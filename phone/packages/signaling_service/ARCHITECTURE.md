@@ -266,14 +266,17 @@ _signalingModule = context.read<SignalingServiceFactory>().create(config: ..., m
 ```
 
 `SignalingServiceFactory` (`lib/utils/signaling_service_factory.dart`) builds a
-`WebtritSignalingService`. When `CallBloc` subscribes later it gets the session so far:
+`WebtritSignalingService`. A consumer that subscribes later gets the session so far - `CallBloc`
+through the shell's `SignalingInbound` (`lib/app/session/signaling_inbound.dart`), which takes a
+fresh `events` stream from the module for each listener, so the replay reaches it as it would a
+direct listener. Protocol events are not replayed: they are folded into the rendered handshake.
 
 ```
 MainShell.initState()
   connect()
   buffered: Connecting, Connected, HandshakeReceived
 
-CallBloc subscribes later: events.listen(...)
+CallBloc subscribes later: SignalingInbound.call -> events.listen(...)
   [replay] SignalingConnecting
   [replay] SignalingConnected
   [replay] SignalingHandshakeReceived (rendered from the snapshot)
@@ -319,8 +322,9 @@ between one boundary's replay and the next is gone at both.
 
 `SignalingModule` owns the protocol knowledge (what a disconnect code means, as
 `recommendedReconnectDelay`), and the consumer owns the decision - in the main isolate
-`SignalingReconnectController` (`lib/features/call/services/signaling_reconnect_controller.dart`,
-created by `CallBloc`), which also weighs the app state, the network and active calls. The split
+`SignalingReconnectController` (`lib/services/signaling/signaling_reconnect_controller.dart`,
+created by `MainShell` with the module, before any feature listens), which also weighs the app
+state, the network and active calls; `CallBloc` tells it what it sees through `SignalingReconnect`. The split
 and each consumer's rules are in
 [signaling_architecture_target.md](../../docs/architecture/signaling_architecture_target.md)
 (sections "Reconnect - responsibility split" and "SignalingReconnectController").

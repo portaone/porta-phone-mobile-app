@@ -18,11 +18,13 @@ import 'package:webtrit_phone/app/router/main_shell_blocs.dart';
 import 'package:webtrit_phone/app/router/main_shell_repositories.dart';
 import 'package:webtrit_phone/app/router/main_shell_services.dart';
 import 'package:webtrit_phone/app/router/startup_config_refresh.dart';
+import 'package:webtrit_phone/app/session/signaling_inbound.dart';
 import 'package:webtrit_phone/blocs/blocs.dart';
 import 'package:webtrit_phone/data/data.dart';
 import 'package:webtrit_phone/environment_config.dart';
 import 'package:webtrit_phone/features/features.dart';
 import 'package:webtrit_phone/repositories/repositories.dart';
+import 'package:webtrit_phone/services/services.dart';
 import 'package:webtrit_phone/utils/utils.dart';
 
 final _logger = Logger('MainShell');
@@ -62,6 +64,8 @@ class _MainShellState extends State<MainShell> {
   /// Late subscribers (including [CallBloc]) receive all buffered session
   /// events via the replay stream.
   late final SignalingModule _signalingModule;
+  late final SignalingInbound _signalingInbound;
+  late final SignalingReconnectController _signalingReconnect;
 
   /// Lazily initialised on first [build] once [CallBloc], [CallRoutingCubit],
   /// and [NotificationsBloc] are available in the widget tree. The `??=`
@@ -130,6 +134,13 @@ class _MainShellState extends State<MainShell> {
       ),
       mode: context.read<IncomingCallTypeRepository>().getIncomingCallType().toSignalingServiceMode(),
     )..connect();
+    _signalingInbound = SignalingInbound(() => _signalingModule.events);
+    _signalingReconnect = SignalingReconnectController(
+      signalingModule: _signalingModule,
+      onConnectionFailed: reportSignalingFailure,
+      onConnectionPresenceChanged: (isAvailable) =>
+          _logger.info('signaling presence changed: isAvailable=$isAvailable'),
+    );
 
     _notificationsBloc = context.read<NotificationsBloc>();
 
@@ -160,6 +171,8 @@ class _MainShellState extends State<MainShell> {
 
   @override
   void dispose() {
+    // First: no reconnect may be scheduled once the session is going.
+    _signalingReconnect.dispose();
     unawaited(_sessionRejectionsSubscription.cancel());
     unawaited(Future.wait([_tearDownCallkeep(), _tearDownSignaling()]).whenComplete(_ended.complete));
     _callController?.dispose();
@@ -196,6 +209,8 @@ class _MainShellState extends State<MainShell> {
             callkeep: _callkeep,
             callkeepConnections: _callkeepConnections,
             signalingModule: _signalingModule,
+            signalingInbound: _signalingInbound,
+            signalingReconnect: _signalingReconnect,
 
             /// The shell chrome: call, messaging and notification overlays around
             /// the nested [AutoRouter], with a [MainShellNavigatorObserver] attached.
@@ -212,7 +227,8 @@ class _MainShellState extends State<MainShell> {
                       child: CallShell(
                         child: MessagingShell(
                           child: SystemNotificationsShell(
-                            child: VoicemailPushShell(
+                            child: VoicemailShell(
+                              boxChanges: _signalingInbound.voicemail,
                               // Per session on purpose: a fresh login checks for an
                               // update (and may prompt) anew.
                               child: AppUpdateCheck(

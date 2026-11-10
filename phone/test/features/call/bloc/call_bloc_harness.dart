@@ -9,6 +9,7 @@ import 'package:signaling/signaling.dart';
 import 'package:signaling_service_platform_interface/signaling_service_platform_interface.dart';
 import 'package:webtrit_callkeep/webtrit_callkeep.dart';
 import 'package:webtrit_phone/app/notifications/notifications.dart';
+import 'package:webtrit_phone/app/session/signaling_inbound.dart';
 import 'package:webtrit_phone/features/call/call.dart';
 import 'package:webtrit_phone/models/models.dart';
 import 'package:webtrit_phone/repositories/repositories.dart';
@@ -61,6 +62,7 @@ class CallBlocHarness {
     ContactResolver? contactResolver,
     int? lines,
     OutgoingFromNumberResolver? resolveOutgoingFromNumber,
+    SignalingReconnect? signalingReconnect,
   }) : peerFactory = peerConnectionFactory ?? FakePeerConnectionFactory() {
     TestWidgetsFlutterBinding.ensureInitialized();
     installPlatformStubs();
@@ -92,7 +94,14 @@ class CallBlocHarness {
       voiceNoiseReductionFailed: voiceNoiseReductionFailed,
       mediaManager: mediaManager?.call(callkeep),
       onDiagnosticReportRequested: (_, _) {},
-      signalingModule: signaling,
+      callSignaling: ModuleCallSignaling(signaling, events: inbound.call),
+      signalingReconnect:
+          signalingReconnect ??
+          (reconnectPolicy = SignalingReconnectController(
+            signalingModule: signaling,
+            onConnectionFailed: reportSignalingFailure,
+          )),
+      signalingEvents: inbound.call,
       callPeerConnectionManager: peers,
       connectivityService: _FakeConnectivityService(),
       roomOfferDeadlineTimer: offerDeadline?.createTimer,
@@ -115,6 +124,14 @@ class CallBlocHarness {
 
   late final CallBloc bloc;
   final FakeSignalingModule signaling = FakeSignalingModule();
+
+  /// The bloc takes [signaling]'s events through the session's routing, as in
+  /// the app.
+  late final SignalingInbound inbound = SignalingInbound(() => signaling.events);
+
+  /// The session's reconnect policy over [signaling], as the shell makes it;
+  /// null when the test gave the bloc a reconnect of its own.
+  SignalingReconnectController? reconnectPolicy;
   final FakeCallkeep callkeep = FakeCallkeep();
   final FakeQueuedTerminationRequestsRepository terminationQueue = FakeQueuedTerminationRequestsRepository();
   final RecordingCallErrorReporter errors = RecordingCallErrorReporter();
@@ -279,6 +296,7 @@ class CallBlocHarness {
     final stub = _lastInstalledPlatform;
     if (stub != null) WebtritCallkeepPlatform.instance = stub;
     await bloc.close();
+    reconnectPolicy?.dispose();
     await signaling.close();
   }
 

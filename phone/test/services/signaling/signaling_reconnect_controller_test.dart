@@ -6,7 +6,7 @@ import 'package:signaling/signaling.dart';
 import 'package:signaling_service/signaling_service.dart';
 
 import 'package:webtrit_phone/app/constants.dart';
-import 'package:webtrit_phone/features/call/services/signaling_reconnect_controller.dart';
+import 'package:webtrit_phone/services/signaling/signaling_reconnect_controller.dart';
 
 // ---------------------------------------------------------------------------
 // Fake SignalingModule
