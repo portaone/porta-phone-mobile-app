@@ -40,6 +40,15 @@ Spawned when an FCM push notification (or SMS trigger) announces an incoming cal
   before this service started. Every `onStartCommand` path returns `START_NOT_STICKY`: if
   the OS kills the service, a restart with a null intent must not re-post a notification
   for a call that is gone.
+- Restricted background usage (battery settings: "Allow background usage" off, or the
+  Restricted mode): the system refuses `startForeground()` without an exception and drops the
+  notification handed to it, while Telecom and the ringtone go on. `IncomingCallHandler`
+  therefore posts the same notification under the same id right after `startForeground()`
+  (`postBesideForeground` in `common/Extensions.kt`): in the foreground the post replaces the
+  service's notification in place, restricted it is what shows the call. Never before the
+  start - a CallStyle notification is accepted only from a foreground service or with a
+  full-screen intent. Restricted and without the full-screen permission the post is refused
+  too; that is logged, and the call rings with nothing on screen, as before.
 - One call per instance. An `IC_INITIALIZE` for another call while one is shown or still
   finishing (the next waiting call the core put through, a call beside an answered one) is
   kept, and `onDestroy` starts the service again for it if the call still rings

@@ -112,6 +112,14 @@ overwrite each other; `shownNotification` records which is up, so a refresh neve
 ringing call's Answer and Decline with the ongoing variant. When the call the ongoing
 notification stands for ends, a surviving answered call takes it over (`survivingAnchor`).
 
+**Restricted background usage.** With the app's background usage restricted in the battery
+settings the system refuses `startForeground()` silently and drops its notification. After the
+promotion with the incoming notification the service posts the same notification under
+`NOTIFICATION_ID` (`postBesideForeground`, as `IncomingCallHandler` does on the Telecom path),
+so the call is shown; in the foreground the post only replaces the notification in place. The
+answer brings the app on screen, where the system grants the ongoing call's promotion, so that
+one needs no post.
+
 **Foreground service type.** An incoming call rings with `phoneCall` only: since Android 14 the
 microphone type cannot be taken from the background, and a push-delivered call arrives there. An
 outgoing call is set up with `phoneCall|microphone` at once (`setupForegroundServiceType`): the

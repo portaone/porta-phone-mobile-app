@@ -9,6 +9,7 @@ import android.os.Build
 import android.os.IBinder
 import androidx.annotation.Keep
 import androidx.core.app.NotificationCompat
+import androidx.core.app.NotificationManagerCompat
 import androidx.core.content.ContextCompat
 import com.webtrit.callkeep.PIncomingCallError
 import com.webtrit.callkeep.R
@@ -17,6 +18,7 @@ import com.webtrit.callkeep.common.AssetCacheManager
 import com.webtrit.callkeep.common.CallDataConst
 import com.webtrit.callkeep.common.ContextHolder
 import com.webtrit.callkeep.common.Log
+import com.webtrit.callkeep.common.postBesideForeground
 import com.webtrit.callkeep.common.startForegroundServiceOrFallback
 import com.webtrit.callkeep.managers.NotificationChannelManager
 import com.webtrit.callkeep.models.AudioDevice
@@ -458,6 +460,9 @@ class StandaloneCallService : Service() {
             ringingForegroundServiceType,
             ringingForegroundServiceType,
         )
+        // Shows the call when the app's background usage is restricted and the system dropped the
+        // foreground start above; otherwise replaces the service's notification in place.
+        NotificationManagerCompat.from(this).postBesideForeground(TAG, NOTIFICATION_ID, notification)
         shownNotification = ShownNotification.Incoming(metadata.callId)
     }
 

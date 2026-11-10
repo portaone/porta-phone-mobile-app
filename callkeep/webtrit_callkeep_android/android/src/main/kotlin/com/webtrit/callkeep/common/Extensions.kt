@@ -16,6 +16,7 @@ import android.os.Build.VERSION.SDK_INT
 import android.os.Bundle
 import android.os.Parcelable
 import android.view.WindowManager
+import androidx.core.app.NotificationManagerCompat
 import androidx.core.app.ServiceCompat
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.Lifecycle
@@ -246,6 +247,38 @@ private fun heldMicrophoneType(service: android.app.Service): Int =
     } else {
         0
     }
+
+/**
+ * Posts the notification a call service has just handed to `startForeground()`, under the same
+ * id.
+ *
+ * When the user restricted the app's background usage (battery settings: "Allow background
+ * usage" off, or the Restricted mode) the system refuses `startForeground()` without an
+ * exception - one warning in its own log - and drops the notification with it, while the push,
+ * Telecom and the ringtone go on: the phone rings and nothing on the screen answers it. A plain
+ * post is not restricted, so it brings the notification back, full-screen intent included. When
+ * the service did enter the foreground, the post replaces its notification in place: still one
+ * notification and one heads-up.
+ *
+ * Call it after `startForeground()`, never before: a CallStyle notification is accepted only from
+ * a foreground service or with a full-screen intent, so a post ahead of it would be refused for a
+ * user without the full-screen permission. Restricted and without that permission, the post is
+ * refused all the same; that is logged and the call is left as it was.
+ */
+@SuppressLint("MissingPermission")
+fun NotificationManagerCompat.postBesideForeground(
+    tag: String,
+    notificationId: Int,
+    notification: Notification,
+) {
+    try {
+        notify(notificationId, notification)
+    } catch (e: IllegalArgumentException) {
+        Log.w(tag, "postBesideForeground: notification $notificationId refused", e)
+    } catch (e: SecurityException) {
+        Log.w(tag, "postBesideForeground: notification $notificationId refused", e)
+    }
+}
 
 suspend fun PDelegateBackgroundRegisterFlutterApi.syncPushIsolate(
     context: Context,
