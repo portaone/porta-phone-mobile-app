@@ -194,21 +194,22 @@ app_version: 1.16.5+3
     // service this product stopped using. A checkout without it wrote no
     // translations at all, so the brand shipped with the strings built into the
     // app instead of its own - and the only sign was a warning.
-    writePubspec("""
+    writePubspec('''
 name: webtrit_phone
 app_version: 1.16.5+3
-""");
+''');
     File(p.join(checkout.path, 'lib/l10n/arb/app_uk.arb'))
       ..createSync(recursive: true)
       ..writeAsStringSync('{"@@locale": "uk", "greeting": "Vitayu"}');
 
-    backend.serveJson(bundlePath(), bundle(locales: ['en']));
-    backend.serveBytes(
-        '/v1/translations/compose-arb/$_applicationId',
-        _archiveOf({
-          'en.arb': '{"@@locale": "en", "greeting": "Hello"}',
-          'uk.arb': '{"@@locale": "uk", "greeting": "Vitayu"}',
-        }));
+    backend
+      ..serveJson(bundlePath(), bundle(locales: ['en']))
+      ..serveBytes(
+          '/v1/translations/compose-arb/$_applicationId',
+          _archiveOf({
+            'en.arb': '{"@@locale": "en", "greeting": "Hello"}',
+            'uk.arb': '{"@@locale": "uk", "greeting": "Vitayu"}',
+          }));
 
     await runResources();
 
