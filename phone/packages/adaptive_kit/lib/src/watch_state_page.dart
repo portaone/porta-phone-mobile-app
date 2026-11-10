@@ -26,16 +26,34 @@ import 'watch_title.dart';
 /// moving to it. The middle scrolls when it does not fit and fades into the
 /// edge below it, as the kit's lists do.
 class WatchStatePage extends StatelessWidget {
-  const WatchStatePage({super.key, required String this.message, this.title, this.icon, this.hint, this.action})
-    : progressLabel = null;
+  const WatchStatePage({
+    super.key,
+    required String this.message,
+    this.title,
+    this.footer = const [],
+    this.icon,
+    this.hint,
+    this.action,
+  }) : progressLabel = null;
 
-  const WatchStatePage.loading({super.key, required String this.progressLabel, this.title, this.hint})
-    : icon = null,
-      message = null,
-      action = null;
+  const WatchStatePage.loading({
+    super.key,
+    required String this.progressLabel,
+    this.title,
+    this.footer = const [],
+    this.hint,
+  }) : icon = null,
+       message = null,
+       action = null;
 
   /// The section's name, at the top of the face.
   final String? title;
+
+  /// What the section keeps beside its state - the chip that shows another
+  /// of its lists - so the state is not a dead end: under the state in the
+  /// middle, scrolling with it, so the state itself is what a small face
+  /// shows first.
+  final List<Widget> footer;
 
   /// Drawn at the icon size of the state (smaller on a small face) in the
   /// face's muted colour, unless it sets its own; decoration only, never read out.
@@ -89,7 +107,13 @@ class WatchStatePage extends StatelessWidget {
             fadeHeight: _fadeHeight,
             child: Center(
               child: SingleChildScrollView(
-                child: Semantics(liveRegion: true, child: loading ? _spinner(context) : _state(context)),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Semantics(liveRegion: true, child: loading ? _spinner(context) : _state(context)),
+                    for (final widget in footer) ...[SizedBox(height: context.adaptiveMetrics.gap * 2), widget],
+                  ],
+                ),
               ),
             ),
           ),

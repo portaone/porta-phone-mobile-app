@@ -47,8 +47,7 @@ class ContactTileAdapter extends StatelessWidget {
     final chatsEnabled = featureAccess.messagingConfig.chatsPresent;
     final cdrsEnabled = featureAccess.bottomMenuConfig.getTabEnabled<RecentsBottomMenuTab>()?.supportsCallHistory;
 
-    final number =
-        contact.extension ?? contact.mobileNumber ?? (contact.phones.isNotEmpty ? contact.phones.first.number : null);
+    final number = contactRowNumber(contact);
 
     void openCallLog(String number) {
       if (cdrsEnabled == true) {
@@ -58,19 +57,7 @@ class ContactTileAdapter extends StatelessWidget {
       }
     }
 
-    // Whoever is asking, and whether this row is an answer. Both are needed
-    // and they are not the same: while a choice is being made no row does what
-    // it normally does, but only a row the purpose accepts can be chosen.
-    //
-    // Every number the row stands for is counted only while somebody is being
-    // chosen: it is what tells a contact with one number from one with
-    // several, and nothing else asks.
-    final candidate = DestinationCandidate(
-      number: number,
-      contact: contact,
-      numbers: context.isPickingDestination ? {for (final phone in contact.phones) phone.number}.toList() : null,
-    );
-    final pick = context.pickOfferFor(candidate, onFallbackPressed: (purpose) => _pickNumber(context, purpose));
+    final pick = contactPickOffer(context, contact);
 
     return BlocBuilder<CallBloc, CallState>(
       buildWhen: (previous, current) => previous.activeCalls != current.activeCalls,
@@ -131,20 +118,46 @@ class ContactTileAdapter extends StatelessWidget {
       },
     );
   }
+}
 
-  /// One of the contact's numbers, for a purpose that will not take the
-  /// contact as a whole because it has several.
-  void _pickNumber(BuildContext context, DestinationPickPurpose purpose) {
-    final choices = [
-      for (final entry in contact.displayPhoneEntries)
-        NumberChoice(number: entry.phone.number, label: entry.displayLabel),
-    ];
-    final number = DestinationNumberPicker.show(context, purpose: purpose, choices: choices);
+/// The number a contact's row calls and picks: the extension, else the
+/// mobile, else the first.
+String? contactRowNumber(Contact contact) =>
+    contact.extension ?? contact.mobileNumber ?? (contact.phones.isNotEmpty ? contact.phones.first.number : null);
 
-    pickDestinationLater(
-      context,
-      purpose,
-      number.then((number) => number == null ? null : DestinationCandidate(number: number, contact: contact)),
-    );
-  }
+/// What a contact's row offers while somebody is being chosen, and null when
+/// nobody is: the row itself as the choice, or - for a purpose that will not
+/// take a contact with several numbers - a pick among them. Shared by the
+/// phone's row and the watch's, so the two choose alike.
+DestinationPickOffer? contactPickOffer(BuildContext context, Contact contact) {
+  final number = contactRowNumber(contact);
+  // Whoever is asking, and whether this row is an answer. Both are needed
+  // and they are not the same: while a choice is being made no row does what
+  // it normally does, but only a row the purpose accepts can be chosen.
+  //
+  // Every number the row stands for is counted only while somebody is being
+  // chosen: it is what tells a contact with one number from one with
+  // several, and nothing else asks.
+  final candidate = DestinationCandidate(
+    number: number,
+    contact: contact,
+    numbers: context.isPickingDestination ? {for (final phone in contact.phones) phone.number}.toList() : null,
+  );
+  return context.pickOfferFor(candidate, onFallbackPressed: (purpose) => _pickNumber(context, contact, purpose));
+}
+
+/// One of the contact's numbers, for a purpose that will not take the
+/// contact as a whole because it has several.
+void _pickNumber(BuildContext context, Contact contact, DestinationPickPurpose purpose) {
+  final choices = [
+    for (final entry in contact.displayPhoneEntries)
+      NumberChoice(number: entry.phone.number, label: entry.displayLabel),
+  ];
+  final number = DestinationNumberPicker.show(context, purpose: purpose, choices: choices);
+
+  pickDestinationLater(
+    context,
+    purpose,
+    number.then((number) => number == null ? null : DestinationCandidate(number: number, contact: contact)),
+  );
 }

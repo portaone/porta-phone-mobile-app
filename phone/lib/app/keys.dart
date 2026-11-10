@@ -391,6 +391,15 @@ const contactsSourcePickerKey = Key(contactsSourcePickerId);
 const String contactsSearchOpenId = 'contactsSearchOpen';
 const contactsSearchOpenKey = Key(contactsSearchOpenId);
 
+/// The one address book chip of a contacts list on a watch, in place of the
+/// tabs: a tap shows the next book.
+const String contactsWatchSourceId = 'contactsWatchSource';
+const contactsWatchSourceKey = Key(contactsWatchSourceId);
+
+/// The edge button of a cloud address book on a watch that came back empty
+/// or failed, in place of the phone's pull to refresh.
+const String contactsWatchRefreshId = 'contactsWatchRefresh';
+
 const String contactsSearchInputId = 'contactsSearchInput';
 const contactsSearchInputKey = Key(contactsSearchInputId);
 const String contactsSearchInputClearId = 'contactsSearchInputClear';

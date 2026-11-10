@@ -51,6 +51,42 @@ void main() {
         );
       });
 
+      testWidgets('on $preset a footer sits under the state, the state first, and can be used', (tester) async {
+        preset.apply(tester);
+        var taps = 0;
+        final chip = TextButton(key: const Key('chip'), onPressed: () => taps++, child: const Text('Cloud'));
+        expect(
+          await pumpCollectingOverflows(
+            tester,
+            wrap(
+              WatchStatePage(
+                title: 'Contacts',
+                footer: [chip],
+                icon: const Icon(Icons.error_outline, key: Key('icon')),
+                message: 'Failed',
+              ),
+            ),
+          ),
+          isEmpty,
+        );
+
+        final title = tester.getRect(find.widgetWithText(WatchTitle, 'Contacts'));
+        final footer = tester.getRect(find.byKey(const Key('chip')));
+        expect(title.bottom, lessThanOrEqualTo(tester.getRect(find.byKey(const Key('icon'))).top));
+        expect(tester.getRect(find.text('Failed')).bottom, lessThanOrEqualTo(footer.top));
+        await tester.tap(find.byKey(const Key('chip')));
+        expect(taps, 1);
+
+        await pumpCollectingOverflows(
+          tester,
+          wrap(WatchStatePage.loading(title: 'Contacts', footer: [chip], progressLabel: 'Loading')),
+        );
+        expect(
+          tester.getRect(find.byType(CircularProgressIndicator)).bottom,
+          lessThanOrEqualTo(tester.getRect(find.byKey(const Key('chip'))).top),
+        );
+      });
+
       testWidgets('on $preset the loading state is a spinner with its hint and no action', (tester) async {
         preset.apply(tester);
         expect(

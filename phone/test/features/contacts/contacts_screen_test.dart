@@ -106,6 +106,7 @@ void main() {
                 ],
                 child: ContactsScreen(
                   sourceTypes: sourceTypes,
+                  watchTitle: 'Contacts',
                   // Read from a context BELOW the screen's own: this screen hands
                   // the builder its outer context, while a real tab is built
                   // inside the body and sees the inset the body was given.
