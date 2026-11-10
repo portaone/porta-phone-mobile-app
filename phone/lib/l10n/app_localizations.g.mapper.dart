@@ -2060,6 +2060,30 @@ extension AppLocalizationsExtension on AppLocalizations {
           'cacheManagement_Label_itemsCount requires 1 arguments',
         ),
       },
+      'cacheManagement_Label_sizeBytes' => switch (args) {
+        [final String size] => cacheManagement_Label_sizeBytes(size),
+        _ => throw ArgumentError(
+          'cacheManagement_Label_sizeBytes requires 1 arguments',
+        ),
+      },
+      'cacheManagement_Label_sizeGigabytes' => switch (args) {
+        [final String size] => cacheManagement_Label_sizeGigabytes(size),
+        _ => throw ArgumentError(
+          'cacheManagement_Label_sizeGigabytes requires 1 arguments',
+        ),
+      },
+      'cacheManagement_Label_sizeKilobytes' => switch (args) {
+        [final String size] => cacheManagement_Label_sizeKilobytes(size),
+        _ => throw ArgumentError(
+          'cacheManagement_Label_sizeKilobytes requires 1 arguments',
+        ),
+      },
+      'cacheManagement_Label_sizeMegabytes' => switch (args) {
+        [final String size] => cacheManagement_Label_sizeMegabytes(size),
+        _ => throw ArgumentError(
+          'cacheManagement_Label_sizeMegabytes requires 1 arguments',
+        ),
+      },
       'callTile_SemanticsLabel_call' => switch (args) {
         [final String name] => callTile_SemanticsLabel_call(name),
         _ => throw ArgumentError(

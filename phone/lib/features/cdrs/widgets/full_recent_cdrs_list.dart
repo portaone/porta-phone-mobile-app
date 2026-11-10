@@ -4,6 +4,7 @@ import 'package:auto_route/auto_route.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import 'package:webtrit_phone/app/router/app_router.dart';
+import 'package:webtrit_phone/data/data.dart';
 import 'package:webtrit_phone/features/features.dart';
 import 'package:webtrit_phone/l10n/l10n.dart';
 import 'package:webtrit_phone/models/models.dart';
@@ -117,6 +118,7 @@ class _FullRecentCdrsListState extends State<FullRecentCdrsList> {
 
   @override
   Widget build(BuildContext context) {
+    final timeOrDateFormat = context.read<AppTime>().timeOrDateFormat(Localizations.localeOf(context));
     return BlocBuilder<FullRecentCdrsCubit, CdrsListState>(
       builder: (context, state) {
         if (state.isLoading) {
@@ -179,6 +181,7 @@ class _FullRecentCdrsListState extends State<FullRecentCdrsList> {
 
                               return UserSmsNumbersBuilder(
                                 builder: (context, userSmsNumbers, {required loading}) => CdrTile(
+                                  timeOrDateFormat: timeOrDateFormat,
                                   cdr: cdr,
                                   contact: contact,
                                   callNumbers: callNumbers,

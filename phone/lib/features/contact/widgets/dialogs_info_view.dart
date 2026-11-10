@@ -1,13 +1,15 @@
 import 'package:material_ui/material_ui.dart';
 
-import 'package:webtrit_phone/extensions/extensions.dart';
+import 'package:intl/intl.dart';
+
 import 'package:webtrit_phone/l10n/l10n.dart';
 import 'package:webtrit_phone/models/dialog_info.dart';
 
 class DialogsInfoView extends StatefulWidget {
-  const DialogsInfoView({required this.dialogInfo, super.key});
+  const DialogsInfoView({required this.dialogInfo, required this.timeFormat, super.key});
 
   final List<DialogInfo> dialogInfo;
+  final DateFormat timeFormat;
 
   @override
   State<DialogsInfoView> createState() => _DialogsInfoViewState();
@@ -66,7 +68,7 @@ class _DialogsInfoViewState extends State<DialogsInfoView> {
           child: Text(destination, style: Theme.of(context).textTheme.bodySmall, overflow: TextOverflow.ellipsis),
         ),
         const SizedBox(width: 8),
-        Text(dialog.arrivalTime.toLocal().toHHmm, style: Theme.of(context).textTheme.bodySmall),
+        Text(widget.timeFormat.format(dialog.arrivalTime.toLocal()), style: Theme.of(context).textTheme.bodySmall),
       ],
     );
   }

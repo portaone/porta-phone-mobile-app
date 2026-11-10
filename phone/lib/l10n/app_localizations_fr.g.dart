@@ -174,6 +174,26 @@ class AppLocalizationsFr extends AppLocalizations {
   }
 
   @override
+  String cacheManagement_Label_sizeBytes(String size) {
+    return '$size o';
+  }
+
+  @override
+  String cacheManagement_Label_sizeGigabytes(String size) {
+    return '$size Go';
+  }
+
+  @override
+  String cacheManagement_Label_sizeKilobytes(String size) {
+    return '$size Ko';
+  }
+
+  @override
+  String cacheManagement_Label_sizeMegabytes(String size) {
+    return '$size Mo';
+  }
+
+  @override
   String get cacheManagement_Label_unknown => 'Inconnu';
 
   @override

@@ -6,6 +6,7 @@ import 'package:auto_route/auto_route.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import 'package:webtrit_phone/app/constants.dart';
+import 'package:webtrit_phone/data/data.dart';
 import 'package:webtrit_phone/features/features.dart';
 import 'package:webtrit_phone/theme/extension/outlined_button_styles.dart';
 import 'package:webtrit_phone/utils/gravatar.dart';
@@ -63,6 +64,10 @@ class _NumberCdrsScreenState extends State<NumberCdrsScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final appTime = context.read<AppTime>();
+    final locale = Localizations.localeOf(context);
+    final timeFormat = appTime.hourMinuteFormat(locale);
+    final dateFormat = appTime.dayMonthFormat(locale);
     final theme = Theme.of(context);
     final outlinedButtonStyles = theme.extension<OutlinedButtonStyles>();
     final style = theme.extension<NumberCdrsScreenStyles>()?.primary;
@@ -110,7 +115,7 @@ class _NumberCdrsScreenState extends State<NumberCdrsScreen> {
                     return FadeIn(
                       child: SizedBox(
                         key: Key(cdr.callId.toString()),
-                        child: NumberCdrTile(cdr: cdr),
+                        child: NumberCdrTile(cdr: cdr, timeFormat: timeFormat, dateFormat: dateFormat),
                       ),
                     );
                   },

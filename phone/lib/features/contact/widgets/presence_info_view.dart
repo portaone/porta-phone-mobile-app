@@ -9,9 +9,12 @@ import 'package:webtrit_phone/extensions/extensions.dart';
 import 'package:webtrit_phone/widgets/widgets.dart';
 
 class PresenceInfoView extends StatelessWidget {
-  const PresenceInfoView({required this.presenceInfo, super.key});
+  const PresenceInfoView({required this.presenceInfo, required this.timeFormat, super.key});
 
   final List<PresenceInfo> presenceInfo;
+
+  /// The contact's local time.
+  final DateFormat timeFormat;
 
   @override
   Widget build(BuildContext context) {
@@ -90,7 +93,7 @@ class PresenceInfoView extends StatelessWidget {
                           Text(l10n.presence_infoView_localTime, style: Theme.of(context).textTheme.bodySmall),
                           const SizedBox(width: 4),
                           Text(
-                            DateFormat.Hm().format(clock.now().toUtc().add(Duration(minutes: info.timeOffsetMin ?? 0))),
+                            timeFormat.format(clock.now().toUtc().add(Duration(minutes: info.timeOffsetMin ?? 0))),
                             style: Theme.of(context).textTheme.bodySmall,
                           ),
                           Text(

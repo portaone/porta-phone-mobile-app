@@ -1,13 +1,17 @@
 import 'package:material_ui/material_ui.dart';
 
+import 'package:intl/intl.dart';
+
 import 'package:webtrit_phone/extensions/extensions.dart';
 import 'package:webtrit_phone/features/features.dart';
 import 'package:webtrit_phone/models/models.dart';
 
 class NumberCdrTile extends StatelessWidget {
-  const NumberCdrTile({required this.cdr, super.key});
+  const NumberCdrTile({required this.cdr, required this.timeFormat, required this.dateFormat, super.key});
 
   final CdrRecord cdr;
+  final DateFormat timeFormat;
+  final DateFormat dateFormat;
 
   @override
   Widget build(BuildContext context) {
@@ -41,7 +45,7 @@ class NumberCdrTile extends StatelessWidget {
               children: [
                 const Icon(Icons.access_time, size: 16, color: Colors.grey),
                 const SizedBox(width: 4),
-                Text(cdr.connectTime.toHHmm),
+                Text(timeFormat.format(cdr.connectTime.toLocal())),
               ],
             ),
             const SizedBox(height: 2),
@@ -50,7 +54,7 @@ class NumberCdrTile extends StatelessWidget {
               children: [
                 const Icon(Icons.calendar_month, size: 16, color: Colors.grey),
                 const SizedBox(width: 4),
-                Text(cdr.connectTime.toDayOfMonth),
+                Text(dateFormat.format(cdr.connectTime.toLocal())),
               ],
             ),
           ],

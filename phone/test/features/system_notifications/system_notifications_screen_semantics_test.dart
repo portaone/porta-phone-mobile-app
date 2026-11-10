@@ -8,6 +8,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:mocktail/mocktail.dart';
 
 import 'package:webtrit_phone/app/keys.dart';
+import 'package:webtrit_phone/data/app_time.dart';
 import 'package:webtrit_phone/features/system_notifications/system_notifications.dart';
 import 'package:webtrit_phone/l10n/l10n.dart';
 import 'package:webtrit_phone/models/models.dart';
@@ -63,13 +64,16 @@ void main() {
     when(() => local.getNotificationIds()).thenAnswer((_) async => stored.map((n) => n.id).toList());
 
     await tester.pumpWidget(
-      MaterialApp(
-        locale: const Locale('en'),
-        localizationsDelegates: appLocalizationsDelegates,
-        supportedLocales: AppLocalizations.supportedLocales,
-        home: BlocProvider(
-          create: (_) => SystemNotificationsScreenCubit(local, remote, outbox: idleOutbox())..init(),
-          child: const SystemNotificationsScreen(),
+      RepositoryProvider<AppTime>.value(
+        value: AppTime(is24HourFormat: true),
+        child: MaterialApp(
+          locale: const Locale('en'),
+          localizationsDelegates: appLocalizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: BlocProvider(
+            create: (_) => SystemNotificationsScreenCubit(local, remote, outbox: idleOutbox())..init(),
+            child: const SystemNotificationsScreen(),
+          ),
         ),
       ),
     );

@@ -7,6 +7,7 @@ import 'package:logging/logging.dart';
 import 'package:webtrit_phone/app/constants.dart';
 import 'package:webtrit_phone/app/keys.dart';
 import 'package:webtrit_phone/app/router/app_router.dart';
+import 'package:webtrit_phone/data/data.dart';
 import 'package:webtrit_phone/features/call/call.dart';
 import 'package:webtrit_phone/features/call_routing/cubit/call_routing_cubit.dart';
 import 'package:webtrit_phone/features/messaging/widgets/sms_sender_number_sheet.dart';
@@ -57,6 +58,8 @@ class _ContactScreenState extends State<ContactScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final appTime = context.read<AppTime>();
+    final locale = Localizations.localeOf(context);
     final themeData = Theme.of(context);
     final l10n = context.l10n;
     final presenceParams = PresenceViewParams.of(context);
@@ -186,8 +189,14 @@ class _ContactScreenState extends State<ContactScreen> {
                             label: contactEmail.label,
                             onEmailPressed: widget.enableTileEmail ? () => _onEmailPressed(contactEmail) : null,
                           ),
-                        if (showPresenceInfo) ...[const Divider(), PresenceInfoView(presenceInfo: presenseInfo)],
-                        if (showDialogsInfo) ...[const Divider(), DialogsInfoView(dialogInfo: dialogInfo)],
+                        if (showPresenceInfo) ...[
+                          const Divider(),
+                          PresenceInfoView(presenceInfo: presenseInfo, timeFormat: appTime.hourMinuteFormat(locale)),
+                        ],
+                        if (showDialogsInfo) ...[
+                          const Divider(),
+                          DialogsInfoView(dialogInfo: dialogInfo, timeFormat: appTime.hourMinuteFormat(locale)),
+                        ],
                         if (showOptionsSection) ...[
                           const Divider(),
                           Padding(

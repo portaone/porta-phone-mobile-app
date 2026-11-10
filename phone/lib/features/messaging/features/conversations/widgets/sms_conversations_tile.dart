@@ -6,6 +6,7 @@ import 'package:auto_route/auto_route.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import 'package:webtrit_phone/app/router/app_router.dart';
+import 'package:webtrit_phone/data/app_time.dart';
 import 'package:webtrit_phone/extensions/extensions.dart';
 import 'package:webtrit_phone/features/messaging/messaging.dart';
 import 'package:webtrit_phone/l10n/l10n.dart';
@@ -13,11 +14,18 @@ import 'package:webtrit_phone/models/models.dart';
 import 'package:webtrit_phone/widgets/widgets.dart';
 
 class SmsConversationsTile extends StatefulWidget {
-  const SmsConversationsTile({required this.conversation, required this.lastMessage, required this.userId, super.key});
+  const SmsConversationsTile({
+    required this.conversation,
+    required this.lastMessage,
+    required this.userId,
+    required this.timeOrDateFormat,
+    super.key,
+  });
 
   final SmsConversation conversation;
   final SmsMessage? lastMessage;
   final String userId;
+  final TimeOrDateFormat timeOrDateFormat;
 
   @override
   State<SmsConversationsTile> createState() => _SmsConversationsTileState();
@@ -106,7 +114,8 @@ class _SmsConversationsTileState extends State<SmsConversationsTile> {
         ),
         if (muted) const NotificationMutedIndicator(),
         const SizedBox(width: 4),
-        if (lastMessage != null) Text(lastMessage.createdAt.timeOrDate, style: const TextStyle(fontSize: 12)),
+        if (lastMessage != null)
+          Text(widget.timeOrDateFormat.format(lastMessage.createdAt), style: const TextStyle(fontSize: 12)),
       ],
     );
   }

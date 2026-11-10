@@ -6,7 +6,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:mocktail/mocktail.dart';
 
 import 'package:webtrit_phone/app/keys.dart';
-import 'package:webtrit_phone/extensions/extensions.dart';
+import 'package:webtrit_phone/data/app_time.dart';
 import 'package:webtrit_phone/l10n/l10n.dart';
 import 'package:webtrit_phone/features/messaging/messaging.dart';
 import 'package:webtrit_phone/models/models.dart';
@@ -20,6 +20,7 @@ class MockUnreadCountCubit extends MockCubit<UnreadCountState> implements Unread
 
 void main() {
   late ConversationScreenHarness harness;
+  final timeOrDateFormat = AppTime(is24HourFormat: true).timeOrDateFormat(const Locale('en', 'US'));
 
   setUpAll(() => registerFallbackValue(ContactSourceType.external));
   setUp(() => harness = ConversationScreenHarness());
@@ -98,6 +99,7 @@ void main() {
             value: unreadCount,
             child: Scaffold(
               body: ChatConversationsTile(
+                timeOrDateFormat: timeOrDateFormat,
                 conversation: groupChat(id: 7, name: null),
                 lastMessage: null,
                 userId: 'user-1',
@@ -270,7 +272,12 @@ void main() {
               blfViaSipSupport: false,
               presenceViaSipSupport: false,
               child: Scaffold(
-                body: ChatConversationsTile(conversation: chat, lastMessage: lastMessage, userId: 'user-1'),
+                body: ChatConversationsTile(
+                  timeOrDateFormat: timeOrDateFormat,
+                  conversation: chat,
+                  lastMessage: lastMessage,
+                  userId: 'user-1',
+                ),
               ),
             ),
           ),
@@ -304,7 +311,7 @@ void main() {
       // look for it in two places down one list.
       double markToTime(WidgetTester tester) {
         final mark = tester.getTopRight(find.byIcon(Icons.notifications_off_outlined)).dx;
-        return tester.getTopLeft(find.text(lastMessage.createdAt.timeOrDate)).dx - mark;
+        return tester.getTopLeft(find.text(timeOrDateFormat.format(lastMessage.createdAt))).dx - mark;
       }
 
       harness.withChatMute(7, const NotificationMute(muted: true));

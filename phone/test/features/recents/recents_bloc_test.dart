@@ -1,7 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:bloc_test/bloc_test.dart';
-import 'package:intl/intl.dart';
 import 'package:mocktail/mocktail.dart';
 
 import 'package:webtrit_phone/features/recents/recents.dart';
@@ -23,11 +22,8 @@ void main() {
     when(() => recentsRepository.deleteAll()).thenAnswer((_) async {});
   });
 
-  RecentsBloc build() => RecentsBloc(
-    recentsRepository: recentsRepository,
-    activeRecentsVisibilityFilterRepository: filterRepository,
-    dateFormat: DateFormat(),
-  );
+  RecentsBloc build() =>
+      RecentsBloc(recentsRepository: recentsRepository, activeRecentsVisibilityFilterRepository: filterRepository);
 
   blocTest<RecentsBloc, RecentsState>(
     'clearing deletes the whole call log and says it is done only once it is',

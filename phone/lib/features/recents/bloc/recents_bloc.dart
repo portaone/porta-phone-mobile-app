@@ -4,7 +4,6 @@ import 'package:bloc/bloc.dart';
 import 'package:bloc_concurrency/bloc_concurrency.dart';
 import 'package:equatable/equatable.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
-import 'package:intl/intl.dart';
 import 'package:logging/logging.dart';
 
 import 'package:webtrit_phone/models/models.dart';
@@ -19,11 +18,8 @@ part 'recents_state.dart';
 final _logger = Logger('RecentsBloc');
 
 class RecentsBloc extends Bloc<RecentsEvent, RecentsState> {
-  RecentsBloc({
-    required this.recentsRepository,
-    required this.activeRecentsVisibilityFilterRepository,
-    required this.dateFormat,
-  }) : super(RecentsState(filter: activeRecentsVisibilityFilterRepository.getActiveRecentsVisibilityFilter())) {
+  RecentsBloc({required this.recentsRepository, required this.activeRecentsVisibilityFilterRepository})
+    : super(RecentsState(filter: activeRecentsVisibilityFilterRepository.getActiveRecentsVisibilityFilter())) {
     on<RecentsStarted>(_onStarted, transformer: restartable());
     on<RecentsFiltered>(_onFiltered);
     on<RecentsDeleted>(_onDeleted);
@@ -32,7 +28,6 @@ class RecentsBloc extends Bloc<RecentsEvent, RecentsState> {
 
   final RecentsRepository recentsRepository;
   final ActiveRecentsVisibilityFilterRepository activeRecentsVisibilityFilterRepository;
-  final DateFormat dateFormat;
 
   Future<void> _onStarted(RecentsStarted event, Emitter<RecentsState> emit) async {
     await emit.forEach(

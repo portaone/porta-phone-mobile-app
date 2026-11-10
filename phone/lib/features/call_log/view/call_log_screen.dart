@@ -4,6 +4,7 @@ import 'package:auto_route/auto_route.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import 'package:webtrit_phone/app/constants.dart';
+import 'package:webtrit_phone/data/data.dart';
 import 'package:webtrit_phone/extensions/extensions.dart';
 import 'package:webtrit_phone/features/features.dart';
 import 'package:webtrit_phone/l10n/l10n.dart';
@@ -31,6 +32,7 @@ class CallLogScreen extends StatelessWidget {
 
           final themeData = Theme.of(context);
           final outlinedButtonStyles = themeData.extension<OutlinedButtonStyles>();
+          final dateFormat = context.read<AppTime>().dateTimeFormat(Localizations.localeOf(context));
 
           return ListView(
             children: [
@@ -82,7 +84,7 @@ class CallLogScreen extends StatelessWidget {
                 for (final entry in callLog)
                   CallLogHistoryTile(
                     callLogEntry: entry,
-                    dateFormat: context.read<CallLogBloc>().dateFormat,
+                    dateFormat: dateFormat,
                     onDeleted: (callLogEntry) {
                       context.showSnackBar(context.l10n.recents_snackBar_deleted(entry.number));
                       context.read<CallLogBloc>().add(CallLogEntryDeleted(entry));

@@ -43,7 +43,7 @@ class VoicemailScreenHost extends StatelessWidget {
 
     final screenContext = VoicemailScreenContext(
       mediaCacheBasePath: appPath.mediaCacheBasePath,
-      dateFormat: appTime.formatDateTime(true),
+      dateFormat: appTime.dateTimeFormat(Localizations.localeOf(context)),
       mediaHeaders: mediaHeaders,
     );
 
@@ -65,7 +65,9 @@ class VoicemailScreenHost extends StatelessWidget {
             forwardSupported: featureAccess.voicemailForwardAvailable,
           ),
         ),
-        Provider<VoicemailScreenContext>(create: (_) => screenContext),
+        // Built again on every rebuild (a language change among them), so
+        // the dates follow the app language.
+        Provider<VoicemailScreenContext>.value(value: screenContext),
         ChangeNotifierProvider(create: (_) => VoicemailPlaybackController()),
       ],
       child: child,

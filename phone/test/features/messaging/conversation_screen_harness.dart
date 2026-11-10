@@ -178,24 +178,27 @@ class ConversationScreenHarness {
   }
 
   Widget wrap(Widget screen, {ThemeData? theme}) {
-    return MaterialApp(
-      theme: theme,
-      localizationsDelegates: appLocalizationsDelegates,
-      supportedLocales: AppLocalizations.supportedLocales,
-      home: MultiRepositoryProvider(
-        providers: [
-          RepositoryProvider<SmsRepository>.value(value: smsRepository),
-          RepositoryProvider<ContactsRepository>.value(value: contactsRepository),
-          RepositoryProvider<FeatureAccess>.value(value: featureAccess),
-        ],
-        child: MultiBlocProvider(
+    return RepositoryProvider<AppTime>.value(
+      value: AppTime(is24HourFormat: true),
+      child: MaterialApp(
+        theme: theme,
+        localizationsDelegates: appLocalizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        home: MultiRepositoryProvider(
           providers: [
-            BlocProvider<MessagingBloc>.value(value: messagingBloc),
-            BlocProvider<ConversationCubit>.value(value: conversationCubit),
-            BlocProvider<SmsConversationCubit>.value(value: smsConversationCubit),
-            BlocProvider<ConversationUserSettingsCubit>.value(value: userSettingsCubit),
+            RepositoryProvider<SmsRepository>.value(value: smsRepository),
+            RepositoryProvider<ContactsRepository>.value(value: contactsRepository),
+            RepositoryProvider<FeatureAccess>.value(value: featureAccess),
           ],
-          child: screen,
+          child: MultiBlocProvider(
+            providers: [
+              BlocProvider<MessagingBloc>.value(value: messagingBloc),
+              BlocProvider<ConversationCubit>.value(value: conversationCubit),
+              BlocProvider<SmsConversationCubit>.value(value: smsConversationCubit),
+              BlocProvider<ConversationUserSettingsCubit>.value(value: userSettingsCubit),
+            ],
+            child: screen,
+          ),
         ),
       ),
     );

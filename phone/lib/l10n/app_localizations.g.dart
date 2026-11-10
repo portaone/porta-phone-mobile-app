@@ -311,6 +311,30 @@ abstract class AppLocalizations {
   /// **'{count, plural, one{1 record} other{{count} records}}'**
   String cacheManagement_Label_itemsCount(int count);
 
+  /// A size under a kilobyte, in bytes.
+  ///
+  /// In en, this message translates to:
+  /// **'{size} B'**
+  String cacheManagement_Label_sizeBytes(String size);
+
+  /// A size in gigabytes, the number already formatted for the language.
+  ///
+  /// In en, this message translates to:
+  /// **'{size} GB'**
+  String cacheManagement_Label_sizeGigabytes(String size);
+
+  /// A size in kilobytes, the number already formatted for the language.
+  ///
+  /// In en, this message translates to:
+  /// **'{size} KB'**
+  String cacheManagement_Label_sizeKilobytes(String size);
+
+  /// A size in megabytes, the number already formatted for the language.
+  ///
+  /// In en, this message translates to:
+  /// **'{size} MB'**
+  String cacheManagement_Label_sizeMegabytes(String size);
+
   /// No description provided for @cacheManagement_Label_unknown.
   ///
   /// In en, this message translates to:

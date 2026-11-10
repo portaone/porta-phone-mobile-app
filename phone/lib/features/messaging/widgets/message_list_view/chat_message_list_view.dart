@@ -5,8 +5,10 @@ import 'package:material_ui/material_ui.dart';
 
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:auto_route/auto_route.dart';
+import 'package:intl/intl.dart';
 
 import 'package:webtrit_phone/app/router/app_router.dart';
+import 'package:webtrit_phone/data/data.dart';
 import 'package:webtrit_phone/extensions/extensions.dart';
 import 'package:webtrit_phone/features/messaging/messaging.dart';
 import 'package:webtrit_phone/l10n/app_localizations.g.mapper.dart';
@@ -171,7 +173,11 @@ class _ChatMessageListViewState extends State<ChatMessageListView> {
     widget.onDelete(message);
   }
 
-  String formatChatMessageDate(DateTime messageDate) {
+  String formatChatMessageDate(
+    DateTime messageDate, {
+    required DateFormat weekday,
+    required DateFormat weekdayDayMonth,
+  }) {
     final now = DateTime.now();
     final today = DateTime(now.year, now.month, now.day);
     final date = DateTime(messageDate.year, messageDate.month, messageDate.day);
@@ -180,9 +186,9 @@ class _ChatMessageListViewState extends State<ChatMessageListView> {
 
     if (difference == 0) return context.l10n.messaging_MessageView_today;
     if (difference == 1) return context.l10n.messaging_MessageView_yesterday;
-    if (difference < 7) return messageDate.toWeekday;
+    if (difference < 7) return weekday.format(messageDate.toLocal());
 
-    return messageDate.toWeekDayOfMonth;
+    return weekdayDayMonth.format(messageDate.toLocal());
   }
 
   @override
@@ -227,6 +233,11 @@ class _ChatMessageListViewState extends State<ChatMessageListView> {
   }
 
   Widget list() {
+    final appTime = context.read<AppTime>();
+    final locale = Localizations.localeOf(context);
+    final timeFormat = appTime.hourMinuteFormat(locale);
+    final weekdayFormat = appTime.weekdayFormat(locale);
+    final weekdayDayMonthFormat = appTime.weekdayDayMonthFormat(locale);
     return GestureDetector(
       // A tap anywhere puts the keyboard away. It is a convenience for a
       // finger and nothing a screen reader should be taken to - left in the
@@ -251,6 +262,7 @@ class _ChatMessageListViewState extends State<ChatMessageListView> {
                 key: Key(entry.message?.idKey ?? entry.outboxMessage!.idKey),
                 child: ChatMessageView(
                   userId: widget.userId,
+                  timeFormat: timeFormat,
                   message: entry.message,
                   outboxMessage: entry.outboxMessage,
                   outboxEditEntry: entry.outboxEditEntry,
@@ -289,7 +301,7 @@ class _ChatMessageListViewState extends State<ChatMessageListView> {
                 padding: const EdgeInsets.only(top: 8),
                 child: Center(
                   child: Text(
-                    formatChatMessageDate(entry.date),
+                    formatChatMessageDate(entry.date, weekday: weekdayFormat, weekdayDayMonth: weekdayDayMonthFormat),
                     style: const TextStyle(fontSize: 12, color: Colors.grey),
                   ),
                 ),

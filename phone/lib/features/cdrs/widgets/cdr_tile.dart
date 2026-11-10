@@ -1,5 +1,6 @@
 import 'package:material_ui/material_ui.dart';
 
+import 'package:webtrit_phone/data/app_time.dart';
 import 'package:webtrit_phone/extensions/extensions.dart';
 import 'package:webtrit_phone/features/recents/extensions/extensions.dart';
 import 'package:webtrit_phone/l10n/app_localizations.g.mapper.dart';
@@ -10,8 +11,9 @@ class CdrTile extends StatelessWidget {
   const CdrTile({
     super.key,
     required this.cdr,
-    this.contact,
     required this.callNumbers,
+    required this.timeOrDateFormat,
+    this.contact,
     this.onTap,
     this.expanded = false,
     this.onDialPressed,
@@ -29,6 +31,7 @@ class CdrTile extends StatelessWidget {
   final CdrRecord cdr;
   final Contact? contact;
   final List<String> callNumbers;
+  final TimeOrDateFormat timeOrDateFormat;
   final Function()? onTap;
   final bool expanded;
   final Function()? onDialPressed;
@@ -89,7 +92,7 @@ class CdrTile extends StatelessWidget {
         size: 14,
         color: cdr.direction == CallDirection.incoming ? Colors.blue : Colors.green,
       ),
-      timeLabel: cdr.connectTime.toLocal().timeOrDate,
+      timeLabel: timeOrDateFormat.format(cdr.connectTime),
       durationLabel: cdr.duration.format(),
       disconnectReason: disconnectText,
       onTap: onTap,

@@ -4,6 +4,7 @@ import 'package:material_ui/material_ui.dart';
 
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import 'package:webtrit_phone/data/data.dart';
 import 'package:webtrit_phone/features/features.dart';
 import 'package:webtrit_phone/l10n/l10n.dart';
 import 'package:webtrit_phone/app/keys.dart';
@@ -57,6 +58,8 @@ class _DialogChatInfoState extends State<DialogChatInfo> {
 
   @override
   Widget build(BuildContext context) {
+    final appTime = context.read<AppTime>();
+    final locale = Localizations.localeOf(context);
     final theme = Theme.of(context);
 
     final participant = widget.participantId;
@@ -132,7 +135,12 @@ class _DialogChatInfoState extends State<DialogChatInfo> {
                           const SizedBox(height: 24),
                           if (muteAvailable && chatId != null) ...[
                             const Divider(),
-                            NotificationMuteTile(mute: userSettings.activeChatMute(chatId), onChoice: onMuteChoice),
+                            NotificationMuteTile(
+                              mute: userSettings.activeChatMute(chatId),
+                              onChoice: onMuteChoice,
+                              timeFormat: appTime.hourMinuteFormat(locale),
+                              dateFormat: appTime.dayMonthFormat(locale),
+                            ),
                           ],
                           if (contact != null && contact.kind == ContactKind.visible) ...[
                             const Divider(),
