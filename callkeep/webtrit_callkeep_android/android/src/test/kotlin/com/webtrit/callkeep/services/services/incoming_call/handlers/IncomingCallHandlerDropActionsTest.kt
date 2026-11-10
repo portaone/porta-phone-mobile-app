@@ -69,8 +69,9 @@ class IncomingCallHandlerDropActionsTest {
         `when`(notificationBuilder.buildSilent()).thenReturn(mock(Notification::class.java))
 
         handler.handle(CallMetadata(callId = "call-1", displayName = "Caller"))
-        // Ignore the ringing startForeground done while showing the call; only the release matters.
-        clearInvocations(service)
+        // Ignore the ringing startForeground and post done while showing the call; only the
+        // release matters.
+        clearInvocations(service, notifier)
 
         handler.releaseIncomingCallNotification()
 
@@ -92,7 +93,7 @@ class IncomingCallHandlerDropActionsTest {
         `when`(notificationBuilder.buildSilent()).thenReturn(mock(Notification::class.java))
 
         handler.handle(CallMetadata(callId = "call-1", displayName = "Caller"))
-        clearInvocations(service)
+        clearInvocations(service, notifier)
 
         handler.dropIncomingCallActions()
 

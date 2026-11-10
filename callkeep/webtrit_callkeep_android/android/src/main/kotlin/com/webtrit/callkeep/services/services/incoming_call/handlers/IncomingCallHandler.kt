@@ -7,6 +7,7 @@ import android.os.Build
 import android.util.Log
 import androidx.core.app.NotificationManagerCompat
 import com.webtrit.callkeep.WebtritCallkeep
+import com.webtrit.callkeep.common.postBesideForeground
 import com.webtrit.callkeep.common.startForegroundServiceCompat
 import com.webtrit.callkeep.models.CallMetadata
 import com.webtrit.callkeep.notifications.IncomingCallNotificationBuilder
@@ -57,17 +58,22 @@ class IncomingCallHandler(
             TAG,
             "Handling incoming call: id=${metadata.callId}, handle=${metadata.handle}, " + "name=${metadata.displayName}, video=${metadata.hasVideo}",
         )
-        show(metadata)
+        lastMetadata = metadata
+        showNotification(metadata, postBeside = true)
         maybeInitBackgroundHandling()
     }
 
     /**
      * Posts the ringing notification and takes the service into the foreground, nothing more:
      * the call is given to nobody. For a call that is released before it is shown.
+     *
+     * Only the foreground start, not the post beside it: the call is over, and with the app's
+     * background usage restricted - where the start shows nothing - the post would put a ringing
+     * call with its full-screen intent on the screen for it.
      */
     fun show(metadata: CallMetadata) {
         lastMetadata = metadata
-        showNotification(metadata)
+        showNotification(metadata, postBeside = false)
     }
 
     /**
@@ -182,10 +188,16 @@ class IncomingCallHandler(
         notifier.notify(currentNotificationId, notificationBuilder.buildSilent())
     }
 
-    private fun showNotification(metadata: CallMetadata) {
-        // Build a high-priority incoming call notification and elevate the Service to foreground.
-        // foregroundServiceType must be passed explicitly: on API 34+ startForeground() without
-        // a type throws InvalidForegroundServiceTypeException when the manifest declares one.
+    private fun showNotification(
+        metadata: CallMetadata,
+        postBeside: Boolean,
+    ) {
+        // Build a high-priority incoming call notification, elevate the Service to foreground with
+        // it, then post it under the same id: the post is what shows the call when the app's
+        // background usage is restricted and the system dropped the foreground start
+        // (postBesideForeground). foregroundServiceType must be passed explicitly: on API 34+
+        // startForeground() without a type throws InvalidForegroundServiceTypeException when the
+        // manifest declares one.
         val notification = notificationBuilder.apply { setCallMetaData(metadata) }.build()
         Log.d(TAG, "startForeground [ringing]: id=$currentNotificationId SDK=${Build.VERSION.SDK_INT}")
         service.startForegroundServiceCompat(
@@ -195,6 +207,7 @@ class IncomingCallHandler(
             ServiceInfo.FOREGROUND_SERVICE_TYPE_PHONE_CALL,
         )
         Log.d(TAG, "startForeground [ringing]: completed")
+        if (postBeside) notifier.postBesideForeground(TAG, currentNotificationId, notification)
     }
 
     private fun maybeInitBackgroundHandling() {
