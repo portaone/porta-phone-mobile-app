@@ -93,9 +93,10 @@ const watchResizesForKeyboard = false;
 /// of [diameter]: (1 - 1 / sqrt 2) / 2 of it, 28 on a 192 face.
 double roundSafeInset(double diameter) => diameter * 0.1464;
 
-// A list is narrower than the inscribed square would make it: its items are
-// pills, whose rounded ends fit into the curve.
-const _roundListSide = 0.13;
+// A list is wider than the inscribed square would make it: its items are
+// pills, whose rounded ends fit into the curve, and the rows the face shows
+// at rest sit in its wide middle - 15 points a side on a 192 face.
+const _roundListSide = 0.08;
 const _roundListTop = 0.12;
 const _roundListBottom = 0.2;
 
