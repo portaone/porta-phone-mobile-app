@@ -24,6 +24,8 @@ class WatchListTile extends StatelessWidget {
     this.identifier,
     this.fitTitle = false,
     this.onTap,
+    this.onLongPress,
+    this.longPressHint,
   });
 
   final String title;
@@ -57,18 +59,30 @@ class WatchListTile extends StatelessWidget {
   /// Null shows the row disabled.
   final VoidCallback? onTap;
 
+  /// The row's second action, such as removing it: a watch has no swipe to
+  /// spare, the list scrolls with it. Offered to assistive technology as the
+  /// long press, named by [longPressHint]. Ignored while [onTap] is null.
+  final VoidCallback? onLongPress;
+
+  /// What the long press does, for assistive technology: "Remove", not "Long
+  /// press".
+  final String? longPressHint;
+
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
     final textTheme = Theme.of(context).textTheme;
     final subtitle = this.subtitle;
     final enabled = onTap != null;
+    // A row shown disabled offers neither of its actions.
+    final longPress = enabled ? onLongPress : null;
 
     return SemanticAction(
       label: semanticsLabel ?? (subtitle == null ? title : '$title, $subtitle'),
       identifier: identifier,
       child: Semantics(
         selected: selected,
+        onLongPressHint: longPress == null ? null : longPressHint,
         child: Opacity(
           opacity: enabled ? 1 : 0.45,
           child: Material(
@@ -77,6 +91,7 @@ class WatchListTile extends StatelessWidget {
             clipBehavior: Clip.antiAlias,
             child: InkWell(
               onTap: onTap,
+              onLongPress: longPress,
               child: ConstrainedBox(
                 constraints: const BoxConstraints(minHeight: WatchPill.height),
                 child: Padding(

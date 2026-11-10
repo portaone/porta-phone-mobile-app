@@ -1285,6 +1285,21 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String get favorites_Watch_empty => 'No favorites yet';
+
+  @override
+  String get favorites_Watch_emptyHint => 'Star a contact to add it';
+
+  @override
+  String get favorites_Watch_notFound => 'No favorites found';
+
+  @override
+  String get favorites_Watch_remove => 'Remove from favorites';
+
+  @override
+  String get favorites_Watch_removeQuestion => 'Remove from favorites?';
+
+  @override
   String formatPhone(String style, String main, String ext) {
     String _temp0 = intl.Intl.selectLogic(style, {
       'full': '$main (ext: $ext)',

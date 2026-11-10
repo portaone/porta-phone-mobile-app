@@ -1265,6 +1265,26 @@
       }
     }
   },
+  "favorites_Watch_empty": "No favorites yet",
+  "@favorites_Watch_empty": {
+    "description": "On a watch, the one line of an empty favorites list."
+  },
+  "favorites_Watch_emptyHint": "Star a contact to add it",
+  "@favorites_Watch_emptyHint": {
+    "description": "On a watch, the short hint under the empty favorites line: how a favorite is added."
+  },
+  "favorites_Watch_notFound": "No favorites found",
+  "@favorites_Watch_notFound": {
+    "description": "On a watch, the line in place of the favorites a search found none of."
+  },
+  "favorites_Watch_remove": "Remove from favorites",
+  "@favorites_Watch_remove": {
+    "description": "On a watch, what a long press on a favorite does, read by a screen reader."
+  },
+  "favorites_Watch_removeQuestion": "Remove from favorites?",
+  "@favorites_Watch_removeQuestion": {
+    "description": "On a watch, the question asked before a favorite is removed."
+  },
   "formatPhone": "{style, select, full{{main} (ext: {ext})} simple{{main}} only_ext{ext: {ext}} empty{No phone number} other{{main}}}",
   "@formatPhone": {
     "description": "Formats phone number based on presence of main number and extension, covering four scenarios: both, main only, extension only, and neither.",

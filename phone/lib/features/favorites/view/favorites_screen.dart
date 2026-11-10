@@ -11,6 +11,7 @@ class FavoritesScreen extends StatefulWidget {
   const FavoritesScreen({
     super.key,
     this.title,
+    required this.watchTitle,
     required this.transferEnabled,
     required this.videoEnabled,
     required this.chatsEnabled,
@@ -20,6 +21,10 @@ class FavoritesScreen extends StatefulWidget {
   });
 
   final Widget? title;
+
+  /// The section's name, heading the list on a watch.
+  final String watchTitle;
+
   final bool transferEnabled;
   final bool videoEnabled;
   final bool chatsEnabled;
@@ -42,6 +47,14 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
 
   @override
   Widget build(BuildContext context) {
+    return AdaptiveLayout(
+      handset: _handset,
+      watch: (_) =>
+          FavoritesScreenWatch(title: widget.watchTitle, cdrsEnabled: widget.cdrsEnabled, style: widget.style),
+    );
+  }
+
+  Widget _handset(BuildContext context) {
     final themeData = Theme.of(context);
     final effectiveStyle = widget.style ?? themeData.extension<FavoritesScreenStyles>()?.primary;
     final mediaQueryData = MediaQuery.of(context);

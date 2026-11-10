@@ -154,6 +154,7 @@ void main() {
                     void Function(int index)? onReorderStart,
                     void Function(int index)? onReorderEnd,
                   }) => Text(reorderMode ? 'favorites rearranging' : 'favorites'),
+                  favoritesWatchWidgetBuilder: (context, body) => const Text('favorites'),
                 ),
               ),
             ),

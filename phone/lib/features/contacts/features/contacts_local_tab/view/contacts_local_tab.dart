@@ -114,10 +114,14 @@ class _ContactsLocalTabState extends State<ContactsLocalTab> with WidgetsBinding
         final denied = state.status == ContactsLocalTabStatus.permissionFailure;
         return ContactsWatchBody(
           loading: state.status == ContactsLocalTabStatus.initial,
-          contacts: denied ? const [] : state.contacts,
+          itemCount: denied ? 0 : state.contacts.length,
+          itemBuilder: (context, index) => ContactsWatchTile(
+            key: ValueKey(state.contacts[index].id),
+            tileKey: contactsLocalContactTileKey,
+            contact: state.contacts[index],
+          ),
           searching: state.searching && !denied,
           empty: empty,
-          tileKey: contactsLocalContactTileKey,
           // A list of only the shared contacts says so, as on the phone.
           footer: state.selectionOnly && !state.searching && !denied ? const ContactsSelectionNotice() : null,
         );

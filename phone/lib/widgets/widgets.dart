@@ -60,6 +60,7 @@ export 'text_buttons_table.dart';
 export 'themed_scaffold.dart';
 export 'destination_picking_banner.dart';
 export 'unfocuser.dart';
+export 'watch_contact_avatar.dart';
 export 'watch_dial_keys.dart';
 export 'watch_logo.dart';
 export 'watch_section.dart';

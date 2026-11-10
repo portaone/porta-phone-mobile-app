@@ -1161,6 +1161,16 @@
       }
     }
   },
+  "favorites_Watch_empty": "Обраних ще немає",
+  "@favorites_Watch_empty": {},
+  "favorites_Watch_emptyHint": "Позначте контакт зірочкою",
+  "@favorites_Watch_emptyHint": {},
+  "favorites_Watch_notFound": "Обраних не знайдено",
+  "@favorites_Watch_notFound": {},
+  "favorites_Watch_remove": "Видалити з обраних",
+  "@favorites_Watch_remove": {},
+  "favorites_Watch_removeQuestion": "Видалити з обраних?",
+  "@favorites_Watch_removeQuestion": {},
   "formatPhone": "{style, select, full{{main} (розш: {ext})} simple{{main}} only_ext{розш: {ext}} empty{Не вказано} other{{main}}}",
   "@formatPhone": {
     "description": "Formats phone number based on presence of main number and extension, covering four scenarios: both, main only, extension only, and neither.",

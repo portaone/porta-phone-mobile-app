@@ -543,6 +543,11 @@ extension AppLocalizationsExtension on AppLocalizations {
       'favorites_SemanticsLabel_reorderDone' =>
         favorites_SemanticsLabel_reorderDone,
       'favorites_SemanticsLabel_reorder' => favorites_SemanticsLabel_reorder,
+      'favorites_Watch_empty' => favorites_Watch_empty,
+      'favorites_Watch_emptyHint' => favorites_Watch_emptyHint,
+      'favorites_Watch_notFound' => favorites_Watch_notFound,
+      'favorites_Watch_remove' => favorites_Watch_remove,
+      'favorites_Watch_removeQuestion' => favorites_Watch_removeQuestion,
       'locale_default' => locale_default,
       'locale_en' => locale_en,
       'locale_it' => locale_it,

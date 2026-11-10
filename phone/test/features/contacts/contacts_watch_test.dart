@@ -51,11 +51,11 @@ void main() {
     when(() => router.navigate(any())).thenAnswer((_) async {});
   });
 
-  void shown(ContactSourceType sourceType, {String search = ''}) {
+  void shown(ContactSourceType sourceType, {String search = '', bool favorites = false}) {
     whenListen(
       contactsBloc,
       const Stream<ContactsState>.empty(),
-      initialState: ContactsState(sourceType: sourceType, search: search),
+      initialState: ContactsState(sourceType: sourceType, search: search, favorites: favorites),
     );
   }
 
@@ -252,11 +252,108 @@ void main() {
           sourceTypeWidgetBuilder: source,
           favoritesWidgetBuilder: (context, {reorderMode = false, onReorderStart, onReorderEnd}) =>
               const Text('favourites', key: Key('favourites')),
+          favoritesWatchWidgetBuilder: (context, body) => const Text('favourites', key: Key('favourites')),
         ),
       ),
     );
 
     expect(find.byKey(const Key('favourites')), findsOneWidget);
+  });
+
+  Widget unifiedWithFavorites(List<FavoriteWithContact>? favorites) => app(
+    ContactsFilterScreen(
+      watchTitle: 'Contacts',
+      selections: const [ContactsSourceSelection(ContactSourceType.external), ContactsFavoritesSelection()],
+      sourceTypeWidgetBuilder: source,
+      favoritesWidgetBuilder: (context, {reorderMode = false, onReorderStart, onReorderEnd}) => const SizedBox(),
+      favoritesWatchWidgetBuilder: (context, body) =>
+          body(context, favorites, (item, index) => Text(item.favorite.number)),
+    ),
+  );
+
+  FavoriteWithContact favorite(String number) => (
+    favorite: Favorite(
+      number: number,
+      sourceType: FavoriteSourceType.pbx,
+      sourceId: number,
+      label: 'work',
+      position: 0,
+    ),
+    contact: null,
+  );
+
+  testWidgets('the favourites of a unified section are one more list of the chip, under the same row', (tester) async {
+    final handle = tester.ensureSemantics();
+    watchPresets.first.apply(tester);
+    shown(ContactSourceType.external, favorites: true);
+    external(ContactsExternalTabState(status: ContactsExternalTabStatus.success, contacts: people));
+    expect(
+      await pumpCollectingOverflows(tester, unifiedWithFavorites([favorite('555008'), favorite('555004')])),
+      isEmpty,
+    );
+
+    expect(find.text('Contacts'), findsOneWidget);
+    expect(find.bySemanticsIdentifier(contactsSearchInputId), findsOneWidget);
+    expect(find.byType(WatchSeparator), findsOneWidget);
+    expect(find.text('555008'), findsOneWidget);
+    final chip = find.bySemanticsIdentifier(contactsWatchSourceId);
+    expect(tester.getSemantics(chip).getSemanticsData().label, 'Contact source: Favorites');
+    await tapViaSemantics(tester, chip);
+
+    verify(
+      () => contactsBloc.add(const ContactsListSelectionChanged(ContactsSourceSelection(ContactSourceType.external))),
+    ).called(1);
+    handle.dispose();
+  });
+
+  testWidgets('the search narrows the favourites and says when it finds none', (tester) async {
+    watchPresets.first.apply(tester);
+    shown(ContactSourceType.external, favorites: true, search: '5004');
+    external(ContactsExternalTabState(status: ContactsExternalTabStatus.success, contacts: people));
+    await pumpCollectingOverflows(tester, unifiedWithFavorites([favorite('555008'), favorite('555004')]));
+    expect(find.text('555004'), findsOneWidget);
+    expect(find.text('555008'), findsNothing);
+
+    shown(ContactSourceType.external, favorites: true, search: 'zz');
+    await pumpCollectingOverflows(tester, unifiedWithFavorites([favorite('555008')]));
+    expect(find.text('No favorites found'), findsOneWidget);
+    // The row stays, so the query can be changed.
+    expect(find.bySemanticsIdentifier(contactsSearchInputId), findsOneWidget);
+  });
+
+  testWidgets('no favourites is the state page of an empty book, the chip under it', (tester) async {
+    watchPresets.first.apply(tester);
+    shown(ContactSourceType.external, favorites: true);
+    external(ContactsExternalTabState(status: ContactsExternalTabStatus.success, contacts: people));
+    expect(await pumpCollectingOverflows(tester, unifiedWithFavorites(const [])), isEmpty);
+
+    expect(find.text('No favorites yet'), findsOneWidget);
+    expect(find.text('Star a contact to add it'), findsOneWidget);
+    expect(find.byKey(contactsWatchSourceKey), findsOneWidget);
+  });
+
+  testWidgets('a page or dialog over the list takes the search focus, so closing it brings no keyboard', (
+    tester,
+  ) async {
+    final handle = tester.ensureSemantics();
+    watchPresets.first.apply(tester);
+    shown(ContactSourceType.external, favorites: true);
+    external(ContactsExternalTabState(status: ContactsExternalTabStatus.success, contacts: people));
+    await pumpCollectingOverflows(tester, unifiedWithFavorites([favorite('555008')]));
+
+    await tapViaSemantics(tester, find.bySemanticsIdentifier(contactsSearchInputId));
+    await tester.pump();
+    bool focused() => tester.widget<TextField>(find.byKey(contactsSearchInputKey)).focusNode!.hasFocus;
+    expect(focused(), isTrue);
+
+    final context = tester.element(find.byType(ContactsWatchToolbar));
+    unawaited(showDialog<void>(context: context, useRootNavigator: false, builder: (_) => const Text('over')));
+    await tester.pumpAndSettle();
+    Navigator.of(context).pop();
+    await tester.pumpAndSettle();
+
+    expect(focused(), isFalse);
+    handle.dispose();
   });
 
   testWidgets('one book has no chip', (tester) async {
@@ -438,6 +535,7 @@ void main() {
           ],
           sourceTypeWidgetBuilder: source,
           favoritesWidgetBuilder: (context, {reorderMode = false, onReorderStart, onReorderEnd}) => const SizedBox(),
+          favoritesWatchWidgetBuilder: (context, body) => const SizedBox(),
         ),
       ),
     );

@@ -11,26 +11,28 @@ import 'package:webtrit_phone/l10n/l10n.dart';
 import 'package:webtrit_phone/models/models.dart';
 import 'package:webtrit_phone/widgets/widgets.dart';
 
+import 'package:webtrit_phone/features/favorites/favorites.dart';
+
 import '../contacts.dart';
 
-/// The address books of a contacts screen on a watch: one at a time, as on
-/// the phone, the shown one remembered by the contacts bloc. Every book stays
-/// mounted and only one is shown, so changing the book keeps each list's
-/// place and its bloc; the shown book's list draws the whole face under the
-/// heading it gets through [ContactsWatchScope].
+/// The lists of a contacts screen on a watch - its address books and, where
+/// the section offers them, the favourites - one at a time, as on the phone,
+/// the shown one remembered by the contacts bloc. Every list stays mounted
+/// and only one is shown, so changing it keeps each list's place and its
+/// bloc; the shown list draws the whole face under the heading it gets
+/// through [ContactsWatchScope].
 ///
 /// Both contacts screens, tabbed and unified, are this on a watch; they
-/// differ in how a choice is filed and in what a section with no book left
-/// shows.
+/// differ in what they offer, how a choice is filed and which list is shown.
 class ContactsWatchSources extends StatelessWidget {
   const ContactsWatchSources({
     super.key,
     required this.style,
     required this.title,
-    required this.sources,
+    required this.selections,
+    required this.shown,
     required this.onSelected,
-    required this.bookBuilder,
-    this.noBookBuilder,
+    required this.listBuilder,
   });
 
   final ContactsScreenStyle? style;
@@ -38,16 +40,17 @@ class ContactsWatchSources extends StatelessWidget {
   /// The section's name, the one the hub shows for it.
   final String title;
 
-  final List<ContactSourceType> sources;
+  /// The lists the section offers, in their order.
+  final List<ContactsListSelection> selections;
 
-  /// Files the choice of another book.
-  final ValueChanged<ContactSourceType> onSelected;
+  /// The list shown, given what the bloc remembers; null for none.
+  final ContactsListSelection? Function(ContactsState state) shown;
 
-  /// Mounts the list of one book.
-  final Widget Function(BuildContext context, ContactSourceType sourceType) bookBuilder;
+  /// Files the choice of another list.
+  final ValueChanged<ContactsListSelection> onSelected;
 
-  /// What a section with no book left shows; nothing when null.
-  final WidgetBuilder? noBookBuilder;
+  /// Mounts one list, under the scope that heads it.
+  final Widget Function(BuildContext context, ContactsListSelection selection) listBuilder;
 
   @override
   Widget build(BuildContext context) {
@@ -56,16 +59,19 @@ class ContactsWatchSources extends StatelessWidget {
       background: style?.background,
       contentThemeOverride: style?.contentThemeOverride ?? ThemeMode.system,
       body: BlocBuilder<ContactsBloc, ContactsState>(
-        buildWhen: (previous, current) => previous.sourceType != current.sourceType,
+        buildWhen: (previous, current) => shown(previous) != shown(current),
         builder: (context, state) {
-          final selected = sources.shown(state.sourceType);
-          if (selected == null) return noBookBuilder?.call(context) ?? const SizedBox.shrink();
+          final selected = shown(state);
+          if (selected == null || !selections.contains(selected)) return const SizedBox.shrink();
           return ContactsWatchScope(
-            section: WatchSection(title: title, options: sources, selected: selected, onSelected: onSelected),
+            section: WatchSection(title: title, options: selections, selected: selected, onSelected: onSelected),
             child: IndexedStack(
-              index: sources.indexOf(selected),
+              index: selections.indexOf(selected),
               sizing: StackFit.expand,
-              children: [for (final sourceType in sources) bookBuilder(context, sourceType)],
+              // Built under the scope, so a list can read its heading.
+              children: [
+                for (final selection in selections) Builder(builder: (context) => listBuilder(context, selection)),
+              ],
             ),
           );
         },
@@ -80,9 +86,9 @@ class ContactsWatchSources extends StatelessWidget {
 class ContactsWatchScope extends InheritedWidget {
   const ContactsWatchScope({super.key, required this.section, required super.child});
 
-  final WatchSection<ContactSourceType> section;
+  final WatchSection<ContactsListSelection> section;
 
-  static WatchSection<ContactSourceType> of(BuildContext context) {
+  static WatchSection<ContactsListSelection> of(BuildContext context) {
     final scope = context.dependOnInheritedWidgetOfExactType<ContactsWatchScope>();
     assert(scope != null, 'a contacts list on a watch is mounted by a contacts screen');
     return scope!.section;
@@ -97,40 +103,45 @@ class ContactsWatchScope extends InheritedWidget {
 /// What an address book's list says when it has no rows: the message, and
 /// what can be done about it on the edge button.
 class ContactsWatchEmpty {
-  const ContactsWatchEmpty({required this.message, this.icon = Icons.person_off_outlined, this.action});
+  const ContactsWatchEmpty({required this.message, this.icon = Icons.person_off_outlined, this.hint, this.action});
 
   final String message;
+
+  /// A short second line: how the list gets filled.
+  final String? hint;
   final IconData icon;
   final WatchAction? action;
 }
 
-/// One address book's list on a watch: the section's title, the search, the
-/// chip that shows another book, and a row per contact - no tabs, no app
-/// bar. On its way it is a loading page; with nothing to list, a state page
+/// One list of a contacts section on a watch - an address book, or the
+/// favourites - : the section's title, the search, the chip that shows
+/// another list, and a row per entry - no tabs, no app bar. On its way it is a loading page; with nothing to list, a state page
 /// that keeps the chip, so another book is a tap away - and a search that
 /// finds nothing stays the list, so the query can be changed.
 class ContactsWatchBody extends StatelessWidget {
   const ContactsWatchBody({
     super.key,
     required this.loading,
-    required this.contacts,
+    required this.itemCount,
+    required this.itemBuilder,
     required this.searching,
     required this.empty,
-    this.tileKey,
     this.footer,
   });
 
   final bool loading;
-  final List<Contact> contacts;
+
+  /// How many rows [itemBuilder] builds.
+  final int itemCount;
+
+  /// Builds the row at an index: a [ContactsWatchTile], or a favourite's.
+  final IndexedWidgetBuilder itemBuilder;
 
   /// Whether a search is applied to the list.
   final bool searching;
 
   /// What the page says with no rows.
   final ContactsWatchEmpty empty;
-
-  /// The key every row carries, as on the phone.
-  final Key? tileKey;
 
   /// What closes a list with rows - a note that it is not the whole book.
   final Widget? footer;
@@ -151,7 +162,7 @@ class ContactsWatchBody extends StatelessWidget {
     // keyboard would close after the letter that emptied the list. Asked
     // before the loading page, which a book still syncing would otherwise
     // show for the same letter.
-    if (contacts.isEmpty && searching) {
+    if (itemCount == 0 && searching) {
       return WatchScrollList.builder(
         title: section.title,
         header: header,
@@ -168,12 +179,13 @@ class ContactsWatchBody extends StatelessWidget {
       );
     }
 
-    if (contacts.isEmpty) {
+    if (itemCount == 0) {
       return WatchStatePage(
         title: section.title,
         footer: [?chip],
         icon: Icon(empty.icon),
         message: empty.message,
+        hint: empty.hint,
         action: empty.action,
       );
     }
@@ -182,22 +194,53 @@ class ContactsWatchBody extends StatelessWidget {
       title: section.title,
       header: header,
       spacing: context.adaptiveMetrics.gap,
-      itemCount: contacts.length + (footer == null ? 0 : 1),
-      itemBuilder: (context, index) {
-        if (index == contacts.length) return footer!;
-        final contact = contacts[index];
-        return ContactsWatchTile(key: ValueKey(contact.id), tileKey: tileKey, contact: contact);
-      },
+      itemCount: itemCount + (footer == null ? 0 : 1),
+      itemBuilder: (context, index) => index == itemCount ? footer! : itemBuilder(context, index),
     );
   }
 }
 
-/// The address book chip of a contacts list on a watch, in place of the
-/// tabs: one pill naming the book shown; a tap moves to the next one.
+/// The favourites as one list of a contacts section on a watch, drawn like
+/// an address book: the same title, search and chip, a row per favourite,
+/// and the search narrowing them by name and number.
+class ContactsWatchFavorites extends StatelessWidget {
+  const ContactsWatchFavorites({super.key, required this.favorites, required this.tileBuilder});
+
+  /// Null while on their way.
+  final List<FavoriteWithContact>? favorites;
+
+  final Widget Function(FavoriteWithContact item, int index) tileBuilder;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    final search = context.select((ContactsBloc bloc) => bloc.state.search);
+    final shown = favorites?.where((item) => item.matches(search)).toList() ?? const <FavoriteWithContact>[];
+    final searching = search.isNotEmpty;
+
+    return ContactsWatchBody(
+      loading: favorites == null,
+      itemCount: shown.length,
+      itemBuilder: (context, index) => tileBuilder(shown[index], index),
+      searching: searching,
+      empty: searching
+          ? ContactsWatchEmpty(message: l10n.favorites_Watch_notFound)
+          : ContactsWatchEmpty(
+              message: l10n.favorites_Watch_empty,
+              hint: l10n.favorites_Watch_emptyHint,
+              icon: Icons.star_outline,
+            ),
+    );
+  }
+}
+
+/// The list chip of a contacts section on a watch, in place of the tabs or
+/// the chooser: one pill naming the address book shown, or the favourites; a
+/// tap moves to the next one.
 class ContactsWatchSourceChip extends StatelessWidget {
   const ContactsWatchSourceChip({super.key, required this.section, this.round = false});
 
-  final WatchSection<ContactSourceType> section;
+  final WatchSection<ContactsListSelection> section;
 
   /// Only the book's icon, in a round button: beside a query, which takes the
   /// rest of the row.
@@ -207,7 +250,7 @@ class ContactsWatchSourceChip extends StatelessWidget {
   Widget build(BuildContext context) {
     final label = section.selected.l10n(context);
     final name = '${context.l10n.contacts_ContactsScreen_sourceSemanticsLabel}: $label';
-    final icon = section.selected == ContactSourceType.local ? Icons.smartphone_outlined : Icons.cloud_outlined;
+    final icon = section.selected.icon;
     void showNext() => section.onSelected(section.next);
 
     if (round) {
@@ -250,7 +293,7 @@ class ContactsWatchSourceChip extends StatelessWidget {
 class ContactsWatchToolbar extends StatefulWidget {
   const ContactsWatchToolbar({super.key, required this.section});
 
-  final WatchSection<ContactSourceType> section;
+  final WatchSection<ContactsListSelection> section;
 
   @override
   State<ContactsWatchToolbar> createState() => _ContactsWatchToolbarState();
@@ -261,6 +304,16 @@ class _ContactsWatchToolbarState extends State<ContactsWatchToolbar> {
   final _focus = FocusNode();
 
   @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // A page or a dialog over the list: the field may not take focus back
+    // when it closes. The keyboard closed with Back leaves the field focused,
+    // and the route handing focus back would bring the keyboard up again over
+    // a list nobody is searching. The search button lets it again.
+    if (ModalRoute.isCurrentOf(context) == false) _focus.canRequestFocus = false;
+  }
+
+  @override
   void dispose() {
     _controller.dispose();
     _focus.dispose();
@@ -268,6 +321,7 @@ class _ContactsWatchToolbarState extends State<ContactsWatchToolbar> {
   }
 
   void _open() {
+    _focus.canRequestFocus = true;
     if (_focus.hasFocus) {
       // Focused already, the keyboard may have been closed with Back: ask
       // for it again.
@@ -449,13 +503,7 @@ class ContactsWatchTile extends StatelessWidget {
     return WatchListTile(
       key: tileKey,
       title: contact.displayTitle,
-      leading: LeadingAvatar(
-        username: contact.displayTitle,
-        thumbnail: contact.thumbnail,
-        thumbnailUrl: contact.thumbnailUrl,
-        badge: AvatarStatusBadge.maybe(registered: contact.registered),
-        radius: 12,
-      ),
+      leading: WatchContactAvatar(contact: contact),
       onTap: pick != null
           ? pick.onPressed
           : () => context.router.navigate(ContactScreenPageRoute(contactId: contact.id)),

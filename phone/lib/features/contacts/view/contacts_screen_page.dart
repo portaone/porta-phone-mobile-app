@@ -117,3 +117,12 @@ Widget contactsFavoritesWidgetBuilder(
     cdrsEnabled: cdrsEnabled ?? false,
   );
 }
+
+/// Mounts the favourites section's list on a watch, drawn by [body]: the same
+/// bloc and the same rows as the favourites section's.
+Widget contactsFavoritesWatchWidgetBuilder(BuildContext context, FavoritesWatchBodyBuilder body) {
+  final featureAccess = context.read<FeatureAccess>();
+  final cdrsEnabled = featureAccess.bottomMenuConfig.getTabEnabled<RecentsBottomMenuTab>()?.supportsCallHistory;
+
+  return FavoritesWatchList(cdrsEnabled: cdrsEnabled ?? false, body: body);
+}

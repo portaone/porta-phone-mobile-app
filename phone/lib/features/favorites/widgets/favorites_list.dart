@@ -115,11 +115,7 @@ class _FavoritesListState extends State<FavoritesList> {
   }
 
   void openCallLog({required String number}) {
-    if (widget.cdrsEnabled) {
-      context.router.navigate(NumberCdrsScreenPageRoute(number: number));
-    } else {
-      context.router.navigate(CallLogScreenPageRoute(number: number));
-    }
+    openFavoriteCallLog(context, number: number, cdrsEnabled: widget.cdrsEnabled);
   }
 
   void delete({required Favorite favorite}) {

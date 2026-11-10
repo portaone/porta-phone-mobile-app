@@ -96,7 +96,8 @@ void main() {
       // takes as bottom padding; without that here the page cannot know about
       // the bar at all.
       MediaQuery(
-        data: const MediaQueryData(padding: EdgeInsets.only(bottom: _shellBarRoom)),
+        // The view's own size, so the screen is laid out as on a phone.
+        data: MediaQueryData.fromView(tester.view).copyWith(padding: const EdgeInsets.only(bottom: _shellBarRoom)),
         child: ThemeProvider(
           settings: const ThemeSettings(),
           lightDynamic: null,
@@ -120,6 +121,7 @@ void main() {
                 child: RepositoryProvider<SmsRepository>.value(
                   value: smsRepository,
                   child: const FavoritesScreen(
+                    watchTitle: 'Favorites',
                     transferEnabled: false,
                     videoEnabled: false,
                     chatsEnabled: false,

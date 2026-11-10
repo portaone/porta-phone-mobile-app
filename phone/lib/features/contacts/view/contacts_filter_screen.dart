@@ -25,6 +25,7 @@ class ContactsFilterScreen extends StatefulWidget {
     required this.selections,
     required this.sourceTypeWidgetBuilder,
     required this.favoritesWidgetBuilder,
+    required this.favoritesWatchWidgetBuilder,
     this.title,
     required this.watchTitle,
     this.style,
@@ -45,6 +46,10 @@ class ContactsFilterScreen extends StatefulWidget {
     void Function(int index)? onReorderEnd,
   })
   favoritesWidgetBuilder;
+
+  /// Mounts the favourites section's list on a watch, drawn by [body] as one
+  /// more list of this section.
+  final Widget Function(BuildContext context, FavoritesWatchBodyBuilder body) favoritesWatchWidgetBuilder;
 
   final Widget? title;
 
@@ -89,20 +94,27 @@ class _ContactsFilterScreenState extends State<ContactsFilterScreen> {
     return AdaptiveLayout(handset: _handset, watch: _watch);
   }
 
-  /// One address book on the face at a time, a chip in place of the
-  /// chooser. The favourites are not among the chip's choices yet: their
-  /// list has no watch arrangement, and a face showing it would have no chip
-  /// to come back by.
+  /// One list on the face at a time - an address book or the favourites -
+  /// and a chip in place of the chooser.
   Widget _watch(BuildContext context) {
     return ContactsWatchSources(
       style: widget.style ?? Theme.of(context).extension<ContactsScreenStyles>()?.primary,
       title: widget.watchTitle,
-      sources: widget.selections.sourceTypes,
-      onSelected: (sourceType) => _onSelected(ContactsSourceSelection(sourceType)),
-      bookBuilder: (context, sourceType) => widget.sourceTypeWidgetBuilder(context, sourceType, markFavorites: true),
-      // A section with no address book left shows its favourites, as the
-      // phone does; their list has no watch arrangement yet.
-      noBookBuilder: (context) => widget.favoritesWidgetBuilder(context),
+      selections: widget.selections,
+      shown: _shown,
+      onSelected: _onSelected,
+      listBuilder: (context, selection) => switch (selection) {
+        ContactsSourceSelection(:final sourceType) => widget.sourceTypeWidgetBuilder(
+          context,
+          sourceType,
+          markFavorites: true,
+        ),
+        // Drawn like a book: the same search narrows them by name and number.
+        ContactsFavoritesSelection() => widget.favoritesWatchWidgetBuilder(
+          context,
+          (context, favorites, tileBuilder) => ContactsWatchFavorites(favorites: favorites, tileBuilder: tileBuilder),
+        ),
+      },
     );
   }
 

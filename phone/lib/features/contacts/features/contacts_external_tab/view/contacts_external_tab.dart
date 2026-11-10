@@ -62,7 +62,12 @@ class _ContactsExternalTabState extends State<ContactsExternalTab> {
               state.contacts.isEmpty &&
               (state.status == ContactsExternalTabStatus.initial ||
                   state.status == ContactsExternalTabStatus.inProgress),
-          contacts: state.contacts,
+          itemCount: state.contacts.length,
+          itemBuilder: (context, index) => ContactsWatchTile(
+            key: ValueKey(state.contacts[index].id),
+            tileKey: contactsExtContactTileKey,
+            contact: state.contacts[index],
+          ),
           searching: state.searching,
           empty: switch (state.status) {
             ContactsExternalTabStatus.failure => ContactsWatchEmpty(
@@ -73,7 +78,6 @@ class _ContactsExternalTabState extends State<ContactsExternalTab> {
             _ when state.searching => ContactsWatchEmpty(message: l10n.contacts_ExternalTabText_emptyOnSearching),
             _ => ContactsWatchEmpty(message: l10n.contacts_ExternalTabText_empty, action: refresh),
           },
-          tileKey: contactsExtContactTileKey,
         );
       },
     );
