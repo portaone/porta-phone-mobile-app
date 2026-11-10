@@ -119,7 +119,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String callCenter_Text_agentsOfTotal(int loggedIn, int total) {
-    return '$loggedIn agents sur $total';
+    return 'Agents connectés : $loggedIn/$total';
   }
 
   @override
@@ -135,7 +135,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String callCenter_Text_loggedInOfTotal(int loggedIn, int total) {
-    return 'En service sur $loggedIn files sur $total';
+    return 'Files actives : $loggedIn/$total';
   }
 
   @override
@@ -3693,7 +3693,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get voicemail_Cache_description =>
-      'L\'écoute d\'un message vocal conserve une copie locale de l\'audio pour une réécriture immédiate. Vider le cache libère de l\'espace ; l\'audio est téléchargé à nouveau à la prochaine lecture.';
+      'L\'écoute d\'un message vocal conserve une copie locale de l\'audio pour une réécoute immédiate. Vider le cache libère de l\'espace ; l\'audio est téléchargé à nouveau à la prochaine lecture.';
 
   @override
   String get voicemail_Cache_title => 'Audio des messages vocaux';
