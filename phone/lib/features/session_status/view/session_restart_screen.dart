@@ -161,8 +161,44 @@ class _SessionRestartScreenState extends State<SessionRestartScreen> {
     unawaited(context.router.replaceAll([const MainShellRoute()]));
   }
 
+  /// What the screen is waiting for: the previous session to let go, or the
+  /// system info of a start that has none stored.
+  String _progressText(AppLocalizations l10n) =>
+      widget.sessionEnded != null ? l10n.session_Restart_progressText : l10n.session_Restart_loadingText;
+
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context) => AdaptiveLayout(handset: _handset, watch: _watch);
+
+  /// On its way, the spinner and the line saying why; unreachable, the reason
+  /// with Try again on the edge and Log out under it.
+  Widget _watch(BuildContext context) {
+    final l10n = context.l10n;
+    return Scaffold(
+      body: _unreachable
+          ? WatchStatePage(
+              icon: const Icon(Icons.cloud_off),
+              message: l10n.session_Restart_unreachableText,
+              action: WatchAction(
+                label: l10n.session_Restart_retryButton,
+                identifier: sessionRestartRetryButtonId,
+                buttonKey: sessionRestartRetryButtonKey,
+                onPressed: _retry,
+              ),
+              footer: [
+                WatchListTile(
+                  key: sessionRestartLogoutButtonKey,
+                  identifier: sessionRestartLogoutButtonId,
+                  leading: Icon(Icons.logout, color: Theme.of(context).colorScheme.error),
+                  title: l10n.session_Restart_logoutButton,
+                  onTap: _logOut,
+                ),
+              ],
+            )
+          : WatchStatePage.loading(progressLabel: l10n.common_SemanticsLabel_loading, hint: _progressText(l10n)),
+    );
+  }
+
+  Widget _handset(BuildContext context) {
     final l10n = context.l10n;
     return Scaffold(
       body: Center(
@@ -195,12 +231,7 @@ class _SessionRestartScreenState extends State<SessionRestartScreen> {
                 : [
                     const CircularProgressIndicator(),
                     const SizedBox(height: 16),
-                    Text(
-                      widget.sessionEnded != null
-                          ? l10n.session_Restart_progressText
-                          : l10n.session_Restart_loadingText,
-                      textAlign: TextAlign.center,
-                    ),
+                    Text(_progressText(l10n), textAlign: TextAlign.center),
                   ],
           ),
         ),

@@ -16,7 +16,22 @@ class ErrorDetailsScreen extends StatelessWidget {
   final List<ErrorFieldModel> fields;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context) => AdaptiveLayout(handset: _handset, watch: _watch);
+
+  /// The error's title and its fields as label-over-value rows that scroll;
+  /// sharing them and the log console stay on the phone.
+  Widget _watch(BuildContext context) {
+    return Scaffold(
+      body: WatchScrollList.builder(
+        title: title,
+        spacing: context.adaptiveMetrics.gap,
+        itemCount: fields.length,
+        itemBuilder: (context, index) => WatchInfoRow(label: fields[index].title, value: fields[index].details),
+      ),
+    );
+  }
+
+  Widget _handset(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: Text(title),
