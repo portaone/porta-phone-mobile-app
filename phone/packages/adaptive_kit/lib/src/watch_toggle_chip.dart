@@ -14,6 +14,7 @@ class WatchToggleChip extends StatelessWidget {
     required this.value,
     required this.onChanged,
     this.subtitle,
+    this.subtitleSemanticsLabel,
     this.identifier,
     this.toggleKey,
   });
@@ -23,6 +24,10 @@ class WatchToggleChip extends StatelessWidget {
   /// A line under the label: what the state means ("Account can receive
   /// calls") or why it cannot change now.
   final String? subtitle;
+
+  /// What a screen reader says for [subtitle] when it should not read it as
+  /// drawn: parts joined by a dot read with a pause instead.
+  final String? subtitleSemanticsLabel;
 
   final bool value;
   final ValueChanged<bool>? onChanged;
@@ -61,6 +66,7 @@ class WatchToggleChip extends StatelessWidget {
                       if (subtitle case final subtitle?)
                         Text(
                           subtitle,
+                          semanticsLabel: subtitleSemanticsLabel,
                           maxLines: 2,
                           overflow: TextOverflow.ellipsis,
                           style: themeData.textTheme.labelSmall?.copyWith(
@@ -91,7 +97,9 @@ class WatchToggleChip extends StatelessWidget {
       ),
     );
     // One node: the label, the on/off state and the tap.
-    final node = Semantics(toggled: value, child: chip);
+    // Offering nothing - a change on its way, a setting the brand fixes - it
+    // says it is disabled rather than reading as a live toggle.
+    final node = Semantics(toggled: value, enabled: onChanged == null ? false : null, child: chip);
     final identifier = this.identifier;
     return identifier != null ? SemanticAction(identifier: identifier, child: node) : MergeSemantics(child: node);
   }

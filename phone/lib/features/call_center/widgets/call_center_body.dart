@@ -2,10 +2,10 @@ import 'package:material_ui/material_ui.dart';
 
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-import 'package:webtrit_phone/extensions/extensions.dart';
 import 'package:webtrit_phone/l10n/l10n.dart';
 
 import '../bloc/bloc.dart';
+import 'call_queue_change.dart';
 import 'call_queue_tile.dart';
 import 'queue_master_tile.dart';
 
@@ -68,7 +68,7 @@ class CallCenterBody extends StatelessWidget {
                 // this control refuse too, and a switch that looks live while
                 // it cannot act is worse than one that looks busy.
                 pending: state.isBusy,
-                onChanged: (value) => _onAllChanged(context, value),
+                onChanged: (value) => changeAllQueuesLoggedIn(context, loggedIn: value),
               );
             }
 
@@ -76,37 +76,11 @@ class CallCenterBody extends StatelessWidget {
             return CallQueueTile(
               queue: queue,
               pending: state.isPending(queue.id),
-              onChanged: (value) => _onQueueChanged(context, queue.id, value),
+              onChanged: (value) => changeQueueLoggedIn(context, queue.id, loggedIn: value),
             );
           },
         );
       },
     );
-  }
-
-  Future<void> _onQueueChanged(BuildContext context, String queueId, bool loggedIn) async {
-    final outcome = await context.read<CallQueuesCubit>().setLoggedIn(queueId, loggedIn: loggedIn);
-    if (context.mounted) _report(context, outcome);
-  }
-
-  // A mixed list logs into every queue rather than out of it: the control
-  // reads as off there, and starting a shift is the action worth reaching by
-  // accident.
-  Future<void> _onAllChanged(BuildContext context, bool loggedIn) async {
-    final outcome = await context.read<CallQueuesCubit>().setAllLoggedIn(loggedIn: loggedIn);
-    if (context.mounted) _report(context, outcome);
-  }
-
-  void _report(BuildContext context, CallQueueWriteOutcome outcome) {
-    final l10n = context.l10n;
-
-    final message = switch (outcome) {
-      CallQueueWriteOutcome.ok => null,
-      CallQueueWriteOutcome.queueGone => l10n.callCenter_Snackbar_queueGone,
-      CallQueueWriteOutcome.readOnly => l10n.callCenter_Snackbar_readOnly,
-      CallQueueWriteOutcome.failed => l10n.callCenter_Snackbar_changeFailed,
-    };
-
-    if (message != null) context.showErrorSnackBar(message);
   }
 }
