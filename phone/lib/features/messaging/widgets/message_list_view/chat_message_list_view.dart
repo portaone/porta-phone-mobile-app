@@ -1,5 +1,3 @@
-import 'dart:ui';
-
 import 'package:flutter/foundation.dart';
 import 'package:material_ui/material_ui.dart';
 
@@ -16,6 +14,7 @@ import 'package:webtrit_phone/models/models.dart';
 import 'package:webtrit_phone/widgets/widgets.dart';
 import 'package:webtrit_phone/app/constants.dart';
 
+import 'conversation_layout.dart';
 import 'exchange_bar.dart';
 import 'message_text_field.dart';
 import 'typing_indicator.dart';
@@ -193,43 +192,7 @@ class _ChatMessageListViewState extends State<ChatMessageListView> {
 
   @override
   Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
-
-    return Stack(
-      children: [
-        list(),
-        Positioned(top: MediaQuery.of(context).padding.top, left: 0, right: 0, child: const MessagingStateBar()),
-        Positioned(
-          bottom: 0,
-          left: 0,
-          right: 0,
-          child: Column(
-            children: [
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                alignment: Alignment.centerRight,
-                child: ScrollToBottomButton(scrolledAway, scrollToBottom),
-              ),
-              const SizedBox(height: 24),
-              ClipRRect(
-                child: BackdropFilter(
-                  filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-                  child: Column(
-                    children: [
-                      field(),
-                      Container(
-                        height: MediaQuery.of(context).padding.bottom,
-                        color: colorScheme.surface.withAlpha(200),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ],
-    );
+    return ConversationLayout(list: list(), bar: field(), scrolledAway: scrolledAway, onScrollToBottom: scrollToBottom);
   }
 
   Widget list() {
@@ -250,10 +213,9 @@ class _ChatMessageListViewState extends State<ChatMessageListView> {
         // TODO: migrate to scrollCacheExtent (deprecated after Flutter 3.41.0-0.0.pre)
         // ignore: deprecated_member_use
         cacheExtent: 500,
-        padding: EdgeInsets.only(
-          top: MediaQuery.of(context).padding.top + 24,
-          bottom: MediaQuery.of(context).padding.bottom + 64,
-        ),
+        // No padding of its own: a list without one keeps clear of what its
+        // MediaQuery says is covered, and ConversationLayout puts the app bar
+        // and the bar a message is written in there, at the height each has.
         children: [
           TypingIndicator(userId: widget.userId, typingUsers: context.watch<ChatTypingCubit>().state),
           ...viewEntries.map((entry) {
@@ -311,6 +273,8 @@ class _ChatMessageListViewState extends State<ChatMessageListView> {
             return const SizedBox();
           }),
           HistoryFetchIndicator(widget.fetchingHistory),
+          // The oldest message does not touch the app bar.
+          const SizedBox(height: 24),
         ],
       ),
     );
