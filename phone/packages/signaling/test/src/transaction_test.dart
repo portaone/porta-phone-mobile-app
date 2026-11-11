@@ -58,6 +58,23 @@ void main() {
     });
   });
 
+  group('Transaction.timeOutNow', () {
+    test('ends the wait with the timeout exception before the timeout', () {
+      final tx = Transaction(signalingClientId: clientId, timeoutDuration: timeout);
+      tx.timeOutNow();
+
+      expect(tx.future, throwsA(isA<WebtritSignalingTransactionTimeoutException>()));
+    });
+
+    test('does nothing to a transaction already answered', () async {
+      final tx = Transaction(signalingClientId: clientId, timeoutDuration: timeout);
+      tx.handleResponse({'response': 'ack'});
+      tx.timeOutNow();
+
+      expect(await tx.future, {'response': 'ack'});
+    });
+  });
+
   group('Transaction.terminateByDisconnect', () {
     test('completes future with disconnect error', () {
       final tx = Transaction(signalingClientId: clientId, timeoutDuration: timeout);

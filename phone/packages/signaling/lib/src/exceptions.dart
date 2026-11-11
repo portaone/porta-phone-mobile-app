@@ -65,6 +65,13 @@ class WebtritSignalingKeepaliveTransactionTimeoutException extends WebtritSignal
   const WebtritSignalingKeepaliveTransactionTimeoutException(super.id, super.transactionId);
 }
 
+/// The keepalive was answered on a connection whose state handshake never
+/// came. The server sends the state first, so such a connection lost frames
+/// on the way and is given up as one whose keepalive got no answer.
+class WebtritSignalingKeepaliveWithoutStateException extends WebtritSignalingKeepaliveTransactionTimeoutException {
+  const WebtritSignalingKeepaliveWithoutStateException(super.id, super.transactionId);
+}
+
 abstract class WebtritSignalingTransactionTerminateException extends WebtritSignalingTransactionException {
   const WebtritSignalingTransactionTerminateException(super.id, super.transactionId);
 }

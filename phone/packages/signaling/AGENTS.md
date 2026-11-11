@@ -122,6 +122,17 @@ status, `hold_request.dart`); do not copy them.
   scheduling replaces it.
   Timing out raises `WebtritSignalingKeepaliveTransactionTimeoutException` through `onError`; a
   write to a closed socket (`WebtritSignalingBadStateException`) just ends the loop.
+- Silence: `ReceiveWatchdog` ([receive_watchdog.dart](lib/src/receive_watchdog.dart)) is started
+  by `listen` and restarted by every message received, never by what is sent - a request leaves a
+  dead connection as well as a live one, and `execute` puts the keepalive off. Nothing received
+  for the keepalive interval makes the client send its keepalive at once (unless one is waiting
+  for its answer), so a connection is asked within the interval of its last message whatever is
+  sent on it, and from `listen` on, before its state has come.
+- A keepalive that gets no answer gives the connection up as `disconnect` does: both timers
+  stop, the subscription is cancelled (no `onDisconnect`, no more messages, `execute` throws
+  `WebtritSignalingDisconnectedException`), the sink is closed, and the requests still waiting
+  time out at once (`Transaction.timeOutNow`, the exception they would have got at their own
+  time). Then `onError` gets the keepalive timeout, once.
 - `disconnect([code, reason])` stops the timer, terminates open transactions with
   `WebtritSignalingTransactionTerminateByDisconnectException`, cancels the subscription (so
   `onDisconnect` is not called) and closes the sink.
@@ -143,6 +154,7 @@ All extend `WebtritSignalingException`:
 - `WebtritSignalingTransactionException` (abstract)
   - `WebtritSignalingTransactionTimeoutException`
     - `WebtritSignalingKeepaliveTransactionTimeoutException`
+      - `WebtritSignalingKeepaliveWithoutStateException` - the keepalive answered before the state
   - `WebtritSignalingTransactionTerminateException` (abstract)
     - `WebtritSignalingTransactionTerminateByDisconnectException`
 
