@@ -2113,6 +2113,11 @@ class AppLocalizationsFr extends AppLocalizations {
   String get messaging_Watch_statusDisconnected => 'Discussions hors ligne';
 
   @override
+  String messaging_Watch_nextMembers(int count) {
+    return 'Suivant ($count)';
+  }
+
+  @override
   String get messaging_Watch_notFound => 'Aucune conversation trouvée';
 
   @override

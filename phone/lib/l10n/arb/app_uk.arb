@@ -1872,6 +1872,8 @@
   "@messaging_Watch_statusConnecting": {},
   "messaging_Watch_statusDisconnected": "Чати не підключені",
   "@messaging_Watch_statusDisconnected": {},
+  "messaging_Watch_nextMembers": "Далі ({count})",
+  "@messaging_Watch_nextMembers": {},
   "messaging_Watch_notFound": "Розмов не знайдено",
   "@messaging_Watch_notFound": {},
   "messaging_Watch_newChat": "Новий чат",

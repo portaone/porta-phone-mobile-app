@@ -117,11 +117,19 @@ class _ConversationsScreenState extends State<ConversationsScreen> with SingleTi
     }
   }
 
+  /// Opens a conversation builder: the phone's sheet, or on a watch a page of
+  /// its own - a face has no room for a sheet over the list.
+  void _openBuilder(WidgetBuilder builder) {
+    if (context.formFactor == FormFactor.watch) {
+      unawaited(Navigator.of(context).push(MaterialPageRoute<void>(builder: builder)));
+    } else {
+      context.showModalBottomSheet(useSafeArea: true, isScrollControlled: true, builder: builder);
+    }
+  }
+
   Future<void> onNewChatConversation() async {
-    context.showModalBottomSheet(
-      useSafeArea: true,
-      isScrollControlled: true,
-      builder: (context) => BlocProvider(
+    _openBuilder(
+      (context) => BlocProvider(
         create: (context) => ChatConversationBuilderCubit(
           messagingBloc.state.client,
           chatsRepository,
@@ -143,16 +151,17 @@ class _ConversationsScreenState extends State<ConversationsScreen> with SingleTi
             notificationsBloc.add(NotificationsSubmitted(n));
           },
         ),
-        child: const ChatConversationBuilderView(),
+        child: AdaptiveLayout(
+          handset: (_) => const ChatConversationBuilderView(),
+          watch: (_) => const ChatConversationBuilderWatch(),
+        ),
       ),
     );
   }
 
   Future<void> onNewSmsConversation() async {
-    context.showModalBottomSheet(
-      useSafeArea: true,
-      isScrollControlled: true,
-      builder: (context) => BlocProvider(
+    _openBuilder(
+      (context) => BlocProvider(
         create: (context) => SmsConversationBuilderCubit(
           smsRepository,
           contactsRepository,
@@ -162,7 +171,10 @@ class _ConversationsScreenState extends State<ConversationsScreen> with SingleTi
             openSmsDialog(userNumber, recipientNumber, recipientId);
           },
         ),
-        child: const SmsConversationBuilderView(),
+        child: AdaptiveLayout(
+          handset: (_) => const SmsConversationBuilderView(),
+          watch: (_) => const SmsConversationBuilderWatch(),
+        ),
       ),
     );
   }

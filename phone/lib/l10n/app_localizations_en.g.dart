@@ -2087,6 +2087,11 @@ class AppLocalizationsEn extends AppLocalizations {
   String get messaging_Watch_statusDisconnected => 'Chats are offline';
 
   @override
+  String messaging_Watch_nextMembers(int count) {
+    return 'Next ($count)';
+  }
+
+  @override
   String get messaging_Watch_notFound => 'No conversations found';
 
   @override

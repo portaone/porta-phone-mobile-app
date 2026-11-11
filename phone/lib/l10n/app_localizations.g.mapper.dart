@@ -2435,6 +2435,12 @@ extension AppLocalizationsExtension on AppLocalizations {
           'messaging_NotificationMute_mutedUntil requires 1 arguments',
         ),
       },
+      'messaging_Watch_nextMembers' => switch (args) {
+        [final int count] => messaging_Watch_nextMembers(count),
+        _ => throw ArgumentError(
+          'messaging_Watch_nextMembers requires 1 arguments',
+        ),
+      },
       'notifications_errorSnackBar_signalingDisconnectWithCodeName' =>
         switch (args) {
           [final String codeName] =>

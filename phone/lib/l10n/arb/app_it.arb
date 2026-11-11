@@ -1872,6 +1872,8 @@
   "@messaging_Watch_statusConnecting": {},
   "messaging_Watch_statusDisconnected": "Chat non connesse",
   "@messaging_Watch_statusDisconnected": {},
+  "messaging_Watch_nextMembers": "Avanti ({count})",
+  "@messaging_Watch_nextMembers": {},
   "messaging_Watch_notFound": "Nessuna conversazione trovata",
   "@messaging_Watch_notFound": {},
   "messaging_Watch_newChat": "Nuova chat",

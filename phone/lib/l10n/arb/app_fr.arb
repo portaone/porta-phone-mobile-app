@@ -2014,6 +2014,8 @@
   "@messaging_Watch_statusConnecting": {},
   "messaging_Watch_statusDisconnected": "Discussions hors ligne",
   "@messaging_Watch_statusDisconnected": {},
+  "messaging_Watch_nextMembers": "Suivant ({count})",
+  "@messaging_Watch_nextMembers": {},
   "messaging_Watch_notFound": "Aucune conversation trouvée",
   "@messaging_Watch_notFound": {},
   "messaging_Watch_newChat": "Nouveau chat",

@@ -2075,6 +2075,11 @@ class AppLocalizationsTh extends AppLocalizations {
   String get messaging_Watch_statusDisconnected => 'แชทออฟไลน์';
 
   @override
+  String messaging_Watch_nextMembers(int count) {
+    return 'ถัดไป ($count)';
+  }
+
+  @override
   String get messaging_Watch_notFound => 'ไม่พบการสนทนา';
 
   @override

@@ -2058,6 +2058,15 @@
   "@messaging_Watch_statusDisconnected": {
     "description": "Watch: the line under the chats when the chat connection is down"
   },
+  "messaging_Watch_nextMembers": "Next ({count})",
+  "@messaging_Watch_nextMembers": {
+    "description": "Watch: the edge button that goes on from picking a group's members, with how many are picked",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "messaging_Watch_notFound": "No conversations found",
   "@messaging_Watch_notFound": {
     "description": "On a watch, the line in place of the conversations a search found none of."
