@@ -10,12 +10,18 @@ class HelpScreen extends StatelessWidget {
   final String userAgent;
 
   @override
-  Widget build(BuildContext context) {
-    final widget = WebViewContainer(
-      title: Text(context.l10n.settings_ListViewTileTitle_help),
-      initialUri: initialUri,
-      userAgent: userAgent,
-    );
-    return widget;
-  }
+  Widget build(BuildContext context) => AdaptiveLayout(handset: _handset, watch: _watch);
+
+  /// A watch has no web view: Help opens on the paired phone, in the app's
+  /// language as the phone's web view would open it.
+  Widget _watch(BuildContext context) => WatchOpenOnPhonePage(
+    title: context.l10n.settings_ListViewTileTitle_help,
+    uri: WebViewContainer.withLocaleName(initialUri, context.l10n.localeName),
+  );
+
+  Widget _handset(BuildContext context) => WebViewContainer(
+    title: Text(context.l10n.settings_ListViewTileTitle_help),
+    initialUri: initialUri,
+    userAgent: userAgent,
+  );
 }
