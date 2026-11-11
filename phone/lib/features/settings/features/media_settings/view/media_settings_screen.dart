@@ -9,6 +9,7 @@ import 'package:webtrit_phone/models/encoding_settings.dart';
 import 'package:webtrit_phone/widgets/widgets.dart';
 
 import 'components/components.dart';
+import '../../../widgets/settings_watch_choice.dart';
 import '../media_settings.dart';
 
 class MediaSettingsScreen extends StatefulWidget {
@@ -24,7 +25,51 @@ class _MediaSettingsScreenState extends State<MediaSettingsScreen> {
   late final cubit = context.read<MediaSettingsCubit>();
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context) => AdaptiveLayout(handset: _handset, watch: _watch);
+
+  /// The quality preset as a choice, the page staying where it is; "Custom"
+  /// among them only while it is in force, its sliders being the phone's. The
+  /// speaker toggle where the deployment offers it, Reset to default after the
+  /// watch confirm, and a line naming what stays on the phone.
+  Widget _watch(BuildContext context) {
+    final l10n = context.l10n;
+    return BlocBuilder<MediaSettingsCubit, MediaSettingsState>(
+      builder: (context, state) => SettingsWatchChoicePage<EncodingPreset?>(
+        title: l10n.settings_ListViewTileTitle_mediaSettings,
+        closeOnChoice: false,
+        options: [
+          for (final preset in <EncodingPreset?>[null, ...EncodingPreset.values])
+            if (preset != EncodingPreset.custom || state.encodingPreset == EncodingPreset.custom)
+              SettingsWatchOption(value: preset, label: encodingPresetLabel(context, preset)),
+        ],
+        selected: state.encodingPreset,
+        onChosen: cubit.setEncodingPreset,
+        footer: [
+          if (state.speakerOnMinimizeConfigurable)
+            WatchToggleChip(
+              label: l10n.settings_speakerOnMinimize_switch,
+              value: state.speakerOnMinimize,
+              onChanged: cubit.setSpeakerOnMinimize,
+            ),
+          WatchListTile(
+            leading: const Icon(Icons.settings_backup_restore),
+            title: l10n.settings_encoding_AppBar_reset_tooltip,
+            onTap: () => _onReset(context),
+          ),
+          WatchListNote(l10n.settings_media_Watch_onPhone),
+        ],
+      ),
+    );
+  }
+
+  /// Asked first on a watch: the reset clears settings the watch cannot show
+  /// or put back.
+  Future<void> _onReset(BuildContext context) async {
+    final reset = await ConfirmDialog.show(context, title: context.l10n.settings_media_Watch_resetQuestion);
+    if (reset == true) cubit.reset();
+  }
+
+  Widget _handset(BuildContext context) {
     final theme = Theme.of(context);
     final l10n = context.l10n;
 

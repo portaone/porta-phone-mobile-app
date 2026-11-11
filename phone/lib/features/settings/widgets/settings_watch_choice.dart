@@ -35,7 +35,9 @@ class SettingsWatchOption<T> {
 ///
 /// [enabled] false shows the rows dimmed, offering nothing, where the brand
 /// fixes the setting. [header] goes over the rows (a note such as "Custom"),
-/// [footer] after them (what stays on the phone).
+/// [footer] after them (what stays on the phone). A page that holds more than
+/// the choice - a toggle, an action after it - sets [closeOnChoice] false and
+/// stays where it is.
 class SettingsWatchChoicePage<T> extends StatelessWidget {
   const SettingsWatchChoicePage({
     super.key,
@@ -46,6 +48,7 @@ class SettingsWatchChoicePage<T> extends StatelessWidget {
     this.enabled = true,
     this.header = const [],
     this.footer = const [],
+    this.closeOnChoice = true,
   });
 
   final String title;
@@ -58,6 +61,7 @@ class SettingsWatchChoicePage<T> extends StatelessWidget {
   final bool enabled;
   final List<Widget> header;
   final List<Widget> footer;
+  final bool closeOnChoice;
 
   @override
   Widget build(BuildContext context) {
@@ -89,6 +93,6 @@ class SettingsWatchChoicePage<T> extends StatelessWidget {
     // re-fire for its checked value: some settings restart a service when
     // they are set, even to the same value.
     if (value != selected) onChosen(value);
-    Navigator.of(context).maybePop();
+    if (closeOnChoice) Navigator.of(context).maybePop();
   }
 }

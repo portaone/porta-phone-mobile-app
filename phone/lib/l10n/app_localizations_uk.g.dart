@@ -3028,6 +3028,12 @@ class AppLocalizationsUk extends AppLocalizations {
       'Чи переходить аудіодзвінок на гучномовець, коли ви залишаєте екран дзвінка, і назад на розмовний динамік, коли повертаєтесь.';
 
   @override
+  String get settings_media_Watch_onPhone => 'Власна якість, обробка звуку, відео, ICE і TURN: на телефоні';
+
+  @override
+  String get settings_media_Watch_resetQuestion => 'Скинути всі налаштування медіа до типових?';
+
+  @override
   String get settings_speakerOnMinimize_switch => 'Вмикати гучномовець при виході з екрана дзвінка';
 
   @override
@@ -3436,6 +3442,9 @@ class AppLocalizationsUk extends AppLocalizations {
   @override
   String get settings_network_fallbackCalls_description =>
       'Якщо push-сповіщення про виклик не доходять, застосунок отримає спеціальне SMS та покаже екран вхідного дзвінка.';
+
+  @override
+  String get settings_network_Watch_howTheyDiffer => 'Чим вони відрізняються';
 
   @override
   String get settings_network_fallbackCalls_title => 'Резервні вхідні дзвінки';

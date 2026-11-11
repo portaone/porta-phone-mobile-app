@@ -2589,6 +2589,10 @@
   "@settings_speakerOnMinimize_Section_title": {},
   "settings_speakerOnMinimize_Section_tooltip": "Se una chiamata audio passa al vivavoce quando si lascia la schermata della chiamata e torna all'auricolare quando vi si rientra.",
   "@settings_speakerOnMinimize_Section_tooltip": {},
+  "settings_media_Watch_onPhone": "Qualità personalizzata, elaborazione audio, video, ICE e TURN: sul telefono",
+  "@settings_media_Watch_onPhone": {},
+  "settings_media_Watch_resetQuestion": "Ripristinare tutte le impostazioni multimediali predefinite?",
+  "@settings_media_Watch_resetQuestion": {},
   "settings_speakerOnMinimize_switch": "Attiva il vivavoce quando si lascia la schermata della chiamata",
   "@settings_speakerOnMinimize_switch": {},
   "settings_Watch_onPhone": "{setting}: sul telefono",
@@ -2849,6 +2853,8 @@
   "@settings_network_fallbackCalls_description": {
     "description": "Tooltip description for fallback SMS-based call trigger"
   },
+  "settings_network_Watch_howTheyDiffer": "Come si differenziano",
+  "@settings_network_Watch_howTheyDiffer": {},
   "settings_network_fallbackCalls_title": "Chiamate in entrata di riserva",
   "@settings_network_fallbackCalls_title": {
     "description": "Title for fallback incoming calls section"

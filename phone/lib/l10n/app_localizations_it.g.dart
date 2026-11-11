@@ -3004,6 +3004,13 @@ class AppLocalizationsIt extends AppLocalizations {
       'Se una chiamata audio passa al vivavoce quando si lascia la schermata della chiamata e torna all\'auricolare quando vi si rientra.';
 
   @override
+  String get settings_media_Watch_onPhone =>
+      'Qualità personalizzata, elaborazione audio, video, ICE e TURN: sul telefono';
+
+  @override
+  String get settings_media_Watch_resetQuestion => 'Ripristinare tutte le impostazioni multimediali predefinite?';
+
+  @override
   String get settings_speakerOnMinimize_switch => 'Attiva il vivavoce quando si lascia la schermata della chiamata';
 
   @override
@@ -3413,6 +3420,9 @@ class AppLocalizationsIt extends AppLocalizations {
   @override
   String get settings_network_fallbackCalls_description =>
       'Se le notifiche push relative alle chiamate non arrivano, l\'applicazione riceverà un SMS speciale e mostrerà la schermata delle chiamate in arrivo.';
+
+  @override
+  String get settings_network_Watch_howTheyDiffer => 'Come si differenziano';
 
   @override
   String get settings_network_fallbackCalls_title => 'Chiamate in entrata di riserva';

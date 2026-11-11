@@ -20,12 +20,22 @@ class ConfirmDialog extends StatelessWidget {
   // screen is hosted inside another navigator (the configurator preview), where the
   // root navigator belongs to the host and the dialog would otherwise escape its
   // surface and lose the phone's Localizations.
-  static Future<bool?> show(BuildContext context, {required String title, String? content, ConfirmDialogStyle? style}) {
+  ///
+  /// [confirmLabel] names the yes where a plain "Yes" would not say what it
+  /// does: a statement rather than a question, such as a warning with a way
+  /// to the settings that lift it.
+  static Future<bool?> show(
+    BuildContext context, {
+    required String title,
+    String? content,
+    String? confirmLabel,
+    ConfirmDialogStyle? style,
+  }) {
     return showDialog<bool?>(
       context: context,
       useRootNavigator: false,
       builder: (context) {
-        return ConfirmDialog._(title: title, content: content, style: style);
+        return ConfirmDialog._(title: title, content: content, confirmLabel: confirmLabel, style: style);
       },
     );
   }
@@ -45,7 +55,13 @@ class ConfirmDialog extends StatelessWidget {
     );
   }
 
-  const ConfirmDialog._({this.dangerous = false, required this.title, this.content, required this.style});
+  const ConfirmDialog._({
+    this.dangerous = false,
+    required this.title,
+    this.content,
+    this.confirmLabel,
+    required this.style,
+  });
 
   final bool dangerous;
   final String title;
@@ -57,6 +73,9 @@ class ConfirmDialog extends StatelessWidget {
   /// type reads worse than one without.
   final String? content;
 
+  /// The yes, when "Yes" would not say what it does.
+  final String? confirmLabel;
+
   final ConfirmDialogStyle? style;
 
   @override
@@ -64,8 +83,20 @@ class ConfirmDialog extends StatelessWidget {
     final localStyle = ConfirmDialogStyle.merge(style, Theme.of(context).extension<ConfirmDialogStyles>()?.primary);
 
     return AdaptiveLayout(
-      handset: (context) => _ConfirmCard(title: title, content: content, dangerous: dangerous, style: localStyle),
-      watch: (context) => _ConfirmFace(title: title, content: content, dangerous: dangerous, style: localStyle),
+      handset: (context) => _ConfirmCard(
+        title: title,
+        content: content,
+        confirmLabel: confirmLabel,
+        dangerous: dangerous,
+        style: localStyle,
+      ),
+      watch: (context) => _ConfirmFace(
+        title: title,
+        content: content,
+        confirmLabel: confirmLabel,
+        dangerous: dangerous,
+        style: localStyle,
+      ),
     );
   }
 }
@@ -73,10 +104,17 @@ class ConfirmDialog extends StatelessWidget {
 /// A watch has no room around a card: the question takes the whole face,
 /// answered by two round buttons.
 class _ConfirmFace extends StatelessWidget {
-  const _ConfirmFace({required this.title, required this.content, required this.dangerous, required this.style});
+  const _ConfirmFace({
+    required this.title,
+    required this.content,
+    required this.confirmLabel,
+    required this.dangerous,
+    required this.style,
+  });
 
   final String title;
   final String? content;
+  final String? confirmLabel;
   final bool dangerous;
   final ConfirmDialogStyle style;
 
@@ -113,7 +151,7 @@ class _ConfirmFace extends StatelessWidget {
           questionColor: (style.titleTextStyle ?? dialogTheme.titleTextStyle)?.color,
           detailColor: (style.contentTextStyle ?? dialogTheme.contentTextStyle)?.color,
           cancelLabel: context.l10n.alertDialogActions_no,
-          confirmLabel: context.l10n.alertDialogActions_yes,
+          confirmLabel: confirmLabel ?? context.l10n.alertDialogActions_yes,
           cancelIdentifier: confirmDialogNoButtonId,
           confirmIdentifier: confirmDialogYesButtonId,
           cancelKey: confirmDialogNoButtonKey,
@@ -127,10 +165,17 @@ class _ConfirmFace extends StatelessWidget {
 }
 
 class _ConfirmCard extends StatelessWidget {
-  const _ConfirmCard({required this.title, required this.content, required this.dangerous, required this.style});
+  const _ConfirmCard({
+    required this.title,
+    required this.content,
+    required this.confirmLabel,
+    required this.dangerous,
+    required this.style,
+  });
 
   final String title;
   final String? content;
+  final String? confirmLabel;
   final bool dangerous;
   final ConfirmDialogStyle style;
 
@@ -162,7 +207,7 @@ class _ConfirmCard extends StatelessWidget {
             key: confirmDialogYesButtonKey,
             onPressed: () => Navigator.of(context).pop(true),
             style: dangerous ? style.activeButtonStyle2 : style.defaultButtonStyle,
-            child: Text(context.l10n.alertDialogActions_yes),
+            child: Text(confirmLabel ?? context.l10n.alertDialogActions_yes),
           ),
         ),
       ],

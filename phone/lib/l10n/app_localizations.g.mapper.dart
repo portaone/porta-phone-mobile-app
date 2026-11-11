@@ -1279,6 +1279,9 @@ extension AppLocalizationsExtension on AppLocalizations {
         settings_speakerOnMinimize_Section_title,
       'settings_speakerOnMinimize_Section_tooltip' =>
         settings_speakerOnMinimize_Section_tooltip,
+      'settings_media_Watch_onPhone' => settings_media_Watch_onPhone,
+      'settings_media_Watch_resetQuestion' =>
+        settings_media_Watch_resetQuestion,
       'settings_speakerOnMinimize_switch' => settings_speakerOnMinimize_switch,
       'settings_callerId_cancel_button' => settings_callerId_cancel_button,
       'settings_callerId_defaultTitle' => settings_callerId_defaultTitle,
@@ -1523,6 +1526,8 @@ extension AppLocalizationsExtension on AppLocalizations {
         settings_missingMicrophoneIndicator_title,
       'settings_network_fallbackCalls_description' =>
         settings_network_fallbackCalls_description,
+      'settings_network_Watch_howTheyDiffer' =>
+        settings_network_Watch_howTheyDiffer,
       'settings_network_fallbackCalls_title' =>
         settings_network_fallbackCalls_title,
       'settings_network_incomingCallType_pushNotification_description' =>

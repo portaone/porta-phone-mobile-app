@@ -2974,6 +2974,12 @@ class AppLocalizationsEn extends AppLocalizations {
       'Whether an audio call moves to the loudspeaker when you leave the call screen, and back to the earpiece when you return to it.';
 
   @override
+  String get settings_media_Watch_onPhone => 'Custom quality, audio processing, video, ICE and TURN: on the phone';
+
+  @override
+  String get settings_media_Watch_resetQuestion => 'Reset all media settings to default?';
+
+  @override
   String get settings_speakerOnMinimize_switch => 'Turn the speaker on when leaving the call screen';
 
   @override
@@ -3381,6 +3387,9 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get settings_network_fallbackCalls_description =>
       'If push notifications about calls are not received, the app will receive a special SMS and display the incoming call screen.';
+
+  @override
+  String get settings_network_Watch_howTheyDiffer => 'How they differ';
 
   @override
   String get settings_network_fallbackCalls_title => 'Fallback Incoming Calls';

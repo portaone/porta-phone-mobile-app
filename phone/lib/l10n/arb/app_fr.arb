@@ -2819,6 +2819,10 @@
   "@settings_speakerOnMinimize_Section_title": {},
   "settings_speakerOnMinimize_Section_tooltip": "Indique si un appel audio passe en haut-parleur lorsque vous quittez l'écran d'appel, et revient à l'écouteur à votre retour.",
   "@settings_speakerOnMinimize_Section_tooltip": {},
+  "settings_media_Watch_onPhone": "Qualité personnalisée, traitement audio, vidéo, ICE et TURN : sur le téléphone",
+  "@settings_media_Watch_onPhone": {},
+  "settings_media_Watch_resetQuestion": "Rétablir tous les paramètres média par défaut ?",
+  "@settings_media_Watch_resetQuestion": {},
   "settings_speakerOnMinimize_switch": "Activer le haut-parleur en quittant l'écran d'appel",
   "@settings_speakerOnMinimize_switch": {},
   "settings_Watch_onPhone": "{setting} : sur le téléphone",
@@ -3091,6 +3095,8 @@
   "@settings_network_fallbackCalls_description": {
     "description": "Tooltip description for fallback SMS-based call trigger"
   },
+  "settings_network_Watch_howTheyDiffer": "Quelle différence",
+  "@settings_network_Watch_howTheyDiffer": {},
   "settings_network_fallbackCalls_title": "Appels entrants de secours",
   "@settings_network_fallbackCalls_title": {
     "description": "Title for fallback incoming calls section"

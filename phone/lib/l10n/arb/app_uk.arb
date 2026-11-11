@@ -2589,6 +2589,10 @@
   "@settings_speakerOnMinimize_Section_title": {},
   "settings_speakerOnMinimize_Section_tooltip": "Чи переходить аудіодзвінок на гучномовець, коли ви залишаєте екран дзвінка, і назад на розмовний динамік, коли повертаєтесь.",
   "@settings_speakerOnMinimize_Section_tooltip": {},
+  "settings_media_Watch_onPhone": "Власна якість, обробка звуку, відео, ICE і TURN: на телефоні",
+  "@settings_media_Watch_onPhone": {},
+  "settings_media_Watch_resetQuestion": "Скинути всі налаштування медіа до типових?",
+  "@settings_media_Watch_resetQuestion": {},
   "settings_speakerOnMinimize_switch": "Вмикати гучномовець при виході з екрана дзвінка",
   "@settings_speakerOnMinimize_switch": {},
   "settings_Watch_onPhone": "{setting}: на телефоні",
@@ -2849,6 +2853,8 @@
   "@settings_network_fallbackCalls_description": {
     "description": "Tooltip description for fallback SMS-based call trigger"
   },
+  "settings_network_Watch_howTheyDiffer": "Чим вони відрізняються",
+  "@settings_network_Watch_howTheyDiffer": {},
   "settings_network_fallbackCalls_title": "Резервні вхідні дзвінки",
   "@settings_network_fallbackCalls_title": {
     "description": "Title for fallback incoming calls section"
