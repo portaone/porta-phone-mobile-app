@@ -136,15 +136,6 @@ class EnvironmentConfig {
       : null;
   static String? get FCM_VAPID_KEY => _env.stringOrNull(FCM_VAPID_KEY__NAME, _FCM_VAPID_KEY_ENV);
 
-  // LOGZIO service-specific configuration.
-  // If additional logging services are introduced, consider moving these to a separate logging configuration file.
-  static const REMOTE_LOGZIO_LOGGING_URL__NAME = 'WEBTRIT_APP_REMOTE_LOGZIO_LOGGING_URL';
-  static const String? _REMOTE_LOGZIO_LOGGING_URL_ENV = bool.hasEnvironment(REMOTE_LOGZIO_LOGGING_URL__NAME)
-      ? String.fromEnvironment(REMOTE_LOGZIO_LOGGING_URL__NAME)
-      : null;
-  static String? get REMOTE_LOGZIO_LOGGING_URL =>
-      _env.stringOrNull(REMOTE_LOGZIO_LOGGING_URL__NAME, _REMOTE_LOGZIO_LOGGING_URL_ENV);
-
   // Severity of libwebrtc's own log, bridged into the application log.
   // 'none', 'error', 'warning', 'info' (default) or 'verbose'. A threshold, not a selection.
   // 'info' is the first level that carries ICE and TURN, which is the whole reason this is on:
@@ -155,26 +146,19 @@ class EnvironmentConfig {
     const String.fromEnvironment(WEBRTC_NATIVE_LOG_SEVERITY__NAME, defaultValue: 'info'),
   );
 
-  // LOGZIO service-specific configuration.
-  // If additional logging services are introduced, consider moving these to a separate logging configuration file.
+  // Remote logging to WebTrit Core: the level sent when the core does not name
+  // one. Whether logs are sent, and where, comes from the core's system info.
+  // The LOGZIO name is kept so that existing build configurations still apply.
   static const REMOTE_LOGZIO_LOG_LEVEL__NAME = 'WEBTRIT_APP_REMOTE_LOGZIO_LOG_LEVEL';
   static String get REMOTE_LOGZIO_LOG_LEVEL => _env.string(
     REMOTE_LOGZIO_LOG_LEVEL__NAME,
     const String.fromEnvironment(REMOTE_LOGZIO_LOG_LEVEL__NAME, defaultValue: 'INFO'),
   );
 
-  // LOGZIO service-specific configuration.
-  // If additional logging services are introduced, consider moving these to a separate logging configuration file.
-  static const REMOTE_LOGZIO_LOGGING_TOKEN__NAME = 'WEBTRIT_APP_REMOTE_LOGZIO_LOGGING_TOKEN';
-  static const String? _REMOTE_LOGZIO_LOGGING_TOKEN_ENV = bool.hasEnvironment(REMOTE_LOGZIO_LOGGING_TOKEN__NAME)
-      ? String.fromEnvironment(REMOTE_LOGZIO_LOGGING_TOKEN__NAME)
-      : null;
-  static String? get REMOTE_LOGZIO_LOGGING_TOKEN =>
-      _env.stringOrNull(REMOTE_LOGZIO_LOGGING_TOKEN__NAME, _REMOTE_LOGZIO_LOGGING_TOKEN_ENV);
-
-  // LOGZIO service-specific configuration.
-  // If additional logging services are introduced, consider moving these to a separate logging configuration file.
-  static const _REMOTE_LOGZIO_LOGGING_BUFFER_SIZE__KB = 0;
+  // Remote logging to WebTrit Core: how many records one request carries at
+  // most. A batch is sent once it holds that many records, or 10 seconds after
+  // its first record, whichever comes first; 0 or less means the default.
+  static const _REMOTE_LOGZIO_LOGGING_BUFFER_SIZE__KB = 100;
   static const REMOTE_LOGZIO_LOGGING_BUFFER_SIZE__NAME = 'WEBTRIT_APP_REMOTE_LOGZIO_LOGGING_BUFFER_SIZE';
   static int get REMOTE_LOGZIO_LOGGING_BUFFER_SIZE => _env.integer(
     REMOTE_LOGZIO_LOGGING_BUFFER_SIZE__NAME,

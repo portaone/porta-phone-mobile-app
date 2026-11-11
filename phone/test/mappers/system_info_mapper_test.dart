@@ -119,4 +119,86 @@ void main() {
       expect(mapper.systemInfoFromMap(map).core.notificationDeletedRetentionDays, isNull);
     });
   });
+
+  // Whether and how the app sends its logs to the core. Absent from an older
+  // core - and from a cache written before the app read it - which both mean
+  // remote logging is off.
+  group('CoreInfo mobileRemoteLogging', () {
+    api.SystemInfo fromCore(api.MobileRemoteLoggingInfo? logging) => api.SystemInfo(
+      core: api.CoreInfo(version: Version(1, 0, 0), mobileRemoteLogging: logging),
+      postgres: api.PostgresInfo(version: '15.0'),
+    );
+
+    final expiresAt = DateTime.utc(2026, 11, 12);
+
+    test('comes from the API with every field', () {
+      final info = mapper
+          .systemInfoFromApi(
+            fromCore(
+              api.MobileRemoteLoggingInfo(
+                available: true,
+                enabled: true,
+                level: 'FINE',
+                anonymization: false,
+                expiresAt: expiresAt,
+                path: '/mobile-logs',
+              ),
+            ),
+          )
+          .core
+          .mobileRemoteLogging;
+
+      expect(
+        info,
+        MobileRemoteLoggingInfo(
+          available: true,
+          enabled: true,
+          level: 'FINE',
+          anonymization: false,
+          expiresAt: expiresAt,
+          path: '/mobile-logs',
+        ),
+      );
+    });
+
+    test('an absent block maps to null', () {
+      expect(mapper.systemInfoFromApi(fromCore(null)).core.mobileRemoteLogging, isNull);
+    });
+
+    test('missing fields take the safe defaults: off, anonymized', () {
+      final info = mapper.systemInfoFromApi(fromCore(const api.MobileRemoteLoggingInfo())).core.mobileRemoteLogging!;
+
+      expect(info.available, isFalse);
+      expect(info.enabled, isFalse);
+      expect(info.anonymization, isTrue);
+      expect(info.level, isNull);
+      expect(info.expiresAt, isNull);
+      expect(info.path, isNull);
+    });
+
+    test('survives the cache', () {
+      final domain = mapper.systemInfoFromApi(
+        fromCore(
+          api.MobileRemoteLoggingInfo(
+            available: true,
+            enabled: true,
+            level: 'INFO',
+            anonymization: true,
+            expiresAt: expiresAt,
+            path: '/mobile-logs',
+          ),
+        ),
+      );
+
+      final restored = mapper.systemInfoFromJson(mapper.systemInfoToJson(domain));
+
+      expect(restored.core.mobileRemoteLogging, domain.core.mobileRemoteLogging);
+    });
+
+    test('a cache written before the app read it has none', () {
+      final map = mapper.systemInfoToMap(domainInfo());
+      (map['core'] as Map<String, dynamic>).remove('mobile_remote_logging');
+      expect(mapper.systemInfoFromMap(map).core.mobileRemoteLogging, isNull);
+    });
+  });
 }
