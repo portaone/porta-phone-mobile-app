@@ -3,6 +3,8 @@ import 'package:material_ui/material_ui.dart';
 import 'package:webtrit_phone/l10n/l10n.dart';
 import 'package:webtrit_phone/widgets/widgets.dart';
 
+import 'help_screen_watch.dart';
+
 class HelpScreen extends StatelessWidget {
   const HelpScreen({super.key, required this.initialUri, required this.userAgent});
 
@@ -10,7 +12,12 @@ class HelpScreen extends StatelessWidget {
   final String userAgent;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context) => AdaptiveLayout(
+    handset: _handset,
+    watch: (_) => HelpScreenWatch(initialUri: initialUri),
+  );
+
+  Widget _handset(BuildContext context) {
     final widget = WebViewContainer(
       title: Text(context.l10n.settings_ListViewTileTitle_help),
       initialUri: initialUri,
