@@ -38,6 +38,11 @@ CoreInfo _$CoreInfoFromJson(Map<String, dynamic> json) => CoreInfo(
   iceServersConfigured: json['ice_servers_configured'] as bool?,
   notificationDeletedRetentionDays:
       (json['notification_deleted_retention_days'] as num?)?.toInt(),
+  mobileRemoteLogging: json['mobile_remote_logging'] == null
+      ? null
+      : MobileRemoteLoggingInfo.fromJson(
+          json['mobile_remote_logging'] as Map<String, dynamic>,
+        ),
 );
 
 Map<String, dynamic> _$CoreInfoToJson(CoreInfo instance) => <String, dynamic>{
@@ -45,6 +50,31 @@ Map<String, dynamic> _$CoreInfoToJson(CoreInfo instance) => <String, dynamic>{
   'ice_servers_configured': instance.iceServersConfigured,
   'notification_deleted_retention_days':
       instance.notificationDeletedRetentionDays,
+  'mobile_remote_logging': instance.mobileRemoteLogging?.toJson(),
+};
+
+MobileRemoteLoggingInfo _$MobileRemoteLoggingInfoFromJson(
+  Map<String, dynamic> json,
+) => MobileRemoteLoggingInfo(
+  available: json['available'] as bool?,
+  enabled: json['enabled'] as bool?,
+  level: json['level'] as String?,
+  anonymization: json['anonymization'] as bool?,
+  expiresAt: json['expires_at'] == null
+      ? null
+      : DateTime.parse(json['expires_at'] as String),
+  path: json['path'] as String?,
+);
+
+Map<String, dynamic> _$MobileRemoteLoggingInfoToJson(
+  MobileRemoteLoggingInfo instance,
+) => <String, dynamic>{
+  'available': instance.available,
+  'enabled': instance.enabled,
+  'level': instance.level,
+  'anonymization': instance.anonymization,
+  'expires_at': instance.expiresAt?.toIso8601String(),
+  'path': instance.path,
 };
 
 PostgresInfo _$PostgresInfoFromJson(Map<String, dynamic> json) =>

@@ -70,18 +70,21 @@ class IsolateContext {
           )
         : null;
 
+    // Remote logging follows what the core last said, as the app stored it.
+    // An isolate never asks the core itself, so it does not hold records for
+    // an answer that will not come: without a stored config nothing is sent.
+    final appPreferences = await _tryInit(AppPreferencesImpl.init, 'AppPreferences');
+
     try {
       final loggingConfig = remoteConfigService != null
           ? LoggingMapper.mapFromOverridesOnly(FeatureOverridesFactory.create(remoteConfigService.snapshot))
-          : const LoggingConfig(
-              logLevel: Level.INFO,
-              monitorCheckInterval: Duration(seconds: 15),
-              remoteLoggingEnabled: false,
-              anonymizationEnabled: true,
-            );
+          : const LoggingConfig(logLevel: Level.INFO, monitorCheckInterval: Duration(seconds: 15));
       await AppLogger.init(
         loggingConfig,
-        LogzioLoggingService.fromEnvironment(loggingConfig.remoteLoggingEnabled),
+        CoreRemoteLoggingService.fromEnvironment(
+          store: appPreferences != null ? RemoteLoggingConfigPrefsStore(appPreferences) : null,
+          bufferUntilConfigured: false,
+        ),
         () => appLabelsProvider?.logLabels ?? {},
       );
     } catch (e, st) {

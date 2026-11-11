@@ -21,6 +21,20 @@ mixin SystemInfoApiMapper {
       version: coreInfo.version,
       iceServersConfigured: coreInfo.iceServersConfigured ?? false,
       notificationDeletedRetentionDays: coreInfo.notificationDeletedRetentionDays,
+      mobileRemoteLogging: coreInfo.mobileRemoteLogging != null
+          ? mobileRemoteLoggingInfoFromApi(coreInfo.mobileRemoteLogging!)
+          : null,
+    );
+  }
+
+  MobileRemoteLoggingInfo mobileRemoteLoggingInfoFromApi(api.MobileRemoteLoggingInfo info) {
+    return MobileRemoteLoggingInfo(
+      available: info.available ?? false,
+      enabled: info.enabled ?? false,
+      level: info.level,
+      anonymization: info.anonymization ?? true,
+      expiresAt: info.expiresAt,
+      path: info.path,
     );
   }
 

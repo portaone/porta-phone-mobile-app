@@ -9,15 +9,25 @@ import 'package:webtrit_phone/utils/utils.dart';
 
 final _logger = Logger('SystemInfoRepository');
 
+/// Called with every system info the core returns and the tenant URL it was
+/// asked at.
+typedef SystemInfoFetchedCallback = void Function(WebtritSystemInfo info, Uri tenantUrl);
+
 /// Responsible for fetching [WebtritSystemInfo] from the remote API.
 ///
 /// This datasource acts as a low-level abstraction over the HTTP client,
 /// handling the raw request and mapping the response to the domain model
 /// via [SystemInfoApiMapper].
 class SystemInfoRemoteDatasource with SystemInfoApiMapper implements Disposable {
-  SystemInfoRemoteDatasource(this.webtritApiClient);
+  SystemInfoRemoteDatasource(this.webtritApiClient, {this.onFetched});
 
   final WebtritApiClientFactory webtritApiClient;
+
+  /// Told of every successful fetch, the stateless ones of the login flow
+  /// included. Remote logging takes its settings from here: it needs them
+  /// before the user is signed in, and it needs the address of the core that
+  /// sent them, which the cached system info does not keep.
+  final SystemInfoFetchedCallback? onFetched;
 
   /// Retrieves the system information from the backend.
   ///
@@ -36,11 +46,21 @@ class SystemInfoRemoteDatasource with SystemInfoApiMapper implements Disposable 
 
       final apiSystemInfo = await client.getSystemInfo();
       final newInfo = systemInfoFromApi(apiSystemInfo);
+      _notifyFetched(newInfo, client.tenantUrl);
 
       return newInfo;
     } catch (e, stackTrace) {
       _logger.warning('Failed to gather system info from remote API', e, stackTrace);
       rethrow;
+    }
+  }
+
+  void _notifyFetched(WebtritSystemInfo info, Uri tenantUrl) {
+    try {
+      onFetched?.call(info, tenantUrl);
+    } catch (e, stackTrace) {
+      // A listener must not turn a good answer of the core into a failure.
+      _logger.warning('System info listener failed', e, stackTrace);
     }
   }
 

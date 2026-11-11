@@ -225,20 +225,20 @@ $CoreInfoCopyWith<CoreInfo> get copyWith => _$CoreInfoCopyWithImpl<CoreInfo>(thi
 @override
 bool operator ==(Object other) {
   final _this = this as CoreInfo;
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is CoreInfo&&(identical(other.version, _this.version) || other.version == _this.version)&&(identical(other.iceServersConfigured, _this.iceServersConfigured) || other.iceServersConfigured == _this.iceServersConfigured)&&(identical(other.notificationDeletedRetentionDays, _this.notificationDeletedRetentionDays) || other.notificationDeletedRetentionDays == _this.notificationDeletedRetentionDays));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is CoreInfo&&(identical(other.version, _this.version) || other.version == _this.version)&&(identical(other.iceServersConfigured, _this.iceServersConfigured) || other.iceServersConfigured == _this.iceServersConfigured)&&(identical(other.notificationDeletedRetentionDays, _this.notificationDeletedRetentionDays) || other.notificationDeletedRetentionDays == _this.notificationDeletedRetentionDays)&&(identical(other.mobileRemoteLogging, _this.mobileRemoteLogging) || other.mobileRemoteLogging == _this.mobileRemoteLogging));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
 int get hashCode {
   final _this = this as CoreInfo;
-  return Object.hash(runtimeType,_this.version,_this.iceServersConfigured,_this.notificationDeletedRetentionDays);
+  return Object.hash(runtimeType,_this.version,_this.iceServersConfigured,_this.notificationDeletedRetentionDays,_this.mobileRemoteLogging);
 }
 
 @override
 String toString() {
   final _this = this as CoreInfo;
-  return 'CoreInfo(version: ${_this.version}, iceServersConfigured: ${_this.iceServersConfigured}, notificationDeletedRetentionDays: ${_this.notificationDeletedRetentionDays})';
+  return 'CoreInfo(version: ${_this.version}, iceServersConfigured: ${_this.iceServersConfigured}, notificationDeletedRetentionDays: ${_this.notificationDeletedRetentionDays}, mobileRemoteLogging: ${_this.mobileRemoteLogging})';
 }
 
 
@@ -249,7 +249,7 @@ abstract mixin class $CoreInfoCopyWith<$Res>  {
   factory $CoreInfoCopyWith(CoreInfo value, $Res Function(CoreInfo) _then) = _$CoreInfoCopyWithImpl;
 @useResult
 $Res call({
-@VersionConverter() Version version, bool? iceServersConfigured, int? notificationDeletedRetentionDays
+@VersionConverter() Version version, bool? iceServersConfigured, int? notificationDeletedRetentionDays, MobileRemoteLoggingInfo? mobileRemoteLogging
 });
 
 
@@ -266,12 +266,13 @@ class _$CoreInfoCopyWithImpl<$Res>
 
 /// Create a copy of CoreInfo
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? version = null,Object? iceServersConfigured = freezed,Object? notificationDeletedRetentionDays = freezed,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? version = null,Object? iceServersConfigured = freezed,Object? notificationDeletedRetentionDays = freezed,Object? mobileRemoteLogging = freezed,}) {
   return _then(CoreInfo(
 version: null == version ? _self.version : version // ignore: cast_nullable_to_non_nullable
 as Version,iceServersConfigured: freezed == iceServersConfigured ? _self.iceServersConfigured : iceServersConfigured // ignore: cast_nullable_to_non_nullable
 as bool?,notificationDeletedRetentionDays: freezed == notificationDeletedRetentionDays ? _self.notificationDeletedRetentionDays : notificationDeletedRetentionDays // ignore: cast_nullable_to_non_nullable
-as int?,
+as int?,mobileRemoteLogging: freezed == mobileRemoteLogging ? _self.mobileRemoteLogging : mobileRemoteLogging // ignore: cast_nullable_to_non_nullable
+as MobileRemoteLoggingInfo?,
   ));
 }
 

@@ -17,7 +17,7 @@ class AppLogger implements Disposable {
 
     Logger.root.clearListeners();
 
-    // Anonymization is intentionally applied only to remote logs (Logzio).
+    // Anonymization is intentionally applied only to remote logs.
     // Console output is not anonymized to preserve full detail for local debugging.
     PrintAppender(formatter: const ColorFormatter()).attachToLogger(Logger.root);
 
@@ -35,17 +35,15 @@ class AppLogger implements Disposable {
 
   void applyConfig(LoggingConfig config) {
     Logger.root.level = config.logLevel;
-    _remoteLoggingService?.setAnonymizationEnabled(config.anonymizationEnabled);
     EquatableConfig.stringify =
         config.logLevel <= Level.FINE || (_remoteLoggingService?.minLevel ?? Level.OFF) <= Level.FINE;
     _logger.info('AppLogger log level applied: ${config.logLevel}');
   }
 
-  /// Updates remote logging labels and re-attaches the remote appender.
+  /// Updates the labels sent with every remote record.
   ///
   /// Call this after authentication when coreUrl and tenantId become available.
   void updateRemoteLabels() {
-    _remoteLoggingService?.dispose();
     _remoteLoggingService?.initialize(_getLabels());
   }
 
@@ -56,6 +54,6 @@ class AppLogger implements Disposable {
   /// it here would silence a host that keeps running.
   @override
   Future<void> dispose() async {
-    _remoteLoggingService?.dispose();
+    await _remoteLoggingService?.dispose();
   }
 }
