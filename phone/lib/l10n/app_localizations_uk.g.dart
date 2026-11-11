@@ -3771,6 +3771,13 @@ class AppLocalizationsUk extends AppLocalizations {
   String get system_notifications_screen_list_empty => 'Немає сповіщень';
 
   @override
+  String get system_notifications_Watch_deleteQuestion => 'Видалити це сповіщення?';
+
+  @override
+  String get system_notifications_Watch_deleteContent =>
+      'Його буде видалено з облікового запису, а не лише з цього годинника.';
+
+  @override
   String get system_notifications_screen_title => 'Сповіщення';
 
   @override

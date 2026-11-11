@@ -1,6 +1,6 @@
 import 'package:material_ui/material_ui.dart';
 
-import 'dart:ui' show Tristate;
+import 'dart:ui' show SemanticsAction, Tristate;
 
 import 'package:flutter_test/flutter_test.dart';
 
@@ -129,5 +129,61 @@ void main() {
     final node = find.semantics.byLabel('Pixel Watch 3, Active now').evaluate().single;
     expect(node.flagsCollection.isButton, isFalse);
     handle.dispose();
+  });
+
+  group('WatchNoticeCard', () {
+    for (final preset in watchPresets) {
+      testWidgets('on $preset the title, three lines of the text and the time stay inside the face', (tester) async {
+        preset.apply(tester);
+        expect(
+          await pumpCollectingOverflows(
+            tester,
+            wrap(
+              WatchNoticeCard(
+                leading: const Icon(Icons.campaign_outlined),
+                title: 'Scheduled maintenance tonight',
+                body: 'Calls may drop on Sunday 02:00-03:00 while the service is updated. Messages are kept. ' * 3,
+                time: '14:02',
+                unread: true,
+                onTap: () {},
+              ),
+            ),
+          ),
+          isEmpty,
+        );
+        final body = tester.widget<Text>(find.textContaining('Calls may drop'));
+        expect(body.maxLines, 3);
+      });
+    }
+
+    testWidgets('one node: title, text and time, a tap and a long press; the long press does what it is given, named', (
+      tester,
+    ) async {
+      final handle = tester.ensureSemantics();
+      watchPresets.first.apply(tester);
+      var opened = 0;
+      var deleted = 0;
+      await tester.pumpWidget(
+        wrap(
+          WatchNoticeCard(
+            title: 'New feature',
+            body: 'Voicemail can be forwarded.',
+            time: 'Mon',
+            onTap: () => opened++,
+            onLongPress: () => deleted++,
+            longPressHint: 'Delete',
+          ),
+        ),
+      );
+
+      final node = find.semantics.byLabel('New feature, Voicemail can be forwarded., Mon').evaluate().single;
+      expect(node.getSemanticsData().hasAction(SemanticsAction.tap), isTrue);
+      expect(node.getSemanticsData().hasAction(SemanticsAction.longPress), isTrue);
+      expect(node.flagsCollection.isButton, isTrue);
+      await tester.tap(find.text('New feature'));
+      await tester.longPress(find.text('New feature'));
+      expect((opened, deleted), (1, 1));
+      handle.dispose();
+    });
   });
 }

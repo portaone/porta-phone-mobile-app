@@ -3757,6 +3757,13 @@ class AppLocalizationsFr extends AppLocalizations {
   String get system_notifications_screen_list_empty => 'Aucune notification pour le moment';
 
   @override
+  String get system_notifications_Watch_deleteQuestion => 'Supprimer cette notification ?';
+
+  @override
+  String get system_notifications_Watch_deleteContent =>
+      'Elle est supprimée de votre compte, pas seulement de cette montre.';
+
+  @override
   String get system_notifications_screen_title => 'Notifications';
 
   @override
