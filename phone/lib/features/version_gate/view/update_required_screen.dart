@@ -14,6 +14,7 @@ import 'package:webtrit_phone/data/data.dart';
 import 'package:webtrit_phone/l10n/l10n.dart';
 import 'package:webtrit_phone/models/models.dart';
 import 'package:webtrit_phone/theme/theme.dart';
+import 'package:webtrit_phone/widgets/widgets.dart';
 
 final _logger = Logger('UpdateRequiredScreen');
 
@@ -114,7 +115,51 @@ class _UpdateRequiredViewState extends State<_UpdateRequiredView> {
   }
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context) => AdaptiveLayout(handset: _handset, watch: _watch);
+
+  /// Why in a line, the versions as rows, Log out as the last row; Update on
+  /// the edge once the store has the app.
+  Widget _watch(BuildContext context) {
+    final l10n = context.l10n;
+    final theme = Theme.of(context);
+    final rows = [
+      Text(
+        l10n.main_AppUpdateRequiredDialog_description,
+        textAlign: TextAlign.center,
+        style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurfaceVariant),
+      ),
+      WatchInfoRow(
+        label: l10n.main_AppUpdateRequiredDialog_currentVersionLabel,
+        value: widget.currentVersion.toString(),
+      ),
+      WatchInfoRow(label: l10n.main_AppUpdateRequiredDialog_buildVersionLabel, value: widget.storeVersion),
+      WatchInfoRow(
+        label: l10n.main_AppUpdateRequiredDialog_minimumVersionLabel,
+        value: widget.minSupportedVersion.toString(),
+      ),
+      WatchListTile(
+        leading: Icon(Icons.logout, color: theme.colorScheme.error),
+        title: l10n.main_CompatibilityIssueDialogActions_logout,
+        onTap: _onLogout,
+      ),
+    ];
+    return Scaffold(
+      body: WatchScrollList.builder(
+        title: l10n.main_AppUpdateRequiredDialog_title,
+        spacing: context.adaptiveMetrics.gap,
+        itemCount: rows.length,
+        itemBuilder: (context, index) => rows[index],
+        edge: _updateStoreUrl == null
+            ? null
+            : (context, overlay) => WatchAction(
+                label: l10n.main_CompatibilityIssueDialogActions_update,
+                onPressed: _onUpdate,
+              ).buildButton(overlay),
+      ),
+    );
+  }
+
+  Widget _handset(BuildContext context) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
     final textTheme = theme.textTheme;

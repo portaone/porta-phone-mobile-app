@@ -12,6 +12,7 @@ import 'package:webtrit_phone/blocs/blocs.dart';
 import 'package:webtrit_phone/data/data.dart';
 import 'package:webtrit_phone/l10n/l10n.dart';
 import 'package:webtrit_phone/models/models.dart';
+import 'package:webtrit_phone/widgets/widgets.dart';
 
 final _logger = Logger('CompatibilityIssueScreen');
 
@@ -93,18 +94,55 @@ class _CompatibilityIssueViewState extends State<_CompatibilityIssueView> {
   }
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context) => AdaptiveLayout(handset: _handset, watch: _watch);
+
+  String _content(BuildContext context) =>
+      context.l10n.main_CompatibilityIssueDialog_contentCoreVersionUnsupportedExceptionError(
+        widget.currentVersion.toString(),
+        widget.supportedConstraint.toString(),
+      );
+
+  /// The phone's text under the title - the reason and both versions - Update
+  /// as a row where the store has a newer build, Log out on the soft edge.
+  Widget _watch(BuildContext context) {
+    final l10n = context.l10n;
+    final theme = Theme.of(context);
+    final rows = [
+      Text(_content(context), textAlign: TextAlign.center, style: theme.textTheme.bodySmall),
+      if (_updateStoreUrl != null)
+        WatchListTile(
+          leading: const Icon(Icons.system_update),
+          title: l10n.main_CompatibilityIssueDialogActions_update,
+          onTap: _onUpdate,
+        ),
+    ];
+    return Scaffold(
+      body: WatchScrollList.builder(
+        title: l10n.main_CompatibilityIssueDialog_title,
+        spacing: context.adaptiveMetrics.gap,
+        itemCount: rows.length,
+        itemBuilder: (context, index) => rows[index],
+        edge: (context, overlay) => WatchAction(
+          label: l10n.main_CompatibilityIssueDialogActions_logout,
+          // styleFrom, not fixed colours: the press ripple follows the label's
+          // colour instead of the theme's primary.
+          style: OutlinedButton.styleFrom(
+            backgroundColor: theme.colorScheme.surfaceContainerHighest,
+            foregroundColor: theme.colorScheme.onSurface,
+          ),
+          onPressed: _onLogout,
+        ).buildButton(overlay),
+      ),
+    );
+  }
+
+  Widget _handset(BuildContext context) {
     final l10n = context.l10n;
     return Scaffold(
       body: Center(
         child: AlertDialog(
           title: Text(l10n.main_CompatibilityIssueDialog_title, textAlign: TextAlign.center),
-          content: Text(
-            l10n.main_CompatibilityIssueDialog_contentCoreVersionUnsupportedExceptionError(
-              widget.currentVersion.toString(),
-              widget.supportedConstraint.toString(),
-            ),
-          ),
+          content: Text(_content(context)),
           actions: [
             if (_updateStoreUrl != null)
               TextButton(onPressed: _onUpdate, child: Text(l10n.main_CompatibilityIssueDialogActions_update)),
