@@ -19,14 +19,6 @@
       }
     },
     {
-      "identity" : "csqlite",
-      "kind" : "remoteSourceControl",
-      "location" : "https://github.com/simolus3/CSQLite.git",
-      "state" : {
-        "revision" : "ae972b235e8b3c5af6d8f4e5bf18c800bdddb27e"
-      }
-    },
-    {
       "identity" : "firebase-ios-sdk",
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/firebase/firebase-ios-sdk",
