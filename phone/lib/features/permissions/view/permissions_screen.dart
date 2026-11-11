@@ -81,8 +81,11 @@ class _PermissionsScreenState extends State<PermissionsScreen> with WidgetsBindi
             final onContinue = _onRequestPermissions(context, isRequesting, isFlowCompleted);
 
             return AdaptiveLayout(
-              watch: (context) =>
-                  _PermissionsWatch(onContinue: onContinue, buttonStyle: elevatedButtonStyles?.primary, child: button),
+              watch: (context) => PermissionsScreenWatch(
+                onContinue: onContinue,
+                buttonStyle: elevatedButtonStyles?.primary,
+                child: button,
+              ),
               handset: (context) => LayoutBuilder(
                 builder: (context, viewportConstraints) {
                   final body = Padding(
@@ -212,35 +215,5 @@ class _PermissionsScreenState extends State<PermissionsScreen> with WidgetsBindi
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
     super.dispose();
-  }
-}
-
-/// The permissions step on a watch face: a title instead of the icon, the
-/// explanation in small text that scrolls, and Continue - which starts the
-/// system prompts - as the edge button.
-class _PermissionsWatch extends StatelessWidget {
-  const _PermissionsWatch({required this.onContinue, required this.buttonStyle, required this.child});
-
-  final VoidCallback? onContinue;
-  final ButtonStyle? buttonStyle;
-
-  /// The button's label, or its progress while the prompts run.
-  final Widget child;
-
-  @override
-  Widget build(BuildContext context) {
-    return WatchActionLayout(
-      title: context.l10n.permission_Text_title,
-      content: [Text(context.l10n.permission_Text_description, textAlign: TextAlign.center)],
-      primary: (overlay) => SemanticAction(
-        identifier: permissionsInitButtonId,
-        child: OutlinedButton(
-          key: permissionsInitButtonKey,
-          onPressed: onContinue,
-          style: overlay.merge(buttonStyle),
-          child: child,
-        ),
-      ),
-    );
   }
 }

@@ -6,6 +6,8 @@ import 'package:webtrit_phone/l10n/l10n.dart';
 import 'package:webtrit_phone/theme/theme.dart';
 import 'package:webtrit_phone/widgets/widgets.dart';
 
+import 'permission_tips_watch.dart';
+
 class PermissionTips extends StatelessWidget {
   const PermissionTips({
     super.key,
@@ -36,7 +38,14 @@ class PermissionTips extends StatelessWidget {
 
     return Scaffold(
       body: AdaptiveLayout(
-        watch: (context) => _PermissionTipsWatch(tips: this),
+        watch: (context) => PermissionTipsWatch(
+          title: title,
+          instruction: instruction,
+          onGoToAppSettings: onGoToAppSettings,
+          onPop: onPop,
+          note: note,
+          dismissLabel: dismissLabel,
+        ),
         handset: (context) => LayoutBuilder(
           builder: (context, viewportConstraints) {
             final body = Padding(
@@ -112,50 +121,6 @@ class PermissionTips extends StatelessWidget {
             );
           },
         ),
-      ),
-    );
-  }
-}
-
-/// The tips on a watch face: the title, the steps and notes in small text
-/// that scroll, going to the settings - what the steps lead to - at their
-/// end, and the dismissal as the edge button, the main action as on a phone,
-/// so leaving the tips never waits on scrolling through them.
-class _PermissionTipsWatch extends StatelessWidget {
-  const _PermissionTipsWatch({required this.tips});
-
-  final PermissionTips tips;
-
-  @override
-  Widget build(BuildContext context) {
-    final themeData = Theme.of(context);
-    final ElevatedButtonStyles? elevatedButtonStyles = themeData.extension<ElevatedButtonStyles>();
-    final note = tips.note;
-    final gap = context.adaptiveMetrics.gap;
-
-    return WatchActionLayout(
-      title: tips.title,
-      content: [
-        for (final (index, step) in tips.instruction.indexed) Text('${index + 1}. $step'),
-        SizedBox(height: gap),
-        Text(context.l10n.permission_manufacturer_Text_trailing, textAlign: TextAlign.center),
-        if (note != null) ...[SizedBox(height: gap), Text(note, textAlign: TextAlign.center)],
-      ],
-      secondary: SemanticAction(
-        identifier: permissionTipsSettingsButtonId,
-        child: OutlinedButton(
-          key: permissionTipsSettingsButtonKey,
-          onPressed: tips.onGoToAppSettings,
-          style: WatchPill.style.merge(elevatedButtonStyles?.neutral),
-          child: Text(context.l10n.permission_manufacturer_Button_toSettings),
-        ),
-      ),
-      action: WatchAction(
-        label: tips.dismissLabel ?? context.l10n.permission_manufacturer_Button_gotIt,
-        onPressed: tips.onPop,
-        style: elevatedButtonStyles?.primary,
-        identifier: permissionTipsButtonId,
-        buttonKey: permissionTipsButtonKey,
       ),
     );
   }
