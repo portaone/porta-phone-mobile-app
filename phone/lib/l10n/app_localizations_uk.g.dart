@@ -164,6 +164,11 @@ class AppLocalizationsUk extends AppLocalizations {
   String get callTileActions_message => 'Повідомлення';
 
   @override
+  String cacheManagement_Watch_clearQuestion(String name) {
+    return 'Очистити: $name?';
+  }
+
+  @override
   String get cacheManagement_Button_clear => 'Очистити';
 
   @override

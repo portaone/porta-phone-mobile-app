@@ -154,6 +154,11 @@ class AppLocalizationsEn extends AppLocalizations {
   String get callTileActions_message => 'Message';
 
   @override
+  String cacheManagement_Watch_clearQuestion(String name) {
+    return 'Clear $name?';
+  }
+
+  @override
   String get cacheManagement_Button_clear => 'Clear';
 
   @override

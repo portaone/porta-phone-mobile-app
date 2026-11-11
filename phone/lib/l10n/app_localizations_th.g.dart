@@ -154,6 +154,11 @@ class AppLocalizationsTh extends AppLocalizations {
   String get callTileActions_message => 'ข้อความ';
 
   @override
+  String cacheManagement_Watch_clearQuestion(String name) {
+    return 'ล้าง $name หรือไม่';
+  }
+
+  @override
   String get cacheManagement_Button_clear => 'ล้าง';
 
   @override

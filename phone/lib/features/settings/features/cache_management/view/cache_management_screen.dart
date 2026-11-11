@@ -17,7 +17,35 @@ class CacheManagementScreen extends StatelessWidget {
   const CacheManagementScreen({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context) => AdaptiveLayout(handset: _handset, watch: _watch);
+
+  /// A row per store with its size and a bin for what a tap does; the tap
+  /// asks on the watch confirm, the store's description under the question -
+  /// a watch row has no room for the phone's paragraph and Clear button.
+  Widget _watch(BuildContext context) {
+    final l10n = context.l10n;
+    final title = l10n.cacheManagement_Widget_screenTitle;
+    return Scaffold(
+      body: BlocBuilder<CacheManagementCubit, CacheManagementState>(
+        builder: (context, state) {
+          if (state.sections.isEmpty) {
+            return WatchStatePage(
+              title: title,
+              icon: const Icon(Icons.storage),
+              message: l10n.cacheManagement_Label_empty,
+            );
+          }
+          return WatchScrollList(
+            title: title,
+            spacing: context.adaptiveMetrics.gap,
+            children: [for (final section in state.sections) _CacheSectionWatchRow(section: section)],
+          );
+        },
+      ),
+    );
+  }
+
+  Widget _handset(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: Text(context.l10n.cacheManagement_Widget_screenTitle), leading: const ExtBackButton()),
       body: BlocBuilder<CacheManagementCubit, CacheManagementState>(
@@ -42,23 +70,68 @@ class CacheManagementScreen extends StatelessWidget {
   }
 }
 
+/// How much a store holds, in the words the phone uses; "Unknown" when it
+/// could not be measured, null while it is being measured.
+String? _usageLabel(BuildContext context, CacheSectionState section) {
+  final usage = section.usage;
+  if (usage != null) {
+    return switch (usage.unit) {
+      CacheUsageUnit.bytes => formatBytes(usage.amount, context.l10n),
+      CacheUsageUnit.items => context.l10n.cacheManagement_Label_itemsCount(usage.amount),
+    };
+  }
+  return section.measureFailed ? context.l10n.cacheManagement_Label_unknown : null;
+}
+
+/// One store on a watch: its name and size, a spinner while it is measured or
+/// cleared, a bin otherwise; a tap asks before clearing it.
+class _CacheSectionWatchRow extends StatelessWidget {
+  const _CacheSectionWatchRow({required this.section});
+
+  final CacheSectionState section;
+
+  @override
+  Widget build(BuildContext context) {
+    final usage = _usageLabel(context, section);
+    final busy = section.clearing || usage == null;
+    return WatchListTile(
+      leading: const Icon(Icons.storage),
+      title: context.parseL10n(section.titleL10n),
+      subtitle: usage,
+      // What a tap does, for a screen reader: the bin says it to the eye.
+      semanticsLabel: [
+        context.parseL10n(section.titleL10n),
+        ?usage,
+        context.l10n.cacheManagement_Button_clear,
+      ].join(', '),
+      trailing: busy
+          ? const SizedCircularProgressIndicator(size: 16, strokeWidth: 2)
+          : const Icon(Icons.delete_outline),
+      onTap: section.clearing ? null : () => _clear(context),
+    );
+  }
+
+  Future<void> _clear(BuildContext context) async {
+    final cubit = context.read<CacheManagementCubit>();
+    final name = context.parseL10n(section.titleL10n);
+    final clear = await ConfirmDialog.showDangerous(
+      context,
+      title: context.l10n.cacheManagement_Watch_clearQuestion(name),
+      content: context.parseL10n(section.descriptionL10n),
+    );
+    if (clear == true) await cubit.clearSection(section.id);
+  }
+}
+
 class _CacheSectionTile extends StatelessWidget {
   const _CacheSectionTile({required this.section, required this.onClear});
 
   final CacheSectionState section;
   final VoidCallback onClear;
 
-  String _formatUsage(BuildContext context, CacheUsage usage) {
-    return switch (usage.unit) {
-      CacheUsageUnit.bytes => formatBytes(usage.amount, context.l10n),
-      CacheUsageUnit.items => context.l10n.cacheManagement_Label_itemsCount(usage.amount),
-    };
-  }
-
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final usage = section.usage;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -67,11 +140,10 @@ class _CacheSectionTile extends StatelessWidget {
           leading: const Icon(Icons.storage),
           title: Text(context.parseL10n(section.titleL10n)),
           subtitle: Text(context.parseL10n(section.descriptionL10n), style: theme.textTheme.bodySmall),
-          trailing: usage != null
-              ? Text(_formatUsage(context, usage), style: theme.textTheme.titleSmall)
-              : section.measureFailed
-              ? Text(context.l10n.cacheManagement_Label_unknown, style: theme.textTheme.titleSmall)
-              : const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2)),
+          trailing: switch (_usageLabel(context, section)) {
+            final label? => Text(label, style: theme.textTheme.titleSmall),
+            null => const SizedCircularProgressIndicator(size: 16, strokeWidth: 2),
+          },
         ),
         Align(
           alignment: Alignment.centerRight,
