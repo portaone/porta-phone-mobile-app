@@ -17,6 +17,7 @@ export 'src/watch_keyboard_input.dart';
 export 'src/watch_list_label.dart';
 export 'src/watch_list_note.dart';
 export 'src/watch_list_tile.dart';
+export 'src/watch_notice_card.dart';
 export 'src/watch_pill.dart';
 export 'src/watch_pill_button.dart';
 export 'src/watch_play_button.dart';

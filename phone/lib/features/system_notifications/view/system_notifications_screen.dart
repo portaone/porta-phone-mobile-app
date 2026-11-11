@@ -51,7 +51,12 @@ class _SystemNotificationsScreenState extends State<SystemNotificationsScreen> {
   }
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context) => AdaptiveLayout(
+    handset: _handset,
+    watch: (_) => SystemNotificationsScreenWatch(scrollController: scrollController),
+  );
+
+  Widget _handset(BuildContext context) {
     final timeOrDateFormat = context.read<AppTime>().timeOrDateFormat(Localizations.localeOf(context));
     return Scaffold(
       extendBodyBehindAppBar: true,

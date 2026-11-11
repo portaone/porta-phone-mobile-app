@@ -1682,6 +1682,10 @@ extension AppLocalizationsExtension on AppLocalizations {
         socketError_serverUnreachableDescription,
       'system_notifications_screen_list_empty' =>
         system_notifications_screen_list_empty,
+      'system_notifications_Watch_deleteQuestion' =>
+        system_notifications_Watch_deleteQuestion,
+      'system_notifications_Watch_deleteContent' =>
+        system_notifications_Watch_deleteContent,
       'system_notifications_screen_title' => system_notifications_screen_title,
       'system_notifications_Dialog_deleteAllContent' =>
         system_notifications_Dialog_deleteAllContent,

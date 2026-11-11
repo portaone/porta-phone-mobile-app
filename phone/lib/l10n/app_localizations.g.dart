@@ -6764,6 +6764,18 @@ abstract class AppLocalizations {
   /// **'No notifications yet'**
   String get system_notifications_screen_list_empty;
 
+  /// On a watch, asked before a notification is deleted by a long press on it.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete this notification?'**
+  String get system_notifications_Watch_deleteQuestion;
+
+  /// On a watch, under 'Delete this notification?': what deleting it means.
+  ///
+  /// In en, this message translates to:
+  /// **'It is deleted from your account, not only from this watch.'**
+  String get system_notifications_Watch_deleteContent;
+
   /// No description provided for @system_notifications_screen_title.
   ///
   /// In en, this message translates to:

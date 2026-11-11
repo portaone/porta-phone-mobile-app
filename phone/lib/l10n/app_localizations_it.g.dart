@@ -3748,6 +3748,12 @@ class AppLocalizationsIt extends AppLocalizations {
   String get system_notifications_screen_list_empty => 'Non ci sono notifiche';
 
   @override
+  String get system_notifications_Watch_deleteQuestion => 'Eliminare questa notifica?';
+
+  @override
+  String get system_notifications_Watch_deleteContent => 'Viene eliminata dall\'account, non solo da questo orologio.';
+
+  @override
   String get system_notifications_screen_title => 'Notifiche';
 
   @override

@@ -3687,6 +3687,12 @@ class AppLocalizationsTh extends AppLocalizations {
   String get system_notifications_screen_list_empty => 'ยังไม่มีการแจ้งเตือน';
 
   @override
+  String get system_notifications_Watch_deleteQuestion => 'ลบการแจ้งเตือนนี้หรือไม่';
+
+  @override
+  String get system_notifications_Watch_deleteContent => 'การแจ้งเตือนจะถูกลบออกจากบัญชีของคุณ ไม่ใช่แค่จากนาฬิกานี้';
+
+  @override
   String get system_notifications_screen_title => 'การแจ้งเตือน';
 
   @override

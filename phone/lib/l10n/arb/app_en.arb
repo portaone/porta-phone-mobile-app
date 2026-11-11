@@ -3503,6 +3503,14 @@
   },
   "system_notifications_screen_list_empty": "No notifications yet",
   "@system_notifications_screen_list_empty": {},
+  "system_notifications_Watch_deleteQuestion": "Delete this notification?",
+  "@system_notifications_Watch_deleteQuestion": {
+    "description": "On a watch, asked before a notification is deleted by a long press on it."
+  },
+  "system_notifications_Watch_deleteContent": "It is deleted from your account, not only from this watch.",
+  "@system_notifications_Watch_deleteContent": {
+    "description": "On a watch, under 'Delete this notification?': what deleting it means."
+  },
   "system_notifications_screen_title": "Notifications",
   "@system_notifications_screen_title": {},
   "system_notifications_Dialog_deleteAllContent": "They will be deleted from your account, not only from this device. This cannot be undone.",
