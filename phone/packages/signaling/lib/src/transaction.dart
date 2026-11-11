@@ -102,6 +102,12 @@ class Transaction {
     );
   }
 
+  /// Ends the wait now, as the timeout would: for a connection found dead
+  /// before the timeout of this transaction. No-op if already resolved.
+  void timeOutNow() {
+    if (!_isDone) _onTimeout();
+  }
+
   void _onTimeout() {
     if (_isDone) {
       _logger.warning(

@@ -406,6 +406,237 @@ void main() {
     });
   });
 
+  group('Silent connection', () {
+    const interval = Duration(seconds: 30);
+    final wait = WebtritSignalingClient.defaultExecuteTransactionTimeoutDuration;
+
+    late List<Object> errors;
+    late List<String> sent;
+    late int disconnects;
+
+    WebtritSignalingClient listening() {
+      errors = [];
+      sent = [];
+      disconnects = 0;
+      final client = WebtritSignalingClient.inner(mockChannel);
+      client.listen(
+        onStateHandshake: (_) {},
+        onEvent: (_) {},
+        onError: (e, _) => errors.add(e),
+        onDisconnect: (_, _) => disconnects++,
+      );
+      return client;
+    }
+
+    int keepalives() => sent.where((frame) => frame.contains('"keepalive"')).length;
+
+    /// The same request again every time it times out, as the request queue retries it.
+    void retry(WebtritSignalingClient client) {
+      client
+          .execute(HangupRequest(transaction: 'retried', line: 0, callId: 'call'))
+          .then<void>(
+            (_) {},
+            onError: (Object e, _) {
+              if (e is WebtritSignalingTransactionTimeoutException) retry(client);
+            },
+          );
+    }
+
+    test('gets a keepalive while requests keep going out, and is given up when it is not answered', () {
+      fakeAsync((async) {
+        when(() => mockSink.add(any())).thenAnswer((call) => sent.add(call.positionalArguments.single as String));
+        final client = listening();
+        streamController.add(_handshakeJson(keepaliveInterval: interval.inMilliseconds));
+        async.flushMicrotasks();
+
+        retry(client);
+        async.elapse(interval - const Duration(milliseconds: 1));
+        expect(keepalives(), 0);
+
+        async.elapse(const Duration(milliseconds: 1));
+        expect(keepalives(), 1, reason: 'nothing received for the interval, whatever was sent');
+        expect(errors, isEmpty);
+
+        async.elapse(wait);
+        async.flushMicrotasks();
+        expect(errors.single, isA<WebtritSignalingKeepaliveTransactionTimeoutException>());
+
+        async.elapse(const Duration(minutes: 10));
+        expect(errors, hasLength(1), reason: 'a connection given up tells nothing more');
+        expect(disconnects, 0);
+      });
+    });
+
+    test('with its keepalive answered, an unanswered request costs only its own timeout', () {
+      fakeAsync((async) {
+        when(() => mockSink.add(any())).thenAnswer((call) {
+          final frame = call.positionalArguments.single as String;
+          sent.add(frame);
+          if (frame.contains('"keepalive"')) streamController.add(frame);
+        });
+        final client = listening();
+        streamController.add(_handshakeJson(keepaliveInterval: interval.inMilliseconds));
+        async.flushMicrotasks();
+        Object? requestError;
+
+        async.elapse(const Duration(seconds: 15));
+        client
+            .execute(HangupRequest(transaction: 'ignored', line: 0, callId: 'call'))
+            .then<void>((_) {}, onError: (Object e, _) => requestError = e);
+        async.elapse(const Duration(minutes: 10));
+
+        expect(requestError, isA<WebtritSignalingTransactionTimeoutException>());
+        expect(errors, isEmpty);
+      });
+    });
+
+    test('is watched by the interval the server names', () {
+      fakeAsync((async) {
+        when(() => mockSink.add(any())).thenAnswer((call) {
+          final frame = call.positionalArguments.single as String;
+          sent.add(frame);
+          if (frame.contains('"keepalive"')) streamController.add(frame);
+        });
+        listening();
+        streamController.add(_handshakeJson(keepaliveInterval: 60000));
+        async.flushMicrotasks();
+
+        async.elapse(const Duration(seconds: 59));
+        expect(keepalives(), 0);
+
+        async.elapse(const Duration(minutes: 10));
+        expect(errors, isEmpty);
+        expect(keepalives(), 10, reason: 'one per interval, the timer and the watch never both');
+      });
+    });
+
+    test('that never gets its state is asked a keepalive and given up', () {
+      fakeAsync((async) {
+        when(() => mockSink.add(any())).thenAnswer((call) => sent.add(call.positionalArguments.single as String));
+        listening();
+
+        async.elapse(interval);
+        expect(keepalives(), 1);
+        expect(errors, isEmpty);
+
+        async.elapse(wait);
+        async.flushMicrotasks();
+        expect(errors.single, isA<WebtritSignalingKeepaliveTransactionTimeoutException>());
+      });
+    });
+
+    test('that answers its keepalive before the state is given up at the answer', () {
+      fakeAsync((async) {
+        when(() => mockSink.add(any())).thenAnswer((call) {
+          final frame = call.positionalArguments.single as String;
+          sent.add(frame);
+          if (frame.contains('"keepalive"')) streamController.add(frame);
+        });
+        when(() => mockSink.close(any(), any())).thenAnswer((_) async {});
+        listening();
+
+        async.elapse(interval);
+        async.flushMicrotasks();
+        expect(keepalives(), 1);
+        final keepalive = jsonDecode(sent.single) as Map<String, dynamic>;
+        expect(
+          errors.single,
+          isA<WebtritSignalingKeepaliveWithoutStateException>().having(
+            (e) => e.transactionId,
+            'transactionId',
+            keepalive['transaction'],
+          ),
+        );
+        verify(() => mockSink.close(any(), any())).called(1);
+
+        streamController.add(_handshakeJson(keepaliveInterval: interval.inMilliseconds));
+        async.elapse(const Duration(minutes: 10));
+        expect(errors, hasLength(1), reason: 'a connection given up tells nothing more');
+        expect(keepalives(), 1);
+      });
+    });
+
+    test('whose state comes late but before the keepalive answer is kept', () {
+      fakeAsync((async) {
+        when(() => mockSink.add(any())).thenAnswer((call) => sent.add(call.positionalArguments.single as String));
+        listening();
+
+        async.elapse(interval);
+        expect(keepalives(), 1);
+
+        streamController.add(_handshakeJson(keepaliveInterval: interval.inMilliseconds));
+        async.elapse(const Duration(seconds: 5));
+        streamController.add(sent.single);
+        async.flushMicrotasks();
+
+        expect(errors, isEmpty, reason: 'the order of the frames counts, not how long the state took');
+      });
+    });
+
+    test('given up: waiting requests time out at once, the socket is closed, nothing more is taken', () {
+      fakeAsync((async) {
+        when(() => mockSink.add(any())).thenAnswer((call) => sent.add(call.positionalArguments.single as String));
+        final client = listening();
+        streamController.add(_handshakeJson(keepaliveInterval: interval.inMilliseconds));
+        async.flushMicrotasks();
+        Object? waitingError;
+        async.elapse(interval);
+        client
+            .execute(HangupRequest(transaction: 'waiting', line: 0, callId: 'call'), const Duration(minutes: 5))
+            .then<void>((_) {}, onError: (Object e, _) => waitingError = e);
+
+        async.elapse(wait);
+        async.flushMicrotasks();
+
+        expect(errors, hasLength(1));
+        expect(waitingError, isA<WebtritSignalingTransactionTimeoutException>());
+        expect(waitingError, isNot(isA<WebtritSignalingKeepaliveTransactionTimeoutException>()));
+        verify(() => mockSink.close()).called(1);
+        Object? lateError;
+        client
+            .execute(HangupRequest(transaction: 'late', line: 0, callId: 'call'))
+            .then<void>((_) {}, onError: (Object e, _) => lateError = e);
+        async.flushMicrotasks();
+        expect(lateError, isA<WebtritSignalingDisconnectedException>());
+      });
+    });
+
+    test('given up even when the error handler throws: the socket is closed first', () {
+      fakeAsync((async) {
+        when(() => mockSink.add(any())).thenAnswer((_) {});
+        final thrown = <Object>[];
+        runZonedGuarded(() {
+          WebtritSignalingClient.inner(mockChannel).listen(
+            onStateHandshake: (_) {},
+            onEvent: (_) {},
+            onError: (_, _) => throw StateError('handler'),
+            onDisconnect: (_, _) {},
+          );
+        }, (error, _) => thrown.add(error));
+
+        async.elapse(interval + wait);
+        async.flushMicrotasks();
+
+        expect(thrown.single, isStateError);
+
+        verify(() => mockSink.close()).called(1);
+      });
+    });
+
+    test('is not watched after a disconnect', () {
+      fakeAsync((async) {
+        when(() => mockSink.add(any())).thenAnswer((call) => sent.add(call.positionalArguments.single as String));
+        final client = listening();
+
+        client.disconnect();
+        async.elapse(const Duration(minutes: 10));
+
+        expect(errors, isEmpty);
+        expect(keepalives(), 0);
+      });
+    });
+  });
+
   group('Request transaction timeout', () {
     test(
       'should throw WebtritSignalingTransactionTimeoutException (not keepalive variant) when server ignores request',
