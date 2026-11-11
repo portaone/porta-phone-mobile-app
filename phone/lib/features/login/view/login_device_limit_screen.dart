@@ -32,12 +32,17 @@ class LoginDeviceLimitScreen extends StatelessWidget {
       builder: (context, processing) {
         return PopScope(
           canPop: !processing,
-          child: Scaffold(
-            appBar: AppBar(
-              title: Text(context.l10n.login_Text_deviceLimitTitle),
-              leading: ExtBackButton(disabled: processing),
+          child: AdaptiveLayout(
+            handset: (context) => Scaffold(
+              appBar: AppBar(
+                title: Text(context.l10n.login_Text_deviceLimitTitle),
+                leading: ExtBackButton(disabled: processing),
+              ),
+              body: SafeArea(child: LoginDeviceLimitBody(dateFormat: dateFormat)),
             ),
-            body: SafeArea(child: LoginDeviceLimitBody(dateFormat: dateFormat)),
+            // No app bar: the list draws the whole face under the screen's
+            // name; Back is the watch's swipe, held by the same PopScope.
+            watch: (context) => Scaffold(body: LoginDeviceLimitBody(dateFormat: dateFormat)),
           ),
         );
       },
@@ -61,6 +66,35 @@ class LoginDeviceLimitBody extends StatelessWidget {
         builder: (context, state) {
           // Empty while the screen is leaving: the login it was shown for is gone by then.
           final sessions = state.pendingLogin?.sessions ?? const <ActiveSession>[];
+          // On a watch the same rows are pills with a gap between them.
+          final tiles = SessionTiles(
+            children: [
+              for (final (index, session) in sessions.indexed)
+                SessionTile(
+                  session: session,
+                  index: index,
+                  dateFormat: dateFormat,
+                  revoking: state.pendingLoginRevokingSessionId == session.id,
+                  onRevoke: (session) => _onRevoke(context, session),
+                ),
+            ],
+          );
+
+          if (context.formFactor == FormFactor.watch) {
+            final themeData = Theme.of(context);
+            return WatchScrollList(
+              title: context.l10n.login_Text_deviceLimitTitle,
+              spacing: context.adaptiveMetrics.gap,
+              children: [
+                Text(
+                  context.l10n.login_Text_deviceLimitDescription,
+                  textAlign: TextAlign.center,
+                  style: themeData.textTheme.bodySmall?.copyWith(color: themeData.colorScheme.onSurfaceVariant),
+                ),
+                tiles,
+              ],
+            );
+          }
 
           return ListView(
             children: [
@@ -68,18 +102,7 @@ class LoginDeviceLimitBody extends StatelessWidget {
                 padding: const EdgeInsets.fromLTRB(kInset, kInset, kInset, kInset / 2),
                 child: Text(context.l10n.login_Text_deviceLimitDescription),
               ),
-              SessionTiles(
-                children: [
-                  for (final (index, session) in sessions.indexed)
-                    SessionTile(
-                      session: session,
-                      index: index,
-                      dateFormat: dateFormat,
-                      revoking: state.pendingLoginRevokingSessionId == session.id,
-                      onRevoke: (session) => _onRevoke(context, session),
-                    ),
-                ],
-              ),
+              tiles,
             ],
           );
         },
@@ -88,6 +111,12 @@ class LoginDeviceLimitBody extends StatelessWidget {
   }
 
   Future<void> _onRevoke(BuildContext context, ActiveSession session) async {
+    // While one device is being signed out the others keep their rows, but
+    // the login takes no second pick: on a watch, where the question takes the
+    // whole face, it is not asked when a yes would do nothing. The phone asks
+    // as it always has.
+    if (context.formFactor == FormFactor.watch && context.read<LoginCubit>().state.processing) return;
+
     final confirmed = await ConfirmDialog.showDangerous(
       context,
       title: context.l10n.sessions_RevokeConfirmDialog_title,
