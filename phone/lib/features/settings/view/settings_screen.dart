@@ -19,6 +19,7 @@ import 'package:webtrit_phone/widgets/widgets.dart';
 
 import '../settings.dart';
 import '../widgets/widgets.dart';
+import 'settings_screen_watch.dart';
 
 export 'settings_screen_style.dart';
 export 'settings_screen_styles.dart';
@@ -35,7 +36,21 @@ class SettingsScreen extends StatelessWidget {
   final SettingScreenStyle? style;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context) => AdaptiveLayout(
+    handset: _handset,
+    watch: (context) => SettingsScreenWatch(
+      sections: sections,
+      sessionsEnabled: sessionsEnabled,
+      style: style,
+      onDiagnostic: () => _onDiagnosticTap(context),
+      onSessions: () => _onSessionsTap(context),
+      onRegisterChanged: (value) => _onRegisterStatusChanged(context, value),
+      onItem: (item) => _onItemTap(context, item),
+      onLogout: () => _onLogoutTap(context),
+    ),
+  );
+
+  Widget _handset(BuildContext context) {
     final themeData = Theme.of(context);
     final effectiveStyle = style ?? themeData.extension<SettingsScreenStyles>()?.primary;
 

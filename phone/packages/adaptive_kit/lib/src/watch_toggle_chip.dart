@@ -13,11 +13,17 @@ class WatchToggleChip extends StatelessWidget {
     required this.label,
     required this.value,
     required this.onChanged,
+    this.subtitle,
     this.identifier,
     this.toggleKey,
   });
 
   final String label;
+
+  /// A line under the label: what the state means ("Account can receive
+  /// calls") or why it cannot change now.
+  final String? subtitle;
+
   final bool value;
   final ValueChanged<bool>? onChanged;
 
@@ -47,7 +53,22 @@ class WatchToggleChip extends StatelessWidget {
             child: Row(
               children: [
                 Expanded(
-                  child: Text(label, style: themeData.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w500)),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(label, style: themeData.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w500)),
+                      if (subtitle case final subtitle?)
+                        Text(
+                          subtitle,
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                          style: themeData.textTheme.labelSmall?.copyWith(
+                            color: themeData.colorScheme.onSurfaceVariant,
+                          ),
+                        ),
+                    ],
+                  ),
                 ),
                 // The pill is the target; the switch only shows the state, so
                 // it stays out of the semantics and out of the hit test.
