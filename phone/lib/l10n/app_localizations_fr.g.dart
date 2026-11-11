@@ -2860,6 +2860,9 @@ class AppLocalizationsFr extends AppLocalizations {
   String get sessions_Button_retry => 'Réessayer';
 
   @override
+  String get sessions_Watch_revokeAllOthers => 'Déconnecter les autres';
+
+  @override
   String get sessions_Button_revokeAllOthers => 'Déconnecter les autres sessions';
 
   @override

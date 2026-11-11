@@ -117,4 +117,17 @@ void main() {
       });
     }
   });
+
+  testWidgets('a read-only WatchListTile is drawn at full strength and read as text, not a button', (tester) async {
+    final handle = tester.ensureSemantics();
+    watchPresets.first.apply(tester);
+    await tester.pumpWidget(
+      wrap(const WatchListTile(title: 'Pixel Watch 3', subtitle: 'Active now', readOnly: true, selected: true)),
+    );
+
+    expect(tester.widget<Opacity>(find.byType(Opacity).first).opacity, 1);
+    final node = find.semantics.byLabel('Pixel Watch 3, Active now').evaluate().single;
+    expect(node.flagsCollection.isButton, isFalse);
+    handle.dispose();
+  });
 }

@@ -26,6 +26,7 @@ class WatchListTile extends StatelessWidget {
     this.onTap,
     this.onLongPress,
     this.longPressHint,
+    this.readOnly = false,
   });
 
   final String title;
@@ -68,12 +69,19 @@ class WatchListTile extends StatelessWidget {
   /// press".
   final String? longPressHint;
 
+  /// A row that shows something and takes no tap - this device among the
+  /// signed-in ones: drawn at full strength rather than dimmed as a disabled
+  /// row, and read as text, not as a button. [onTap] and [onLongPress] are
+  /// ignored.
+  final bool readOnly;
+
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
     final textTheme = Theme.of(context).textTheme;
     final subtitle = this.subtitle;
-    final enabled = onTap != null;
+    final tap = readOnly ? null : onTap;
+    final enabled = tap != null;
     // A row shown disabled offers neither of its actions.
     final longPress = enabled ? onLongPress : null;
 
@@ -84,13 +92,13 @@ class WatchListTile extends StatelessWidget {
         selected: selected,
         onLongPressHint: longPress == null ? null : longPressHint,
         child: Opacity(
-          opacity: enabled ? 1 : 0.45,
+          opacity: enabled || readOnly ? 1 : 0.45,
           child: Material(
             color: selected ? colorScheme.secondaryContainer : colorScheme.surfaceContainerHighest,
             shape: StadiumBorder(side: outlined ? BorderSide(color: colorScheme.primary, width: 1.5) : BorderSide.none),
             clipBehavior: Clip.antiAlias,
             child: InkWell(
-              onTap: onTap,
+              onTap: tap,
               onLongPress: longPress,
               child: ConstrainedBox(
                 constraints: const BoxConstraints(minHeight: WatchPill.height),

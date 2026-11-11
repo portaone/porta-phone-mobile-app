@@ -2879,6 +2879,9 @@ class AppLocalizationsUk extends AppLocalizations {
   String get sessions_Button_retry => 'Спробувати ще раз';
 
   @override
+  String get sessions_Watch_revokeAllOthers => 'Вийти на інших';
+
+  @override
   String get sessions_Button_revokeAllOthers => 'Вийти з інших сесій';
 
   @override

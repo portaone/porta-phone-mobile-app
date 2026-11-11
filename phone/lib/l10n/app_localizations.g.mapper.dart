@@ -1195,6 +1195,7 @@ extension AppLocalizationsExtension on AppLocalizations {
       'sessions_AutoTerminateOther_label' => sessions_AutoTerminateOther_label,
       'sessions_AutoTerminateOther_save' => sessions_AutoTerminateOther_save,
       'sessions_Button_retry' => sessions_Button_retry,
+      'sessions_Watch_revokeAllOthers' => sessions_Watch_revokeAllOthers,
       'sessions_Button_revokeAllOthers' => sessions_Button_revokeAllOthers,
       'sessions_Placeholder_empty' => sessions_Placeholder_empty,
       'sessions_Placeholder_failure' => sessions_Placeholder_failure,

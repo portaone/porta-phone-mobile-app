@@ -30,7 +30,15 @@ class SessionTiles extends StatelessWidget {
   final List<SessionTile> children;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context) => AdaptiveLayout(handset: _handset, watch: _watch);
+
+  /// On a watch each row is a pill of its own: a gap between them, no surface
+  /// or divider.
+  Widget _watch(BuildContext context) {
+    return Column(spacing: context.adaptiveMetrics.gap, children: children);
+  }
+
+  Widget _handset(BuildContext context) {
     return ColoredBox(
       color: Theme.of(context).colorScheme.surfaceBright,
       child: Column(
@@ -80,7 +88,37 @@ class SessionTile extends StatelessWidget {
   final Version? ownAppVersion;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context) => AdaptiveLayout(handset: _handset, watch: _watch);
+
+  /// One row: the kind's icon, the device, where and when it was seen; this
+  /// device tinted and taking no tap, another one signed out by a tap, a
+  /// spinner in place of its mark while that is on its way.
+  Widget _watch(BuildContext context) {
+    final l10n = context.l10n;
+    final device = SessionDevice.parse(session.userAgent);
+    final title = device?.deviceName ?? _titleOf(l10n, session.appType);
+    final details = [
+      ?device?.osLabel,
+      if (session.lastActivityLocation ?? session.location case final location?) location.toUpperCase(),
+    ];
+    final seenAt = (session.lastActivityAt ?? session.createdAt)?.toLocal();
+    final appVersion = _foreignAppVersion(device);
+
+    _WatchSessionRow row(String? seen) => _WatchSessionRow(
+      session: session,
+      index: index,
+      icon: _kindOf(session.appType, device?.deviceName).icon,
+      title: title,
+      subtitle: [...details, ?seen, if (appVersion != null) l10n.sessions_Tile_appVersion(appVersion)],
+      revoking: revoking,
+      onRevoke: onRevoke,
+    );
+
+    if (seenAt == null) return row(null);
+    return _SeenAt(at: seenAt, dateFormat: dateFormat, builder: row);
+  }
+
+  Widget _handset(BuildContext context) {
     final l10n = context.l10n;
     final themeData = Theme.of(context);
     final colorScheme = themeData.colorScheme;
@@ -230,6 +268,17 @@ class _SeenAtState extends State<_SeenAt> {
     _timer = Timer.periodic(_seenAtTick, (_) => setState(() {}));
   }
 
+  /// A list keeps this state by position, so after a row above is removed it
+  /// may serve another device; one whose earlier time had stopped the clock
+  /// must start it again.
+  @override
+  void didUpdateWidget(_SeenAt oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.at != oldWidget.at && _timer == null) {
+      _timer = Timer.periodic(_seenAtTick, (_) => setState(() {}));
+    }
+  }
+
   @override
   void dispose() {
     _timer?.cancel();
@@ -257,7 +306,17 @@ class _SeenAtState extends State<_SeenAt> {
   }
 }
 
-enum _Kind { phone, tablet, web, desktop, unknown }
+enum _Kind {
+  phone(Icons.smartphone),
+  tablet(Icons.tablet_android),
+  web(Icons.language),
+  desktop(Icons.desktop_windows),
+  unknown(Icons.devices_other);
+
+  const _Kind(this.icon);
+
+  final IconData icon;
+}
 
 class _KindIcon extends StatelessWidget {
   const _KindIcon({required this.kind, required this.current});
@@ -268,13 +327,7 @@ class _KindIcon extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
-    final icon = switch (kind) {
-      _Kind.phone => Icons.smartphone,
-      _Kind.tablet => Icons.tablet_android,
-      _Kind.web => Icons.language,
-      _Kind.desktop => Icons.desktop_windows,
-      _Kind.unknown => Icons.devices_other,
-    };
+    final icon = kind.icon;
     return Container(
       width: 40,
       height: 40,
@@ -283,6 +336,51 @@ class _KindIcon extends StatelessWidget {
         color: current ? colorScheme.primaryContainer : colorScheme.surfaceContainerHighest,
       ),
       child: Icon(icon, size: 20, color: current ? colorScheme.onPrimaryContainer : colorScheme.onSurfaceVariant),
+    );
+  }
+}
+
+/// A session as a row on a watch: the device, what is known of it and when it
+/// was last seen; this device tinted and taking no tap, another one signed
+/// out by a tap.
+class _WatchSessionRow extends StatelessWidget {
+  const _WatchSessionRow({
+    required this.session,
+    required this.index,
+    required this.icon,
+    required this.title,
+    required this.subtitle,
+    required this.revoking,
+    required this.onRevoke,
+  });
+
+  final ActiveSession session;
+  final int index;
+  final IconData icon;
+  final String title;
+  final List<String> subtitle;
+  final bool revoking;
+  final ValueChanged<ActiveSession> onRevoke;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    return WatchListTile(
+      identifier: session.current ? sessionsCurrentTileId : numberedId(sessionsTileId, index),
+      leading: Icon(icon),
+      title: title,
+      subtitle: subtitle.isEmpty ? null : subtitle.join(_separator),
+      // The parts with pauses, not the middle dots the eye reads; another
+      // device's row also says what a tap does: it signs it out.
+      semanticsLabel: [title, ...subtitle, if (!session.current) l10n.sessions_Tile_revokeTooltip].join(', '),
+      selected: session.current,
+      readOnly: session.current,
+      trailing: session.current
+          ? null
+          : revoking
+          ? const SizedCircularProgressIndicator(size: 16, strokeWidth: 2)
+          : Icon(Icons.logout, color: Theme.of(context).colorScheme.error),
+      onTap: session.current || revoking ? null : () => onRevoke(session),
     );
   }
 }

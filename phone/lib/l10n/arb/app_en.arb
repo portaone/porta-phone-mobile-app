@@ -2743,6 +2743,10 @@
   },
   "sessions_Button_retry": "Try again",
   "@sessions_Button_retry": {},
+  "sessions_Watch_revokeAllOthers": "Sign out others",
+  "@sessions_Watch_revokeAllOthers": {
+    "description": "On a watch, the red edge button that signs out every other session (the phone's 'Sign out other sessions', shortened to fit the edge)."
+  },
   "sessions_Button_revokeAllOthers": "Sign out other sessions",
   "@sessions_Button_revokeAllOthers": {
     "description": "Action that revokes every session except the one on this device."

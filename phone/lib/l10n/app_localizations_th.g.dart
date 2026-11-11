@@ -2810,6 +2810,9 @@ class AppLocalizationsTh extends AppLocalizations {
   String get sessions_Button_retry => 'ลองอีกครั้ง';
 
   @override
+  String get sessions_Watch_revokeAllOthers => 'ออกจากระบบอื่น';
+
+  @override
   String get sessions_Button_revokeAllOthers => 'ออกจากระบบเซสชันอื่น';
 
   @override
