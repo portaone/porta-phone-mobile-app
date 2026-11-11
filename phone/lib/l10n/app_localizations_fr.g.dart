@@ -748,6 +748,9 @@ class AppLocalizationsFr extends AppLocalizations {
   String get common_Watch_openOnPhone_retry => 'Réessayer';
 
   @override
+  String get common_Watch_phoneOnly => 'Ouvrez-la dans l\'app sur votre téléphone';
+
+  @override
   String get common_SemanticsLabel_loading => 'Chargement';
 
   @override

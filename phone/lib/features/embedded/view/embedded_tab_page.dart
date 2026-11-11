@@ -22,6 +22,7 @@ import '../utils/utils.dart';
 import '../bloc/embedded_cubit.dart';
 
 import 'embedded_screen.dart';
+import 'embedded_watch_page.dart';
 
 @RoutePage()
 class EmbeddedTabPage extends StatelessWidget {
@@ -31,7 +32,12 @@ class EmbeddedTabPage extends StatelessWidget {
   final String id;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context) => AdaptiveLayout(
+    handset: _handset,
+    watch: (_) => EmbeddedTabPageWatch(id: id),
+  );
+
+  Widget _handset(BuildContext context) {
     final bottomMenuManager = context.read<FeatureAccess>().bottomMenuConfig;
     final data = bottomMenuManager.getEmbeddedTabById(id);
 

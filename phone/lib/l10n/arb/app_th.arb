@@ -675,6 +675,8 @@
   "@common_Watch_openOnPhone_failedHint": {},
   "common_Watch_openOnPhone_retry": "ลองอีกครั้ง",
   "@common_Watch_openOnPhone_retry": {},
+  "common_Watch_phoneOnly": "เปิดในแอปบนโทรศัพท์ของคุณ",
+  "@common_Watch_phoneOnly": {},
   "common_SemanticsLabel_loading": "กำลังโหลด",
   "@common_SemanticsLabel_loading": {
     "description": "Accessibility name announced while a screen waits for a request to finish."

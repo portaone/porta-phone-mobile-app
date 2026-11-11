@@ -268,6 +268,7 @@ extension AppLocalizationsExtension on AppLocalizations {
       'common_Watch_openOnPhone_failedHint' =>
         common_Watch_openOnPhone_failedHint,
       'common_Watch_openOnPhone_retry' => common_Watch_openOnPhone_retry,
+      'common_Watch_phoneOnly' => common_Watch_phoneOnly,
       'common_SemanticsLabel_loading' => common_SemanticsLabel_loading,
       'common_noInternetConnection_message' =>
         common_noInternetConnection_message,

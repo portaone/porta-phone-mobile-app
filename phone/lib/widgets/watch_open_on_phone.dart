@@ -14,7 +14,8 @@ typedef WatchPhoneOpener = Future<bool> Function(Uri uri);
 /// A page a watch cannot show - a watch has no web view - sent to the paired
 /// phone instead: the page's name, "Opens on your phone", and Open on phone
 /// on the edge. Taken by the phone, the face says where to look and goes back
-/// after a moment; with no phone to take it, it says so with Try again.
+/// after a moment - or, at the root with nothing to go back to, offers sending
+/// again; with no phone to take it, it says so with Try again.
 class WatchOpenOnPhonePage extends StatefulWidget {
   const WatchOpenOnPhonePage({super.key, required this.title, required this.uri, this.opener = PhoneLink.open});
 
@@ -76,17 +77,18 @@ class _WatchOpenOnPhonePageState extends State<WatchOpenOnPhonePage> {
     _back = Timer(WatchOpenOnPhonePage.sentFor, _goBack);
   }
 
-  void _goBack() {
+  Future<void> _goBack() async {
     if (!mounted) return;
     // Only this page, and only while it is on top: the navigator may be the
     // main screen's, shared with Settings, a chat or a call opened over the
-    // page in the meantime, which a pop would close instead. Under another
-    // page it is not left, and offers to send again once back on top.
-    if (ModalRoute.of(context)?.isCurrent ?? false) {
-      Navigator.of(context).maybePop();
-    } else {
-      setState(() => _state = _Sending.idle);
-    }
+    // page in the meantime, which a pop would close instead.
+    final current = ModalRoute.of(context)?.isCurrent ?? false;
+    final popped = current && await Navigator.of(context).maybePop();
+    // A page at the root of its navigator - an embedded section, a tab of the
+    // main screen - has nothing under it to go back to, and one under another
+    // page is not left; on "Check your phone" it would have no way to send
+    // the page again.
+    if (!popped && mounted) setState(() => _state = _Sending.idle);
   }
 
   @override

@@ -675,6 +675,8 @@
   "@common_Watch_openOnPhone_failedHint": {},
   "common_Watch_openOnPhone_retry": "Riprova",
   "@common_Watch_openOnPhone_retry": {},
+  "common_Watch_phoneOnly": "Aprila nell'app sul telefono",
+  "@common_Watch_phoneOnly": {},
   "common_SemanticsLabel_loading": "Caricamento",
   "@common_SemanticsLabel_loading": {
     "description": "Accessibility name announced while a screen waits for a request to finish."

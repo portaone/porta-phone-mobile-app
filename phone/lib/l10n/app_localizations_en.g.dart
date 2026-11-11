@@ -737,6 +737,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get common_Watch_openOnPhone_retry => 'Try again';
 
   @override
+  String get common_Watch_phoneOnly => 'Open it in the app on your phone';
+
+  @override
   String get common_SemanticsLabel_loading => 'Loading';
 
   @override

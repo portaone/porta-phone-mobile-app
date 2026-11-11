@@ -726,6 +726,9 @@ class AppLocalizationsTh extends AppLocalizations {
   String get common_Watch_openOnPhone_retry => 'ลองอีกครั้ง';
 
   @override
+  String get common_Watch_phoneOnly => 'เปิดในแอปบนโทรศัพท์ของคุณ';
+
+  @override
   String get common_SemanticsLabel_loading => 'กำลังโหลด';
 
   @override

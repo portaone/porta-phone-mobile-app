@@ -742,6 +742,9 @@ class AppLocalizationsIt extends AppLocalizations {
   String get common_Watch_openOnPhone_retry => 'Riprova';
 
   @override
+  String get common_Watch_phoneOnly => 'Aprila nell\'app sul telefono';
+
+  @override
   String get common_SemanticsLabel_loading => 'Caricamento';
 
   @override

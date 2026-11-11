@@ -787,6 +787,8 @@
   "@common_Watch_openOnPhone_failedHint": {},
   "common_Watch_openOnPhone_retry": "Réessayer",
   "@common_Watch_openOnPhone_retry": {},
+  "common_Watch_phoneOnly": "Ouvrez-la dans l'app sur votre téléphone",
+  "@common_Watch_phoneOnly": {},
   "common_SemanticsLabel_loading": "Chargement",
   "@common_SemanticsLabel_loading": {
     "description": "Accessibility name announced while a screen waits for a request to finish."

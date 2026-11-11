@@ -801,6 +801,10 @@
   "@common_Watch_openOnPhone_retry": {
     "description": "On a watch, the edge button under 'No phone connected': sends the page to the phone again."
   },
+  "common_Watch_phoneOnly": "Open it in the app on your phone",
+  "@common_Watch_phoneOnly": {
+    "description": "On a watch, a page built into the app that cannot be sent to the phone as a link: it is read in the app on the phone."
+  },
   "common_SemanticsLabel_loading": "Loading",
   "@common_SemanticsLabel_loading": {
     "description": "Accessibility name announced while a screen waits for a request to finish."

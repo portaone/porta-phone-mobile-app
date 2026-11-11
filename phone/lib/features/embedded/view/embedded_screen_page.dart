@@ -22,6 +22,7 @@ import '../bloc/embedded_cubit.dart';
 import '../utils/utils.dart';
 
 import 'embedded_screen.dart';
+import 'embedded_watch_page.dart';
 
 final _logger = Logger('EmbeddedScreenPage');
 
@@ -33,7 +34,12 @@ class EmbeddedScreenPage extends StatelessWidget {
   final EmbeddedData data;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context) => AdaptiveLayout(
+    handset: _handset,
+    watch: (_) => EmbeddedScreenPageWatch(data: data),
+  );
+
+  Widget _handset(BuildContext context) {
     final selfConfigRepository = context.readOrNull<PrivateGatewayRepository>();
     final secureStorage = context.read<SecureStorage>();
     final appMetadataProvider = context.read<AppMetadataProvider>();
