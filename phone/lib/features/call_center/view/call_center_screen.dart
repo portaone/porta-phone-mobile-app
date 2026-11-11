@@ -11,10 +11,12 @@ class CallCenterScreen extends StatelessWidget {
   const CallCenterScreen({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    return Scaffold(
+  Widget build(BuildContext context) => AdaptiveLayout(
+    handset: (context) => Scaffold(
       appBar: AppBar(title: Text(context.l10n.callCenter_AppBarTitle), leading: const ExtBackButton()),
       body: const CallCenterBody(),
-    );
-  }
+    ),
+    // No app bar: the queues draw the whole face under the screen's name.
+    watch: (context) => Scaffold(body: CallCenterBody(watchTitle: context.l10n.callCenter_AppBarTitle)),
+  );
 }

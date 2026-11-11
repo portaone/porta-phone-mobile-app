@@ -9,10 +9,18 @@ import 'call_center_screen_styles.dart';
 /// The queues as a section of the bottom menu: the same bar every section
 /// carries, so the header does not change from tab to tab.
 class CallCenterTabScreen extends StatelessWidget {
-  const CallCenterTabScreen({super.key});
+  const CallCenterTabScreen({super.key, required this.watchTitle});
+
+  /// The section's name, heading the queues on a watch.
+  final String watchTitle;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context) => AdaptiveLayout(handset: _handset, watch: _watch);
+
+  /// No bar: the queues draw the whole face under the section's name.
+  Widget _watch(BuildContext context) => ThemedScaffold(body: CallCenterBody(watchTitle: watchTitle));
+
+  Widget _handset(BuildContext context) {
     return ThemedScaffold(
       // The configured bar is transparent; the tint that keeps it from reading
       // as part of the background comes from this section's page style.

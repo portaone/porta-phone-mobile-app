@@ -186,4 +186,16 @@ void main() {
       handle.dispose();
     });
   });
+
+  testWidgets('a WatchToggleChip offering nothing says it is disabled', (tester) async {
+    final handle = tester.ensureSemantics();
+    watchPresets.first.apply(tester);
+    await tester.pumpWidget(
+      wrap(const WatchToggleChip(label: 'Sales', value: true, identifier: 'sales', onChanged: null)),
+    );
+
+    final node = find.semantics.byPredicate((node) => node.identifier == 'sales').evaluate().single;
+    expect(node.flagsCollection.isEnabled, Tristate.isFalse);
+    handle.dispose();
+  });
 }

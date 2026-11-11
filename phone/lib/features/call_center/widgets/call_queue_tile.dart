@@ -7,6 +7,18 @@ import 'package:webtrit_phone/widgets/widgets.dart';
 
 import 'queue_status_dot.dart';
 
+/// How many callers wait in [queue], as a row of it says - on the phone's
+/// list and on a watch's pill alike.
+///
+/// Unknown is not zero. Where the PBX call control interface is out of reach
+/// the figure is absent on every queue, permanently, so it reads as a dash -
+/// telling an agent that nobody is waiting would be a lie the screen cannot
+/// take back.
+String callersWaitingLabel(AppLocalizations l10n, CallQueue queue) => switch (queue.callersWaiting) {
+  final count? => l10n.callCenter_Text_callersWaiting(count),
+  null => l10n.callCenter_Text_callersWaitingUnknown,
+};
+
 /// One queue: what it is called, how loaded it is, and whether this agent is
 /// taking its calls.
 ///
@@ -26,13 +38,7 @@ class CallQueueTile extends StatelessWidget {
 
     final title = Text(queue.name, maxLines: 1, overflow: TextOverflow.ellipsis);
 
-    // Unknown is not zero. Where the PBX call control interface is out of
-    // reach the figure is absent on every queue, permanently, so it reads as a
-    // dash - telling an agent that nobody is waiting would be a lie the screen
-    // cannot take back.
-    final waiting = queue.callersWaiting == null
-        ? l10n.callCenter_Text_callersWaitingUnknown
-        : l10n.callCenter_Text_callersWaiting(queue.callersWaiting!);
+    final waiting = callersWaitingLabel(l10n, queue);
 
     final subtitle = Row(
       children: [
