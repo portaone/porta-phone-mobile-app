@@ -8,7 +8,6 @@ import 'package:webtrit_phone/data/data.dart';
 import 'package:webtrit_phone/extensions/extensions.dart';
 import 'package:webtrit_phone/features/features.dart';
 import 'package:webtrit_phone/l10n/l10n.dart';
-import 'package:webtrit_phone/models/models.dart';
 import 'package:webtrit_phone/theme/theme.dart';
 import 'package:webtrit_phone/utils/utils.dart';
 import 'package:webtrit_phone/widgets/widgets.dart';
@@ -20,42 +19,11 @@ class CallLogScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return AdaptiveLayout(handset: _handset, watch: _watch);
-  }
-
-  Widget _watch(BuildContext context) {
-    final timeOrDateFormat = context.read<AppTime>().timeOrDateFormat(Localizations.localeOf(context));
-    return Scaffold(
-      body: BlocBuilder<CallLogBloc, CallLogState>(
-        builder: (context, state) {
-          final number = state.number;
-          final name = state.contact?.maybeName;
-          final callLog = state.callLog ?? const <CallLogEntry>[];
-          return CallLogWatchPage(
-            title: state.contact?.displayTitle ?? number,
-            number: number,
-            loading: state.callLog == null,
-            itemCount: callLog.length,
-            itemBuilder: (context, index) {
-              final entry = callLog[index];
-              return CallLogWatchRow(
-                key: ObjectKey(entry),
-                direction: entry.direction,
-                complete: entry.isComplete,
-                missed: entry.isMissedIncoming,
-                // A call that never connected says Missed, as the phone's
-                // row does; only an incoming one is red.
-                status: entry.isComplete
-                    ? (entry.duration ?? Duration.zero).format()
-                    : context.l10n.recents_HistoryTile_missedCallText,
-                time: timeOrDateFormat.format(entry.createdTime),
-                video: entry.video,
-              );
-            },
-            onCall: () => _initiateCall(context, number, name, false),
-            onVideoCall: videoVisible ? () => _initiateCall(context, number, name, true) : null,
-          );
-        },
+    return AdaptiveLayout(
+      handset: _handset,
+      watch: (context) => CallLogScreenWatch(
+        videoVisible: videoVisible,
+        onCall: (number, name, video) => _initiateCall(context, number, name, video),
       ),
     );
   }

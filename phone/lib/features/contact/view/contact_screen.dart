@@ -67,27 +67,21 @@ class _ContactScreenState extends State<ContactScreen> {
 
         return AdaptiveLayout(
           handset: (context) => _handset(context, contact),
-          watch: (context) => Scaffold(
-            body: SemanticId(
-              identifier: contactScreenId,
-              child: ContactWatchView(
-                contact: contact,
-                phones: contact.displayPhoneEntries,
-                onCall: widget.enableTileVoiceCall ? (number) => _call(number, contact, video: false) : null,
-                pickLabel: purpose == null ? null : (phone) => purpose.pickLabel(_candidate(phone, contact)),
-                pickIcon: purpose?.pickIcon,
-                onPick: purpose == null ? null : (phone) => _pickCallback(purpose, phone, contact),
-                onVideoCall: widget.enableTileVideoCall ? (number) => _call(number, contact, video: true) : null,
-                onMessage: (widget.enableTileChat || widget.enableAppBarChat) && contact.canMessage
-                    ? () => _navigateToChatConversation(contact)
-                    : null,
-                onCallLog: widget.enableTileCallLog ? _onCallLogPressed : null,
-                onFavoriteChanged: widget.enableTileFavorite
-                    ? (phone, favorite) => _onFavoriteChanged(favorite, phone, contact)
-                    : null,
-                onEmail: widget.enableTileEmail ? _onEmailPressed : null,
-              ),
-            ),
+          watch: (context) => ContactScreenWatch(
+            contact: contact,
+            onCall: widget.enableTileVoiceCall ? (number) => _call(number, contact, video: false) : null,
+            pickLabel: purpose == null ? null : (phone) => purpose.pickLabel(_candidate(phone, contact)),
+            pickIcon: purpose?.pickIcon,
+            onPick: purpose == null ? null : (phone) => _pickCallback(purpose, phone, contact),
+            onVideoCall: widget.enableTileVideoCall ? (number) => _call(number, contact, video: true) : null,
+            onMessage: (widget.enableTileChat || widget.enableAppBarChat) && contact.canMessage
+                ? () => _navigateToChatConversation(contact)
+                : null,
+            onCallLog: widget.enableTileCallLog ? _onCallLogPressed : null,
+            onFavoriteChanged: widget.enableTileFavorite
+                ? (phone, favorite) => _onFavoriteChanged(favorite, phone, contact)
+                : null,
+            onEmail: widget.enableTileEmail ? _onEmailPressed : null,
           ),
         );
       },
