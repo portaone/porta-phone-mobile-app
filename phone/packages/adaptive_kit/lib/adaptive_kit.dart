@@ -17,6 +17,7 @@ export 'src/watch_list_note.dart';
 export 'src/watch_list_tile.dart';
 export 'src/watch_pill.dart';
 export 'src/watch_pill_button.dart';
+export 'src/watch_play_button.dart';
 export 'src/watch_round_button.dart';
 export 'src/watch_scroll_list.dart';
 export 'src/watch_search_row.dart';

@@ -245,7 +245,9 @@ void main() {
 
       await tester.pumpWidget(
         MediaQuery(
-          data: MediaQueryData(supportsAnnounce: announces),
+          // The test window's size kept: a MediaQuery of no size is a face
+          // too small for anything but a watch's layout.
+          data: MediaQueryData.fromView(tester.view).copyWith(supportsAnnounce: announces),
           child: host(),
         ),
       );

@@ -16,10 +16,22 @@ import 'voicemail_screen_styles.dart';
 /// managed. What is left is the delete control for messages picked by hand,
 /// which shows itself only once something is picked.
 class VoicemailTabScreen extends StatelessWidget {
-  const VoicemailTabScreen({super.key});
+  const VoicemailTabScreen({super.key, required this.watchTitle});
+
+  /// The section's name, heading the list on a watch.
+  final String watchTitle;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context) => AdaptiveLayout(handset: _handset, watch: _watch);
+
+  /// No bar: the list draws the whole face under the section's name.
+  Widget _watch(BuildContext context) {
+    return ThemedScaffold(
+      body: VoicemailBody(origin: voicemailTabRoute, watchTitle: watchTitle),
+    );
+  }
+
+  Widget _handset(BuildContext context) {
     return ThemedScaffold(
       // The configured bar is transparent; the tint that keeps it from reading
       // as part of the background comes from this section's page style.

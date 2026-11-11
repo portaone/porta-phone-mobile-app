@@ -8,6 +8,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:webtrit_phone/app/router/app_router.dart';
 import 'package:webtrit_phone/data/data.dart';
 import 'package:webtrit_phone/l10n/app_localizations.g.mapper.dart';
+import 'package:webtrit_phone/widgets/widgets.dart';
 
 import '../bloc/bloc.dart';
 import '../widgets/widgets.dart';
@@ -18,7 +19,15 @@ class VoicemailScreen extends StatelessWidget {
   const VoicemailScreen({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context) => AdaptiveLayout(handset: _handset, watch: _watch);
+
+  /// No app bar: the list draws the whole face under the screen's name, and
+  /// what manages the whole mailbox stays on the phone.
+  Widget _watch(BuildContext context) => Scaffold(
+    body: VoicemailBody(origin: voicemailSettingsRoute, watchTitle: context.l10n.voicemail_Widget_screenTitle),
+  );
+
+  Widget _handset(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: Text(context.l10n.voicemail_Widget_screenTitle),

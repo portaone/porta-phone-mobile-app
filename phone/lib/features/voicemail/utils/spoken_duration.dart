@@ -16,3 +16,10 @@ String spokenDuration(AppLocalizations l10n, Duration duration) {
     l10n.common_SemanticsValue_durationSeconds(seconds),
   );
 }
+
+/// [duration] as the player draws it: `0:10`, `1:05`.
+String drawnDuration(Duration duration) {
+  final minutes = duration.inMinutes;
+  final seconds = duration.inSeconds % 60;
+  return '$minutes:${seconds.toString().padLeft(2, '0')}';
+}

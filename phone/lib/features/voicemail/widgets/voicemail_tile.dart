@@ -169,12 +169,7 @@ class VoicemailTile extends StatelessWidget {
           title: Row(
             spacing: 6,
             children: [
-              Flexible(
-                child: Text(
-                  voicemail.hasSender ? voicemail.displaySender : context.l10n.notifications_missedCall_unknownCaller,
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ),
+              Flexible(child: Text(voicemail.senderName(context), overflow: TextOverflow.ellipsis)),
               if (_saved)
                 Icon(
                   Icons.bookmark,
