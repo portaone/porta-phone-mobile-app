@@ -1,5 +1,3 @@
-import 'dart:ui';
-
 import 'package:flutter/foundation.dart';
 import 'package:material_ui/material_ui.dart';
 
@@ -12,6 +10,7 @@ import 'package:webtrit_phone/models/models.dart';
 import 'package:webtrit_phone/widgets/widgets.dart';
 import 'package:webtrit_phone/app/constants.dart';
 
+import 'conversation_layout.dart';
 import 'message_text_field.dart';
 import 'typing_indicator.dart';
 import '../message_view/sms_message_view.dart';
@@ -125,47 +124,16 @@ class _SmsMessageListViewState extends State<SmsMessageListView> {
 
   @override
   Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
-
-    return Stack(
-      children: [
-        list(),
-        Positioned(top: MediaQuery.of(context).padding.top, left: 0, right: 0, child: const MessagingStateBar()),
-        Positioned(
-          bottom: 0,
-          left: 0,
-          right: 0,
-          child: Column(
-            children: [
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                alignment: Alignment.centerRight,
-                child: ScrollToBottomButton(scrolledAway, scrollToBottom),
-              ),
-              const SizedBox(height: 24),
-              ClipRRect(
-                child: BackdropFilter(
-                  filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-                  child: Column(
-                    children: [
-                      MessageTextField(
-                        controller: inputController,
-                        onSend: handleSend,
-                        onChanged: (value) => context.read<SmsTypingCubit>().sendTyping(),
-                        maxLength: kSmsMessagingMaxLength,
-                      ),
-                      Container(
-                        height: MediaQuery.of(context).padding.bottom,
-                        color: colorScheme.surface.withAlpha(200),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ],
+    return ConversationLayout(
+      list: list(),
+      bar: MessageTextField(
+        controller: inputController,
+        onSend: handleSend,
+        onChanged: (value) => context.read<SmsTypingCubit>().sendTyping(),
+        maxLength: kSmsMessagingMaxLength,
+      ),
+      scrolledAway: scrolledAway,
+      onScrollToBottom: scrollToBottom,
     );
   }
 
