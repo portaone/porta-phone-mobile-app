@@ -218,6 +218,21 @@ void main() {
     handle.dispose();
   });
 
+  testWidgets('while a device is being signed out, another one still asks first, as it always has', (tester) async {
+    final handle = tester.ensureSemantics();
+
+    await tester.pumpWidget(wrap());
+    cubit.emit(cubit.state.copyWith(processing: true, pendingLoginRevokingSessionId: 'session-1'));
+    await tester.pump();
+
+    await tapViaSemantics(tester, signOutOf('iPhone 12 mini'));
+    // The row being signed out spins, so the screen never settles.
+    await tester.pump(const Duration(milliseconds: 500));
+    expect(find.text('Sign out this session?'), findsOneWidget);
+
+    handle.dispose();
+  });
+
   testWidgets('a device that turned out to be signed out already leaves the list', (tester) async {
     await tester.pumpWidget(wrap());
 
