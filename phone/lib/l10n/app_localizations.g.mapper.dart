@@ -409,6 +409,9 @@ extension AppLocalizationsExtension on AppLocalizations {
         diagnostic_permission_contacts_description,
       'diagnostic_permission_contacts_title' =>
         diagnostic_permission_contacts_title,
+      'diagnostic_Watch_openSettings' => diagnostic_Watch_openSettings,
+      'diagnostic_Watch_allow' => diagnostic_Watch_allow,
+      'diagnostic_Watch_runAgain' => diagnostic_Watch_runAgain,
       'diagnosticPermissionDetails_button_managePermission' =>
         diagnosticPermissionDetails_button_managePermission,
       'diagnosticPermissionDetails_button_requestPermission' =>

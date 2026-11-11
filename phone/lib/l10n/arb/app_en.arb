@@ -1089,6 +1089,18 @@
   "@diagnostic_permission_contacts_description": {},
   "diagnostic_permission_contacts_title": "Contacts",
   "@diagnostic_permission_contacts_title": {},
+  "diagnostic_Watch_openSettings": "Open settings",
+  "@diagnostic_Watch_openSettings": {
+    "description": "On a watch, the edge button of a diagnostic check that opens the watch's settings for the app (the phone's Manage Permission, shortened to fit the edge)."
+  },
+  "diagnostic_Watch_allow": "Allow",
+  "@diagnostic_Watch_allow": {
+    "description": "On a watch, the edge button of a denied permission that asks the system for it (the phone's Request Permission, shortened to fit the edge)."
+  },
+  "diagnostic_Watch_runAgain": "Run again",
+  "@diagnostic_Watch_runAgain": {
+    "description": "On a watch, the edge button of the network check's page: runs the check again."
+  },
   "diagnosticPermissionDetails_button_managePermission": "Manage Permission",
   "@diagnosticPermissionDetails_button_managePermission": {},
   "diagnosticPermissionDetails_button_requestPermission": "Request Permission",

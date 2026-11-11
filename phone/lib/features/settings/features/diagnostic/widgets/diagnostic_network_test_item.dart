@@ -18,53 +18,17 @@ class DiagnosticNetworkTestItem extends StatelessWidget {
   Widget build(BuildContext context) {
     return BlocBuilder<NetworkTesterCubit, NetworkTesterState>(
       builder: (context, state) {
-        final gathering = state.gatheringStatus == IceGatheringStatus.gathering;
-        final offline = state.networks.isEmpty || state.networks.every((n) => n == ConnectivityResult.none);
-        final effective = state.effectiveCandidates.toList();
-        final srflx = effective.where((c) => c.type == IceType.srflx).toList();
-        final relay = effective.where((c) => c.type == IceType.relay).toList();
-        final host = effective.where((c) => c.type == IceType.host).toList();
-
-        final publicIps = srflx.map((c) => c.address).toSet().join(', ');
-
         final l10n = context.l10n;
-
-        final networkLabel = state.networks
-            .where((n) => n != ConnectivityResult.none)
-            .map((r) => _networkLabel(r, l10n))
-            .toSet()
-            .join(', ');
-
-        final (title, icon, color) = switch (null) {
-          _ when offline => (l10n.diagnosticNetworkTest_status_offline, Icons.signal_wifi_off, Colors.red),
-          _ when srflx.isNotEmpty => (l10n.diagnosticNetworkTest_status_reachable, Icons.check_circle, Colors.green),
-          _ when relay.isNotEmpty => (
-            l10n.diagnosticNetworkTest_status_restricted,
-            Icons.warning_amber_rounded,
-            Colors.orange,
-          ),
-          _ when host.isNotEmpty => (
-            l10n.diagnosticNetworkTest_status_restricted,
-            Icons.warning_amber_rounded,
-            Colors.orange,
-          ),
-          _ when gathering => (l10n.diagnosticNetworkTest_status_checking, Icons.pending_outlined, Colors.grey),
-          _ => (l10n.diagnosticNetworkTest_status_unreachable, Icons.error_outline, Colors.red),
+        final summary = NetworkTestSummary.of(state, l10n);
+        final gathering = summary.gathering;
+        final title = summary.title;
+        final (icon, color) = switch (summary.level) {
+          NetworkTestLevel.offline => (Icons.signal_wifi_off, Colors.red),
+          NetworkTestLevel.reachable => (Icons.check_circle, Colors.green),
+          NetworkTestLevel.restricted => (Icons.warning_amber_rounded, Colors.orange),
+          NetworkTestLevel.checking => (Icons.pending_outlined, Colors.grey),
+          NetworkTestLevel.unreachable => (Icons.error_outline, Colors.red),
         };
-
-        final subtitleParts = [
-          if (networkLabel.isNotEmpty) networkLabel,
-          if (offline)
-            l10n.diagnosticNetworkTestItem_subtitle_noNetwork
-          else if (srflx.isNotEmpty)
-            l10n.diagnosticNetworkTestItem_subtitle_publicIps(publicIps)
-          else if (relay.isNotEmpty)
-            l10n.diagnosticNetworkTestItem_subtitle_stunBlocked
-          else if (host.isNotEmpty)
-            l10n.diagnosticNetworkTestItem_subtitle_stunUnreachable
-          else if (!gathering)
-            l10n.diagnosticNetworkTestItem_subtitle_noCandidates,
-        ];
 
         // An anchor, not a merged control: this row holds two things to press -
         // itself, which opens the details, and the button that runs the check
@@ -104,13 +68,84 @@ class DiagnosticNetworkTestItem extends StatelessWidget {
                 ),
               ],
             ),
-            subtitle: Text(subtitleParts.join(' · ')),
+            subtitle: Text(summary.subtitle),
             trailing: Icon(icon, color: color),
           ),
         );
       },
     );
   }
+}
+
+/// Where the network check stands, as the phone's row and the watch's row
+/// both say it.
+enum NetworkTestLevel { offline, reachable, restricted, checking, unreachable }
+
+/// The network check read into what a row shows: the status in a word, how
+/// it stands, and the line under it - the network and what was found.
+class NetworkTestSummary {
+  const NetworkTestSummary({required this.title, required this.level, required this.subtitle, required this.gathering});
+
+  factory NetworkTestSummary.of(NetworkTesterState state, AppLocalizations l10n) {
+    final gathering = state.gatheringStatus == IceGatheringStatus.gathering;
+    final offline = state.networks.isEmpty || state.networks.every((n) => n == ConnectivityResult.none);
+    final effective = state.effectiveCandidates.toList();
+    final srflx = effective.where((c) => c.type == IceType.srflx).toList();
+    final relay = effective.where((c) => c.type == IceType.relay).toList();
+    final host = effective.where((c) => c.type == IceType.host).toList();
+
+    final publicIps = srflx.map((c) => c.address).toSet().join(', ');
+    final networkLabel = state.networks
+        .where((n) => n != ConnectivityResult.none)
+        .map((r) => _networkLabel(r, l10n))
+        .toSet()
+        .join(', ');
+
+    final (title, level) = switch (null) {
+      _ when offline => (l10n.diagnosticNetworkTest_status_offline, NetworkTestLevel.offline),
+      _ when srflx.isNotEmpty => (l10n.diagnosticNetworkTest_status_reachable, NetworkTestLevel.reachable),
+      _ when relay.isNotEmpty || host.isNotEmpty => (
+        l10n.diagnosticNetworkTest_status_restricted,
+        NetworkTestLevel.restricted,
+      ),
+      _ when gathering => (l10n.diagnosticNetworkTest_status_checking, NetworkTestLevel.checking),
+      _ => (l10n.diagnosticNetworkTest_status_unreachable, NetworkTestLevel.unreachable),
+    };
+
+    final subtitleParts = [
+      if (networkLabel.isNotEmpty) networkLabel,
+      if (offline)
+        l10n.diagnosticNetworkTestItem_subtitle_noNetwork
+      else if (srflx.isNotEmpty)
+        l10n.diagnosticNetworkTestItem_subtitle_publicIps(publicIps)
+      else if (relay.isNotEmpty)
+        l10n.diagnosticNetworkTestItem_subtitle_stunBlocked
+      else if (host.isNotEmpty)
+        l10n.diagnosticNetworkTestItem_subtitle_stunUnreachable
+      else if (!gathering)
+        l10n.diagnosticNetworkTestItem_subtitle_noCandidates,
+    ];
+
+    return NetworkTestSummary(title: title, level: level, subtitle: subtitleParts.join(' · '), gathering: gathering);
+  }
+
+  final String title;
+  final NetworkTestLevel level;
+  final String subtitle;
+  final bool gathering;
+
+  // Compared by what it shows, so a list that selects it is rebuilt only when
+  // that changes, not on every candidate gathered.
+  @override
+  bool operator ==(Object other) =>
+      other is NetworkTestSummary &&
+      other.title == title &&
+      other.level == level &&
+      other.subtitle == subtitle &&
+      other.gathering == gathering;
+
+  @override
+  int get hashCode => Object.hash(title, level, subtitle, gathering);
 
   static String _networkLabel(ConnectivityResult r, AppLocalizations l10n) => switch (r) {
     ConnectivityResult.wifi => l10n.diagnosticNetworkTestItem_network_wifi,

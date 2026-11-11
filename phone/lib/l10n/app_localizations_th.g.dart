@@ -1040,6 +1040,15 @@ class AppLocalizationsTh extends AppLocalizations {
   String get diagnostic_permission_contacts_title => 'รายชื่อติดต่อ';
 
   @override
+  String get diagnostic_Watch_openSettings => 'เปิดการตั้งค่า';
+
+  @override
+  String get diagnostic_Watch_allow => 'อนุญาต';
+
+  @override
+  String get diagnostic_Watch_runAgain => 'ตรวจอีกครั้ง';
+
+  @override
   String get diagnosticPermissionDetails_button_managePermission => 'จัดการสิทธิ์';
 
   @override
