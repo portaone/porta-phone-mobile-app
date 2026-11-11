@@ -80,6 +80,17 @@ void main() {
         ),
       };
 
+  Widget watchSource(BuildContext context, ContactSourceType sourceType) => switch (sourceType) {
+    ContactSourceType.local => BlocProvider<ContactsLocalTabBloc>.value(
+      value: harness.localBloc,
+      child: const ContactsLocalTabWatch(),
+    ),
+    ContactSourceType.external => BlocProvider<ContactsExternalTabBloc>.value(
+      value: harness.externalBloc,
+      child: const ContactsExternalTabWatch(),
+    ),
+  };
+
   Widget app(Widget screen) {
     return ThemeProvider(
       settings: const ThemeSettings(),
@@ -122,8 +133,14 @@ void main() {
     );
   }
 
-  Widget tabbed({List<ContactSourceType> sources = const [ContactSourceType.external, ContactSourceType.local]}) =>
-      app(ContactsScreen(watchTitle: 'Contacts', sourceTypes: sources, sourceTypeWidgetBuilder: source));
+  Widget tabbed({List<ContactSourceType> sources = const [ContactSourceType.external, ContactSourceType.local]}) => app(
+    ContactsScreen(
+      watchTitle: 'Contacts',
+      sourceTypes: sources,
+      sourceTypeWidgetBuilder: source,
+      sourceTypeWatchWidgetBuilder: watchSource,
+    ),
+  );
 
   final people = [for (var i = 1; i <= 20; i++) buildListContact(id: i, name: 'Person $i')];
 
@@ -235,7 +252,7 @@ void main() {
     await tester.scrollUntilVisible(
       find.byType(ContactsSelectionNotice),
       200,
-      scrollable: find.descendant(of: find.byType(ContactsLocalTab), matching: find.byType(Scrollable)).first,
+      scrollable: find.descendant(of: find.byType(ContactsLocalTabWatch), matching: find.byType(Scrollable)).first,
     );
     expect(find.byType(ContactsSelectionNotice), findsOneWidget);
   });
@@ -250,6 +267,7 @@ void main() {
           watchTitle: 'Contacts',
           selections: const [ContactsFavoritesSelection()],
           sourceTypeWidgetBuilder: source,
+          sourceTypeWatchWidgetBuilder: watchSource,
           favoritesWidgetBuilder: (context, {reorderMode = false, onReorderStart, onReorderEnd}) =>
               const Text('favourites', key: Key('favourites')),
           favoritesWatchWidgetBuilder: (context, body) => const Text('favourites', key: Key('favourites')),
@@ -265,6 +283,7 @@ void main() {
       watchTitle: 'Contacts',
       selections: const [ContactsSourceSelection(ContactSourceType.external), ContactsFavoritesSelection()],
       sourceTypeWidgetBuilder: source,
+      sourceTypeWatchWidgetBuilder: watchSource,
       favoritesWidgetBuilder: (context, {reorderMode = false, onReorderStart, onReorderEnd}) => const SizedBox(),
       favoritesWatchWidgetBuilder: (context, body) =>
           body(context, favorites, (item, index) => Text(item.favorite.number)),
@@ -534,6 +553,7 @@ void main() {
             ContactsFavoritesSelection(),
           ],
           sourceTypeWidgetBuilder: source,
+          sourceTypeWatchWidgetBuilder: watchSource,
           favoritesWidgetBuilder: (context, {reorderMode = false, onReorderStart, onReorderEnd}) => const SizedBox(),
           favoritesWatchWidgetBuilder: (context, body) => const SizedBox(),
         ),

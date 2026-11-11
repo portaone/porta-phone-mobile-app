@@ -36,6 +36,7 @@ class ContactsScreenPage extends StatelessWidget {
       ),
       sourceTypes: sourceTypes,
       sourceTypeWidgetBuilder: contactSourceTypeWidgetBuilder,
+      sourceTypeWatchWidgetBuilder: contactSourceTypeWatchWidgetBuilder,
     );
     final provider = BlocProvider(
       create: (context) => ContactsBloc(activeContactsListRepository: context.read<ActiveContactsListRepository>()),
@@ -54,10 +55,26 @@ Widget contactSourceTypeWidgetBuilder(
   ContactSourceType sourceType, {
   bool markFavorites = false,
 }) {
+  return _contactSourceTypeBlocProvider(context, sourceType, switch (sourceType) {
+    ContactSourceType.local => ContactsLocalTab(markFavorites: markFavorites),
+    ContactSourceType.external => ContactsExternalTab(markFavorites: markFavorites),
+  });
+}
+
+/// Mounts the list of one contact source on a watch, with the same blocs as
+/// the phone's.
+Widget contactSourceTypeWatchWidgetBuilder(BuildContext context, ContactSourceType sourceType) {
+  return _contactSourceTypeBlocProvider(context, sourceType, switch (sourceType) {
+    ContactSourceType.local => const ContactsLocalTabWatch(),
+    ContactSourceType.external => const ContactsExternalTabWatch(),
+  });
+}
+
+/// Provides [child] with the bloc of the contact source it lists.
+Widget _contactSourceTypeBlocProvider(BuildContext context, ContactSourceType sourceType, Widget child) {
   switch (sourceType) {
     case ContactSourceType.local:
-      final widget = ContactsLocalTab(markFavorites: markFavorites);
-      final provider = BlocProvider(
+      return BlocProvider(
         create: (context) {
           final contactsSearchBloc = context.read<ContactsBloc>();
           return ContactsLocalTabBloc(
@@ -66,13 +83,11 @@ Widget contactSourceTypeWidgetBuilder(
             localContactsSyncCubit: context.read<LocalContactsSyncCubit>(),
           )..add(ContactsLocalTabStarted(search: contactsSearchBloc.state.search));
         },
-        child: widget,
+        child: child,
       );
-      return provider;
     case ContactSourceType.external:
       final sync = context.read<ExternalContactsSync>();
-      final widget = ContactsExternalTab(markFavorites: markFavorites);
-      final provider = BlocProvider(
+      return BlocProvider(
         create: (context) {
           final contactsSearchBloc = context.read<ContactsBloc>();
           return ContactsExternalTabBloc(
@@ -82,9 +97,8 @@ Widget contactSourceTypeWidgetBuilder(
             syncRunner: sync,
           )..add(ContactsExternalTabStarted(search: contactsSearchBloc.state.search));
         },
-        child: widget,
+        child: child,
       );
-      return provider;
   }
 }
 

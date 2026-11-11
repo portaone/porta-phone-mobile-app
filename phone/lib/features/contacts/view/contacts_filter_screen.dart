@@ -24,6 +24,7 @@ class ContactsFilterScreen extends StatefulWidget {
     super.key,
     required this.selections,
     required this.sourceTypeWidgetBuilder,
+    required this.sourceTypeWatchWidgetBuilder,
     required this.favoritesWidgetBuilder,
     required this.favoritesWatchWidgetBuilder,
     this.title,
@@ -37,6 +38,9 @@ class ContactsFilterScreen extends StatefulWidget {
   /// Mounts the list of one address book.
   final Widget Function(BuildContext context, ContactSourceType sourceType, {bool markFavorites})
   sourceTypeWidgetBuilder;
+
+  /// Mounts the list of one address book on a watch.
+  final ContactSourceTypeWidgetBuilder sourceTypeWatchWidgetBuilder;
 
   /// Mounts the favourites section's own list, rearrangeable when asked.
   final Widget Function(
@@ -91,30 +95,17 @@ class _ContactsFilterScreenState extends State<ContactsFilterScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return AdaptiveLayout(handset: _handset, watch: _watch);
-  }
-
-  /// One list on the face at a time - an address book or the favourites -
-  /// and a chip in place of the chooser.
-  Widget _watch(BuildContext context) {
-    return ContactsWatchSources(
-      style: widget.style ?? Theme.of(context).extension<ContactsScreenStyles>()?.primary,
-      title: widget.watchTitle,
-      selections: widget.selections,
-      shown: _shown,
-      onSelected: _onSelected,
-      listBuilder: (context, selection) => switch (selection) {
-        ContactsSourceSelection(:final sourceType) => widget.sourceTypeWidgetBuilder(
-          context,
-          sourceType,
-          markFavorites: true,
-        ),
-        // Drawn like a book: the same search narrows them by name and number.
-        ContactsFavoritesSelection() => widget.favoritesWatchWidgetBuilder(
-          context,
-          (context, favorites, tileBuilder) => ContactsWatchFavorites(favorites: favorites, tileBuilder: tileBuilder),
-        ),
-      },
+    return AdaptiveLayout(
+      handset: _handset,
+      watch: (context) => ContactsFilterScreenWatch(
+        style: widget.style,
+        title: widget.watchTitle,
+        selections: widget.selections,
+        shown: _shown,
+        onSelected: _onSelected,
+        sourceTypeWidgetBuilder: widget.sourceTypeWatchWidgetBuilder,
+        favoritesWidgetBuilder: widget.favoritesWatchWidgetBuilder,
+      ),
     );
   }
 

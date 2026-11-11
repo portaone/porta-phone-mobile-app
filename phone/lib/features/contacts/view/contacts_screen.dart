@@ -20,6 +20,7 @@ class ContactsScreen extends StatefulWidget {
     super.key,
     required this.sourceTypes,
     required this.sourceTypeWidgetBuilder,
+    required this.sourceTypeWatchWidgetBuilder,
     this.title,
     required this.watchTitle,
     this.style,
@@ -27,6 +28,9 @@ class ContactsScreen extends StatefulWidget {
 
   final List<ContactSourceType> sourceTypes;
   final ContactSourceTypeWidgetBuilder sourceTypeWidgetBuilder;
+
+  /// Mounts the list of one address book on a watch.
+  final ContactSourceTypeWidgetBuilder sourceTypeWatchWidgetBuilder;
 
   final Widget? title;
 
@@ -88,30 +92,13 @@ class _ContactsScreenState extends State<ContactsScreen> with SingleTickerProvid
     final effectiveStyle = widget.style ?? Theme.of(context).extension<ContactsScreenStyles>()?.primary;
     return AdaptiveLayout(
       handset: (context) => _handset(context, effectiveStyle),
-      watch: (context) => _watch(effectiveStyle),
-    );
-  }
-
-  /// One address book on the face at a time, a chip in place of the tabs;
-  /// the chip moves the tab controller, so both arrangements remember the
-  /// same book.
-  Widget _watch(ContactsScreenStyle? effectiveStyle) {
-    final sources = widget.sourceTypes;
-    return ContactsWatchSources(
-      style: effectiveStyle,
-      title: widget.watchTitle,
-      selections: [for (final sourceType in sources) ContactsSourceSelection(sourceType)],
-      shown: (state) => switch (sources.shown(state.sourceType)) {
-        final sourceType? => ContactsSourceSelection(sourceType),
-        null => null,
-      },
-      // Only books are offered here.
-      onSelected: (selection) =>
-          _tabController.index = sources.indexOf((selection as ContactsSourceSelection).sourceType),
-      listBuilder: (context, selection) => switch (selection) {
-        ContactsSourceSelection(:final sourceType) => widget.sourceTypeWidgetBuilder(context, sourceType),
-        ContactsFavoritesSelection() => const SizedBox.shrink(),
-      },
+      watch: (context) => ContactsScreenWatch(
+        style: effectiveStyle,
+        title: widget.watchTitle,
+        sourceTypes: widget.sourceTypes,
+        tabController: _tabController,
+        sourceTypeWidgetBuilder: widget.sourceTypeWatchWidgetBuilder,
+      ),
     );
   }
 
