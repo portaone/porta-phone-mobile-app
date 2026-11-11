@@ -1325,6 +1325,12 @@ abstract class AppLocalizations {
   /// **'Try again'**
   String get common_Watch_openOnPhone_retry;
 
+  /// On a watch, a page built into the app that cannot be sent to the phone as a link: it is read in the app on the phone.
+  ///
+  /// In en, this message translates to:
+  /// **'Open it in the app on your phone'**
+  String get common_Watch_phoneOnly;
+
   /// Accessibility name announced while a screen waits for a request to finish.
   ///
   /// In en, this message translates to:

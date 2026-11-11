@@ -759,6 +759,9 @@ class AppLocalizationsUk extends AppLocalizations {
   String get common_Watch_openOnPhone_retry => 'Спробувати ще раз';
 
   @override
+  String get common_Watch_phoneOnly => 'Відкрийте це в застосунку на телефоні';
+
+  @override
   String get common_SemanticsLabel_loading => 'Завантаження';
 
   @override

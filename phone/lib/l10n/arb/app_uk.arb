@@ -675,6 +675,8 @@
   "@common_Watch_openOnPhone_failedHint": {},
   "common_Watch_openOnPhone_retry": "Спробувати ще раз",
   "@common_Watch_openOnPhone_retry": {},
+  "common_Watch_phoneOnly": "Відкрийте це в застосунку на телефоні",
+  "@common_Watch_phoneOnly": {},
   "common_SemanticsLabel_loading": "Завантаження",
   "@common_SemanticsLabel_loading": {
     "description": "Accessibility name announced while a screen waits for a request to finish."

@@ -22,6 +22,7 @@ import '../utils/utils.dart';
 import '../bloc/embedded_cubit.dart';
 
 import 'embedded_screen.dart';
+import 'embedded_watch_page.dart';
 
 @RoutePage()
 class EmbeddedTabPage extends StatelessWidget {
@@ -31,7 +32,15 @@ class EmbeddedTabPage extends StatelessWidget {
   final String id;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context) => AdaptiveLayout(handset: _handset, watch: _watch);
+
+  /// A watch has no web view: the section's page opens on the paired phone.
+  Widget _watch(BuildContext context) {
+    final data = context.read<FeatureAccess>().bottomMenuConfig.getEmbeddedTabById(id);
+    return EmbeddedWatchPage(title: context.parseL10n(data.titleL10n), uri: data.data!.uri);
+  }
+
+  Widget _handset(BuildContext context) {
     final bottomMenuManager = context.read<FeatureAccess>().bottomMenuConfig;
     final data = bottomMenuManager.getEmbeddedTabById(id);
 
