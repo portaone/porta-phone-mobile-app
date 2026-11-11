@@ -2477,6 +2477,8 @@
   "@sessions_AutoTerminateOther_save": {},
   "sessions_Button_retry": "Спробувати ще раз",
   "@sessions_Button_retry": {},
+  "sessions_Watch_revokeAllOthers": "Вийти на інших",
+  "@sessions_Watch_revokeAllOthers": {},
   "sessions_Button_revokeAllOthers": "Вийти з інших сесій",
   "@sessions_Button_revokeAllOthers": {},
   "sessions_Placeholder_empty": "Немає активних сесій",

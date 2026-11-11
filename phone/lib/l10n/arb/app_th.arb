@@ -2480,6 +2480,8 @@
   "@sessions_AutoTerminateOther_save": {},
   "sessions_Button_retry": "ลองอีกครั้ง",
   "@sessions_Button_retry": {},
+  "sessions_Watch_revokeAllOthers": "ออกจากระบบอื่น",
+  "@sessions_Watch_revokeAllOthers": {},
   "sessions_Button_revokeAllOthers": "ออกจากระบบเซสชันอื่น",
   "@sessions_Button_revokeAllOthers": {},
   "sessions_Placeholder_empty": "ไม่มีเซสชันที่ใช้งานอยู่",

@@ -2477,6 +2477,8 @@
   "@sessions_AutoTerminateOther_save": {},
   "sessions_Button_retry": "Riprova",
   "@sessions_Button_retry": {},
+  "sessions_Watch_revokeAllOthers": "Esci dagli altri",
+  "@sessions_Watch_revokeAllOthers": {},
   "sessions_Button_revokeAllOthers": "Disconnetti le altre sessioni",
   "@sessions_Button_revokeAllOthers": {},
   "sessions_Placeholder_empty": "Nessuna sessione attiva",

@@ -2853,6 +2853,9 @@ class AppLocalizationsIt extends AppLocalizations {
   String get sessions_Button_retry => 'Riprova';
 
   @override
+  String get sessions_Watch_revokeAllOthers => 'Esci dagli altri';
+
+  @override
   String get sessions_Button_revokeAllOthers => 'Disconnetti le altre sessioni';
 
   @override

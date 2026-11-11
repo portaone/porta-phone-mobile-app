@@ -2823,6 +2823,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get sessions_Button_retry => 'Try again';
 
   @override
+  String get sessions_Watch_revokeAllOthers => 'Sign out others';
+
+  @override
   String get sessions_Button_revokeAllOthers => 'Sign out other sessions';
 
   @override

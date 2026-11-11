@@ -2691,6 +2691,8 @@
   },
   "sessions_Button_retry": "Réessayer",
   "@sessions_Button_retry": {},
+  "sessions_Watch_revokeAllOthers": "Déconnecter les autres",
+  "@sessions_Watch_revokeAllOthers": {},
   "sessions_Button_revokeAllOthers": "Déconnecter les autres sessions",
   "@sessions_Button_revokeAllOthers": {
     "description": "Action that revokes every session except the one on this device."

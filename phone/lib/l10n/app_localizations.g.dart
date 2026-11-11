@@ -5132,6 +5132,12 @@ abstract class AppLocalizations {
   /// **'Try again'**
   String get sessions_Button_retry;
 
+  /// On a watch, the red edge button that signs out every other session (the phone's 'Sign out other sessions', shortened to fit the edge).
+  ///
+  /// In en, this message translates to:
+  /// **'Sign out others'**
+  String get sessions_Watch_revokeAllOthers;
+
   /// Action that revokes every session except the one on this device.
   ///
   /// In en, this message translates to:
