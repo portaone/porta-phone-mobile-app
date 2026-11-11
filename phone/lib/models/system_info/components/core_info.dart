@@ -1,8 +1,15 @@
 import 'package:equatable/equatable.dart';
 import 'package:pub_semver/pub_semver.dart';
 
+import 'mobile_remote_logging_info.dart';
+
 class CoreInfo with EquatableMixin {
-  CoreInfo({required this.version, this.iceServersConfigured = false, this.notificationDeletedRetentionDays});
+  CoreInfo({
+    required this.version,
+    this.iceServersConfigured = false,
+    this.notificationDeletedRetentionDays,
+    this.mobileRemoteLogging,
+  });
 
   final Version version;
 
@@ -22,8 +29,12 @@ class CoreInfo with EquatableMixin {
   /// was released under a version that builds without it carry too.
   final int? notificationDeletedRetentionDays;
 
+  /// Whether and how the app sends its logs to the core; null for a core that
+  /// does not offer it, which the app treats as remote logging disabled.
+  final MobileRemoteLoggingInfo? mobileRemoteLogging;
+
   @override
-  List<Object?> get props => [version, iceServersConfigured, notificationDeletedRetentionDays];
+  List<Object?> get props => [version, iceServersConfigured, notificationDeletedRetentionDays, mobileRemoteLogging];
 
   @override
   bool get stringify => true;

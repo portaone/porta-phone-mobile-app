@@ -241,8 +241,6 @@ void main() {
       expect(keys['feature_call_pull_video_strategy'], 'unset');
       expect(keys['feature_monitor_check_interval_sec'], 'unset');
       expect(keys['feature_log_level'], 'unset');
-      expect(keys['firebaseRemoteLogging'], 'unset');
-      expect(keys['feature_log_anonymization_enabled'], 'unset');
     });
 
     test('writes the override values when set', () {

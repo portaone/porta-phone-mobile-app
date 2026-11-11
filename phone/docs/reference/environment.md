@@ -43,9 +43,9 @@ maintainability and enabling tools to parse configuration reliably.
 - `_WEBTRIT_APP_ABOUT_URL` – URL for "About" screen content.
 - `WEBTRIT_APP_SALES_EMAIL` – Email address shown for sales inquiries.
 - `_WEBTRIT_APP_FCM_VAPID_KEY` – VAPID key for Web Push notifications (used on web only).
-- `_WEBTRIT_APP_REMOTE_LOGZIO_LOGGING_URL` – Logz.io remote logging endpoint (optional).
-- `_WEBTRIT_APP_REMOTE_LOGZIO_LOGGING_TOKEN` – Logz.io auth token.
-- `_WEBTRIT_APP_REMOTE_LOGZIO_LOGGING_BUFFER_SIZE` – Logz.io log buffer size.
+- `_WEBTRIT_APP_REMOTE_LOGZIO_LOGGING_BUFFER_SIZE` – how many records one remote logging request
+  carries at most (default: **100**); a batch also goes 10 seconds after its first record. Whether and where logs are sent comes from WebTrit Core
+  (`core.mobile_remote_logging` of `GET /api/v1/system-info`).
 - `WEBTRIT_APP_POLLING_MAX_BACKOFF_SECONDS` - Application polling retry cap in
   positive whole seconds (default: **900**). A longer task interval remains the
   minimum delay. Invalid values fall back safely; the shell reads this value

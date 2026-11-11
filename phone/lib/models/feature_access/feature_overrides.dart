@@ -15,8 +15,6 @@ class FeatureOverrides extends Equatable {
     this.callPullVideoStrategy,
     this.monitorCheckInterval,
     this.logLevel,
-    this.remoteLoggingEnabled,
-    this.isLogAnonymizationEnabled,
   });
 
   final bool? isVideoCallEnabled;
@@ -30,8 +28,6 @@ class FeatureOverrides extends Equatable {
   final CallPullVideoStrategy? callPullVideoStrategy;
   final Duration? monitorCheckInterval;
   final Level? logLevel;
-  final bool? remoteLoggingEnabled;
-  final bool? isLogAnonymizationEnabled;
 
   FeatureOverrides copyWith({
     bool? isVideoCallEnabled,
@@ -42,8 +38,6 @@ class FeatureOverrides extends Equatable {
     CallPullVideoStrategy? callPullVideoStrategy,
     Duration? monitorCheckInterval,
     Level? logLevel,
-    bool? remoteLoggingEnabled,
-    bool? isLogAnonymizationEnabled,
   }) {
     return FeatureOverrides(
       isVideoCallEnabled: isVideoCallEnabled ?? this.isVideoCallEnabled,
@@ -54,8 +48,6 @@ class FeatureOverrides extends Equatable {
       callPullVideoStrategy: callPullVideoStrategy ?? this.callPullVideoStrategy,
       monitorCheckInterval: monitorCheckInterval ?? this.monitorCheckInterval,
       logLevel: logLevel ?? this.logLevel,
-      remoteLoggingEnabled: remoteLoggingEnabled ?? this.remoteLoggingEnabled,
-      isLogAnonymizationEnabled: isLogAnonymizationEnabled ?? this.isLogAnonymizationEnabled,
     );
   }
 
@@ -69,8 +61,6 @@ class FeatureOverrides extends Equatable {
     callPullVideoStrategy,
     monitorCheckInterval,
     logLevel,
-    remoteLoggingEnabled,
-    isLogAnonymizationEnabled,
   ];
 }
 
@@ -87,8 +77,6 @@ abstract final class FeatureOverridesFactory {
   static const callPullVideoStrategyKey = 'feature_call_pull_video_strategy';
   static const monitorCheckIntervalKey = 'feature_monitor_check_interval_sec';
   static const logLevelKey = 'feature_log_level';
-  static const remoteLoggingEnabledKey = 'firebaseRemoteLogging';
-  static const logAnonymizationEnabledKey = 'feature_log_anonymization_enabled';
 
   static FeatureOverrides create(RemoteConfigSnapshot snapshot) {
     final monitorIntervalSec = int.tryParse(snapshot.getString(monitorCheckIntervalKey) ?? '');
@@ -113,8 +101,6 @@ abstract final class FeatureOverridesFactory {
       callPullVideoStrategy: callPullVideoStrategy,
       monitorCheckInterval: monitorCheckInterval,
       logLevel: logLevel,
-      remoteLoggingEnabled: snapshot.getBool(remoteLoggingEnabledKey),
-      isLogAnonymizationEnabled: snapshot.getBool(logAnonymizationEnabledKey),
     );
   }
 }

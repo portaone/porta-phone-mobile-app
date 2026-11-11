@@ -54,6 +54,7 @@ class CoreInfo with _$CoreInfo {
     @VersionConverter() required this.version,
     this.iceServersConfigured,
     this.notificationDeletedRetentionDays,
+    this.mobileRemoteLogging,
   });
 
   @VersionConverter()
@@ -72,9 +73,86 @@ class CoreInfo with _$CoreInfo {
   /// notifications at all.
   final int? notificationDeletedRetentionDays;
 
+  /// Whether and how the app sends its logs to the core (JSON key
+  /// `mobile_remote_logging`). `null` = the core does not offer remote
+  /// logging, or sent a block that cannot be read; the app treats both as
+  /// disabled.
+  @JsonKey(fromJson: _mobileRemoteLoggingFromJson)
+  final MobileRemoteLoggingInfo? mobileRemoteLogging;
+
   factory CoreInfo.fromJson(Map<String, Object?> json) => _$CoreInfoFromJson(json);
 
   Map<String, Object?> toJson() => _$CoreInfoToJson(this);
+}
+
+/// Reads `mobile_remote_logging` without letting a malformed block - a date
+/// that does not parse, a flag sent as a string - fail the whole system info:
+/// such a block turns remote logging off, and everything else still works.
+MobileRemoteLoggingInfo? _mobileRemoteLoggingFromJson(Object? json) {
+  if (json is! Map<String, Object?>) return null;
+  try {
+    return MobileRemoteLoggingInfo.fromJson(json);
+  } catch (_) {
+    return null;
+  }
+}
+
+/// The remote logging settings the core hands out to the app.
+///
+/// Every field is nullable so that a core sending only part of the block is
+/// still read; the app decides what a missing field means.
+@JsonSerializable(fieldRename: FieldRename.snake, explicitToJson: true)
+class MobileRemoteLoggingInfo {
+  const MobileRemoteLoggingInfo({
+    this.available,
+    this.enabled,
+    this.level,
+    this.anonymization,
+    this.expiresAt,
+    this.path,
+  });
+
+  /// Whether the deployment has a log receiver at all.
+  final bool? available;
+
+  /// Whether the app should send its logs now; already the effective value
+  /// the core computed from its own settings.
+  final bool? enabled;
+
+  /// The lowest level to send, a `package:logging` level name (`INFO`, `FINE`, ...).
+  final String? level;
+
+  /// Whether personal data must be masked before a record leaves the device.
+  final bool? anonymization;
+
+  /// When the app must stop sending, even if it does not hear from the core again.
+  final DateTime? expiresAt;
+
+  /// Where the logs go, relative to the tenant URL of the core (`/mobile-logs`).
+  final String? path;
+
+  factory MobileRemoteLoggingInfo.fromJson(Map<String, Object?> json) => _$MobileRemoteLoggingInfoFromJson(json);
+
+  Map<String, Object?> toJson() => _$MobileRemoteLoggingInfoToJson(this);
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is MobileRemoteLoggingInfo &&
+          other.available == available &&
+          other.enabled == enabled &&
+          other.level == level &&
+          other.anonymization == anonymization &&
+          other.expiresAt == expiresAt &&
+          other.path == path;
+
+  @override
+  int get hashCode => Object.hash(available, enabled, level, anonymization, expiresAt, path);
+
+  @override
+  String toString() =>
+      'MobileRemoteLoggingInfo(available: $available, enabled: $enabled, level: $level, '
+      'anonymization: $anonymization, expiresAt: $expiresAt, path: $path)';
 }
 
 @freezed

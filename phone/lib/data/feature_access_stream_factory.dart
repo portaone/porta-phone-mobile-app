@@ -24,13 +24,7 @@ class FeatureAccessStreamFactory {
     required this.remoteConfigService,
     required this.appPreferences,
     required this.sessionRepository,
-  }) {
-    _startupOverrides = FeatureOverridesFactory.create(remoteConfigService.startupSnapshot);
-    _startupAnonymizationEnabled = LoggingMapper.map(appThemes.appConfig, _startupOverrides).anonymizationEnabled;
-  }
-
-  late final FeatureOverrides _startupOverrides;
-  late final bool _startupAnonymizationEnabled;
+  });
 
   Future<FeatureAccess> getInitialSnapshot() async {
     final systemInfo = await systemInfoRepository.getSystemInfo(fetchPolicy: FetchPolicy.cacheOnly);
@@ -53,7 +47,7 @@ class FeatureAccessStreamFactory {
 
   FeatureAccess _build(WebtritSystemInfo? systemInfo, RemoteConfigSnapshot remoteConfig) {
     final coreSupport = CoreSupportFactory.create(systemInfo);
-    final overrides = _applySessionPrivacyPolicy(FeatureOverridesFactory.create(remoteConfig));
+    final overrides = FeatureOverridesFactory.create(remoteConfig);
 
     return FeatureAccess.create(
       appThemes.appConfig,
@@ -74,19 +68,5 @@ class FeatureAccessStreamFactory {
     if (userId.isEmpty) return false;
 
     return appPreferences.getCallCenterAgent(userId) ?? false;
-  }
-
-  FeatureOverrides _applySessionPrivacyPolicy(FeatureOverrides current) {
-    final remoteLoggingEnabled = _startupOverrides.remoteLoggingEnabled == true
-        ? current.remoteLoggingEnabled ?? false
-        : false;
-    final isLogAnonymizationEnabled = _startupAnonymizationEnabled && current.isLogAnonymizationEnabled == false
-        ? true
-        : current.isLogAnonymizationEnabled;
-
-    return current.copyWith(
-      remoteLoggingEnabled: remoteLoggingEnabled,
-      isLogAnonymizationEnabled: isLogAnonymizationEnabled,
-    );
   }
 }
