@@ -91,6 +91,10 @@ const confirmDialogYesButtonKey = Key(confirmDialogYesButtonId);
 const String confirmDialogNoButtonId = 'confirmDialogNoButton';
 const confirmDialogNoButtonKey = Key(confirmDialogNoButtonId);
 
+/// The OK that closes an acknowledgement on a watch.
+const String acknowledgeDialogOkButtonId = 'acknowledgeDialogOkButton';
+const acknowledgeDialogOkButtonKey = Key(acknowledgeDialogOkButtonId);
+
 const String actionPadVideoCallId = 'actionPadVideoCall';
 const actionPadVideoCallKey = Key(actionPadVideoCallId);
 const String actionPadBackspaceId = 'actionPadBackspace';

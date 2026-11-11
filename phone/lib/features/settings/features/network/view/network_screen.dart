@@ -12,6 +12,7 @@ import '../extensions/extensions.dart';
 import '../bloc/network_cubit.dart';
 import '../models/incoming_call_type_model.dart';
 import '../widgets/widgets.dart';
+import 'network_screen_watch.dart';
 
 class NetworkScreen extends StatefulWidget {
   const NetworkScreen({super.key});
@@ -24,7 +25,12 @@ class _NetworkScreenState extends State<NetworkScreen> {
   late final NetworkCubit _cubit = context.read<NetworkCubit>();
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context) => AdaptiveLayout(
+    handset: _handset,
+    watch: (_) => NetworkScreenWatch(onTypeReminder: _showTypeReminder, onBatteryWarning: _warnOfBatteryOptimization),
+  );
+
+  Widget _handset(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: Text(context.l10n.settings_ListViewTileTitle_network), leading: const ExtBackButton()),
       body: BlocConsumer<NetworkCubit, NetworkState>(
@@ -112,11 +118,8 @@ class _NetworkScreenState extends State<NetworkScreen> {
     }
   }
 
-  Future<void> _checkAndShowBatteryWarning() async {
-    final needsWarning = await _cubit.isSocketMissingBatteryExemption();
-    if (!needsWarning || !mounted) return;
-
-    final openSettings = await showDialog<bool>(
+  Future<void> _checkAndShowBatteryWarning() => _warnOfBatteryOptimization(
+    () => showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
         title: Text(ctx.l10n.batteryOptimizationWarningTitle),
@@ -129,7 +132,17 @@ class _NetworkScreenState extends State<NetworkScreen> {
           ),
         ],
       ),
-    );
+    ),
+  );
+
+  /// Where calls over the persistent connection need the battery exemption the
+  /// app lacks, asks through [ask] whether to open the battery settings, and
+  /// opens them on a yes.
+  Future<void> _warnOfBatteryOptimization(Future<bool?> Function() ask) async {
+    final needsWarning = await _cubit.isSocketMissingBatteryExemption();
+    if (!needsWarning || !mounted) return;
+
+    final openSettings = await ask();
     if (openSettings == true && mounted) {
       await _cubit.openBatterySettings();
     }

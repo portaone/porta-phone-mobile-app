@@ -2592,6 +2592,10 @@
   "@settings_speakerOnMinimize_Section_title": {},
   "settings_speakerOnMinimize_Section_tooltip": "กำหนดว่าการโทรด้วยเสียงจะย้ายไปที่ลำโพงเมื่อคุณออกจากหน้าจอการโทร และกลับไปที่หูฟังเมื่อคุณกลับมาหรือไม่",
   "@settings_speakerOnMinimize_Section_tooltip": {},
+  "settings_media_Watch_onPhone": "คุณภาพแบบกำหนดเอง การประมวลผลเสียง วิดีโอ ICE และ TURN: บนโทรศัพท์",
+  "@settings_media_Watch_onPhone": {},
+  "settings_media_Watch_resetQuestion": "รีเซ็ตการตั้งค่าสื่อทั้งหมดเป็นค่าเริ่มต้นหรือไม่",
+  "@settings_media_Watch_resetQuestion": {},
   "settings_speakerOnMinimize_switch": "เปิดลำโพงเมื่อออกจากหน้าจอการโทร",
   "@settings_speakerOnMinimize_switch": {},
   "settings_Watch_onPhone": "{setting}: บนโทรศัพท์",
@@ -2852,6 +2856,8 @@
   "@settings_network_fallbackCalls_description": {
     "description": "Tooltip description for fallback SMS-based call trigger"
   },
+  "settings_network_Watch_howTheyDiffer": "ต่างกันอย่างไร",
+  "@settings_network_Watch_howTheyDiffer": {},
   "settings_network_fallbackCalls_title": "สายเรียกเข้าสำรอง",
   "@settings_network_fallbackCalls_title": {
     "description": "Title for fallback incoming calls section"

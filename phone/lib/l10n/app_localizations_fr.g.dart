@@ -3011,6 +3011,13 @@ class AppLocalizationsFr extends AppLocalizations {
       'Indique si un appel audio passe en haut-parleur lorsque vous quittez l\'écran d\'appel, et revient à l\'écouteur à votre retour.';
 
   @override
+  String get settings_media_Watch_onPhone =>
+      'Qualité personnalisée, traitement audio, vidéo, ICE et TURN : sur le téléphone';
+
+  @override
+  String get settings_media_Watch_resetQuestion => 'Rétablir tous les paramètres média par défaut ?';
+
+  @override
   String get settings_speakerOnMinimize_switch => 'Activer le haut-parleur en quittant l\'écran d\'appel';
 
   @override
@@ -3421,6 +3428,9 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get settings_network_fallbackCalls_description =>
       'Si les notifications push d\'appels ne sont pas reçues, l\'application recevra un SMS spécial et affichera l\'écran d\'appel entrant.';
+
+  @override
+  String get settings_network_Watch_howTheyDiffer => 'Quelle différence';
 
   @override
   String get settings_network_fallbackCalls_title => 'Appels entrants de secours';

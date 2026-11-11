@@ -5402,6 +5402,18 @@ abstract class AppLocalizations {
   /// **'Whether an audio call moves to the loudspeaker when you leave the call screen, and back to the earpiece when you return to it.'**
   String get settings_speakerOnMinimize_Section_tooltip;
 
+  /// On a watch, at the end of the media settings: the settings not offered there.
+  ///
+  /// In en, this message translates to:
+  /// **'Custom quality, audio processing, video, ICE and TURN: on the phone'**
+  String get settings_media_Watch_onPhone;
+
+  /// On a watch, asked before Reset to default clears every media setting, including the ones only the phone shows.
+  ///
+  /// In en, this message translates to:
+  /// **'Reset all media settings to default?'**
+  String get settings_media_Watch_resetQuestion;
+
   /// No description provided for @settings_speakerOnMinimize_switch.
   ///
   /// In en, this message translates to:
@@ -6175,6 +6187,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'If push notifications about calls are not received, the app will receive a special SMS and display the incoming call screen.'**
   String get settings_network_fallbackCalls_description;
+
+  /// On a watch, the row under the two ways incoming calls are delivered: opens both explanations as a page of text.
+  ///
+  /// In en, this message translates to:
+  /// **'How they differ'**
+  String get settings_network_Watch_howTheyDiffer;
 
   /// Title for fallback incoming calls section
   ///

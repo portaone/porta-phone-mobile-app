@@ -2958,6 +2958,12 @@ class AppLocalizationsTh extends AppLocalizations {
       'กำหนดว่าการโทรด้วยเสียงจะย้ายไปที่ลำโพงเมื่อคุณออกจากหน้าจอการโทร และกลับไปที่หูฟังเมื่อคุณกลับมาหรือไม่';
 
   @override
+  String get settings_media_Watch_onPhone => 'คุณภาพแบบกำหนดเอง การประมวลผลเสียง วิดีโอ ICE และ TURN: บนโทรศัพท์';
+
+  @override
+  String get settings_media_Watch_resetQuestion => 'รีเซ็ตการตั้งค่าสื่อทั้งหมดเป็นค่าเริ่มต้นหรือไม่';
+
+  @override
   String get settings_speakerOnMinimize_switch => 'เปิดลำโพงเมื่อออกจากหน้าจอการโทร';
 
   @override
@@ -3364,6 +3370,9 @@ class AppLocalizationsTh extends AppLocalizations {
   @override
   String get settings_network_fallbackCalls_description =>
       'หากไม่ได้รับการแจ้งเตือนแบบพุชเกี่ยวกับสาย แอปจะรับ SMS พิเศษและแสดงหน้าจอสายเรียกเข้า';
+
+  @override
+  String get settings_network_Watch_howTheyDiffer => 'ต่างกันอย่างไร';
 
   @override
   String get settings_network_fallbackCalls_title => 'สายเรียกเข้าสำรอง';

@@ -23,14 +23,7 @@ class EncodingPresetContent extends StatelessWidget {
             ChoosableSection<EncodingPreset>(
               title: null,
               buildOptionTitle: (option) {
-                return Text(switch (option) {
-                  null => context.l10n.settings_encoding_Section_preset_default,
-                  EncodingPreset.eco => context.l10n.settings_encoding_Section_preset_eco,
-                  EncodingPreset.balance => context.l10n.settings_encoding_Section_preset_balance,
-                  EncodingPreset.quality => context.l10n.settings_encoding_Section_preset_quality,
-                  EncodingPreset.custom => context.l10n.settings_encoding_Section_preset_custom,
-                  EncodingPreset.bypass => context.l10n.settings_encoding_Section_preset_bypass,
-                });
+                return Text(encodingPresetLabel(context, option));
               },
               options: EncodingPreset.values,
               selected: encodingPreset,
@@ -52,3 +45,14 @@ class EncodingPresetContent extends StatelessWidget {
     );
   }
 }
+
+/// The name of a quality preset, null being the recommended one, as the phone
+/// and the watch list them.
+String encodingPresetLabel(BuildContext context, EncodingPreset? preset) => switch (preset) {
+  null => context.l10n.settings_encoding_Section_preset_default,
+  EncodingPreset.eco => context.l10n.settings_encoding_Section_preset_eco,
+  EncodingPreset.balance => context.l10n.settings_encoding_Section_preset_balance,
+  EncodingPreset.quality => context.l10n.settings_encoding_Section_preset_quality,
+  EncodingPreset.custom => context.l10n.settings_encoding_Section_preset_custom,
+  EncodingPreset.bypass => context.l10n.settings_encoding_Section_preset_bypass,
+};

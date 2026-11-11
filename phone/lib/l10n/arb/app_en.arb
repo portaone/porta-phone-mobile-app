@@ -2849,6 +2849,14 @@
   "@settings_speakerOnMinimize_Section_title": {},
   "settings_speakerOnMinimize_Section_tooltip": "Whether an audio call moves to the loudspeaker when you leave the call screen, and back to the earpiece when you return to it.",
   "@settings_speakerOnMinimize_Section_tooltip": {},
+  "settings_media_Watch_onPhone": "Custom quality, audio processing, video, ICE and TURN: on the phone",
+  "@settings_media_Watch_onPhone": {
+    "description": "On a watch, at the end of the media settings: the settings not offered there."
+  },
+  "settings_media_Watch_resetQuestion": "Reset all media settings to default?",
+  "@settings_media_Watch_resetQuestion": {
+    "description": "On a watch, asked before Reset to default clears every media setting, including the ones only the phone shows."
+  },
   "settings_speakerOnMinimize_switch": "Turn the speaker on when leaving the call screen",
   "@settings_speakerOnMinimize_switch": {},
   "settings_Watch_onPhone": "{setting}: on the phone",
@@ -3128,6 +3136,10 @@
   "settings_network_fallbackCalls_description": "If push notifications about calls are not received, the app will receive a special SMS and display the incoming call screen.",
   "@settings_network_fallbackCalls_description": {
     "description": "Tooltip description for fallback SMS-based call trigger"
+  },
+  "settings_network_Watch_howTheyDiffer": "How they differ",
+  "@settings_network_Watch_howTheyDiffer": {
+    "description": "On a watch, the row under the two ways incoming calls are delivered: opens both explanations as a page of text."
   },
   "settings_network_fallbackCalls_title": "Fallback Incoming Calls",
   "@settings_network_fallbackCalls_title": {
