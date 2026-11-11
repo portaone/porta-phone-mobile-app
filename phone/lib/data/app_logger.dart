@@ -17,35 +17,52 @@ class AppLogger implements Disposable {
 
     Logger.root.clearListeners();
 
-    // Anonymization is intentionally applied only to remote logs (Logzio).
+    // Anonymization is intentionally applied only to remote logs.
     // Console output is not anonymized to preserve full detail for local debugging.
-    PrintAppender(formatter: const ColorFormatter()).attachToLogger(Logger.root);
+    final console = _ConsoleAppender(level: config.logLevel)..attachToLogger(Logger.root);
 
-    final instance = AppLogger._(remoteLoggingService, getLabels);
+    final instance = AppLogger._(remoteLoggingService, getLabels, console);
+    remoteLoggingService?.onMinLevelChanged = instance._applyLevels;
     instance.updateRemoteLabels();
     instance.applyConfig(config);
 
     return instance;
   }
 
-  AppLogger._(this._remoteLoggingService, this._getLabels);
+  AppLogger._(this._remoteLoggingService, this._getLabels, this._console);
 
   final RemoteLoggingService? _remoteLoggingService;
   final Map<String, String> Function() _getLabels;
+  final _ConsoleAppender _console;
+  LoggingConfig? _config;
 
   void applyConfig(LoggingConfig config) {
-    Logger.root.level = config.logLevel;
-    _remoteLoggingService?.setAnonymizationEnabled(config.anonymizationEnabled);
-    EquatableConfig.stringify =
-        config.logLevel <= Level.FINE || (_remoteLoggingService?.minLevel ?? Level.OFF) <= Level.FINE;
+    _config = config;
+    _applyLevels();
     _logger.info('AppLogger log level applied: ${config.logLevel}');
   }
 
-  /// Updates remote logging labels and re-attaches the remote appender.
+  /// Sets the root logger to the lower of the configured level and the level
+  /// remote logging sends from: a record the root logger drops reaches no
+  /// appender, so a core that asks for FINE would otherwise get nothing below
+  /// the local level. The console keeps the configured level.
+  void _applyLevels() {
+    final config = _config;
+    if (config == null) return;
+    final remoteLevel = _remoteLoggingService?.minLevel ?? Level.OFF;
+    final rootLevel = remoteLevel < config.logLevel ? remoteLevel : config.logLevel;
+    _console.level = config.logLevel;
+    EquatableConfig.stringify = rootLevel <= Level.FINE;
+    if (Logger.root.level != rootLevel) {
+      Logger.root.level = rootLevel;
+      _logger.info('Root log level: $rootLevel (local ${config.logLevel}, remote $remoteLevel)');
+    }
+  }
+
+  /// Updates the labels sent with every remote record.
   ///
   /// Call this after authentication when coreUrl and tenantId become available.
   void updateRemoteLabels() {
-    _remoteLoggingService?.dispose();
     _remoteLoggingService?.initialize(_getLabels());
   }
 
@@ -56,6 +73,20 @@ class AppLogger implements Disposable {
   /// it here would silence a host that keeps running.
   @override
   Future<void> dispose() async {
-    _remoteLoggingService?.dispose();
+    _remoteLoggingService?.onMinLevelChanged = null;
+    await _remoteLoggingService?.dispose();
+  }
+}
+
+/// Prints the records at or above [level], whatever lower level the root
+/// logger lets through for remote logging.
+class _ConsoleAppender extends PrintAppender {
+  _ConsoleAppender({required this.level}) : super(formatter: const ColorFormatter());
+
+  Level level;
+
+  @override
+  void handle(LogRecord record) {
+    if (record.level >= level) super.handle(record);
   }
 }

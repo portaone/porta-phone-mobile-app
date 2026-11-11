@@ -840,7 +840,6 @@ abstract final class SupportedMapper {
 abstract final class LoggingMapper {
   static const _defaultInterval = Duration(seconds: 15);
   static const _defaultLogLevel = Level.INFO;
-  static const _defaultRemoteLoggingEnabled = false;
 
   static LoggingConfig map(AppConfig appConfig, FeatureOverrides overrides) {
     final loggingFeature =
@@ -856,20 +855,13 @@ abstract final class LoggingMapper {
         overrides.monitorCheckInterval ??
         (loggingFeature != null ? Duration(seconds: loggingFeature.checkIntervalSec) : _defaultInterval);
 
-    return LoggingConfig(
-      logLevel: logLevel,
-      monitorCheckInterval: monitorCheckInterval,
-      remoteLoggingEnabled: overrides.remoteLoggingEnabled ?? _defaultRemoteLoggingEnabled,
-      anonymizationEnabled: overrides.isLogAnonymizationEnabled ?? loggingFeature?.anonymizationEnabled ?? true,
-    );
+    return LoggingConfig(logLevel: logLevel, monitorCheckInterval: monitorCheckInterval);
   }
 
   static LoggingConfig mapFromOverridesOnly(FeatureOverrides overrides) {
     return LoggingConfig(
       logLevel: overrides.logLevel ?? _defaultLogLevel,
       monitorCheckInterval: overrides.monitorCheckInterval ?? _defaultInterval,
-      remoteLoggingEnabled: overrides.remoteLoggingEnabled ?? _defaultRemoteLoggingEnabled,
-      anonymizationEnabled: overrides.isLogAnonymizationEnabled ?? true,
     );
   }
 }

@@ -55,35 +55,6 @@ void main() {
         expect(config.logLevel, Level.INFO);
       });
     });
-
-    group('remoteLoggingEnabled resolution', () {
-      test('uses override value when set to true', () {
-        when(() => mockAppConfig.supported).thenReturn([]);
-        const overrides = FeatureOverrides(remoteLoggingEnabled: true);
-
-        final config = LoggingMapper.map(mockAppConfig, overrides);
-
-        expect(config.remoteLoggingEnabled, isTrue);
-      });
-
-      test('uses override value when set to false', () {
-        when(() => mockAppConfig.supported).thenReturn([]);
-        const overrides = FeatureOverrides(remoteLoggingEnabled: false);
-
-        final config = LoggingMapper.map(mockAppConfig, overrides);
-
-        expect(config.remoteLoggingEnabled, isFalse);
-      });
-
-      test('defaults to false when not set in overrides', () {
-        when(() => mockAppConfig.supported).thenReturn([]);
-        const overrides = FeatureOverrides();
-
-        final config = LoggingMapper.map(mockAppConfig, overrides);
-
-        expect(config.remoteLoggingEnabled, isFalse);
-      });
-    });
   });
 
   group('LoggingMapper.mapFromOverridesOnly', () {
@@ -102,24 +73,6 @@ void main() {
         final config = LoggingMapper.mapFromOverridesOnly(overrides);
 
         expect(config.logLevel, Level.INFO);
-      });
-    });
-
-    group('remoteLoggingEnabled resolution', () {
-      test('uses override value when set to true', () {
-        const overrides = FeatureOverrides(remoteLoggingEnabled: true);
-
-        final config = LoggingMapper.mapFromOverridesOnly(overrides);
-
-        expect(config.remoteLoggingEnabled, isTrue);
-      });
-
-      test('defaults to false when not set', () {
-        const overrides = FeatureOverrides();
-
-        final config = LoggingMapper.mapFromOverridesOnly(overrides);
-
-        expect(config.remoteLoggingEnabled, isFalse);
       });
     });
   });

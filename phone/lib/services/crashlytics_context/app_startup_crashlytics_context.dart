@@ -100,8 +100,6 @@ class AppStartupCrashlyticsContext extends CrashlyticsAppContext {
       FeatureOverridesFactory.callPullVideoStrategyKey: overrides.callPullVideoStrategy?.name ?? 'unset',
       FeatureOverridesFactory.monitorCheckIntervalKey: overrides.monitorCheckInterval?.inSeconds ?? 'unset',
       FeatureOverridesFactory.logLevelKey: overrides.logLevel?.name ?? 'unset',
-      FeatureOverridesFactory.remoteLoggingEnabledKey: overrides.remoteLoggingEnabled ?? 'unset',
-      FeatureOverridesFactory.logAnonymizationEnabledKey: overrides.isLogAnonymizationEnabled ?? 'unset',
     });
   }
 }

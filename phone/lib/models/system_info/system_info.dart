@@ -8,6 +8,7 @@ import 'components/janus_info.dart';
 import 'components/postgres_info.dart';
 
 export 'components/core_info.dart';
+export 'components/mobile_remote_logging_info.dart';
 export 'components/gorush_info.dart';
 export 'components/janus_info.dart';
 export 'components/postgres_info.dart';

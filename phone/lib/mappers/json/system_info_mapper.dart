@@ -43,6 +43,9 @@ mixin SystemInfoJsonMapper {
       version: Version.parse(map['version']),
       iceServersConfigured: map['ice_servers_configured'] == true,
       notificationDeletedRetentionDays: map['notification_deleted_retention_days'] as int?,
+      mobileRemoteLogging: map['mobile_remote_logging'] != null
+          ? mobileRemoteLoggingInfoFromMap(map['mobile_remote_logging'])
+          : null,
     );
   }
 
@@ -51,6 +54,32 @@ mixin SystemInfoJsonMapper {
       'version': coreInfo.version.toString(),
       'ice_servers_configured': coreInfo.iceServersConfigured,
       'notification_deleted_retention_days': coreInfo.notificationDeletedRetentionDays,
+      'mobile_remote_logging': coreInfo.mobileRemoteLogging != null
+          ? mobileRemoteLoggingInfoToMap(coreInfo.mobileRemoteLogging!)
+          : null,
+    };
+  }
+
+  MobileRemoteLoggingInfo mobileRemoteLoggingInfoFromMap(Map<String, dynamic> map) {
+    final expiresAt = map['expires_at'] as String?;
+    return MobileRemoteLoggingInfo(
+      available: map['available'] == true,
+      enabled: map['enabled'] == true,
+      level: map['level'] as String?,
+      anonymization: map['anonymization'] != false,
+      expiresAt: expiresAt != null ? DateTime.tryParse(expiresAt) : null,
+      path: map['path'] as String?,
+    );
+  }
+
+  Map<String, dynamic> mobileRemoteLoggingInfoToMap(MobileRemoteLoggingInfo info) {
+    return {
+      'available': info.available,
+      'enabled': info.enabled,
+      'level': info.level,
+      'anonymization': info.anonymization,
+      'expires_at': info.expiresAt?.toUtc().toIso8601String(),
+      'path': info.path,
     };
   }
 

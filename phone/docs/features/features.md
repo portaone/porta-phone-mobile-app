@@ -16,6 +16,7 @@ under "Writing docs".
 | Conversation mute                  | [Overview](conversation_mute.md)                | Active - per capability, expiry derived locally  |
 | Feature access / runtime config    | [Overview](feature_access.md)                   | Active - session pin semantics                   |
 | Presence                           | [Overview](presence.md)                         | Active                                           |
+| Remote logging                     | [Overview](remote_logging.md)                   | Active - switched by WebTrit Core system info    |
 | Session tracking                   | [Overview](session_tracking.md)                 | Active - requires core >=0.35.0                  |
 | System notifications               | [Overview](system_notifications.md)             | Active - both directions on the polling service  |
 | Voicemail                          | [Overview](voicemail.md)                        | Active - save, trash and forward per capability  |
