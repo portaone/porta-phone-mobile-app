@@ -293,6 +293,12 @@ abstract class AppLocalizations {
   /// **'Message'**
   String get callTileActions_message;
 
+  /// On a watch, asked before a store is cleared: a tap on its row clears it, so it asks first.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear {name}?'**
+  String cacheManagement_Watch_clearQuestion(String name);
+
   /// No description provided for @cacheManagement_Button_clear.
   ///
   /// In en, this message translates to:

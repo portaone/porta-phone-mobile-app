@@ -105,6 +105,8 @@
   "@callTileActions_message": {
     "description": "Label of the expanded call tile action that opens a chat with the contact."
   },
+  "cacheManagement_Watch_clearQuestion": "ล้าง {name} หรือไม่",
+  "@cacheManagement_Watch_clearQuestion": {},
   "cacheManagement_Button_clear": "ล้าง",
   "@cacheManagement_Button_clear": {},
   "cacheManagement_Label_empty": "ไม่มีข้อมูลในแคชบนอุปกรณ์นี้",

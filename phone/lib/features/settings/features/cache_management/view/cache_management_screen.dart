@@ -8,6 +8,7 @@ import 'package:webtrit_phone/widgets/widgets.dart';
 
 import '../cubit/cache_management_cubit.dart';
 import '../utils/cache_usage_formatter.dart';
+import 'cache_management_screen_watch.dart';
 
 /// Central place to inspect and free the app's local caches.
 ///
@@ -17,7 +18,10 @@ class CacheManagementScreen extends StatelessWidget {
   const CacheManagementScreen({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context) =>
+      AdaptiveLayout(handset: _handset, watch: (_) => const CacheManagementScreenWatch());
+
+  Widget _handset(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: Text(context.l10n.cacheManagement_Widget_screenTitle), leading: const ExtBackButton()),
       body: BlocBuilder<CacheManagementCubit, CacheManagementState>(

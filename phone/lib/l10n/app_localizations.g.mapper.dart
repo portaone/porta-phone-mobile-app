@@ -2094,6 +2094,12 @@ extension AppLocalizationsExtension on AppLocalizations {
           'callCenter_Text_loggedInOfTotal requires 2 arguments',
         ),
       },
+      'cacheManagement_Watch_clearQuestion' => switch (args) {
+        [final String name] => cacheManagement_Watch_clearQuestion(name),
+        _ => throw ArgumentError(
+          'cacheManagement_Watch_clearQuestion requires 1 arguments',
+        ),
+      },
       'cacheManagement_Label_itemsCount' => switch (args) {
         [final int count] => cacheManagement_Label_itemsCount(count),
         _ => throw ArgumentError(

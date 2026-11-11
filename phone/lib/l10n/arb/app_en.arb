@@ -154,6 +154,16 @@
   "@callTileActions_message": {
     "description": "Label of the expanded call tile action that opens a chat with the contact."
   },
+  "cacheManagement_Watch_clearQuestion": "Clear {name}?",
+  "@cacheManagement_Watch_clearQuestion": {
+    "description": "On a watch, asked before a store is cleared: a tap on its row clears it, so it asks first.",
+    "placeholders": {
+      "name": {
+        "type": "String",
+        "example": "Voicemail audio"
+      }
+    }
+  },
   "cacheManagement_Button_clear": "Clear",
   "@cacheManagement_Button_clear": {},
   "cacheManagement_Label_empty": "Nothing is cached on this device",
