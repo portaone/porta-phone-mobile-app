@@ -320,6 +320,11 @@ const String mediaSettingsAudioProcessingSectionId = 'mediaSettingsAudioProcessi
 const String aboutCoreUrlId = 'aboutCoreUrl';
 const String aboutAppSessionIdentifierId = 'aboutAppSessionIdentifier';
 
+/// The edge button of the watch page that sends a page it cannot show to the
+/// paired phone: Open on phone, and its Try again once no phone took it.
+const String watchOpenOnPhoneId = 'watchOpenOnPhone';
+const String watchOpenOnPhoneRetryId = 'watchOpenOnPhoneRetry';
+
 /// The number of the other party on the call screen, whether or not a name
 /// is shown above it.
 const String callPeerNumberId = 'callPeerNumber';

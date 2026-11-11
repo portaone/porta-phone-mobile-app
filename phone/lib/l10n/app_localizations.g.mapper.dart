@@ -259,6 +259,15 @@ extension AppLocalizationsExtension on AppLocalizations {
       'cdrs_noMissedCalls_message' => cdrs_noMissedCalls_message,
       'cdrs_noRecentCalls_message' => cdrs_noRecentCalls_message,
       'cdrs_refreshFailed_message' => cdrs_refreshFailed_message,
+      'common_Watch_openOnPhone_message' => common_Watch_openOnPhone_message,
+      'common_Watch_openOnPhone_hint' => common_Watch_openOnPhone_hint,
+      'common_Watch_openOnPhone_action' => common_Watch_openOnPhone_action,
+      'common_Watch_openOnPhone_sent' => common_Watch_openOnPhone_sent,
+      'common_Watch_openOnPhone_sentHint' => common_Watch_openOnPhone_sentHint,
+      'common_Watch_openOnPhone_failed' => common_Watch_openOnPhone_failed,
+      'common_Watch_openOnPhone_failedHint' =>
+        common_Watch_openOnPhone_failedHint,
+      'common_Watch_openOnPhone_retry' => common_Watch_openOnPhone_retry,
       'common_SemanticsLabel_loading' => common_SemanticsLabel_loading,
       'common_noInternetConnection_message' =>
         common_noInternetConnection_message,

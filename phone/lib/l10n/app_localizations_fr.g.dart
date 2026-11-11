@@ -719,6 +719,30 @@ class AppLocalizationsFr extends AppLocalizations {
   String get cdrs_refreshFailed_message => 'Impossible d\'actualiser l\'historique des appels - veuillez réessayer';
 
   @override
+  String get common_Watch_openOnPhone_message => 'S\'ouvre sur votre téléphone';
+
+  @override
+  String get common_Watch_openOnPhone_hint => 'Lisez-la sur le téléphone associé';
+
+  @override
+  String get common_Watch_openOnPhone_action => 'Ouvrir sur le téléphone';
+
+  @override
+  String get common_Watch_openOnPhone_sent => 'Regardez votre téléphone';
+
+  @override
+  String get common_Watch_openOnPhone_sentHint => 'La page y est ouverte';
+
+  @override
+  String get common_Watch_openOnPhone_failed => 'Aucun téléphone connecté';
+
+  @override
+  String get common_Watch_openOnPhone_failedHint => 'Connectez le téléphone et réessayez';
+
+  @override
+  String get common_Watch_openOnPhone_retry => 'Réessayer';
+
+  @override
   String get common_SemanticsLabel_loading => 'Chargement';
 
   @override

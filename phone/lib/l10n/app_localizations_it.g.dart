@@ -713,6 +713,30 @@ class AppLocalizationsIt extends AppLocalizations {
   String get cdrs_refreshFailed_message => 'Impossibile aggiornare la cronologia chiamate - riprova';
 
   @override
+  String get common_Watch_openOnPhone_message => 'Si apre sul telefono';
+
+  @override
+  String get common_Watch_openOnPhone_hint => 'Leggila sul telefono associato';
+
+  @override
+  String get common_Watch_openOnPhone_action => 'Apri sul telefono';
+
+  @override
+  String get common_Watch_openOnPhone_sent => 'Controlla il telefono';
+
+  @override
+  String get common_Watch_openOnPhone_sentHint => 'La pagina è aperta lì';
+
+  @override
+  String get common_Watch_openOnPhone_failed => 'Nessun telefono connesso';
+
+  @override
+  String get common_Watch_openOnPhone_failedHint => 'Collega il telefono e riprova';
+
+  @override
+  String get common_Watch_openOnPhone_retry => 'Riprova';
+
+  @override
   String get common_SemanticsLabel_loading => 'Caricamento';
 
   @override
