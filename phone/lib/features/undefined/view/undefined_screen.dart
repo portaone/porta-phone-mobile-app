@@ -5,9 +5,11 @@ import 'package:auto_route/auto_route.dart';
 import 'package:webtrit_phone/app/constants.dart';
 import 'package:webtrit_phone/l10n/l10n.dart';
 import 'package:webtrit_phone/theme/theme.dart';
+import 'package:webtrit_phone/widgets/widgets.dart';
 
 import '../models/models.dart';
 import '../extensions/extensions.dart';
+import 'undefined_screen_watch.dart';
 
 class UndefinedScreen extends StatelessWidget {
   const UndefinedScreen({super.key, required this.undefinedType});
@@ -15,7 +17,12 @@ class UndefinedScreen extends StatelessWidget {
   final UndefinedType undefinedType;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context) => AdaptiveLayout(
+    handset: _handset,
+    watch: (_) => UndefinedScreenWatch(undefinedType: undefinedType),
+  );
+
+  Widget _handset(BuildContext context) {
     final themeData = Theme.of(context);
     final ElevatedButtonStyles? elevatedButtonStyles = themeData.extension<ElevatedButtonStyles>();
     return Scaffold(

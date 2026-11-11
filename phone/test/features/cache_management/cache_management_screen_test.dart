@@ -5,10 +5,14 @@ import 'package:auto_route/auto_route.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:mocktail/mocktail.dart';
 
+import 'package:webtrit_phone/app/keys.dart';
 import 'package:webtrit_phone/data/data.dart';
 import 'package:webtrit_phone/features/settings/features/cache_management/cache_management.dart';
 import 'package:webtrit_phone/l10n/l10n.dart';
 import 'package:webtrit_phone/models/models.dart';
+import 'package:webtrit_phone/widgets/widgets.dart';
+
+import '../../helpers/screen_presets.dart';
 
 class _MockStackRouter extends Mock implements StackRouter {}
 
@@ -179,6 +183,76 @@ void main() {
       expect(formatBytes(500, uk), '500 Б');
       expect(formatBytes(2048, uk), '2,0 КБ');
       expect(formatBytes(3 * 1024 * 1024 * 1024, uk), '3,0 ГБ');
+    });
+  });
+
+  group('on a watch', () {
+    for (final preset in watchPresets) {
+      testWidgets('on $preset a row per store with its size; no app bar, no Clear buttons', (tester) async {
+        preset.apply(tester);
+        expect(
+          await pumpCollectingOverflows(
+            tester,
+            wrap([_FakeCacheSection(size: 2048), _FakeItemsCacheSection(count: 12)]),
+          ),
+          isEmpty,
+        );
+        await tester.pump();
+
+        expect(find.byType(AppBar), findsNothing);
+        expect(find.widgetWithText(WatchListTile, 'Voicemail audio'), findsOneWidget);
+        expect(find.text('2.0 KB'), findsOneWidget);
+        expect(find.text('Clear'), findsNothing);
+      });
+    }
+
+    testWidgets('a tap asks on the watch confirm, the description under the question; yes clears it', (tester) async {
+      watchPresets.last.apply(tester);
+      final section = _FakeCacheSection(size: 2048);
+      await tester.pumpWidget(wrap([section]));
+      await tester.pump();
+
+      final handle = tester.ensureSemantics();
+      expect(find.bySemanticsLabel('Voicemail audio, 2.0 KB, Clear'), findsOneWidget);
+      handle.dispose();
+      await tester.tap(find.text('Voicemail audio'));
+      await tester.pumpAndSettle();
+      expect(find.byType(WatchConfirm), findsOneWidget);
+      expect(find.text('Clear Voicemail audio?'), findsOneWidget);
+      expect(section.clearCalls, 0);
+
+      await tester.tap(find.byKey(confirmDialogYesButtonKey));
+      await tester.pumpAndSettle();
+      expect(section.clearCalls, 1);
+      expect(find.text('0 B'), findsOneWidget);
+    });
+
+    testWidgets('no answers no, and nothing is cleared', (tester) async {
+      watchPresets.last.apply(tester);
+      final section = _FakeCacheSection(size: 2048);
+      await tester.pumpWidget(wrap([section]));
+      await tester.pump();
+
+      await tester.tap(find.text('Voicemail audio'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(confirmDialogNoButtonKey));
+      await tester.pumpAndSettle();
+      expect(section.clearCalls, 0);
+    });
+
+    testWidgets('a store that could not be measured says Unknown', (tester) async {
+      watchPresets.last.apply(tester);
+      await tester.pumpWidget(wrap([_ThrowingCacheSection()]));
+      await tester.pump();
+      expect(find.text('Unknown'), findsOneWidget);
+    });
+
+    testWidgets('nothing cached is a state page', (tester) async {
+      watchPresets.last.apply(tester);
+      await tester.pumpWidget(wrap(const []));
+      await tester.pump();
+      expect(find.byType(WatchStatePage), findsOneWidget);
+      expect(find.text('Nothing is cached on this device'), findsOneWidget);
     });
   });
 }

@@ -154,6 +154,16 @@
   "@callTileActions_message": {
     "description": "Label of the expanded call tile action that opens a chat with the contact."
   },
+  "cacheManagement_Watch_clearQuestion": "Clear {name}?",
+  "@cacheManagement_Watch_clearQuestion": {
+    "description": "On a watch, asked before a store is cleared: a tap on its row clears it, so it asks first.",
+    "placeholders": {
+      "name": {
+        "type": "String",
+        "example": "Voicemail audio"
+      }
+    }
+  },
   "cacheManagement_Button_clear": "Clear",
   "@cacheManagement_Button_clear": {},
   "cacheManagement_Label_empty": "Nothing is cached on this device",
@@ -759,6 +769,42 @@
   "@cdrs_noRecentCalls_message": {},
   "cdrs_refreshFailed_message": "Could not refresh call history - please try again",
   "@cdrs_refreshFailed_message": {},
+  "common_Watch_openOnPhone_message": "Opens on your phone",
+  "@common_Watch_openOnPhone_message": {
+    "description": "On a watch, a page it cannot show (a watch has no web view): it opens on the paired phone."
+  },
+  "common_Watch_openOnPhone_hint": "Read it on the paired phone",
+  "@common_Watch_openOnPhone_hint": {
+    "description": "On a watch, under 'Opens on your phone'."
+  },
+  "common_Watch_openOnPhone_action": "Open on phone",
+  "@common_Watch_openOnPhone_action": {
+    "description": "On a watch, the edge button that sends the page to the paired phone."
+  },
+  "common_Watch_openOnPhone_sent": "Check your phone",
+  "@common_Watch_openOnPhone_sent": {
+    "description": "On a watch, once the paired phone has taken the page."
+  },
+  "common_Watch_openOnPhone_sentHint": "The page is open there",
+  "@common_Watch_openOnPhone_sentHint": {
+    "description": "On a watch, under 'Check your phone'."
+  },
+  "common_Watch_openOnPhone_failed": "No phone connected",
+  "@common_Watch_openOnPhone_failed": {
+    "description": "On a watch, when no paired phone could take the page."
+  },
+  "common_Watch_openOnPhone_failedHint": "Connect the phone and try again",
+  "@common_Watch_openOnPhone_failedHint": {
+    "description": "On a watch, under 'No phone connected'."
+  },
+  "common_Watch_openOnPhone_retry": "Try again",
+  "@common_Watch_openOnPhone_retry": {
+    "description": "On a watch, the edge button under 'No phone connected': sends the page to the phone again."
+  },
+  "common_Watch_phoneOnly": "Open it in the app on your phone",
+  "@common_Watch_phoneOnly": {
+    "description": "On a watch, a page built into the app that cannot be sent to the phone as a link: it is read in the app on the phone."
+  },
   "common_SemanticsLabel_loading": "Loading",
   "@common_SemanticsLabel_loading": {
     "description": "Accessibility name announced while a screen waits for a request to finish."
@@ -1089,6 +1135,18 @@
   "@diagnostic_permission_contacts_description": {},
   "diagnostic_permission_contacts_title": "Contacts",
   "@diagnostic_permission_contacts_title": {},
+  "diagnostic_Watch_openSettings": "Open settings",
+  "@diagnostic_Watch_openSettings": {
+    "description": "On a watch, the edge button of a diagnostic check that opens the watch's settings for the app (the phone's Manage Permission, shortened to fit the edge)."
+  },
+  "diagnostic_Watch_allow": "Allow",
+  "@diagnostic_Watch_allow": {
+    "description": "On a watch, the edge button of a denied permission that asks the system for it (the phone's Request Permission, shortened to fit the edge)."
+  },
+  "diagnostic_Watch_runAgain": "Run again",
+  "@diagnostic_Watch_runAgain": {
+    "description": "On a watch, the edge button of the network check's page: runs the check again."
+  },
   "diagnosticPermissionDetails_button_managePermission": "Manage Permission",
   "@diagnosticPermissionDetails_button_managePermission": {},
   "diagnosticPermissionDetails_button_requestPermission": "Request Permission",
@@ -1264,6 +1322,26 @@
         "type": "String"
       }
     }
+  },
+  "favorites_Watch_empty": "No favorites yet",
+  "@favorites_Watch_empty": {
+    "description": "On a watch, the one line of an empty favorites list."
+  },
+  "favorites_Watch_emptyHint": "Star a contact to add it",
+  "@favorites_Watch_emptyHint": {
+    "description": "On a watch, the short hint under the empty favorites line: how a favorite is added."
+  },
+  "favorites_Watch_notFound": "No favorites found",
+  "@favorites_Watch_notFound": {
+    "description": "On a watch, the line in place of the favorites a search found none of."
+  },
+  "favorites_Watch_remove": "Remove from favorites",
+  "@favorites_Watch_remove": {
+    "description": "On a watch, what a long press on a favorite does, read by a screen reader."
+  },
+  "favorites_Watch_removeQuestion": "Remove from favorites?",
+  "@favorites_Watch_removeQuestion": {
+    "description": "On a watch, the question asked before a favorite is removed."
   },
   "formatPhone": "{style, select, full{{main} (ext: {ext})} simple{{main}} only_ext{ext: {ext}} empty{No phone number} other{{main}}}",
   "@formatPhone": {
@@ -1956,6 +2034,71 @@
   "@messaging_SmsSendingStatus_waiting": {},
   "messaging_StateBar_connecting": "CONNECTING",
   "@messaging_StateBar_connecting": {},
+  "messaging_Watch_search": "Search chats",
+  "@messaging_Watch_search": {
+    "description": "On a watch, the name of the round search button over the conversations."
+  },
+  "messaging_Watch_searchSms": "Search SMS",
+  "@messaging_Watch_searchSms": {
+    "description": "Watch: the search button over the SMS conversations, read by a screen reader"
+  },
+  "messaging_Watch_list": "List",
+  "@messaging_Watch_list": {
+    "description": "Watch: what the pill that switches between Messages and SMS is, read before its value by a screen reader (\"List: SMS\")"
+  },
+  "messaging_Watch_statusInitializing": "Starting chats",
+  "@messaging_Watch_statusInitializing": {
+    "description": "Watch: the line under the chats while the chat connection is starting"
+  },
+  "messaging_Watch_statusConnecting": "Connecting to chats",
+  "@messaging_Watch_statusConnecting": {
+    "description": "Watch: the line under the chats while the chat connection is being made"
+  },
+  "messaging_Watch_statusDisconnected": "Chats are offline",
+  "@messaging_Watch_statusDisconnected": {
+    "description": "Watch: the line under the chats when the chat connection is down"
+  },
+  "messaging_Watch_nextMembers": "Next ({count})",
+  "@messaging_Watch_nextMembers": {
+    "description": "Watch: the edge button that goes on from picking a group's members, with how many are picked",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "messaging_Watch_notFound": "No conversations found",
+  "@messaging_Watch_notFound": {
+    "description": "On a watch, the line in place of the conversations a search found none of."
+  },
+  "messaging_Watch_newChat": "New chat",
+  "@messaging_Watch_newChat": {
+    "description": "On a watch, the short label of the button that starts a chat; a screen reader says the full name."
+  },
+  "messaging_Watch_newSms": "New SMS",
+  "@messaging_Watch_newSms": {
+    "description": "On a watch, the short label of the button that starts an SMS conversation; a screen reader says the full name."
+  },
+  "messaging_Watch_mine": "You",
+  "@messaging_Watch_mine": {
+    "description": "On a watch, said by a screen reader before a message the user wrote."
+  },
+  "messaging_Watch_markDelivered": "Delivered",
+  "@messaging_Watch_markDelivered": {
+    "description": "Watch: said after one of the user's own SMS once the network has delivered it"
+  },
+  "messaging_Watch_markPending": "Sending",
+  "@messaging_Watch_markPending": {
+    "description": "On a watch, said by a screen reader after a message of the user still on its way out."
+  },
+  "messaging_Watch_markSent": "Sent",
+  "@messaging_Watch_markSent": {
+    "description": "On a watch, said by a screen reader after a message of the user that has been sent."
+  },
+  "messaging_Watch_markRead": "Read",
+  "@messaging_Watch_markRead": {
+    "description": "On a watch, said by a screen reader after a message of the user that has been read or delivered."
+  },
   "messaging_StateBar_error": "DISCONNECTED",
   "@messaging_StateBar_error": {
     "description": "Shown in the messaging state bar when the app is disconnected from the messaging server. Condition: connection lost or unable to establish a connection."
@@ -2350,6 +2493,10 @@
   "@presence_settings_availability_title": {},
   "presence_settings_availability_tooltip": "Represents general availability for communications within SIP service. Uses  SIP \"Status\" element in pidf content with \"open/closed\" values (see RFC 3863)",
   "@presence_settings_availability_tooltip": {},
+  "presence_Watch_configOnPhone": "Availability, note, activity and status icon: on the phone",
+  "@presence_Watch_configOnPhone": {
+    "description": "On a watch, under the presence presets: the rest of the presence configuration is not offered there."
+  },
   "presence_settings_config_title": "Configuration:",
   "@presence_settings_config_title": {},
   "presence_settings_dnd_title": "Reject calls (DND)",
@@ -2619,6 +2766,10 @@
   },
   "sessions_Button_retry": "Try again",
   "@sessions_Button_retry": {},
+  "sessions_Watch_revokeAllOthers": "Sign out others",
+  "@sessions_Watch_revokeAllOthers": {
+    "description": "On a watch, the red edge button that signs out every other session (the phone's 'Sign out other sessions', shortened to fit the edge)."
+  },
   "sessions_Button_revokeAllOthers": "Sign out other sessions",
   "@sessions_Button_revokeAllOthers": {
     "description": "Action that revokes every session except the one on this device."
@@ -2769,8 +2920,26 @@
   "@settings_speakerOnMinimize_Section_title": {},
   "settings_speakerOnMinimize_Section_tooltip": "Whether an audio call moves to the loudspeaker when you leave the call screen, and back to the earpiece when you return to it.",
   "@settings_speakerOnMinimize_Section_tooltip": {},
+  "settings_media_Watch_onPhone": "Custom quality, audio processing, video, ICE and TURN: on the phone",
+  "@settings_media_Watch_onPhone": {
+    "description": "On a watch, at the end of the media settings: the settings not offered there."
+  },
+  "settings_media_Watch_resetQuestion": "Reset all media settings to default?",
+  "@settings_media_Watch_resetQuestion": {
+    "description": "On a watch, asked before Reset to default clears every media setting, including the ones only the phone shows."
+  },
   "settings_speakerOnMinimize_switch": "Turn the speaker on when leaving the call screen",
   "@settings_speakerOnMinimize_switch": {},
+  "settings_Watch_onPhone": "{setting}: on the phone",
+  "@settings_Watch_onPhone": {
+    "description": "On a watch, closes a settings page whose other parts are not offered there, naming the part that stays on the phone.",
+    "placeholders": {
+      "setting": {
+        "type": "String",
+        "example": "Dial code matching"
+      }
+    }
+  },
   "settings_callerId_cancel_button": "Cancel",
   "@settings_callerId_cancel_button": {},
   "settings_callerId_defaultTitle": "Default Caller ID",
@@ -3038,6 +3207,10 @@
   "settings_network_fallbackCalls_description": "If push notifications about calls are not received, the app will receive a special SMS and display the incoming call screen.",
   "@settings_network_fallbackCalls_description": {
     "description": "Tooltip description for fallback SMS-based call trigger"
+  },
+  "settings_network_Watch_howTheyDiffer": "How they differ",
+  "@settings_network_Watch_howTheyDiffer": {
+    "description": "On a watch, the row under the two ways incoming calls are delivered: opens both explanations as a page of text."
   },
   "settings_network_fallbackCalls_title": "Fallback Incoming Calls",
   "@settings_network_fallbackCalls_title": {
@@ -3343,6 +3516,14 @@
   },
   "system_notifications_screen_list_empty": "No notifications yet",
   "@system_notifications_screen_list_empty": {},
+  "system_notifications_Watch_deleteQuestion": "Delete this notification?",
+  "@system_notifications_Watch_deleteQuestion": {
+    "description": "On a watch, asked before a notification is deleted by a long press on it."
+  },
+  "system_notifications_Watch_deleteContent": "It is deleted from your account, not only from this watch.",
+  "@system_notifications_Watch_deleteContent": {
+    "description": "On a watch, under 'Delete this notification?': what deleting it means."
+  },
   "system_notifications_screen_title": "Notifications",
   "@system_notifications_screen_title": {},
   "system_notifications_Dialog_deleteAllContent": "They will be deleted from your account, not only from this device. This cannot be undone.",

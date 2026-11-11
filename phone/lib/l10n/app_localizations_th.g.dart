@@ -154,6 +154,11 @@ class AppLocalizationsTh extends AppLocalizations {
   String get callTileActions_message => 'ข้อความ';
 
   @override
+  String cacheManagement_Watch_clearQuestion(String name) {
+    return 'ล้าง $name หรือไม่';
+  }
+
+  @override
   String get cacheManagement_Button_clear => 'ล้าง';
 
   @override
@@ -697,6 +702,33 @@ class AppLocalizationsTh extends AppLocalizations {
   String get cdrs_refreshFailed_message => 'ไม่สามารถรีเฟรชประวัติการโทรได้ - โปรดลองอีกครั้ง';
 
   @override
+  String get common_Watch_openOnPhone_message => 'เปิดบนโทรศัพท์ของคุณ';
+
+  @override
+  String get common_Watch_openOnPhone_hint => 'อ่านบนโทรศัพท์ที่จับคู่ไว้';
+
+  @override
+  String get common_Watch_openOnPhone_action => 'เปิดบนโทรศัพท์';
+
+  @override
+  String get common_Watch_openOnPhone_sent => 'ตรวจดูโทรศัพท์ของคุณ';
+
+  @override
+  String get common_Watch_openOnPhone_sentHint => 'หน้านี้เปิดอยู่ที่นั่น';
+
+  @override
+  String get common_Watch_openOnPhone_failed => 'ไม่ได้เชื่อมต่อโทรศัพท์';
+
+  @override
+  String get common_Watch_openOnPhone_failedHint => 'เชื่อมต่อโทรศัพท์แล้วลองอีกครั้ง';
+
+  @override
+  String get common_Watch_openOnPhone_retry => 'ลองอีกครั้ง';
+
+  @override
+  String get common_Watch_phoneOnly => 'เปิดในแอปบนโทรศัพท์ของคุณ';
+
+  @override
   String get common_SemanticsLabel_loading => 'กำลังโหลด';
 
   @override
@@ -1040,6 +1072,15 @@ class AppLocalizationsTh extends AppLocalizations {
   String get diagnostic_permission_contacts_title => 'รายชื่อติดต่อ';
 
   @override
+  String get diagnostic_Watch_openSettings => 'เปิดการตั้งค่า';
+
+  @override
+  String get diagnostic_Watch_allow => 'อนุญาต';
+
+  @override
+  String get diagnostic_Watch_runAgain => 'ตรวจอีกครั้ง';
+
+  @override
   String get diagnosticPermissionDetails_button_managePermission => 'จัดการสิทธิ์';
 
   @override
@@ -1267,6 +1308,21 @@ class AppLocalizationsTh extends AppLocalizations {
   String favorites_SnackBar_deleted(String name) {
     return 'ลบ $name แล้ว';
   }
+
+  @override
+  String get favorites_Watch_empty => 'ยังไม่มีรายการโปรด';
+
+  @override
+  String get favorites_Watch_emptyHint => 'แตะดาวที่รายชื่อเพื่อเพิ่ม';
+
+  @override
+  String get favorites_Watch_notFound => 'ไม่พบรายการโปรด';
+
+  @override
+  String get favorites_Watch_remove => 'นำออกจากรายการโปรด';
+
+  @override
+  String get favorites_Watch_removeQuestion => 'นำออกจากรายการโปรดหรือไม่';
 
   @override
   String formatPhone(String style, String main, String ext) {
@@ -2001,6 +2057,53 @@ class AppLocalizationsTh extends AppLocalizations {
   String get messaging_StateBar_connecting => 'กำลังเชื่อมต่อ';
 
   @override
+  String get messaging_Watch_search => 'ค้นหาแชท';
+
+  @override
+  String get messaging_Watch_searchSms => 'ค้นหา SMS';
+
+  @override
+  String get messaging_Watch_list => 'รายการ';
+
+  @override
+  String get messaging_Watch_statusInitializing => 'กำลังเริ่มแชท';
+
+  @override
+  String get messaging_Watch_statusConnecting => 'กำลังเชื่อมต่อแชท';
+
+  @override
+  String get messaging_Watch_statusDisconnected => 'แชทออฟไลน์';
+
+  @override
+  String messaging_Watch_nextMembers(int count) {
+    return 'ถัดไป ($count)';
+  }
+
+  @override
+  String get messaging_Watch_notFound => 'ไม่พบการสนทนา';
+
+  @override
+  String get messaging_Watch_newChat => 'แชทใหม่';
+
+  @override
+  String get messaging_Watch_newSms => 'SMS ใหม่';
+
+  @override
+  String get messaging_Watch_mine => 'คุณ';
+
+  @override
+  String get messaging_Watch_markDelivered => 'ส่งถึงแล้ว';
+
+  @override
+  String get messaging_Watch_markPending => 'กำลังส่ง';
+
+  @override
+  String get messaging_Watch_markSent => 'ส่งแล้ว';
+
+  @override
+  String get messaging_Watch_markRead => 'อ่านแล้ว';
+
+  @override
   String get messaging_StateBar_error => 'ถูกตัดการเชื่อมต่อ';
 
   @override
@@ -2448,6 +2551,9 @@ class AppLocalizationsTh extends AppLocalizations {
       'แสดงสถานะความพร้อมในการสื่อสารทั่วไปภายในบริการ SIP โดยใช้องค์ประกอบ \"Status\" ของ SIP ในเนื้อหา pidf ด้วยค่า \"open/closed\" (ดู RFC 3863)';
 
   @override
+  String get presence_Watch_configOnPhone => 'สถานะพร้อมใช้งาน บันทึก กิจกรรม และไอคอนสถานะ: บนโทรศัพท์';
+
+  @override
   String get presence_settings_config_title => 'การกำหนดค่า:';
 
   @override
@@ -2717,6 +2823,9 @@ class AppLocalizationsTh extends AppLocalizations {
   String get sessions_Button_retry => 'ลองอีกครั้ง';
 
   @override
+  String get sessions_Watch_revokeAllOthers => 'ออกจากระบบอื่น';
+
+  @override
   String get sessions_Button_revokeAllOthers => 'ออกจากระบบเซสชันอื่น';
 
   @override
@@ -2898,7 +3007,18 @@ class AppLocalizationsTh extends AppLocalizations {
       'กำหนดว่าการโทรด้วยเสียงจะย้ายไปที่ลำโพงเมื่อคุณออกจากหน้าจอการโทร และกลับไปที่หูฟังเมื่อคุณกลับมาหรือไม่';
 
   @override
+  String get settings_media_Watch_onPhone => 'คุณภาพแบบกำหนดเอง การประมวลผลเสียง วิดีโอ ICE และ TURN: บนโทรศัพท์';
+
+  @override
+  String get settings_media_Watch_resetQuestion => 'รีเซ็ตการตั้งค่าสื่อทั้งหมดเป็นค่าเริ่มต้นหรือไม่';
+
+  @override
   String get settings_speakerOnMinimize_switch => 'เปิดลำโพงเมื่อออกจากหน้าจอการโทร';
+
+  @override
+  String settings_Watch_onPhone(String setting) {
+    return '$setting: บนโทรศัพท์';
+  }
 
   @override
   String get settings_callerId_cancel_button => 'ยกเลิก';
@@ -3301,6 +3421,9 @@ class AppLocalizationsTh extends AppLocalizations {
       'หากไม่ได้รับการแจ้งเตือนแบบพุชเกี่ยวกับสาย แอปจะรับ SMS พิเศษและแสดงหน้าจอสายเรียกเข้า';
 
   @override
+  String get settings_network_Watch_howTheyDiffer => 'ต่างกันอย่างไร';
+
+  @override
   String get settings_network_fallbackCalls_title => 'สายเรียกเข้าสำรอง';
 
   @override
@@ -3570,6 +3693,12 @@ class AppLocalizationsTh extends AppLocalizations {
 
   @override
   String get system_notifications_screen_list_empty => 'ยังไม่มีการแจ้งเตือน';
+
+  @override
+  String get system_notifications_Watch_deleteQuestion => 'ลบการแจ้งเตือนนี้หรือไม่';
+
+  @override
+  String get system_notifications_Watch_deleteContent => 'การแจ้งเตือนจะถูกลบออกจากบัญชีของคุณ ไม่ใช่แค่จากนาฬิกานี้';
 
   @override
   String get system_notifications_screen_title => 'การแจ้งเตือน';

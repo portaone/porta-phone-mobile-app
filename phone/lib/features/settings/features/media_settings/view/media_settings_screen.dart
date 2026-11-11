@@ -10,6 +10,7 @@ import 'package:webtrit_phone/widgets/widgets.dart';
 
 import 'components/components.dart';
 import '../media_settings.dart';
+import 'media_settings_screen_watch.dart';
 
 class MediaSettingsScreen extends StatefulWidget {
   const MediaSettingsScreen({super.key, this.initialOpenSection});
@@ -24,7 +25,10 @@ class _MediaSettingsScreenState extends State<MediaSettingsScreen> {
   late final cubit = context.read<MediaSettingsCubit>();
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context) =>
+      AdaptiveLayout(handset: _handset, watch: (_) => const MediaSettingsScreenWatch());
+
+  Widget _handset(BuildContext context) {
     final theme = Theme.of(context);
     final l10n = context.l10n;
 

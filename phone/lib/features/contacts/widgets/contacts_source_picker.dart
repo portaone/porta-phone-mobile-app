@@ -26,14 +26,6 @@ class ContactsSourcePicker extends StatelessWidget {
   final ContactsListSelection selected;
   final ValueChanged<ContactsListSelection> onSelected;
 
-  IconData _icon(ContactsListSelection selection) => switch (selection) {
-    ContactsSourceSelection(sourceType: ContactSourceType.local) => Icons.smartphone_outlined,
-    ContactsSourceSelection(sourceType: ContactSourceType.external) => Icons.cloud_outlined,
-    // Outlined like the two beside it: the check mark of the open menu says
-    // which entry is on, so a filled star would answer that a second time.
-    ContactsFavoritesSelection() => Icons.star_outline,
-  };
-
   /// The anchor automation reaches the favourites entry by.
   ///
   /// Only that entry carries one: it replaced a control of the title row that
@@ -68,7 +60,7 @@ class ContactsSourcePicker extends StatelessWidget {
                 child: Row(
                   spacing: _pickerMenuGap,
                   children: [
-                    Icon(_icon(selection), size: _pickerIconSize),
+                    Icon(selection.icon, size: _pickerIconSize),
                     Expanded(child: Text(selection.l10n(context))),
                     if (selection == selected)
                       Icon(Icons.check, size: _pickerIconSize, color: theme.colorScheme.primary),
@@ -85,7 +77,7 @@ class ContactsSourcePicker extends StatelessWidget {
               mainAxisSize: MainAxisSize.min,
               spacing: _pickerGap,
               children: [
-                Icon(_icon(selected), size: _pickerIconSize, color: theme.colorScheme.onSurfaceVariant),
+                Icon(selected.icon, size: _pickerIconSize, color: theme.colorScheme.onSurfaceVariant),
                 Text(selected.l10n(context), style: theme.textTheme.bodyMedium),
                 Icon(Icons.expand_more, size: _pickerIconSize, color: theme.colorScheme.onSurfaceVariant),
               ],

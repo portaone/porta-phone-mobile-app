@@ -7,6 +7,8 @@ import 'package:webtrit_phone/models/system_notification.dart';
 import 'package:webtrit_phone/utils/utils.dart';
 import 'package:webtrit_phone/widgets/widgets.dart';
 
+import 'system_notification_type_icon.dart';
+
 class SystemNotificationListTile extends StatefulWidget {
   const SystemNotificationListTile(
     this.notification, {
@@ -128,16 +130,7 @@ class _SystemNotificationListTileState extends State<SystemNotificationListTile>
             Expanded(
               child: Text(widget.notification.title, style: style.copyWith(fontWeight: FontWeight.bold, fontSize: 14)),
             ),
-            Icon(
-              switch (widget.notification.type) {
-                SystemNotificationType.announcement => Icons.announcement_outlined,
-                SystemNotificationType.promotion => Icons.local_offer_outlined,
-                SystemNotificationType.security => Icons.security_outlined,
-                SystemNotificationType.system => Icons.settings_outlined,
-              },
-              size: 20,
-              color: _typeColor(widget.notification.type, colorScheme),
-            ),
+            Icon(widget.notification.type.icon, size: 20, color: _typeColor(widget.notification.type, colorScheme)),
           ],
         ),
         Divider(height: 12, color: style.color?.withAlpha(10)),

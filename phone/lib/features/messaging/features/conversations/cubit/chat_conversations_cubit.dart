@@ -195,6 +195,8 @@ class ChatConversationsCubit extends Cubit<ChatConversationsState> {
     List<ChatWithMessageAndMemebers> conversations,
   ) {
     if (search.isEmpty) return conversations;
+    // Any case finds a name: a watch keyboard capitalises the first letter.
+    final query = search.toLowerCase();
 
     return conversations.where((e) {
       var (:chat, :message, :contacts) = e;
@@ -202,15 +204,16 @@ class ChatConversationsCubit extends Cubit<ChatConversationsState> {
       final groupName = chat.name?.toLowerCase();
       final contactNames = contacts
           .where((e) => e.isCurrentUser == false)
-          .map((e) => '${e.aliasName} + ${e.firstName} + ${e.lastName}'.toLowerCase())
+          // The names a contact has, not "null" for one it lacks.
+          .map((e) => [e.aliasName, e.firstName, e.lastName].nonNulls.join(' ').toLowerCase())
           .join(' ');
       final contactPhones = contacts.expand((e) => e.phones).map((e) => e.number).join(' ');
-      final lastMessageText = message?.content ?? '';
+      final lastMessageText = message?.content.toLowerCase() ?? '';
 
-      return groupName?.contains(search) == true ||
-          contactNames.contains(search) ||
-          contactPhones.contains(search) ||
-          lastMessageText.contains(search);
+      return groupName?.contains(query) == true ||
+          contactNames.contains(query) ||
+          contactPhones.contains(query) ||
+          lastMessageText.contains(query);
     }).toList();
   }
 

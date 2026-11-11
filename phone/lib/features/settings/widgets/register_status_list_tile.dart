@@ -69,7 +69,9 @@ class RegisterStatusListTile extends StatelessWidget {
       return ListTile(
         leading: icon,
         title: title,
-        subtitle: subtitle(context.l10n.settings_ListViewTileSubtitle_registeredUpdating),
+        subtitle: subtitle(
+          registerStatusSubtitle(context, sessionStatus: sessionStatus, registerStatus: registerStatus),
+        ),
         trailing: const SizedCircularProgressIndicator(size: 24, strokeWidth: 2),
       );
     }
@@ -82,7 +84,9 @@ class RegisterStatusListTile extends StatelessWidget {
         identifier: registerStatusSwitchId,
         child: SwitchListTile(
           title: title,
-          subtitle: subtitle(_subtitle(context, available: available)),
+          subtitle: subtitle(
+            registerStatusSubtitle(context, sessionStatus: sessionStatus, registerStatus: registerStatus),
+          ),
           value: registerStatus.value,
           onChanged: onChanged,
           secondary: icon,
@@ -109,20 +113,31 @@ class RegisterStatusListTile extends StatelessWidget {
         iconColor: effectiveIconColor ?? disabledColor,
         textColor: textStyle?.color == null ? disabledColor : null,
         title: title,
-        subtitle: subtitle(_subtitle(context, available: available)),
+        subtitle: subtitle(
+          registerStatusSubtitle(context, sessionStatus: sessionStatus, registerStatus: registerStatus),
+        ),
         trailing: Switch(value: registerStatus.value, onChanged: null),
       ),
     );
   }
+}
 
-  String _subtitle(BuildContext context, {required bool available}) {
-    if (!available) {
-      return sessionStatus.signalingStatus == CallStatus.inProgress
-          ? context.l10n.settings_ListViewTileSubtitle_registeredWaitingForConnection
-          : context.l10n.settings_ListViewTileSubtitle_registeredNeedsConnection;
-    }
-    return registerStatus.value
-        ? context.l10n.settings_ListViewTileSubtitle_registeredOn
-        : context.l10n.settings_ListViewTileSubtitle_registeredOff;
+/// What the registration toggle's state means, said under it on the phone and
+/// on a watch alike: the change in flight, why it cannot change while the
+/// server is out of reach, or what on and off do.
+String registerStatusSubtitle(
+  BuildContext context, {
+  required SessionStatus sessionStatus,
+  required RegisterStatus registerStatus,
+}) {
+  final l10n = context.l10n;
+  if (registerStatus.isUpdating) return l10n.settings_ListViewTileSubtitle_registeredUpdating;
+  if (!sessionStatus.mayReachServer) {
+    return sessionStatus.signalingStatus == CallStatus.inProgress
+        ? l10n.settings_ListViewTileSubtitle_registeredWaitingForConnection
+        : l10n.settings_ListViewTileSubtitle_registeredNeedsConnection;
   }
+  return registerStatus.value
+      ? l10n.settings_ListViewTileSubtitle_registeredOn
+      : l10n.settings_ListViewTileSubtitle_registeredOff;
 }

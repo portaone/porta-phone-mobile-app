@@ -3,6 +3,9 @@ import 'package:flutter/widgets.dart';
 import 'package:auto_route/auto_route.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import 'package:webtrit_phone/extensions/extensions.dart';
+import 'package:webtrit_phone/l10n/l10n.dart';
+import 'package:webtrit_phone/models/feature_access/bottom_menu_feature.dart';
 import 'package:webtrit_phone/repositories/repositories.dart';
 
 import '../bloc/bloc.dart';
@@ -24,7 +27,13 @@ class CallCenterTabPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return BlocProvider(
       create: (context) => CallQueuesCubit(context.read<CallQueuesRepository>()),
-      child: const CallCenterPolling(child: CallCenterTabScreen()),
+      child: CallCenterPolling(
+        child: CallCenterTabScreen(
+          // On a watch the queues are headed by the section's own name, as the
+          // hub shows it.
+          watchTitle: context.watchSectionTitle<CallCenterBottomMenuTab>(fallback: context.l10n.callCenter_AppBarTitle),
+        ),
+      ),
     );
   }
 }

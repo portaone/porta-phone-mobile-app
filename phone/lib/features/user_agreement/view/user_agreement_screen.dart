@@ -13,6 +13,8 @@ import 'package:webtrit_phone/models/models.dart';
 import 'package:webtrit_phone/theme/theme.dart';
 import 'package:webtrit_phone/widgets/widgets.dart';
 
+import 'user_agreement_screen_watch.dart';
+
 class UserAgreementScreen extends StatefulWidget {
   const UserAgreementScreen({super.key, required this.appTermsAndConditionsUrl, required this.appName});
 
@@ -35,7 +37,7 @@ class _UserAgreementScreenState extends State<UserAgreementScreen> {
       body: BlocBuilder<AppBloc, AppState>(
         builder: (context, appState) {
           return AdaptiveLayout(
-            watch: (context) => _UserAgreementWatch(
+            watch: (context) => UserAgreementScreenWatch(
               appName: widget.appName,
               accepted: agreementStatus.isAccepted,
               onChanged: _handleAgreementStatusChange,
@@ -105,59 +107,5 @@ class _UserAgreementScreenState extends State<UserAgreementScreen> {
 
   void _submitAgreement() {
     context.read<AppBloc>().add(AppAgreementAccepted.updateUserAgreement(agreementStatus));
-  }
-}
-
-/// The terms on a watch face: the welcome line, the consent as a toggle,
-/// the terms as their own button - the link cannot sit inside a sentence a
-/// fingertip has to hit - and Continue as the edge button.
-class _UserAgreementWatch extends StatelessWidget {
-  const _UserAgreementWatch({
-    required this.appName,
-    required this.accepted,
-    required this.onChanged,
-    required this.onReadTerms,
-    required this.onContinue,
-    required this.buttonStyle,
-  });
-
-  final String appName;
-  final bool accepted;
-  final ValueChanged<bool> onChanged;
-  final VoidCallback onReadTerms;
-  final VoidCallback? onContinue;
-  final ButtonStyle? buttonStyle;
-
-  @override
-  Widget build(BuildContext context) {
-    final gap = context.adaptiveMetrics.gap;
-    return WatchActionLayout(
-      title: context.l10n.user_agreement_description(appName),
-      content: [
-        // No text under the title here: the toggle keeps a little more room.
-        SizedBox(height: gap),
-        WatchToggleChip(
-          label: context.l10n.user_agreement_toggle_text,
-          value: accepted,
-          onChanged: onChanged,
-          identifier: userAgreementCheckboxId,
-          toggleKey: userAgreementCheckboxKey,
-        ),
-        SizedBox(height: gap),
-        WatchLink(
-          label: context.l10n.user_agreement_terms_button_text,
-          onPressed: onReadTerms,
-          identifier: userAgreementTermsLinkId,
-          linkKey: userAgreementTermsLinkKey,
-        ),
-      ],
-      action: WatchAction(
-        label: context.l10n.user_agreement_button_text,
-        onPressed: onContinue,
-        style: buttonStyle,
-        identifier: userAgreementAcceptButtonId,
-        buttonKey: userAgreementAcceptButtonKey,
-      ),
-    );
   }
 }

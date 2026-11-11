@@ -157,6 +157,11 @@ class AppLocalizationsFr extends AppLocalizations {
   String get callTileActions_message => 'Message';
 
   @override
+  String cacheManagement_Watch_clearQuestion(String name) {
+    return 'Effacer $name ?';
+  }
+
+  @override
   String get cacheManagement_Button_clear => 'Effacer';
 
   @override
@@ -719,6 +724,33 @@ class AppLocalizationsFr extends AppLocalizations {
   String get cdrs_refreshFailed_message => 'Impossible d\'actualiser l\'historique des appels - veuillez réessayer';
 
   @override
+  String get common_Watch_openOnPhone_message => 'S\'ouvre sur votre téléphone';
+
+  @override
+  String get common_Watch_openOnPhone_hint => 'Lisez-la sur le téléphone associé';
+
+  @override
+  String get common_Watch_openOnPhone_action => 'Ouvrir sur le téléphone';
+
+  @override
+  String get common_Watch_openOnPhone_sent => 'Regardez votre téléphone';
+
+  @override
+  String get common_Watch_openOnPhone_sentHint => 'La page y est ouverte';
+
+  @override
+  String get common_Watch_openOnPhone_failed => 'Aucun téléphone connecté';
+
+  @override
+  String get common_Watch_openOnPhone_failedHint => 'Connectez le téléphone et réessayez';
+
+  @override
+  String get common_Watch_openOnPhone_retry => 'Réessayer';
+
+  @override
+  String get common_Watch_phoneOnly => 'Ouvrez-la dans l\'app sur votre téléphone';
+
+  @override
   String get common_SemanticsLabel_loading => 'Chargement';
 
   @override
@@ -1068,6 +1100,15 @@ class AppLocalizationsFr extends AppLocalizations {
   String get diagnostic_permission_contacts_title => 'Contacts';
 
   @override
+  String get diagnostic_Watch_openSettings => 'Ouvrir les réglages';
+
+  @override
+  String get diagnostic_Watch_allow => 'Autoriser';
+
+  @override
+  String get diagnostic_Watch_runAgain => 'Relancer';
+
+  @override
   String get diagnosticPermissionDetails_button_managePermission => 'Gérer l\'autorisation';
 
   @override
@@ -1300,6 +1341,21 @@ class AppLocalizationsFr extends AppLocalizations {
   String favorites_SnackBar_deleted(String name) {
     return '$name supprimé';
   }
+
+  @override
+  String get favorites_Watch_empty => 'Aucun favori';
+
+  @override
+  String get favorites_Watch_emptyHint => 'Ajoutez un contact avec l\'étoile';
+
+  @override
+  String get favorites_Watch_notFound => 'Aucun favori trouvé';
+
+  @override
+  String get favorites_Watch_remove => 'Retirer des favoris';
+
+  @override
+  String get favorites_Watch_removeQuestion => 'Retirer des favoris ?';
 
   @override
   String formatPhone(String style, String main, String ext) {
@@ -2039,6 +2095,53 @@ class AppLocalizationsFr extends AppLocalizations {
   String get messaging_StateBar_connecting => 'CONNEXION';
 
   @override
+  String get messaging_Watch_search => 'Rechercher';
+
+  @override
+  String get messaging_Watch_searchSms => 'Rechercher des SMS';
+
+  @override
+  String get messaging_Watch_list => 'Liste';
+
+  @override
+  String get messaging_Watch_statusInitializing => 'Démarrage des discussions';
+
+  @override
+  String get messaging_Watch_statusConnecting => 'Connexion aux discussions';
+
+  @override
+  String get messaging_Watch_statusDisconnected => 'Discussions hors ligne';
+
+  @override
+  String messaging_Watch_nextMembers(int count) {
+    return 'Suivant ($count)';
+  }
+
+  @override
+  String get messaging_Watch_notFound => 'Aucune conversation trouvée';
+
+  @override
+  String get messaging_Watch_newChat => 'Nouveau chat';
+
+  @override
+  String get messaging_Watch_newSms => 'Nouveau SMS';
+
+  @override
+  String get messaging_Watch_mine => 'Vous';
+
+  @override
+  String get messaging_Watch_markDelivered => 'Distribué';
+
+  @override
+  String get messaging_Watch_markPending => 'Envoi';
+
+  @override
+  String get messaging_Watch_markSent => 'Envoyé';
+
+  @override
+  String get messaging_Watch_markRead => 'Lu';
+
+  @override
   String get messaging_StateBar_error => 'DÉCONNEXION';
 
   @override
@@ -2495,6 +2598,9 @@ class AppLocalizationsFr extends AppLocalizations {
       'Représente la disponibilité générale pour les communications au sein du service SIP. Utilise l\'élément \"Status\" de SIP dans le contenu pidf avec les valeurs \"open/closed\" (voir RFC 3863)';
 
   @override
+  String get presence_Watch_configOnPhone => 'Disponibilité, note, activité et icône de statut : sur le téléphone';
+
+  @override
   String get presence_settings_config_title => 'Configuration :';
 
   @override
@@ -2767,6 +2873,9 @@ class AppLocalizationsFr extends AppLocalizations {
   String get sessions_Button_retry => 'Réessayer';
 
   @override
+  String get sessions_Watch_revokeAllOthers => 'Déconnecter les autres';
+
+  @override
   String get sessions_Button_revokeAllOthers => 'Déconnecter les autres sessions';
 
   @override
@@ -2951,7 +3060,19 @@ class AppLocalizationsFr extends AppLocalizations {
       'Indique si un appel audio passe en haut-parleur lorsque vous quittez l\'écran d\'appel, et revient à l\'écouteur à votre retour.';
 
   @override
+  String get settings_media_Watch_onPhone =>
+      'Qualité personnalisée, traitement audio, vidéo, ICE et TURN : sur le téléphone';
+
+  @override
+  String get settings_media_Watch_resetQuestion => 'Rétablir tous les paramètres média par défaut ?';
+
+  @override
   String get settings_speakerOnMinimize_switch => 'Activer le haut-parleur en quittant l\'écran d\'appel';
+
+  @override
+  String settings_Watch_onPhone(String setting) {
+    return '$setting : sur le téléphone';
+  }
 
   @override
   String get settings_callerId_cancel_button => 'Annuler';
@@ -3358,6 +3479,9 @@ class AppLocalizationsFr extends AppLocalizations {
       'Si les notifications push d\'appels ne sont pas reçues, l\'application recevra un SMS spécial et affichera l\'écran d\'appel entrant.';
 
   @override
+  String get settings_network_Watch_howTheyDiffer => 'Quelle différence';
+
+  @override
   String get settings_network_fallbackCalls_title => 'Appels entrants de secours';
 
   @override
@@ -3639,6 +3763,13 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get system_notifications_screen_list_empty => 'Aucune notification pour le moment';
+
+  @override
+  String get system_notifications_Watch_deleteQuestion => 'Supprimer cette notification ?';
+
+  @override
+  String get system_notifications_Watch_deleteContent =>
+      'Elle est supprimée de votre compte, pas seulement de cette montre.';
 
   @override
   String get system_notifications_screen_title => 'Notifications';

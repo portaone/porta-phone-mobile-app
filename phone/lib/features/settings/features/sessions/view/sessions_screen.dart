@@ -12,6 +12,7 @@ import 'package:webtrit_phone/widgets/widgets.dart';
 
 import '../cubit/sessions_cubit.dart';
 import 'session_auto_terminate_snack_bar.dart';
+import 'sessions_screen_watch.dart';
 import 'widgets/widgets.dart';
 
 class SessionsScreen extends StatelessWidget {
@@ -35,7 +36,20 @@ class SessionsScreen extends StatelessWidget {
   final bool autoTerminateSelectable;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context) => AdaptiveLayout(
+    handset: _handset,
+    watch: (_) => SessionsScreenWatch(
+      dateFormat: dateFormat,
+      appVersion: appVersion,
+      autoTerminateSelectable: autoTerminateSelectable,
+      onRefresh: _onRefresh,
+      onRevoke: _onRevoke,
+      onRevokeAllOthers: _onRevokeAllOthers,
+      onSaveAutoTerminate: _saveAutoTerminate,
+    ),
+  );
+
+  Widget _handset(BuildContext context) {
     final l10n = context.l10n;
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;

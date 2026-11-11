@@ -14,6 +14,9 @@ import 'package:webtrit_phone/data/data.dart';
 import 'package:webtrit_phone/l10n/l10n.dart';
 import 'package:webtrit_phone/models/models.dart';
 import 'package:webtrit_phone/theme/theme.dart';
+import 'package:webtrit_phone/widgets/widgets.dart';
+
+import 'update_required_screen_watch.dart';
 
 final _logger = Logger('UpdateRequiredScreen');
 
@@ -114,7 +117,18 @@ class _UpdateRequiredViewState extends State<_UpdateRequiredView> {
   }
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context) => AdaptiveLayout(
+    handset: _handset,
+    watch: (_) => UpdateRequiredScreenWatch(
+      currentVersion: widget.currentVersion,
+      storeVersion: widget.storeVersion,
+      minSupportedVersion: widget.minSupportedVersion,
+      onUpdate: _updateStoreUrl != null ? _onUpdate : null,
+      onLogout: _onLogout,
+    ),
+  );
+
+  Widget _handset(BuildContext context) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
     final textTheme = theme.textTheme;

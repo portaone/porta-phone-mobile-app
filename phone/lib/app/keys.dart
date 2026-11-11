@@ -91,6 +91,10 @@ const confirmDialogYesButtonKey = Key(confirmDialogYesButtonId);
 const String confirmDialogNoButtonId = 'confirmDialogNoButton';
 const confirmDialogNoButtonKey = Key(confirmDialogNoButtonId);
 
+/// The OK that closes an acknowledgement on a watch.
+const String acknowledgeDialogOkButtonId = 'acknowledgeDialogOkButton';
+const acknowledgeDialogOkButtonKey = Key(acknowledgeDialogOkButtonId);
+
 const String actionPadVideoCallId = 'actionPadVideoCall';
 const actionPadVideoCallKey = Key(actionPadVideoCallId);
 const String actionPadBackspaceId = 'actionPadBackspace';
@@ -316,6 +320,11 @@ const String mediaSettingsAudioProcessingSectionId = 'mediaSettingsAudioProcessi
 const String aboutCoreUrlId = 'aboutCoreUrl';
 const String aboutAppSessionIdentifierId = 'aboutAppSessionIdentifier';
 
+/// The edge button of the watch page that sends a page it cannot show to the
+/// paired phone: Open on phone, and its Try again once no phone took it.
+const String watchOpenOnPhoneId = 'watchOpenOnPhone';
+const String watchOpenOnPhoneRetryId = 'watchOpenOnPhoneRetry';
+
 /// The number of the other party on the call screen, whether or not a name
 /// is shown above it.
 const String callPeerNumberId = 'callPeerNumber';
@@ -335,6 +344,22 @@ const voicemailForwardFailedBadgeKey = Key('voicemailForwardFailedBadge');
 const String voicemailMenuId = 'voicemailMenu';
 const String voicemailPlaybackId = 'voicemailPlayback';
 const String voicemailRetryId = 'voicemailRetry';
+
+/// The voicemail list on a watch: the filter pill, the Try again of a failed
+/// read and the Refresh of an empty mailbox; the message's page: the player,
+/// its rows and Call back.
+const String voicemailWatchFilterId = 'voicemailWatchFilter';
+const voicemailWatchFilterKey = Key(voicemailWatchFilterId);
+const String voicemailWatchRetryId = 'voicemailWatchRetry';
+const String voicemailWatchRefreshId = 'voicemailWatchRefresh';
+const String voicemailWatchPlayId = 'voicemailWatchPlay';
+const voicemailWatchPlayKey = Key(voicemailWatchPlayId);
+const String voicemailWatchHeardId = 'voicemailWatchHeard';
+const String voicemailWatchSaveId = 'voicemailWatchSave';
+const String voicemailWatchDeleteId = 'voicemailWatchDelete';
+const String voicemailWatchRestoreId = 'voicemailWatchRestore';
+const String voicemailWatchCallId = 'voicemailWatchCall';
+const voicemailWatchCallKey = Key(voicemailWatchCallId);
 
 const String scrollToBottomId = 'scrollToBottomButton';
 const scrollToBottomKey = Key(scrollToBottomId);
@@ -464,6 +489,16 @@ const String conversationsTabChatId = 'conversationsTabChat';
 const conversationsTabChatKey = Key(conversationsTabChatId);
 const String conversationsTabSmsId = 'conversationsTabSms';
 const conversationsTabSmsKey = Key(conversationsTabSmsId);
+
+/// The list pill of the conversations on a watch, in place of the tabs.
+const String conversationsWatchListId = 'conversationsWatchList';
+const conversationsWatchListKey = Key(conversationsWatchListId);
+
+/// The Reply edge button of a conversation on a watch, and the keyboard's
+/// field behind it.
+const String conversationWatchReplyId = 'conversationWatchReply';
+const conversationWatchReplyKey = Key(conversationWatchReplyId);
+const conversationWatchReplyInputKey = Key('conversationWatchReplyInput');
 
 const String conversationsSearchInputId = 'conversationsSearchInput';
 const conversationsSearchInputKey = Key(conversationsSearchInputId);

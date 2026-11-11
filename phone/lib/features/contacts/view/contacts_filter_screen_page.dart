@@ -56,7 +56,9 @@ class ContactsFilterScreenPage extends StatelessWidget {
         ),
         selections: selections,
         sourceTypeWidgetBuilder: contactSourceTypeWidgetBuilder,
+        sourceTypeWatchWidgetBuilder: contactSourceTypeWatchWidgetBuilder,
         favoritesWidgetBuilder: contactsFavoritesWidgetBuilder,
+        favoritesWatchWidgetBuilder: contactsFavoritesWatchWidgetBuilder,
       ),
     );
   }

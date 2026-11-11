@@ -82,137 +82,145 @@ class _SmsConversationScreenState extends State<SmsConversationScreen> {
               final conversationId = state is SCSReady ? state.conversation?.id : null;
               final mute = conversationId != null ? userSettings.activeSmsConversationMute(conversationId) : null;
 
-              return Scaffold(
-                extendBodyBehindAppBar: true,
-                appBar: AppBar(
-                  centerTitle: true,
-                  // A thread is part of the conversations section, so its bar is
-                  // frosted the way the conversations list is.
-                  flexibleSpace: BlurredSurface.fromStyle(
-                    Theme.of(context).extension<ConversationsScreenStyles>()?.primary?.appBarBlurredSurface,
-                  ),
-                  // Themes that configure no bar color keep a translucent bar instead
-                  // of the opaque framework default.
-                  backgroundColor: Theme.of(context).appBarTheme.backgroundColor ?? Colors.transparent,
-                  title: Builder(
-                    builder: (context) {
-                      if (recipientNumber != null) {
-                        return FadeIn(
-                          child: Text(
-                            recipientNumber,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: const TextStyle(fontSize: 20),
-                          ),
-                        );
-                      } else {
-                        return FadeIn(
-                          child: Column(
-                            children: [
-                              Text(
-                                firstNumber,
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                                style: const TextStyle(fontSize: 20),
-                              ),
-                              Text(
-                                secondNumber,
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                                style: const TextStyle(fontSize: 20),
-                              ),
-                            ],
-                          ),
-                        );
-                      }
-                    },
-                  ),
-                  actions: [
-                    SemanticAction(
-                      label: context.l10n.messaging_SemanticsLabel_conversationOptions,
-                      identifier: conversationMenuId,
-                      child: PopupMenuButton(
-                        // Without this the built-in "Show menu" tooltip is
-                        // merged in and spoken on top of the name.
-                        tooltip: '',
-                        itemBuilder: (context) {
-                          return [
-                            if (muteAvailable && mute != null)
-                              // The id has to own the node the tap lives on -
-                              // see MessagingPopupMenuItem for why a plain id
-                              // around the tile would leave the entry unnamed.
-                              MessagingPopupMenuItem(
-                                identifier: chatInfoNotificationsId,
-                                onTap: () => onNotifications(mute),
-                                child: ListTile(
-                                  title: Text(context.l10n.messaging_NotificationMute_title),
-                                  subtitle: Text(
-                                    notificationMuteSubtitle(
-                                      context.l10n,
-                                      mute,
-                                      timeFormat: appTime.hourMinuteFormat(locale),
-                                      dateFormat: appTime.dayMonthFormat(locale),
+              return AdaptiveLayout(
+                handset: (context) => Scaffold(
+                  extendBodyBehindAppBar: true,
+                  appBar: AppBar(
+                    centerTitle: true,
+                    // A thread is part of the conversations section, so its bar is
+                    // frosted the way the conversations list is.
+                    flexibleSpace: BlurredSurface.fromStyle(
+                      Theme.of(context).extension<ConversationsScreenStyles>()?.primary?.appBarBlurredSurface,
+                    ),
+                    // Themes that configure no bar color keep a translucent bar instead
+                    // of the opaque framework default.
+                    backgroundColor: Theme.of(context).appBarTheme.backgroundColor ?? Colors.transparent,
+                    title: Builder(
+                      builder: (context) {
+                        if (recipientNumber != null) {
+                          return FadeIn(
+                            child: Text(
+                              recipientNumber,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: const TextStyle(fontSize: 20),
+                            ),
+                          );
+                        } else {
+                          return FadeIn(
+                            child: Column(
+                              children: [
+                                Text(
+                                  firstNumber,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: const TextStyle(fontSize: 20),
+                                ),
+                                Text(
+                                  secondNumber,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: const TextStyle(fontSize: 20),
+                                ),
+                              ],
+                            ),
+                          );
+                        }
+                      },
+                    ),
+                    actions: [
+                      SemanticAction(
+                        label: context.l10n.messaging_SemanticsLabel_conversationOptions,
+                        identifier: conversationMenuId,
+                        child: PopupMenuButton(
+                          // Without this the built-in "Show menu" tooltip is
+                          // merged in and spoken on top of the name.
+                          tooltip: '',
+                          itemBuilder: (context) {
+                            return [
+                              if (muteAvailable && mute != null)
+                                // The id has to own the node the tap lives on -
+                                // see MessagingPopupMenuItem for why a plain id
+                                // around the tile would leave the entry unnamed.
+                                MessagingPopupMenuItem(
+                                  identifier: chatInfoNotificationsId,
+                                  onTap: () => onNotifications(mute),
+                                  child: ListTile(
+                                    title: Text(context.l10n.messaging_NotificationMute_title),
+                                    subtitle: Text(
+                                      notificationMuteSubtitle(
+                                        context.l10n,
+                                        mute,
+                                        timeFormat: appTime.hourMinuteFormat(locale),
+                                        dateFormat: appTime.dayMonthFormat(locale),
+                                      ),
                                     ),
+                                    leading: Icon(
+                                      mute.muted ? Icons.notifications_off_outlined : Icons.notifications_outlined,
+                                    ),
+                                    dense: true,
                                   ),
-                                  leading: Icon(
-                                    mute.muted ? Icons.notifications_off_outlined : Icons.notifications_outlined,
-                                  ),
+                                ),
+                              PopupMenuItem(
+                                onTap: onDeleteDialog,
+                                child: ListTile(
+                                  title: Text(context.l10n.messaging_DialogInfo_deleteBtn),
+                                  leading: const Icon(Icons.playlist_remove_rounded),
                                   dense: true,
                                 ),
                               ),
-                            PopupMenuItem(
-                              onTap: onDeleteDialog,
-                              child: ListTile(
-                                title: Text(context.l10n.messaging_DialogInfo_deleteBtn),
-                                leading: const Icon(Icons.playlist_remove_rounded),
-                                dense: true,
-                              ),
-                            ),
-                          ];
-                        },
-                        icon: const Icon(Icons.menu),
+                            ];
+                          },
+                          icon: const Icon(Icons.menu),
+                        ),
                       ),
-                    ),
-                  ],
-                ),
-                // Anchor of the screen: text conversations look like chats and
-                // a flow has to be able to tell the two apart.
-                body: SemanticId(
-                  identifier: smsConversationScreenId,
-                  child: Builder(
-                    builder: (context) {
-                      if (state is SCSReady) {
-                        return SmsMessageListView(
-                          userId: userId,
-                          userNumber: userNumber,
-                          messages: state.messages,
-                          outboxMessages: state.outboxMessages,
-                          outboxMessageDeletes: state.outboxMessageDeletes,
-                          readCursors: state.readCursors,
-                          fetchingHistory: state.fetchingHistory,
-                          historyEndReached: state.historyEndReached,
-                          onSendMessage: (content) => conversationCubit.sendMessage(content),
-                          onDelete: (refMessage) => conversationCubit.deleteMessage(refMessage),
-                          userReadedUntilUpdate: (date) => conversationCubit.userReadedUntilUpdate(date),
-                          onFetchHistory: conversationCubit.fetchHistory,
-                        );
-                      }
-
-                      if (state is SCSError) {
-                        return NoDataPlaceholder(
-                          content: Text(context.l10n.messaging_Conversation_failure),
-                          actions: [
-                            TextButton(
-                              onPressed: conversationCubit.restart,
-                              child: Text(context.l10n.messaging_ActionBtn_retry),
-                            ),
-                          ],
-                        );
-                      }
-
-                      return const Center(child: CircularProgressIndicator());
-                    },
+                    ],
                   ),
+                  // Anchor of the screen: text conversations look like chats and
+                  // a flow has to be able to tell the two apart.
+                  body: SemanticId(
+                    identifier: smsConversationScreenId,
+                    child: Builder(
+                      builder: (context) {
+                        if (state is SCSReady) {
+                          return SmsMessageListView(
+                            userId: userId,
+                            userNumber: userNumber,
+                            messages: state.messages,
+                            outboxMessages: state.outboxMessages,
+                            outboxMessageDeletes: state.outboxMessageDeletes,
+                            readCursors: state.readCursors,
+                            fetchingHistory: state.fetchingHistory,
+                            historyEndReached: state.historyEndReached,
+                            onSendMessage: (content) => conversationCubit.sendMessage(content),
+                            onDelete: (refMessage) => conversationCubit.deleteMessage(refMessage),
+                            userReadedUntilUpdate: (date) => conversationCubit.userReadedUntilUpdate(date),
+                            onFetchHistory: conversationCubit.fetchHistory,
+                          );
+                        }
+
+                        if (state is SCSError) {
+                          return NoDataPlaceholder(
+                            content: Text(context.l10n.messaging_Conversation_failure),
+                            actions: [
+                              TextButton(
+                                onPressed: conversationCubit.restart,
+                                child: Text(context.l10n.messaging_ActionBtn_retry),
+                              ),
+                            ],
+                          );
+                        }
+
+                        return const Center(child: CircularProgressIndicator());
+                      },
+                    ),
+                  ),
+                ),
+                watch: (_) => SmsConversationScreenWatch(
+                  state: state,
+                  userId: userId,
+                  userNumber: userNumber,
+                  title: recipientNumber ?? '$firstNumber, $secondNumber',
                 ),
               );
             },

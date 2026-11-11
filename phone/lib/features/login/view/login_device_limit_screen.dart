@@ -10,6 +10,7 @@ import 'package:webtrit_phone/models/models.dart';
 import 'package:webtrit_phone/widgets/widgets.dart';
 
 import '../cubit/login_cubit.dart';
+import 'login_device_limit_watch.dart';
 
 bool whenLoginDeviceLimitScreenChange(LoginState previous, LoginState current) {
   return previous.pendingLogin != current.pendingLogin ||
@@ -32,12 +33,15 @@ class LoginDeviceLimitScreen extends StatelessWidget {
       builder: (context, processing) {
         return PopScope(
           canPop: !processing,
-          child: Scaffold(
-            appBar: AppBar(
-              title: Text(context.l10n.login_Text_deviceLimitTitle),
-              leading: ExtBackButton(disabled: processing),
+          child: AdaptiveLayout(
+            handset: (context) => Scaffold(
+              appBar: AppBar(
+                title: Text(context.l10n.login_Text_deviceLimitTitle),
+                leading: ExtBackButton(disabled: processing),
+              ),
+              body: SafeArea(child: LoginDeviceLimitBody(dateFormat: dateFormat)),
             ),
-            body: SafeArea(child: LoginDeviceLimitBody(dateFormat: dateFormat)),
+            watch: (_) => LoginDeviceLimitWatch(dateFormat: dateFormat),
           ),
         );
       },

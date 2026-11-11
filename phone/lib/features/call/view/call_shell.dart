@@ -20,34 +20,54 @@ class CallShell extends StatefulWidget {
   final Widget child;
   final EdgeInsets stickyPadding;
 
+  /// Programmatic back navigation to the main screen.
+  ///
+  /// Uses [StackRouter.navigatePath] to `MainShellRoute` instead of `popUntil`.
+  /// This avoids issues on iOS where `popUntil` executes prematurely while the app
+  /// is backgrounded, and prevents router redirects bug associated with empty sub-routes.
+  ///
+  /// Detailed Context:
+  /// 1. `router.navigate(const MainScreenPageRoute())` wasn't used to avoid a bug that triggers
+  ///    redirect('') from an empty MainScreenPageRoute subroute to the initial (last remembered) flavor.
+  /// 2. On iOS, using `popUntil` doesn't work when the app is collapsed because pushing routes isn't
+  ///    allowed until the app resumes. As a result, `popUntil` is called too early.
+  /// 3. Using `navigatePath` with a path-based approach fixes this by properly restoring state.
+  /// 4. The navigation runs on the app shell's router: a path is matched from the innermost router
+  ///    up, and the router of the call screen's watch pages takes any path for its page of the empty
+  ///    path, so a path left the watch on the call screen after the call had ended; and the root,
+  ///    with a page over the whole app such as a watch's text page, is left as it is.
+  static void backToMainScreen(StackRouter router) {
+    final shell = router.root.innerRouterOf<StackRouter>(AppShellRoute.name) ?? router;
+    shell.navigate(const MainShellRoute());
+  }
+
   @override
   State<CallShell> createState() => _CallShellState();
 }
 
 class _CallShellState extends State<CallShell> {
-  FormFactor? _formFactor;
-
-  /// The overlay is decided on the form factor too: a window that changes
-  /// class - a phone in split screen, the configurator's preview - shows or
-  /// drops it at once rather than on the next change of the call.
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    final formFactor = context.formFactor;
-    final changed = _formFactor != null && formFactor != _formFactor;
-    _formFactor = formFactor;
-    if (changed) {
-      final router = context.router;
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (mounted) _updateOverlayContent(context, context.read<CallBloc>().state, router);
-      });
-    }
-  }
+  /// Whether the floating call thumbnail and the camera preview are shown, as
+  /// the arrangement picked last said; null until the first one is built.
+  bool? _showsOverlays;
 
   late final ThumbnailOverlayManager _thumbnailManager = ThumbnailOverlayManager(stickyPadding: widget.stickyPadding);
 
   @override
   Widget build(BuildContext context) {
+    // A floating thumbnail would cover a third of a watch face, and so would
+    // the camera preview: the hub shows a call to go back to instead, and the
+    // camera is switched under the call's More.
+    return AdaptiveLayout(
+      handset: (_) => _arrangement(showsOverlays: true),
+      watch: (_) => _arrangement(showsOverlays: false),
+    );
+  }
+
+  /// Both arrangements are the same listeners over the same child, so a
+  /// window that changes class keeps the app under it; they differ in whether
+  /// the overlay is shown.
+  Widget _arrangement({required bool showsOverlays}) {
+    _onShowsOverlays(showsOverlays);
     return MultiBlocListener(
       listeners: [
         _callDisplayListener(),
@@ -61,6 +81,20 @@ class _CallShellState extends State<CallShell> {
       ],
       child: widget.child,
     );
+  }
+
+  /// The overlay is decided on the arrangement too: a window that changes
+  /// class - a phone in split screen, the configurator's preview - shows or
+  /// drops it at once rather than on the next change of the call.
+  void _onShowsOverlays(bool showsOverlays) {
+    final changed = _showsOverlays != null && showsOverlays != _showsOverlays;
+    _showsOverlays = showsOverlays;
+    if (changed) {
+      final router = context.router;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) _updateOverlayContent(context, context.read<CallBloc>().state, router);
+      });
+    }
   }
 
   /// Listens to [CallState.display] changes and manages related UI transitions.
@@ -141,17 +175,14 @@ class _CallShellState extends State<CallShell> {
       _openCallScreen(router, state.activeCalls.isNotEmpty);
     }
     if (!callScreenShouldDisplay && callScreenActive) {
-      _backToMainScreen(router);
+      CallShell.backToMainScreen(router);
     }
   }
 
   void _updateOverlayContent(BuildContext context, CallState state, StackRouter router) {
     final hasActiveCalls = state.activeCalls.isNotEmpty;
 
-    // A floating thumbnail would cover a third of a watch face, and so would
-    // the camera preview: the hub shows a call to go back to instead, and the
-    // camera is switched under the call's More.
-    if (context.formFactor == FormFactor.watch) {
+    if (_showsOverlays == false) {
       _hideOverlay();
       return;
     }
@@ -285,22 +316,6 @@ class _CallShellState extends State<CallShell> {
         SnackBar(content: Text(context.l10n.call_ThumbnailAvatar_currentlyNoActiveCall), backgroundColor: Colors.grey),
       );
     }
-  }
-
-  /// Programmatic back navigation to the main screen.
-  ///
-  /// Uses [StackRouter.navigatePath] to `MainShellRoute` instead of `popUntil`.
-  /// This avoids issues on iOS where `popUntil` executes prematurely while the app
-  /// is backgrounded, and prevents router redirects bug associated with empty sub-routes.
-  ///
-  /// Detailed Context:
-  /// 1. `router.navigate(const MainScreenPageRoute())` wasn't used to avoid a bug that triggers
-  ///    redirect('') from an empty MainScreenPageRoute subroute to the initial (last remembered) flavor.
-  /// 2. On iOS, using `popUntil` doesn't work when the app is collapsed because pushing routes isn't
-  ///    allowed until the app resumes. As a result, `popUntil` is called too early.
-  /// 3. Using `navigatePath` with a path-based approach fixes this by properly restoring state.
-  void _backToMainScreen(StackRouter router) {
-    router.navigatePath(MainShellRoute.name);
   }
 
   @override

@@ -15,6 +15,8 @@ import 'package:webtrit_phone/l10n/l10n.dart';
 import 'package:webtrit_phone/repositories/repositories.dart';
 import 'package:webtrit_phone/widgets/widgets.dart';
 
+import 'session_restart_screen_watch.dart';
+
 final _logger = Logger('SessionRestartScreen');
 
 /// Stands between the sign-in and a main shell that is about to be built:
@@ -161,8 +163,23 @@ class _SessionRestartScreenState extends State<SessionRestartScreen> {
     unawaited(context.router.replaceAll([const MainShellRoute()]));
   }
 
+  /// What the screen is waiting for: the previous session to let go, or the
+  /// system info of a start that has none stored.
+  String _progressText(AppLocalizations l10n) =>
+      widget.sessionEnded != null ? l10n.session_Restart_progressText : l10n.session_Restart_loadingText;
+
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context) => AdaptiveLayout(
+    handset: _handset,
+    watch: (_) => SessionRestartScreenWatch(
+      unreachable: _unreachable,
+      progressText: _progressText(context.l10n),
+      onRetry: _retry,
+      onLogOut: _logOut,
+    ),
+  );
+
+  Widget _handset(BuildContext context) {
     final l10n = context.l10n;
     return Scaffold(
       body: Center(
@@ -195,12 +212,7 @@ class _SessionRestartScreenState extends State<SessionRestartScreen> {
                 : [
                     const CircularProgressIndicator(),
                     const SizedBox(height: 16),
-                    Text(
-                      widget.sessionEnded != null
-                          ? l10n.session_Restart_progressText
-                          : l10n.session_Restart_loadingText,
-                      textAlign: TextAlign.center,
-                    ),
+                    Text(_progressText(l10n), textAlign: TextAlign.center),
                   ],
           ),
         ),

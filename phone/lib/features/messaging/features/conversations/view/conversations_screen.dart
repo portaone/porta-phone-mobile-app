@@ -50,9 +50,19 @@ final class DualTabState extends TabsState {
 }
 
 class ConversationsScreen extends StatefulWidget {
-  const ConversationsScreen({super.key, required this.title, required this.initialTabsState, this.style});
+  const ConversationsScreen({
+    super.key,
+    required this.title,
+    required this.watchTitle,
+    required this.initialTabsState,
+    this.style,
+  });
 
   final Widget title;
+
+  /// The section's name, heading the list on a watch.
+  final String watchTitle;
+
   final TabsState initialTabsState;
   final ConversationsScreenStyle? style;
 
@@ -70,6 +80,10 @@ class _ConversationsScreenState extends State<ConversationsScreen> with SingleTi
   late TabController _tabController;
   late final List<ConversationsTab> _tabs;
   late int _currentIndex;
+
+  /// What the watch's search narrows the lists by; both lists take it, as on
+  /// the phone.
+  String _query = '';
 
   @override
   void initState() {
@@ -103,34 +117,49 @@ class _ConversationsScreenState extends State<ConversationsScreen> with SingleTi
     }
   }
 
+  /// The cubit of a new chat, for the phone's sheet and the watch's page.
+  ChatConversationBuilderCubit _createChatBuilder(BuildContext context) {
+    return ChatConversationBuilderCubit(
+      messagingBloc.state.client,
+      chatsRepository,
+      contactsRepository,
+      chatConversationBuilderConfig: ChatConversationBuilderConfig(
+        enableGroupChats: widget.initialTabsState.groupChatsEnabled,
+      ),
+      openDialog: (contact) async {
+        Navigator.of(context).pop();
+        await Future.delayed(const Duration(milliseconds: 300));
+        openDialog(contact);
+      },
+      openGroup: (id) async {
+        Navigator.of(context).pop();
+        await Future.delayed(const Duration(milliseconds: 300));
+        openGroup(id);
+      },
+      submitNotification: (n) {
+        notificationsBloc.add(NotificationsSubmitted(n));
+      },
+    );
+  }
+
+  /// The cubit of a new SMS, for the phone's sheet and the watch's page.
+  SmsConversationBuilderCubit _createSmsBuilder(BuildContext context) {
+    return SmsConversationBuilderCubit(
+      smsRepository,
+      contactsRepository,
+      openSmsDialog: (userNumber, recipientNumber, recipientId) async {
+        Navigator.of(context).pop();
+        await Future.delayed(const Duration(milliseconds: 300));
+        openSmsDialog(userNumber, recipientNumber, recipientId);
+      },
+    );
+  }
+
   Future<void> onNewChatConversation() async {
     context.showModalBottomSheet(
       useSafeArea: true,
       isScrollControlled: true,
-      builder: (context) => BlocProvider(
-        create: (context) => ChatConversationBuilderCubit(
-          messagingBloc.state.client,
-          chatsRepository,
-          contactsRepository,
-          chatConversationBuilderConfig: ChatConversationBuilderConfig(
-            enableGroupChats: widget.initialTabsState.groupChatsEnabled,
-          ),
-          openDialog: (contact) async {
-            Navigator.of(context).pop();
-            await Future.delayed(const Duration(milliseconds: 300));
-            openDialog(contact);
-          },
-          openGroup: (id) async {
-            Navigator.of(context).pop();
-            await Future.delayed(const Duration(milliseconds: 300));
-            openGroup(id);
-          },
-          submitNotification: (n) {
-            notificationsBloc.add(NotificationsSubmitted(n));
-          },
-        ),
-        child: const ChatConversationBuilderView(),
-      ),
+      builder: (context) => BlocProvider(create: _createChatBuilder, child: const ChatConversationBuilderView()),
     );
   }
 
@@ -138,18 +167,7 @@ class _ConversationsScreenState extends State<ConversationsScreen> with SingleTi
     context.showModalBottomSheet(
       useSafeArea: true,
       isScrollControlled: true,
-      builder: (context) => BlocProvider(
-        create: (context) => SmsConversationBuilderCubit(
-          smsRepository,
-          contactsRepository,
-          openSmsDialog: (userNumber, recipientNumber, recipientId) async {
-            Navigator.of(context).pop();
-            await Future.delayed(const Duration(milliseconds: 300));
-            openSmsDialog(userNumber, recipientNumber, recipientId);
-          },
-        ),
-        child: const SmsConversationBuilderView(),
-      ),
+      builder: (context) => BlocProvider(create: _createSmsBuilder, child: const SmsConversationBuilderView()),
     );
   }
 
@@ -170,8 +188,45 @@ class _ConversationsScreenState extends State<ConversationsScreen> with SingleTi
     );
   }
 
+  void _search(String value) {
+    setState(() => _query = value);
+    _narrow(value);
+  }
+
+  /// The phone's box holds its own text, so nothing is rebuilt; the query is
+  /// kept for the watch's row all the same, should the window become a
+  /// watch's - the lists stay narrowed by it.
+  void _searchOnPhone(String value) {
+    _query = value;
+    _narrow(value);
+  }
+
+  void _narrow(String value) {
+    context.readOrNull<ChatConversationsCubit>()?.updateSearch(value);
+    context.readOrNull<SmsConversationsCubit>()?.updateSearch(value);
+  }
+
   @override
   Widget build(BuildContext context) {
+    return AdaptiveLayout(
+      handset: _handset,
+      watch: (_) => ConversationsScreenWatch(
+        section: WatchSection(
+          title: widget.watchTitle,
+          options: _tabs,
+          selected: _tabs[_currentIndex],
+          onSelected: (next) => _tabController.index = _tabs.indexOf(next),
+        ),
+        query: _query,
+        onSearch: _search,
+        createChatBuilder: _createChatBuilder,
+        createSmsBuilder: _createSmsBuilder,
+        style: widget.style,
+      ),
+    );
+  }
+
+  Widget _handset(BuildContext context) {
     final themeData = Theme.of(context);
     final effectiveStyle = widget.style ?? themeData.extension<ConversationsScreenStyles>()?.primary;
     final colorScheme = themeData.colorScheme;
@@ -233,10 +288,9 @@ class _ConversationsScreenState extends State<ConversationsScreen> with SingleTi
           identifier: conversationsSearchInputId,
           clearButtonKey: conversationsSearchInputClearKey,
           clearButtonIdentifier: conversationsSearchInputClearId,
-          onChanged: (value) {
-            context.readOrNull<ChatConversationsCubit>()?.updateSearch(value);
-            context.readOrNull<SmsConversationsCubit>()?.updateSearch(value);
-          },
+          // The query typed on a watch, should the window have been a watch's.
+          initialValue: _query,
+          onChanged: _searchOnPhone,
           onSubmitted: (value) => {},
           iconConstraints: const BoxConstraints.expand(
             width: kMainAppBarBottomControlHeight,

@@ -32,6 +32,29 @@ class LoginSwitchScreenPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // On a watch the ways in are the first tab, in front of the forms. Both
+    // arrangements are the same widget, so crossing the class keeps the tabs
+    // router in place.
+    return AdaptiveLayout(
+      handset: (_) => _LoginSwitchTabs(page: this, offersTypeSelect: false),
+      watch: (_) => _LoginSwitchTabs(page: this, offersTypeSelect: true),
+    );
+  }
+}
+
+/// The tabs router of the ways in and their forms.
+class _LoginSwitchTabs extends StatelessWidget {
+  const _LoginSwitchTabs({required this.page, required this.offersTypeSelect});
+
+  final LoginSwitchScreenPage page;
+
+  /// Whether the ways in are a tab of their own in front of the forms, with
+  /// going back from a form returning to them.
+  final bool offersTypeSelect;
+
+  @override
+  Widget build(BuildContext context) {
+    final LoginSwitchScreenPage(:bodySafeAreaSides, :forceLoginTypes, :isLogoVisible, :isAppBarVisible, :style) = page;
     final themeData = Theme.of(context);
     final LoginSwitchScreenStyles? loginPageStyles = themeData.extension<LoginSwitchScreenStyles>();
     final LoginSwitchScreenStyle? localStyle = style ?? loginPageStyles?.primary;
@@ -41,9 +64,7 @@ class LoginSwitchScreenPage extends StatelessWidget {
           whenLoginSwitchScreenPageActive(current) && previous.supportedLoginTypes != current.supportedLoginTypes,
       builder: (context, state) {
         final supportedLoginTypes = forceLoginTypes ?? state.supportedLoginTypes!;
-        final isWatch = context.formFactor == FormFactor.watch;
-        // On a watch the ways in are the first tab, in front of the forms.
-        final hasTypeSelect = isWatch && LoginTypeWatch.opensOnTypeSelect(supportedLoginTypes);
+        final hasTypeSelect = offersTypeSelect && LoginTypeWatch.opensOnTypeSelect(supportedLoginTypes);
         return AutoTabsRouter(
           routes: [
             if (hasTypeSelect) LoginTypeSelectScreenPageRoute(supportedLoginTypes: supportedLoginTypes),
@@ -61,7 +82,7 @@ class LoginSwitchScreenPage extends StatelessWidget {
             return BlocSelector<LoginCubit, LoginState, bool>(
               selector: (state) => state.processing,
               builder: (context, processing) => _WatchBack(
-                enabled: isWatch,
+                enabled: offersTypeSelect,
                 processing: processing,
                 onForm: hasTypeSelect && !onTypeSelect,
                 backToTypeSelect: () =>

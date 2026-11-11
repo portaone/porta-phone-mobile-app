@@ -10,12 +10,15 @@ import 'package:webtrit_phone/theme/theme.dart';
 import 'package:webtrit_phone/widgets/widgets.dart';
 
 import '../../../widgets/widgets.dart';
+import 'theme_mode_screen_watch.dart';
 
 class ThemeModeScreen extends StatelessWidget {
   const ThemeModeScreen({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context) => AdaptiveLayout(handset: _handset, watch: (_) => const ThemeModeScreenWatch());
+
+  Widget _handset(BuildContext context) {
     const themeModes = ThemeMode.values;
     final themeSettings = context.watch<ThemeSettings>();
 

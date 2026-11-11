@@ -6,6 +6,7 @@ import 'package:webtrit_phone/widgets/widgets.dart';
 
 import '../widgets/widgets.dart';
 import 'voicemail_screen_styles.dart';
+import 'voicemail_tab_screen_watch.dart';
 
 /// Voicemail as a section of the bottom menu: the same list under the bar
 /// every section carries.
@@ -16,10 +17,18 @@ import 'voicemail_screen_styles.dart';
 /// managed. What is left is the delete control for messages picked by hand,
 /// which shows itself only once something is picked.
 class VoicemailTabScreen extends StatelessWidget {
-  const VoicemailTabScreen({super.key});
+  const VoicemailTabScreen({super.key, required this.watchTitle});
+
+  /// The section's name, heading the list on a watch.
+  final String watchTitle;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context) => AdaptiveLayout(
+    handset: _handset,
+    watch: (_) => VoicemailTabScreenWatch(title: watchTitle),
+  );
+
+  Widget _handset(BuildContext context) {
     return ThemedScaffold(
       // The configured bar is transparent; the tint that keeps it from reading
       // as part of the background comes from this section's page style.

@@ -224,7 +224,7 @@ class _SmsConversationBuilderViewState extends State<SmsConversationBuilderView>
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
 
-    final numbersEntered = searchFilter.length > 6 && RegExp(r'^[0-9]*$').hasMatch(searchFilter);
+    final numbersEntered = SmsCBCommon.looksLikeNumber(searchFilter);
 
     String prefix = '';
     if (numbersEntered && parsedNumber.isNotEmpty) {

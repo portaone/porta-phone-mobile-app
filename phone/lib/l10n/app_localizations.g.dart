@@ -293,6 +293,12 @@ abstract class AppLocalizations {
   /// **'Message'**
   String get callTileActions_message;
 
+  /// On a watch, asked before a store is cleared: a tap on its row clears it, so it asks first.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear {name}?'**
+  String cacheManagement_Watch_clearQuestion(String name);
+
   /// No description provided for @cacheManagement_Button_clear.
   ///
   /// In en, this message translates to:
@@ -1271,6 +1277,60 @@ abstract class AppLocalizations {
   /// **'Could not refresh call history - please try again'**
   String get cdrs_refreshFailed_message;
 
+  /// On a watch, a page it cannot show (a watch has no web view): it opens on the paired phone.
+  ///
+  /// In en, this message translates to:
+  /// **'Opens on your phone'**
+  String get common_Watch_openOnPhone_message;
+
+  /// On a watch, under 'Opens on your phone'.
+  ///
+  /// In en, this message translates to:
+  /// **'Read it on the paired phone'**
+  String get common_Watch_openOnPhone_hint;
+
+  /// On a watch, the edge button that sends the page to the paired phone.
+  ///
+  /// In en, this message translates to:
+  /// **'Open on phone'**
+  String get common_Watch_openOnPhone_action;
+
+  /// On a watch, once the paired phone has taken the page.
+  ///
+  /// In en, this message translates to:
+  /// **'Check your phone'**
+  String get common_Watch_openOnPhone_sent;
+
+  /// On a watch, under 'Check your phone'.
+  ///
+  /// In en, this message translates to:
+  /// **'The page is open there'**
+  String get common_Watch_openOnPhone_sentHint;
+
+  /// On a watch, when no paired phone could take the page.
+  ///
+  /// In en, this message translates to:
+  /// **'No phone connected'**
+  String get common_Watch_openOnPhone_failed;
+
+  /// On a watch, under 'No phone connected'.
+  ///
+  /// In en, this message translates to:
+  /// **'Connect the phone and try again'**
+  String get common_Watch_openOnPhone_failedHint;
+
+  /// On a watch, the edge button under 'No phone connected': sends the page to the phone again.
+  ///
+  /// In en, this message translates to:
+  /// **'Try again'**
+  String get common_Watch_openOnPhone_retry;
+
+  /// On a watch, a page built into the app that cannot be sent to the phone as a link: it is read in the app on the phone.
+  ///
+  /// In en, this message translates to:
+  /// **'Open it in the app on your phone'**
+  String get common_Watch_phoneOnly;
+
   /// Accessibility name announced while a screen waits for a request to finish.
   ///
   /// In en, this message translates to:
@@ -1889,6 +1949,24 @@ abstract class AppLocalizations {
   /// **'Contacts'**
   String get diagnostic_permission_contacts_title;
 
+  /// On a watch, the edge button of a diagnostic check that opens the watch's settings for the app (the phone's Manage Permission, shortened to fit the edge).
+  ///
+  /// In en, this message translates to:
+  /// **'Open settings'**
+  String get diagnostic_Watch_openSettings;
+
+  /// On a watch, the edge button of a denied permission that asks the system for it (the phone's Request Permission, shortened to fit the edge).
+  ///
+  /// In en, this message translates to:
+  /// **'Allow'**
+  String get diagnostic_Watch_allow;
+
+  /// On a watch, the edge button of the network check's page: runs the check again.
+  ///
+  /// In en, this message translates to:
+  /// **'Run again'**
+  String get diagnostic_Watch_runAgain;
+
   /// No description provided for @diagnosticPermissionDetails_button_managePermission.
   ///
   /// In en, this message translates to:
@@ -2320,6 +2398,36 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{name} deleted'**
   String favorites_SnackBar_deleted(String name);
+
+  /// On a watch, the one line of an empty favorites list.
+  ///
+  /// In en, this message translates to:
+  /// **'No favorites yet'**
+  String get favorites_Watch_empty;
+
+  /// On a watch, the short hint under the empty favorites line: how a favorite is added.
+  ///
+  /// In en, this message translates to:
+  /// **'Star a contact to add it'**
+  String get favorites_Watch_emptyHint;
+
+  /// On a watch, the line in place of the favorites a search found none of.
+  ///
+  /// In en, this message translates to:
+  /// **'No favorites found'**
+  String get favorites_Watch_notFound;
+
+  /// On a watch, what a long press on a favorite does, read by a screen reader.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove from favorites'**
+  String get favorites_Watch_remove;
+
+  /// On a watch, the question asked before a favorite is removed.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove from favorites?'**
+  String get favorites_Watch_removeQuestion;
 
   /// Formats phone number based on presence of main number and extension, covering four scenarios: both, main only, extension only, and neither.
   ///
@@ -3650,6 +3758,96 @@ abstract class AppLocalizations {
   /// **'CONNECTING'**
   String get messaging_StateBar_connecting;
 
+  /// On a watch, the name of the round search button over the conversations.
+  ///
+  /// In en, this message translates to:
+  /// **'Search chats'**
+  String get messaging_Watch_search;
+
+  /// Watch: the search button over the SMS conversations, read by a screen reader
+  ///
+  /// In en, this message translates to:
+  /// **'Search SMS'**
+  String get messaging_Watch_searchSms;
+
+  /// Watch: what the pill that switches between Messages and SMS is, read before its value by a screen reader ("List: SMS")
+  ///
+  /// In en, this message translates to:
+  /// **'List'**
+  String get messaging_Watch_list;
+
+  /// Watch: the line under the chats while the chat connection is starting
+  ///
+  /// In en, this message translates to:
+  /// **'Starting chats'**
+  String get messaging_Watch_statusInitializing;
+
+  /// Watch: the line under the chats while the chat connection is being made
+  ///
+  /// In en, this message translates to:
+  /// **'Connecting to chats'**
+  String get messaging_Watch_statusConnecting;
+
+  /// Watch: the line under the chats when the chat connection is down
+  ///
+  /// In en, this message translates to:
+  /// **'Chats are offline'**
+  String get messaging_Watch_statusDisconnected;
+
+  /// Watch: the edge button that goes on from picking a group's members, with how many are picked
+  ///
+  /// In en, this message translates to:
+  /// **'Next ({count})'**
+  String messaging_Watch_nextMembers(int count);
+
+  /// On a watch, the line in place of the conversations a search found none of.
+  ///
+  /// In en, this message translates to:
+  /// **'No conversations found'**
+  String get messaging_Watch_notFound;
+
+  /// On a watch, the short label of the button that starts a chat; a screen reader says the full name.
+  ///
+  /// In en, this message translates to:
+  /// **'New chat'**
+  String get messaging_Watch_newChat;
+
+  /// On a watch, the short label of the button that starts an SMS conversation; a screen reader says the full name.
+  ///
+  /// In en, this message translates to:
+  /// **'New SMS'**
+  String get messaging_Watch_newSms;
+
+  /// On a watch, said by a screen reader before a message the user wrote.
+  ///
+  /// In en, this message translates to:
+  /// **'You'**
+  String get messaging_Watch_mine;
+
+  /// Watch: said after one of the user's own SMS once the network has delivered it
+  ///
+  /// In en, this message translates to:
+  /// **'Delivered'**
+  String get messaging_Watch_markDelivered;
+
+  /// On a watch, said by a screen reader after a message of the user still on its way out.
+  ///
+  /// In en, this message translates to:
+  /// **'Sending'**
+  String get messaging_Watch_markPending;
+
+  /// On a watch, said by a screen reader after a message of the user that has been sent.
+  ///
+  /// In en, this message translates to:
+  /// **'Sent'**
+  String get messaging_Watch_markSent;
+
+  /// On a watch, said by a screen reader after a message of the user that has been read or delivered.
+  ///
+  /// In en, this message translates to:
+  /// **'Read'**
+  String get messaging_Watch_markRead;
+
   /// Shown in the messaging state bar when the app is disconnected from the messaging server. Condition: connection lost or unable to establish a connection.
   ///
   /// In en, this message translates to:
@@ -4472,6 +4670,12 @@ abstract class AppLocalizations {
   /// **'Represents general availability for communications within SIP service. Uses  SIP \"Status\" element in pidf content with \"open/closed\" values (see RFC 3863)'**
   String get presence_settings_availability_tooltip;
 
+  /// On a watch, under the presence presets: the rest of the presence configuration is not offered there.
+  ///
+  /// In en, this message translates to:
+  /// **'Availability, note, activity and status icon: on the phone'**
+  String get presence_Watch_configOnPhone;
+
   /// No description provided for @presence_settings_config_title.
   ///
   /// In en, this message translates to:
@@ -4946,6 +5150,12 @@ abstract class AppLocalizations {
   /// **'Try again'**
   String get sessions_Button_retry;
 
+  /// On a watch, the red edge button that signs out every other session (the phone's 'Sign out other sessions', shortened to fit the edge).
+  ///
+  /// In en, this message translates to:
+  /// **'Sign out others'**
+  String get sessions_Watch_revokeAllOthers;
+
   /// Action that revokes every session except the one on this device.
   ///
   /// In en, this message translates to:
@@ -5282,11 +5492,29 @@ abstract class AppLocalizations {
   /// **'Whether an audio call moves to the loudspeaker when you leave the call screen, and back to the earpiece when you return to it.'**
   String get settings_speakerOnMinimize_Section_tooltip;
 
+  /// On a watch, at the end of the media settings: the settings not offered there.
+  ///
+  /// In en, this message translates to:
+  /// **'Custom quality, audio processing, video, ICE and TURN: on the phone'**
+  String get settings_media_Watch_onPhone;
+
+  /// On a watch, asked before Reset to default clears every media setting, including the ones only the phone shows.
+  ///
+  /// In en, this message translates to:
+  /// **'Reset all media settings to default?'**
+  String get settings_media_Watch_resetQuestion;
+
   /// No description provided for @settings_speakerOnMinimize_switch.
   ///
   /// In en, this message translates to:
   /// **'Turn the speaker on when leaving the call screen'**
   String get settings_speakerOnMinimize_switch;
+
+  /// On a watch, closes a settings page whose other parts are not offered there, naming the part that stays on the phone.
+  ///
+  /// In en, this message translates to:
+  /// **'{setting}: on the phone'**
+  String settings_Watch_onPhone(String setting);
 
   /// No description provided for @settings_callerId_cancel_button.
   ///
@@ -6050,6 +6278,12 @@ abstract class AppLocalizations {
   /// **'If push notifications about calls are not received, the app will receive a special SMS and display the incoming call screen.'**
   String get settings_network_fallbackCalls_description;
 
+  /// On a watch, the row under the two ways incoming calls are delivered: opens both explanations as a page of text.
+  ///
+  /// In en, this message translates to:
+  /// **'How they differ'**
+  String get settings_network_Watch_howTheyDiffer;
+
   /// Title for fallback incoming calls section
   ///
   /// In en, this message translates to:
@@ -6541,6 +6775,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'No notifications yet'**
   String get system_notifications_screen_list_empty;
+
+  /// On a watch, asked before a notification is deleted by a long press on it.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete this notification?'**
+  String get system_notifications_Watch_deleteQuestion;
+
+  /// On a watch, under 'Delete this notification?': what deleting it means.
+  ///
+  /// In en, this message translates to:
+  /// **'It is deleted from your account, not only from this watch.'**
+  String get system_notifications_Watch_deleteContent;
 
   /// No description provided for @system_notifications_screen_title.
   ///

@@ -24,7 +24,9 @@ class ContactsFilterScreen extends StatefulWidget {
     super.key,
     required this.selections,
     required this.sourceTypeWidgetBuilder,
+    required this.sourceTypeWatchWidgetBuilder,
     required this.favoritesWidgetBuilder,
+    required this.favoritesWatchWidgetBuilder,
     this.title,
     required this.watchTitle,
     this.style,
@@ -37,6 +39,9 @@ class ContactsFilterScreen extends StatefulWidget {
   final Widget Function(BuildContext context, ContactSourceType sourceType, {bool markFavorites})
   sourceTypeWidgetBuilder;
 
+  /// Mounts the list of one address book on a watch.
+  final ContactSourceTypeWidgetBuilder sourceTypeWatchWidgetBuilder;
+
   /// Mounts the favourites section's own list, rearrangeable when asked.
   final Widget Function(
     BuildContext context, {
@@ -45,6 +50,10 @@ class ContactsFilterScreen extends StatefulWidget {
     void Function(int index)? onReorderEnd,
   })
   favoritesWidgetBuilder;
+
+  /// Mounts the favourites section's list on a watch, drawn by [body] as one
+  /// more list of this section.
+  final Widget Function(BuildContext context, FavoritesWatchBodyBuilder body) favoritesWatchWidgetBuilder;
 
   final Widget? title;
 
@@ -86,23 +95,17 @@ class _ContactsFilterScreenState extends State<ContactsFilterScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return AdaptiveLayout(handset: _handset, watch: _watch);
-  }
-
-  /// One address book on the face at a time, a chip in place of the
-  /// chooser. The favourites are not among the chip's choices yet: their
-  /// list has no watch arrangement, and a face showing it would have no chip
-  /// to come back by.
-  Widget _watch(BuildContext context) {
-    return ContactsWatchSources(
-      style: widget.style ?? Theme.of(context).extension<ContactsScreenStyles>()?.primary,
-      title: widget.watchTitle,
-      sources: widget.selections.sourceTypes,
-      onSelected: (sourceType) => _onSelected(ContactsSourceSelection(sourceType)),
-      bookBuilder: (context, sourceType) => widget.sourceTypeWidgetBuilder(context, sourceType, markFavorites: true),
-      // A section with no address book left shows its favourites, as the
-      // phone does; their list has no watch arrangement yet.
-      noBookBuilder: (context) => widget.favoritesWidgetBuilder(context),
+    return AdaptiveLayout(
+      handset: _handset,
+      watch: (context) => ContactsFilterScreenWatch(
+        style: widget.style,
+        title: widget.watchTitle,
+        selections: widget.selections,
+        shown: _shown,
+        onSelected: _onSelected,
+        sourceTypeWidgetBuilder: widget.sourceTypeWatchWidgetBuilder,
+        favoritesWidgetBuilder: widget.favoritesWatchWidgetBuilder,
+      ),
     );
   }
 

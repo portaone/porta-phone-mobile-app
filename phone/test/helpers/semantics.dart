@@ -54,3 +54,16 @@ Future<void> tapViaSemantics(WidgetTester tester, Finder finder) async {
   node.owner!.performAction(node.id, SemanticsAction.tap);
   await tester.pump();
 }
+
+/// Long-presses the control found by [finder] the way assistive technology
+/// does: through the long-press action of its semantics node.
+Future<void> longPressViaSemantics(WidgetTester tester, Finder finder) async {
+  final node = tester.getSemantics(finder);
+  expect(
+    node.getSemanticsData().hasAction(SemanticsAction.longPress),
+    isTrue,
+    reason: 'node has no long-press action: $node',
+  );
+  node.owner!.performAction(node.id, SemanticsAction.longPress);
+  await tester.pump();
+}

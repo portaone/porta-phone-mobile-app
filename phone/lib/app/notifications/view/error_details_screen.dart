@@ -8,6 +8,7 @@ import 'package:webtrit_phone/l10n/l10n.dart';
 import 'package:webtrit_phone/widgets/widgets.dart';
 
 import '../models/models.dart';
+import 'error_details_screen_watch.dart';
 
 class ErrorDetailsScreen extends StatelessWidget {
   const ErrorDetailsScreen({required this.title, required this.fields, super.key});
@@ -16,7 +17,12 @@ class ErrorDetailsScreen extends StatelessWidget {
   final List<ErrorFieldModel> fields;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context) => AdaptiveLayout(
+    handset: _handset,
+    watch: (_) => ErrorDetailsScreenWatch(title: title, fields: fields),
+  );
+
+  Widget _handset(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: Text(title),

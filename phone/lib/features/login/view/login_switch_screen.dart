@@ -30,23 +30,14 @@ class LoginSwitchScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return AdaptiveLayout(
-      handset: (_) => _Handset(screen: this),
+      handset: _handset,
       watch: (_) => LoginSwitchWatch(body: body),
     );
   }
-}
 
-/// The sign-in forms on a phone: logo, the ways in as segments, the chosen
-/// form below.
-class _Handset extends StatelessWidget {
-  const _Handset({required this.screen});
-
-  final LoginSwitchScreen screen;
-
-  @override
-  Widget build(BuildContext context) {
-    final LoginSwitchScreen(:appBar, :header, :body, :currentLoginType, :supportedLoginTypes, :onLoginTypeChanged) =
-        screen;
+  /// The sign-in forms on a phone: logo, the ways in as segments, the chosen
+  /// form below.
+  Widget _handset(BuildContext context) {
     final themeData = Theme.of(context);
     final LoginSwitchScreenStyles? loginStyles = themeData.extension<LoginSwitchScreenStyles>();
     final localStyle = loginStyles?.primary;

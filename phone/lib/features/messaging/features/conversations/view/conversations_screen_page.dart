@@ -5,7 +5,9 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:provider/provider.dart';
 
 import 'package:webtrit_phone/environment_config.dart';
+import 'package:webtrit_phone/extensions/extensions.dart';
 import 'package:webtrit_phone/features/features.dart';
+import 'package:webtrit_phone/l10n/l10n.dart';
 import 'package:webtrit_phone/models/models.dart';
 import 'package:webtrit_phone/repositories/repositories.dart';
 
@@ -47,6 +49,11 @@ class ConversationsScreenPage extends StatelessWidget {
       ],
       child: ConversationsScreen(
         title: screenTitle,
+        // On a watch the list is headed by the section's own name, as the hub
+        // shows it.
+        watchTitle: context.watchSectionTitle<MessagingBottomMenuTab>(
+          fallback: context.l10n.main_BottomNavigationBarItemLabel_chats,
+        ),
         initialTabsState: switch ((chatsEnabled, smsEnabled)) {
           (true, true) => DualTabState(ConversationsTab.chat, groupChatsEnabled),
           (true, false) => SingleTabState(ConversationsTab.chat, groupChatsEnabled),

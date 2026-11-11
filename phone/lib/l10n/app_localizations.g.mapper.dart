@@ -259,6 +259,16 @@ extension AppLocalizationsExtension on AppLocalizations {
       'cdrs_noMissedCalls_message' => cdrs_noMissedCalls_message,
       'cdrs_noRecentCalls_message' => cdrs_noRecentCalls_message,
       'cdrs_refreshFailed_message' => cdrs_refreshFailed_message,
+      'common_Watch_openOnPhone_message' => common_Watch_openOnPhone_message,
+      'common_Watch_openOnPhone_hint' => common_Watch_openOnPhone_hint,
+      'common_Watch_openOnPhone_action' => common_Watch_openOnPhone_action,
+      'common_Watch_openOnPhone_sent' => common_Watch_openOnPhone_sent,
+      'common_Watch_openOnPhone_sentHint' => common_Watch_openOnPhone_sentHint,
+      'common_Watch_openOnPhone_failed' => common_Watch_openOnPhone_failed,
+      'common_Watch_openOnPhone_failedHint' =>
+        common_Watch_openOnPhone_failedHint,
+      'common_Watch_openOnPhone_retry' => common_Watch_openOnPhone_retry,
+      'common_Watch_phoneOnly' => common_Watch_phoneOnly,
       'common_SemanticsLabel_loading' => common_SemanticsLabel_loading,
       'common_noInternetConnection_message' =>
         common_noInternetConnection_message,
@@ -409,6 +419,9 @@ extension AppLocalizationsExtension on AppLocalizations {
         diagnostic_permission_contacts_description,
       'diagnostic_permission_contacts_title' =>
         diagnostic_permission_contacts_title,
+      'diagnostic_Watch_openSettings' => diagnostic_Watch_openSettings,
+      'diagnostic_Watch_allow' => diagnostic_Watch_allow,
+      'diagnostic_Watch_runAgain' => diagnostic_Watch_runAgain,
       'diagnosticPermissionDetails_button_managePermission' =>
         diagnosticPermissionDetails_button_managePermission,
       'diagnosticPermissionDetails_button_requestPermission' =>
@@ -543,6 +556,11 @@ extension AppLocalizationsExtension on AppLocalizations {
       'favorites_SemanticsLabel_reorderDone' =>
         favorites_SemanticsLabel_reorderDone,
       'favorites_SemanticsLabel_reorder' => favorites_SemanticsLabel_reorder,
+      'favorites_Watch_empty' => favorites_Watch_empty,
+      'favorites_Watch_emptyHint' => favorites_Watch_emptyHint,
+      'favorites_Watch_notFound' => favorites_Watch_notFound,
+      'favorites_Watch_remove' => favorites_Watch_remove,
+      'favorites_Watch_removeQuestion' => favorites_Watch_removeQuestion,
       'locale_default' => locale_default,
       'locale_en' => locale_en,
       'locale_it' => locale_it,
@@ -881,6 +899,22 @@ extension AppLocalizationsExtension on AppLocalizations {
       'messaging_SmsSendingStatus_waiting' =>
         messaging_SmsSendingStatus_waiting,
       'messaging_StateBar_connecting' => messaging_StateBar_connecting,
+      'messaging_Watch_search' => messaging_Watch_search,
+      'messaging_Watch_searchSms' => messaging_Watch_searchSms,
+      'messaging_Watch_list' => messaging_Watch_list,
+      'messaging_Watch_statusInitializing' =>
+        messaging_Watch_statusInitializing,
+      'messaging_Watch_statusConnecting' => messaging_Watch_statusConnecting,
+      'messaging_Watch_statusDisconnected' =>
+        messaging_Watch_statusDisconnected,
+      'messaging_Watch_notFound' => messaging_Watch_notFound,
+      'messaging_Watch_newChat' => messaging_Watch_newChat,
+      'messaging_Watch_newSms' => messaging_Watch_newSms,
+      'messaging_Watch_mine' => messaging_Watch_mine,
+      'messaging_Watch_markDelivered' => messaging_Watch_markDelivered,
+      'messaging_Watch_markPending' => messaging_Watch_markPending,
+      'messaging_Watch_markSent' => messaging_Watch_markSent,
+      'messaging_Watch_markRead' => messaging_Watch_markRead,
       'messaging_StateBar_error' => messaging_StateBar_error,
       'messaging_StateBar_initializing' => messaging_StateBar_initializing,
       'notifications_errorSnackBarAction_callSdpConfiguration' =>
@@ -1071,6 +1105,7 @@ extension AppLocalizationsExtension on AppLocalizations {
         presence_settings_availability_title,
       'presence_settings_availability_tooltip' =>
         presence_settings_availability_tooltip,
+      'presence_Watch_configOnPhone' => presence_Watch_configOnPhone,
       'presence_settings_config_title' => presence_settings_config_title,
       'presence_settings_dnd_title' => presence_settings_dnd_title,
       'presence_settings_dnd_tooltip' => presence_settings_dnd_tooltip,
@@ -1161,6 +1196,7 @@ extension AppLocalizationsExtension on AppLocalizations {
       'sessions_AutoTerminateOther_label' => sessions_AutoTerminateOther_label,
       'sessions_AutoTerminateOther_save' => sessions_AutoTerminateOther_save,
       'sessions_Button_retry' => sessions_Button_retry,
+      'sessions_Watch_revokeAllOthers' => sessions_Watch_revokeAllOthers,
       'sessions_Button_revokeAllOthers' => sessions_Button_revokeAllOthers,
       'sessions_Placeholder_empty' => sessions_Placeholder_empty,
       'sessions_Placeholder_failure' => sessions_Placeholder_failure,
@@ -1257,6 +1293,9 @@ extension AppLocalizationsExtension on AppLocalizations {
         settings_speakerOnMinimize_Section_title,
       'settings_speakerOnMinimize_Section_tooltip' =>
         settings_speakerOnMinimize_Section_tooltip,
+      'settings_media_Watch_onPhone' => settings_media_Watch_onPhone,
+      'settings_media_Watch_resetQuestion' =>
+        settings_media_Watch_resetQuestion,
       'settings_speakerOnMinimize_switch' => settings_speakerOnMinimize_switch,
       'settings_callerId_cancel_button' => settings_callerId_cancel_button,
       'settings_callerId_defaultTitle' => settings_callerId_defaultTitle,
@@ -1501,6 +1540,8 @@ extension AppLocalizationsExtension on AppLocalizations {
         settings_missingMicrophoneIndicator_title,
       'settings_network_fallbackCalls_description' =>
         settings_network_fallbackCalls_description,
+      'settings_network_Watch_howTheyDiffer' =>
+        settings_network_Watch_howTheyDiffer,
       'settings_network_fallbackCalls_title' =>
         settings_network_fallbackCalls_title,
       'settings_network_incomingCallType_pushNotification_description' =>
@@ -1642,6 +1683,10 @@ extension AppLocalizationsExtension on AppLocalizations {
         socketError_serverUnreachableDescription,
       'system_notifications_screen_list_empty' =>
         system_notifications_screen_list_empty,
+      'system_notifications_Watch_deleteQuestion' =>
+        system_notifications_Watch_deleteQuestion,
+      'system_notifications_Watch_deleteContent' =>
+        system_notifications_Watch_deleteContent,
       'system_notifications_screen_title' => system_notifications_screen_title,
       'system_notifications_Dialog_deleteAllContent' =>
         system_notifications_Dialog_deleteAllContent,
@@ -2054,6 +2099,12 @@ extension AppLocalizationsExtension on AppLocalizations {
           'callCenter_Text_loggedInOfTotal requires 2 arguments',
         ),
       },
+      'cacheManagement_Watch_clearQuestion' => switch (args) {
+        [final String name] => cacheManagement_Watch_clearQuestion(name),
+        _ => throw ArgumentError(
+          'cacheManagement_Watch_clearQuestion requires 1 arguments',
+        ),
+      },
       'cacheManagement_Label_itemsCount' => switch (args) {
         [final int count] => cacheManagement_Label_itemsCount(count),
         _ => throw ArgumentError(
@@ -2384,6 +2435,12 @@ extension AppLocalizationsExtension on AppLocalizations {
           'messaging_NotificationMute_mutedUntil requires 1 arguments',
         ),
       },
+      'messaging_Watch_nextMembers' => switch (args) {
+        [final int count] => messaging_Watch_nextMembers(count),
+        _ => throw ArgumentError(
+          'messaging_Watch_nextMembers requires 1 arguments',
+        ),
+      },
       'notifications_errorSnackBar_signalingDisconnectWithCodeName' =>
         switch (args) {
           [final String codeName] =>
@@ -2497,6 +2554,10 @@ extension AppLocalizationsExtension on AppLocalizations {
         _ => throw ArgumentError(
           'sessions_Tile_appVersion requires 1 arguments',
         ),
+      },
+      'settings_Watch_onPhone' => switch (args) {
+        [final String setting] => settings_Watch_onPhone(setting),
+        _ => throw ArgumentError('settings_Watch_onPhone requires 1 arguments'),
       },
       'socketError_defaultDescription' => switch (args) {
         [final int? errorCode] => socketError_defaultDescription(errorCode),

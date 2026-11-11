@@ -17,6 +17,7 @@ import '../widgets/widgets.dart';
 
 import 'about_screen_style.dart';
 import 'about_screen_styles.dart';
+import 'about_screen_watch.dart';
 
 export 'about_screen_style.dart';
 export 'about_screen_styles.dart';
@@ -50,7 +51,12 @@ class _AboutScreenState extends State<AboutScreen> {
   }
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context) => AdaptiveLayout(
+    handset: _handset,
+    watch: (_) => AboutScreenWatch(style: widget.style),
+  );
+
+  Widget _handset(BuildContext context) {
     final themeData = Theme.of(context);
     final localStyle = widget.style ?? themeData.extension<AboutScreenStyles>()?.primary;
     final delimiterHeight = themeData.textTheme.titleLarge!.fontSize!;

@@ -10,6 +10,8 @@ import 'package:webtrit_phone/models/agreement_status.dart';
 import 'package:webtrit_phone/theme/theme.dart';
 import 'package:webtrit_phone/widgets/widgets.dart';
 
+import 'contacts_agreement_screen_watch.dart';
+
 class ContactsAgreementScreen extends StatefulWidget {
   const ContactsAgreementScreen({super.key});
 
@@ -29,7 +31,7 @@ class _ContactsAgreementScreenState extends State<ContactsAgreementScreen> {
       body: BlocBuilder<AppBloc, AppState>(
         builder: (context, appState) {
           return AdaptiveLayout(
-            watch: (context) => _ContactsAgreementWatch(
+            watch: (context) => ContactsAgreementScreenWatch(
               accepted: agreementStatus.isAccepted,
               onChanged: _handleAgreementStatusChange,
               onContinue: _submitAgreement,
@@ -100,50 +102,5 @@ class _ContactsAgreementScreenState extends State<ContactsAgreementScreen> {
   void _submitAgreement() {
     final resultStatus = agreementStatus.isPending ? AgreementStatus.declined : agreementStatus;
     context.read<AppBloc>().add(AppAgreementAccepted.updateContactsAgreement(resultStatus));
-  }
-}
-
-/// The contacts consent on a watch face: the title, the consent as a toggle
-/// right under it, the explanation in small text that scrolls, and Continue
-/// as the edge button. As on a phone, Continue without the consent declines
-/// it - so the toggle sits in view beside Continue, never at the end of a
-/// text nobody scrolls through.
-class _ContactsAgreementWatch extends StatelessWidget {
-  const _ContactsAgreementWatch({
-    required this.accepted,
-    required this.onChanged,
-    required this.onContinue,
-    required this.buttonStyle,
-  });
-
-  final bool accepted;
-  final ValueChanged<bool> onChanged;
-  final VoidCallback onContinue;
-  final ButtonStyle? buttonStyle;
-
-  @override
-  Widget build(BuildContext context) {
-    final gap = context.adaptiveMetrics.gap;
-    return WatchActionLayout(
-      title: context.l10n.contacts_agreement_title,
-      content: [
-        WatchToggleChip(
-          label: context.l10n.contacts_agreement_toggle_text,
-          value: accepted,
-          onChanged: onChanged,
-          identifier: contactsAgreementCheckboxId,
-          toggleKey: contactsAgreementCheckboxKey,
-        ),
-        SizedBox(height: gap * 2),
-        Text(context.l10n.contacts_agreement_description),
-      ],
-      action: WatchAction(
-        label: context.l10n.contacts_agreement_button_text,
-        onPressed: onContinue,
-        style: buttonStyle,
-        identifier: contactsAgreementAcceptButtonId,
-        buttonKey: contactsAgreementAcceptButtonKey,
-      ),
-    );
   }
 }

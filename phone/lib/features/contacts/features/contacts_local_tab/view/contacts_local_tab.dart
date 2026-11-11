@@ -2,7 +2,6 @@ import 'package:material_ui/material_ui.dart';
 
 import 'package:auto_route/auto_route.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:permission_handler/permission_handler.dart';
 import 'package:webtrit_phone/app/keys.dart';
 import 'package:webtrit_phone/app/router/app_router.dart';
 import 'package:webtrit_phone/l10n/l10n.dart';
@@ -24,7 +23,8 @@ class ContactsLocalTab extends StatefulWidget {
   State<ContactsLocalTab> createState() => _ContactsLocalTabState();
 }
 
-class _ContactsLocalTabState extends State<ContactsLocalTab> with WidgetsBindingObserver {
+class _ContactsLocalTabState extends State<ContactsLocalTab>
+    with WidgetsBindingObserver, ContactsLocalTabRefreshOnResume {
   int? _expandedContactId;
 
   void _toggleExpanded(int contactId) {
@@ -32,97 +32,11 @@ class _ContactsLocalTabState extends State<ContactsLocalTab> with WidgetsBinding
   }
 
   @override
-  void initState() {
-    super.initState();
-    WidgetsBinding.instance.addObserver(this);
-  }
-
-  @override
-  void didChangeAppLifecycleState(AppLifecycleState state) {
-    if (state == AppLifecycleState.resumed) {
-      // Refresh contacts when the app is resumed.
-      // This is to account for cases where contacts were updated while the app was collapsed,
-      // or if the user changed contact permissions in the background,
-      // which is a common scenario on Android.
-      _refreshContacts();
-    }
-  }
-
-  @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final elevatedButtonStyles = theme.extension<ElevatedButtonStyles>();
 
-    return AdaptiveLayout(handset: (context) => _handset(context, elevatedButtonStyles), watch: _watch);
-  }
-
-  Future<void> routeToDiagnosticScreen() async {
-    FocusScope.of(context).unfocus();
-    context.router.push(const SettingsRouterPageRoute(children: [DiagnosticScreenPageRoute()]));
-  }
-
-  /// The phone's placeholders become the face's state pages: one message,
-  /// and the first of their buttons on the edge.
-  Widget _watch(BuildContext context) {
-    final l10n = context.l10n;
-    return BlocBuilder<ContactsLocalTabBloc, ContactsLocalTabState>(
-      builder: (context, state) {
-        // The phone's "Grant access to your phone contacts" does not fit
-        // the edge; what the button does is open the settings.
-        final settings = WatchAction(
-          label: l10n.contacts_LocalTabButton_contactsAgreement,
-          identifier: contactsLocalGrantAccessId,
-          onPressed: openAppSettings,
-        );
-        final refresh = WatchAction(
-          label: l10n.contacts_LocalTabButton_refresh,
-          identifier: contactsWatchRefreshId,
-          onPressed: _refreshContacts,
-        );
-        final empty = switch (state.status) {
-          ContactsLocalTabStatus.permissionFailure => ContactsWatchEmpty(
-            message: l10n.contacts_LocalTabText_permissionFailure,
-            icon: Icons.no_accounts_outlined,
-            action: settings,
-          ),
-          ContactsLocalTabStatus.failure => ContactsWatchEmpty(
-            message: l10n.contacts_LocalTabText_failure,
-            icon: Icons.error_outline,
-            action: refresh,
-          ),
-          ContactsLocalTabStatus.contactsAgreementFailure => ContactsWatchEmpty(
-            message: l10n.contacts_LocalTabText_contactsAgreementFailure,
-            action: WatchAction(
-              label: l10n.contacts_LocalTabButton_contactsAgreement,
-              onPressed: routeToDiagnosticScreen,
-            ),
-          ),
-          _ when state.searching => ContactsWatchEmpty(message: l10n.contacts_LocalTabText_emptyOnSearching),
-          _ when state.selectionOnly => ContactsWatchEmpty(
-            message: l10n.contacts_LocalTabText_selectionOnlyEmpty,
-            action: WatchAction(
-              label: l10n.contacts_LocalTabButton_changeSelection,
-              identifier: contactsLocalChangeSelectionId,
-              onPressed: openAppSettings,
-            ),
-          ),
-          _ => ContactsWatchEmpty(message: l10n.contacts_LocalTabText_empty, action: refresh),
-        };
-        // Access is asked before the rows, as on the phone: contacts read
-        // before it was taken away would otherwise stand in for the way to
-        // grant it again.
-        final denied = state.status == ContactsLocalTabStatus.permissionFailure;
-        return ContactsWatchBody(
-          loading: state.status == ContactsLocalTabStatus.initial,
-          contacts: denied ? const [] : state.contacts,
-          searching: state.searching && !denied,
-          empty: empty,
-          tileKey: contactsLocalContactTileKey,
-          // A list of only the shared contacts says so, as on the phone.
-          footer: state.selectionOnly && !state.searching && !denied ? const ContactsSelectionNotice() : null,
-        );
-      },
-    );
+    return _handset(context, elevatedButtonStyles);
   }
 
   Widget _handset(BuildContext context, ElevatedButtonStyles? elevatedButtonStyles) {
@@ -180,7 +94,7 @@ class _ContactsLocalTabState extends State<ContactsLocalTab> with WidgetsBinding
                   Text(context.l10n.contacts_LocalTabText_contactsAgreementFailure),
                   const SizedBox(height: 16),
                   TextButton(
-                    onPressed: routeToDiagnosticScreen,
+                    onPressed: () => routeToContactsDiagnostic(context),
                     style: elevatedButtonStyles?.neutral,
                     child: Text(context.l10n.contacts_LocalTabButton_contactsAgreement),
                   ),
@@ -221,11 +135,41 @@ class _ContactsLocalTabState extends State<ContactsLocalTab> with WidgetsBinding
     );
   }
 
-  Future<void> _refreshContacts() => context.read<ContactsLocalTabBloc>().refresh();
+  Future<void> _refreshContacts() => refreshLocalContacts(context);
+}
+
+/// Reads the phone book again when the app comes back to the foreground.
+/// Shared by the phone's list and the watch's.
+mixin ContactsLocalTabRefreshOnResume<T extends StatefulWidget> on State<T>, WidgetsBindingObserver {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      // Refresh contacts when the app is resumed.
+      // This is to account for cases where contacts were updated while the app was collapsed,
+      // or if the user changed contact permissions in the background,
+      // which is a common scenario on Android.
+      refreshLocalContacts(context);
+    }
+  }
 
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
     super.dispose();
   }
+}
+
+/// Reads the phone book again.
+Future<void> refreshLocalContacts(BuildContext context) => context.read<ContactsLocalTabBloc>().refresh();
+
+/// Opens the diagnostic, where the contacts agreement is given.
+Future<void> routeToContactsDiagnostic(BuildContext context) async {
+  FocusScope.of(context).unfocus();
+  context.router.push(const SettingsRouterPageRoute(children: [DiagnosticScreenPageRoute()]));
 }

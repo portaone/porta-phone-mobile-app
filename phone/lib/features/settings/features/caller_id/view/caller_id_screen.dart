@@ -9,6 +9,7 @@ import 'package:webtrit_phone/widgets/widgets.dart';
 
 import '../caller_id.dart';
 import '../widgets/widgets.dart';
+import 'caller_id_screen_watch.dart';
 
 class CallerIdSettingsScreen extends StatefulWidget {
   const CallerIdSettingsScreen({super.key});
@@ -21,7 +22,9 @@ class _CallerIdSettingsScreenState extends State<CallerIdSettingsScreen> {
   bool showMatcherForm = false;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context) => AdaptiveLayout(handset: _handset, watch: (_) => const CallerIdScreenWatch());
+
+  Widget _handset(BuildContext context) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
     final l10n = context.l10n;

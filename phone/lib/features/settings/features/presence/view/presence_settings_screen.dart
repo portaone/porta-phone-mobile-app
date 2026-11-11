@@ -3,7 +3,6 @@
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:webtrit_phone/app/keys.dart';
-import 'package:webtrit_phone/extensions/iterable.dart';
 import 'package:webtrit_phone/extensions/presence_activity.dart';
 
 import 'package:webtrit_phone/l10n/l10n.dart';
@@ -13,13 +12,8 @@ import 'package:webtrit_phone/widgets/widgets.dart';
 import '../cubit/presence_settings_cubit.dart';
 import '../models/presence_settings_preset.dart';
 import '../widgets/widgets.dart';
-
-/// Side of the presence mark shown beside a preset in the chooser.
-///
-/// The glyph inside the mark is a share of it (`side * 0.55`), so at the 16 dp
-/// this used to be it came out at 9 dp against a 14 dp label and read as a
-/// smudge; this keeps the two about the same size.
-const _presetMarkSide = 24.0;
+import 'presence_settings_presets.dart';
+import 'presence_settings_screen_watch.dart';
 
 /// Height of one preset row in the open chooser.
 ///
@@ -65,7 +59,12 @@ class _PresenceSettingsScreenState extends State<PresenceSettingsScreen> {
   }
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context) => AdaptiveLayout(
+    handset: _handset,
+    watch: (_) => PresenceSettingsScreenWatch(presets: presets),
+  );
+
+  Widget _handset(BuildContext context) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
     final l10n = context.l10n;
@@ -77,13 +76,7 @@ class _PresenceSettingsScreenState extends State<PresenceSettingsScreen> {
       appBar: AppBar(title: Text(l10n.settings_ListViewTileTitle_presence), leading: const ExtBackButton()),
       body: BlocBuilder<PresenceSettingsCubit, PresenceSettings>(
         builder: (context, state) {
-          final selectedPreset = presets.firstWhereOrNull(
-            (element) =>
-                element.available == state.available &&
-                element.note == state.note &&
-                element.activity == state.activity &&
-                element.dndMode == state.dndMode,
-          );
+          final selectedPreset = matchingPresenceSettingsPreset(presets, state);
 
           final isBlank = state.isBlank();
 
@@ -132,29 +125,7 @@ class _PresenceSettingsScreenState extends State<PresenceSettingsScreen> {
                                       style: _menuEntryStyle(),
                                       labelWidget: Row(
                                         children: [
-                                          SizedBox(
-                                            width: _presetMarkSide,
-                                            height: _presetMarkSide,
-                                            child: SipPresenceIndicator(
-                                              presenceInfo: [
-                                                PresenceInfo(
-                                                  id: 'id',
-                                                  number: 'number',
-                                                  available: e.available,
-                                                  note: e.note,
-                                                  activities: [if (e.activity != null) e.activity!],
-                                                  statusIcon: null,
-                                                  device: 'device',
-                                                  timeOffsetMin: 0,
-                                                  timestamp: DateTime.now(),
-                                                  source: PresenceInfoSource.direct,
-                                                  arrivalTime: DateTime.now(),
-                                                ),
-                                              ],
-                                              presenceRect: Rect.fromLTWH(0, 0, _presetMarkSide, _presetMarkSide),
-                                              dialogInfo: [],
-                                            ),
-                                          ),
+                                          PresenceSettingsPresetMark(preset: e),
                                           SizedBox(width: 8),
                                           Flexible(
                                             child: Text(
@@ -171,12 +142,7 @@ class _PresenceSettingsScreenState extends State<PresenceSettingsScreen> {
                               initialSelection: selectedPreset,
                               onSelected: (value) {
                                 if (value == null) return;
-                                final update = state
-                                    .copyWithAvailable(value.available)
-                                    .copyWithNote(value.note)
-                                    .copyWithActivity(value.activity)
-                                    .copyWithDndMode(value.dndMode);
-                                cubit.setPresenceSettings(update);
+                                cubit.setPresenceSettings(applyPresenceSettingsPreset(state, value));
                                 setState(() => equalKey = DateTime.now().microsecondsSinceEpoch.toString());
                               },
                               label: DropdownMenuCaption(

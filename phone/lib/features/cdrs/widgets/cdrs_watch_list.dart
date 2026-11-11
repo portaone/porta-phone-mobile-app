@@ -9,6 +9,8 @@ import 'package:webtrit_phone/l10n/l10n.dart';
 import 'package:webtrit_phone/models/models.dart';
 import 'package:webtrit_phone/widgets/widgets.dart';
 
+import 'cdrs_history_scroll.dart';
+
 /// The account's call history on a watch, either list of it: a row per call
 /// record under the section's title and filter, and the history fetch's
 /// spinner at the end while an older page is on its way.
@@ -19,12 +21,11 @@ import 'package:webtrit_phone/widgets/widgets.dart';
 ///
 /// [C] is the list's cubit, the full history's or the missed calls'; the
 /// rows follow its state.
-class CdrsWatchList<C extends StateStreamable<CdrsListState>> extends StatelessWidget {
+class CdrsWatchList<C extends CdrsListCubit> extends StatefulWidget {
   const CdrsWatchList({
     super.key,
     required this.section,
     required this.emptyMessage,
-    required this.controller,
     required this.onOpen,
     required this.onRefresh,
   });
@@ -34,9 +35,6 @@ class CdrsWatchList<C extends StateStreamable<CdrsListState>> extends StatelessW
   /// What the state page says when the list has no records.
   final String emptyMessage;
 
-  /// The list's scroll controller, which fetches older records near the end.
-  final ScrollController controller;
-
   /// Opens the calls with a number.
   final ValueChanged<String> onOpen;
 
@@ -44,9 +42,33 @@ class CdrsWatchList<C extends StateStreamable<CdrsListState>> extends StatelessW
   /// phone's pull to refresh says it, and the list stays as it was.
   final Future<void> Function() onRefresh;
 
+  @override
+  State<CdrsWatchList<C>> createState() => _CdrsWatchListState<C>();
+}
+
+class _CdrsWatchListState<C extends CdrsListCubit> extends State<CdrsWatchList<C>> {
+  late final _cubit = context.read<C>();
+
+  /// The list's scroll controller, which fetches older records near the end.
+  late final _controller = ScrollController();
+
+  @override
+  void initState() {
+    super.initState();
+    _controller.addListener(_handleScroll);
+  }
+
+  void _handleScroll() => fetchCdrsHistoryNearEnd(_controller.position, _cubit);
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
   Future<void> _refresh(BuildContext context) async {
     try {
-      await onRefresh();
+      await widget.onRefresh();
     } catch (_) {
       if (context.mounted) context.showErrorSnackBar(context.l10n.cdrs_refreshFailed_message);
     }
@@ -62,10 +84,10 @@ class CdrsWatchList<C extends StateStreamable<CdrsListState>> extends StatelessW
   Widget _list(BuildContext context, CdrsListState state, TimeOrDateFormat timeOrDateFormat) {
     final records = state.records;
     return RecentsWatchBody(
-      section: section,
+      section: widget.section,
       loading: state.isLoading,
-      emptyMessage: emptyMessage,
-      controller: controller,
+      emptyMessage: widget.emptyMessage,
+      controller: _controller,
       onRefresh: () => _refresh(context),
       // One more for the history fetch's spinner, as on the phone.
       itemCount: records.isEmpty ? 0 : records.length + 1,
@@ -89,7 +111,7 @@ class CdrsWatchList<C extends StateStreamable<CdrsListState>> extends StatelessW
               onTap: pick != null
                   ? pick.onPressed
                   : number != null
-                  ? () => onOpen(number)
+                  ? () => widget.onOpen(number)
                   : null,
             );
           },

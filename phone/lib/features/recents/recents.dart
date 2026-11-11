@@ -3,4 +3,5 @@ export 'bloc/recents_bloc.dart';
 export 'view/recents_router_page.dart';
 export 'view/recents_screen.dart';
 export 'view/recents_screen_page.dart';
+export 'view/recents_screen_watch.dart';
 export 'widgets/widgets.dart';

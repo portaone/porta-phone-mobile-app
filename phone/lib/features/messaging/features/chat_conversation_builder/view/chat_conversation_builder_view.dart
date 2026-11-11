@@ -108,7 +108,7 @@ class _ChatConversationBuilderViewState extends State<ChatConversationBuilderVie
 
               child: Text(context.l10n.messaging_ConversationBuilders_next_action),
             ),
-          if (state is ChatCBGroupFillInfo && state.name.length >= 3)
+          if (state is ChatCBGroupFillInfo && state.nameLongEnough)
             TextButton(
               onPressed: builderCubit.onGroupCreateConfirm,
               style: actionButtonStyle,

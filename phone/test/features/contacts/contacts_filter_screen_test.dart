@@ -148,12 +148,14 @@ void main() {
                       return Text(sourceType.name);
                     },
                   ),
+                  sourceTypeWatchWidgetBuilder: (context, sourceType) => Text(sourceType.name),
                   favoritesWidgetBuilder: (
                     context, {
                     bool reorderMode = false,
                     void Function(int index)? onReorderStart,
                     void Function(int index)? onReorderEnd,
                   }) => Text(reorderMode ? 'favorites rearranging' : 'favorites'),
+                  favoritesWatchWidgetBuilder: (context, body) => const Text('favorites'),
                 ),
               ),
             ),

@@ -9,18 +9,30 @@ import 'package:webtrit_phone/l10n/l10n.dart';
 import 'package:webtrit_phone/widgets/widgets.dart';
 
 import '../../../widgets/widgets.dart';
+import 'language_screen_watch.dart';
 
 class LanguageScreen extends StatelessWidget {
   const LanguageScreen({super.key});
 
+  /// With a single supported language there is nothing to follow the system
+  /// to, so the "default" (follow-system) entry is dropped and that one
+  /// language offered.
+  static final List<Locale> _locales = AppLocalizations.supportedLocales.length == 1
+      ? AppLocalizations.supportedLocales
+      : [LocaleExtension.defaultNull, ...AppLocalizations.supportedLocales];
+
+  /// The row's id: the language it selects, "system" for the default entry.
+  static String _optionId(Locale locale) =>
+      settingsOptionId(settingsLanguageOptionIdPrefix, locale.isDefaultNull ? 'system' : locale.languageCode);
+
   @override
-  Widget build(BuildContext context) {
-    const supportedLocales = AppLocalizations.supportedLocales;
-    // With a single supported language there is nothing to follow the system to,
-    // so drop the "default" (follow-system) entry and offer that one language.
-    final locales = supportedLocales.length == 1
-        ? supportedLocales
-        : [LocaleExtension.defaultNull, ...supportedLocales];
+  Widget build(BuildContext context) => AdaptiveLayout(
+    handset: _handset,
+    watch: (_) => LanguageScreenWatch(locales: _locales, optionId: _optionId),
+  );
+
+  Widget _handset(BuildContext context) {
+    final locales = _locales;
 
     return Scaffold(
       appBar: AppBar(title: Text(context.l10n.settings_ListViewTileTitle_language), leading: const ExtBackButton()),
@@ -40,10 +52,7 @@ class LanguageScreen extends StatelessWidget {
                 // the language it selects; the "system default" entry is a
                 // sentinel locale rather than a real language.
                 return SemanticAction(
-                  identifier: settingsOptionId(
-                    settingsLanguageOptionIdPrefix,
-                    locale.isDefaultNull ? 'system' : locale.languageCode,
-                  ),
+                  identifier: _optionId(locale),
                   child: RadioListTile<Locale?>(value: locale, title: Text(locale.l10n(context))),
                 );
               },

@@ -164,6 +164,11 @@ class AppLocalizationsUk extends AppLocalizations {
   String get callTileActions_message => 'Повідомлення';
 
   @override
+  String cacheManagement_Watch_clearQuestion(String name) {
+    return 'Очистити: $name?';
+  }
+
+  @override
   String get cacheManagement_Button_clear => 'Очистити';
 
   @override
@@ -730,6 +735,33 @@ class AppLocalizationsUk extends AppLocalizations {
   String get cdrs_refreshFailed_message => 'Не вдалося оновити історію дзвінків - спробуйте ще раз';
 
   @override
+  String get common_Watch_openOnPhone_message => 'Відкривається на телефоні';
+
+  @override
+  String get common_Watch_openOnPhone_hint => 'Читайте на підключеному телефоні';
+
+  @override
+  String get common_Watch_openOnPhone_action => 'Відкрити на телефоні';
+
+  @override
+  String get common_Watch_openOnPhone_sent => 'Перевірте телефон';
+
+  @override
+  String get common_Watch_openOnPhone_sentHint => 'Сторінку відкрито там';
+
+  @override
+  String get common_Watch_openOnPhone_failed => 'Телефон не підключено';
+
+  @override
+  String get common_Watch_openOnPhone_failedHint => 'Підключіть телефон і спробуйте ще раз';
+
+  @override
+  String get common_Watch_openOnPhone_retry => 'Спробувати ще раз';
+
+  @override
+  String get common_Watch_phoneOnly => 'Відкрийте це в застосунку на телефоні';
+
+  @override
   String get common_SemanticsLabel_loading => 'Завантаження';
 
   @override
@@ -1074,6 +1106,15 @@ class AppLocalizationsUk extends AppLocalizations {
   String get diagnostic_permission_contacts_title => 'Контакти';
 
   @override
+  String get diagnostic_Watch_openSettings => 'Відкрити налаштування';
+
+  @override
+  String get diagnostic_Watch_allow => 'Дозволити';
+
+  @override
+  String get diagnostic_Watch_runAgain => 'Перевірити знову';
+
+  @override
   String get diagnosticPermissionDetails_button_managePermission => 'Керування дозволами';
 
   @override
@@ -1305,6 +1346,21 @@ class AppLocalizationsUk extends AppLocalizations {
   String favorites_SnackBar_deleted(String name) {
     return '$name видалено';
   }
+
+  @override
+  String get favorites_Watch_empty => 'Обраних ще немає';
+
+  @override
+  String get favorites_Watch_emptyHint => 'Позначте контакт зірочкою';
+
+  @override
+  String get favorites_Watch_notFound => 'Обраних не знайдено';
+
+  @override
+  String get favorites_Watch_remove => 'Видалити з обраних';
+
+  @override
+  String get favorites_Watch_removeQuestion => 'Видалити з обраних?';
 
   @override
   String formatPhone(String style, String main, String ext) {
@@ -2045,6 +2101,53 @@ class AppLocalizationsUk extends AppLocalizations {
   String get messaging_StateBar_connecting => 'ПІДКЛЮЧЕННЯ';
 
   @override
+  String get messaging_Watch_search => 'Пошук у чатах';
+
+  @override
+  String get messaging_Watch_searchSms => 'Пошук у SMS';
+
+  @override
+  String get messaging_Watch_list => 'Список';
+
+  @override
+  String get messaging_Watch_statusInitializing => 'Запуск чатів';
+
+  @override
+  String get messaging_Watch_statusConnecting => 'Підключення до чатів';
+
+  @override
+  String get messaging_Watch_statusDisconnected => 'Чати не підключені';
+
+  @override
+  String messaging_Watch_nextMembers(int count) {
+    return 'Далі ($count)';
+  }
+
+  @override
+  String get messaging_Watch_notFound => 'Розмов не знайдено';
+
+  @override
+  String get messaging_Watch_newChat => 'Новий чат';
+
+  @override
+  String get messaging_Watch_newSms => 'Нове SMS';
+
+  @override
+  String get messaging_Watch_mine => 'Ви';
+
+  @override
+  String get messaging_Watch_markDelivered => 'Доставлено';
+
+  @override
+  String get messaging_Watch_markPending => 'Надсилається';
+
+  @override
+  String get messaging_Watch_markSent => 'Надіслано';
+
+  @override
+  String get messaging_Watch_markRead => 'Прочитано';
+
+  @override
   String get messaging_StateBar_error => 'ВІДКЛЮЧЕНО';
 
   @override
@@ -2495,6 +2598,9 @@ class AppLocalizationsUk extends AppLocalizations {
       'Відображає загальну доступність для спілкування в службі SIP. Використовує елемент SIP \"Status\" у вмісті pidf зі значеннями \"open/closed\" (див. RFC 3863)';
 
   @override
+  String get presence_Watch_configOnPhone => 'Доступність, примітка, активність і значок статусу: на телефоні';
+
+  @override
   String get presence_settings_config_title => 'Конфігурація:';
 
   @override
@@ -2786,6 +2892,9 @@ class AppLocalizationsUk extends AppLocalizations {
   String get sessions_Button_retry => 'Спробувати ще раз';
 
   @override
+  String get sessions_Watch_revokeAllOthers => 'Вийти на інших';
+
+  @override
   String get sessions_Button_revokeAllOthers => 'Вийти з інших сесій';
 
   @override
@@ -2968,7 +3077,18 @@ class AppLocalizationsUk extends AppLocalizations {
       'Чи переходить аудіодзвінок на гучномовець, коли ви залишаєте екран дзвінка, і назад на розмовний динамік, коли повертаєтесь.';
 
   @override
+  String get settings_media_Watch_onPhone => 'Власна якість, обробка звуку, відео, ICE і TURN: на телефоні';
+
+  @override
+  String get settings_media_Watch_resetQuestion => 'Скинути всі налаштування медіа до типових?';
+
+  @override
   String get settings_speakerOnMinimize_switch => 'Вмикати гучномовець при виході з екрана дзвінка';
+
+  @override
+  String settings_Watch_onPhone(String setting) {
+    return '$setting: на телефоні';
+  }
 
   @override
   String get settings_callerId_cancel_button => 'Скасувати';
@@ -3373,6 +3493,9 @@ class AppLocalizationsUk extends AppLocalizations {
       'Якщо push-сповіщення про виклик не доходять, застосунок отримає спеціальне SMS та покаже екран вхідного дзвінка.';
 
   @override
+  String get settings_network_Watch_howTheyDiffer => 'Чим вони відрізняються';
+
+  @override
   String get settings_network_fallbackCalls_title => 'Резервні вхідні дзвінки';
 
   @override
@@ -3654,6 +3777,13 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get system_notifications_screen_list_empty => 'Немає сповіщень';
+
+  @override
+  String get system_notifications_Watch_deleteQuestion => 'Видалити це сповіщення?';
+
+  @override
+  String get system_notifications_Watch_deleteContent =>
+      'Його буде видалено з облікового запису, а не лише з цього годинника.';
 
   @override
   String get system_notifications_screen_title => 'Сповіщення';

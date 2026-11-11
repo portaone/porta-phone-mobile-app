@@ -118,6 +118,7 @@ void main() {
                       return Text(sourceType.name);
                     },
                   ),
+                  sourceTypeWatchWidgetBuilder: (context, sourceType) => Text(sourceType.name),
                 ),
               ),
             ),
