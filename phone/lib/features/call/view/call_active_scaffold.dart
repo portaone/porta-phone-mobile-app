@@ -440,6 +440,41 @@ class CallActiveScaffoldState extends State<CallActiveScaffold> {
       onAddParticipantCancelled: _cancelAddParticipant,
     );
 
+    // The arrangements differ only in the controls; the picture, the gesture
+    // and the hiding around them, and the state they run on, are the same.
+    return AdaptiveLayout(
+      handset: (_) => _frame(
+        activeCall: activeCall,
+        mediaQueryData: mediaQueryData,
+        style: style,
+        controls: CallControls(
+          callStatus: widget.callStatus,
+          popupMenuItems: _buildPopupMenuItems,
+          params: controlsParams,
+        ),
+      ),
+      watch: (_) => _frame(
+        activeCall: activeCall,
+        mediaQueryData: mediaQueryData,
+        style: style,
+        controls: CallControlsWatch(
+          onPageOpenChanged: _onWatchPageOpenChanged,
+          callStatus: widget.callStatus,
+          params: controlsParams,
+          video: _watchVideoOptions,
+        ),
+      ),
+    );
+  }
+
+  /// The call screen around its [controls]: the remote picture under them,
+  /// the gesture that shows and hides them and the layer that does it.
+  Widget _frame({
+    required ActiveCall activeCall,
+    required MediaQueryData mediaQueryData,
+    required CallScreenStyle? style,
+    required Widget controls,
+  }) {
     // One gesture owns showing and hiding the controls, and it wraps the whole
     // screen rather than sitting inside it: a layer under the controls would
     // never see a tap on the toolbar, which paints over it and swallows it.
@@ -510,19 +545,7 @@ class CallActiveScaffoldState extends State<CallActiveScaffold> {
                   animation: _compactController,
                   builder: (context, child) =>
                       HideableLayer(hidden: _compactController.compact, padding: mediaQueryData.padding, child: child!),
-                  child: AdaptiveLayout(
-                    handset: (_) => CallControls(
-                      callStatus: widget.callStatus,
-                      popupMenuItems: _buildPopupMenuItems,
-                      params: controlsParams,
-                    ),
-                    watch: (_) => CallControlsWatch(
-                      onPageOpenChanged: _onWatchPageOpenChanged,
-                      callStatus: widget.callStatus,
-                      params: controlsParams,
-                      video: _watchVideoOptions,
-                    ),
-                  ),
+                  child: controls,
                 ),
               ],
             );

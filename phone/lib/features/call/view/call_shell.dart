@@ -46,29 +46,28 @@ class CallShell extends StatefulWidget {
 }
 
 class _CallShellState extends State<CallShell> {
-  FormFactor? _formFactor;
-
-  /// The overlay is decided on the form factor too: a window that changes
-  /// class - a phone in split screen, the configurator's preview - shows or
-  /// drops it at once rather than on the next change of the call.
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    final formFactor = context.formFactor;
-    final changed = _formFactor != null && formFactor != _formFactor;
-    _formFactor = formFactor;
-    if (changed) {
-      final router = context.router;
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (mounted) _updateOverlayContent(context, context.read<CallBloc>().state, router);
-      });
-    }
-  }
+  /// Whether the floating call thumbnail and the camera preview are shown, as
+  /// the arrangement picked last said; null until the first one is built.
+  bool? _showsOverlays;
 
   late final ThumbnailOverlayManager _thumbnailManager = ThumbnailOverlayManager(stickyPadding: widget.stickyPadding);
 
   @override
   Widget build(BuildContext context) {
+    // A floating thumbnail would cover a third of a watch face, and so would
+    // the camera preview: the hub shows a call to go back to instead, and the
+    // camera is switched under the call's More.
+    return AdaptiveLayout(
+      handset: (_) => _arrangement(showsOverlays: true),
+      watch: (_) => _arrangement(showsOverlays: false),
+    );
+  }
+
+  /// Both arrangements are the same listeners over the same child, so a
+  /// window that changes class keeps the app under it; they differ in whether
+  /// the overlay is shown.
+  Widget _arrangement({required bool showsOverlays}) {
+    _onShowsOverlays(showsOverlays);
     return MultiBlocListener(
       listeners: [
         _callDisplayListener(),
@@ -82,6 +81,20 @@ class _CallShellState extends State<CallShell> {
       ],
       child: widget.child,
     );
+  }
+
+  /// The overlay is decided on the arrangement too: a window that changes
+  /// class - a phone in split screen, the configurator's preview - shows or
+  /// drops it at once rather than on the next change of the call.
+  void _onShowsOverlays(bool showsOverlays) {
+    final changed = _showsOverlays != null && showsOverlays != _showsOverlays;
+    _showsOverlays = showsOverlays;
+    if (changed) {
+      final router = context.router;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) _updateOverlayContent(context, context.read<CallBloc>().state, router);
+      });
+    }
   }
 
   /// Listens to [CallState.display] changes and manages related UI transitions.
@@ -169,10 +182,7 @@ class _CallShellState extends State<CallShell> {
   void _updateOverlayContent(BuildContext context, CallState state, StackRouter router) {
     final hasActiveCalls = state.activeCalls.isNotEmpty;
 
-    // A floating thumbnail would cover a third of a watch face, and so would
-    // the camera preview: the hub shows a call to go back to instead, and the
-    // camera is switched under the call's More.
-    if (context.formFactor == FormFactor.watch) {
+    if (_showsOverlays == false) {
       _hideOverlay();
       return;
     }

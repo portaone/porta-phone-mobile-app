@@ -50,10 +50,52 @@ class _MainScreenPageState extends State<MainScreenPage> {
     final systemNotificationsEnabled = systemNotificationsFeature.systemNotificationsSupport;
 
     // On a watch the hub is the first tab, in front of the sections.
-    final hasHub = context.formFactor == FormFactor.watch;
+    final autoTabsRouter = AdaptiveLayout(
+      handset: (_) => _tabsRouter(
+        hasHub: false,
+        tabs: tabs,
+        callToActionsEnabled: callToActionsEnabled,
+        mainScreenRouteStateRepository: mainScreenRouteStateRepository,
+      ),
+      watch: (_) => _tabsRouter(
+        hasHub: true,
+        tabs: tabs,
+        callToActionsEnabled: callToActionsEnabled,
+        mainScreenRouteStateRepository: mainScreenRouteStateRepository,
+      ),
+    );
+    final content = callToActionsEnabled
+        ? BlocProvider<CallToActionsCubit>(
+            create: (context) => CallToActionsCubit(
+              callToActionsRepository: context.read<CallToActionsRepository>(),
+              userRepository: context.read<UserRepository>(),
+              locale: context.read<AppBloc>().state.locale,
+            ),
+            child: CallToActionsShell(child: autoTabsRouter),
+          )
+        : autoTabsRouter;
+
+    return BlocBuilder<CallPullCubit, List<DialogInfo>>(
+      builder: (context, dialogs) {
+        return AppBarParams(
+          systemNotificationsEnabled: systemNotificationsEnabled,
+          pullableCallDialogs: dialogs,
+          child: content,
+        );
+      },
+    );
+  }
+
+  /// The sections' tabs, with the hub in front of them when [hasHub].
+  Widget _tabsRouter({
+    required bool hasHub,
+    required List<BottomMenuTab> tabs,
+    required bool callToActionsEnabled,
+    required MainScreenRouteStateRepository mainScreenRouteStateRepository,
+  }) {
     final positions = MainTabPositions(hasHub: hasHub);
 
-    final autoTabsRouter = AutoTabsRouter(
+    return AutoTabsRouter(
       // The router reads homeIndex once, so a window that changes class gets a
       // router of its own.
       key: ValueKey(hasHub),
@@ -123,26 +165,6 @@ class _MainScreenPageState extends State<MainScreenPage> {
         );
       },
       navigatorObservers: () => [MainScreenNavigatorObserver(mainScreenRouteStateRepository)],
-    );
-    final content = callToActionsEnabled
-        ? BlocProvider<CallToActionsCubit>(
-            create: (context) => CallToActionsCubit(
-              callToActionsRepository: context.read<CallToActionsRepository>(),
-              userRepository: context.read<UserRepository>(),
-              locale: context.read<AppBloc>().state.locale,
-            ),
-            child: CallToActionsShell(child: autoTabsRouter),
-          )
-        : autoTabsRouter;
-
-    return BlocBuilder<CallPullCubit, List<DialogInfo>>(
-      builder: (context, dialogs) {
-        return AppBarParams(
-          systemNotificationsEnabled: systemNotificationsEnabled,
-          pullableCallDialogs: dialogs,
-          child: content,
-        );
-      },
     );
   }
 
