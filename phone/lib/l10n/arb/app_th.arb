@@ -1872,6 +1872,8 @@
   "@messaging_Watch_statusConnecting": {},
   "messaging_Watch_statusDisconnected": "แชทออฟไลน์",
   "@messaging_Watch_statusDisconnected": {},
+  "messaging_Watch_nextMembers": "ถัดไป ({count})",
+  "@messaging_Watch_nextMembers": {},
   "messaging_Watch_notFound": "ไม่พบการสนทนา",
   "@messaging_Watch_notFound": {},
   "messaging_Watch_newChat": "แชทใหม่",

@@ -158,6 +158,12 @@ class ChatCBGroupFillInfo extends ChatCBCommon {
   /// Indicates if the group is being submitted to the server, and waiting for a response.
   final bool processing;
 
+  /// The shortest name a group is made with.
+  static const minNameLength = 3;
+
+  /// The name is long enough for the group to be made, counted as typed.
+  bool get nameLongEnough => name.length >= minNameLength;
+
   /// Restore previous [ChatCBGroupContactsSelection] stage from this state.
   ChatCBGroupContactsSelection toGroupContactsStage() {
     return ChatCBGroupContactsSelection(contacts, selectedContacts: selectedContacts, cameBack: true);

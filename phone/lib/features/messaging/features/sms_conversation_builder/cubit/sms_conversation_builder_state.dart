@@ -52,6 +52,14 @@ class SmsCBCommon extends SmsCBState {
   /// The parsed number from the [searchFilter].
   final String parsedNumber;
 
+  /// Whether [searchFilter] is digits long enough to be read as a number being
+  /// typed rather than a name.
+  static bool looksLikeNumber(String searchFilter) =>
+      searchFilter.length > 6 && RegExp(r'^[0-9]*$').hasMatch(searchFilter);
+
+  /// The [searchFilter] is a number being typed, see [looksLikeNumber].
+  bool get numberTyped => looksLikeNumber(searchFilter);
+
   /// Computed lists of contacts based on the search filter.
   late final filteredContacts = contacts.where((c) => _searchMatcher(c, searchFilter));
 

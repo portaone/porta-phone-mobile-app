@@ -1,4 +1,8 @@
+import 'dart:async';
+
 import 'package:material_ui/material_ui.dart';
+
+import 'package:flutter_bloc/flutter_bloc.dart';
 
 import 'package:webtrit_phone/features/features.dart';
 import 'package:webtrit_phone/models/models.dart';
@@ -16,8 +20,8 @@ class ConversationsScreenWatch extends StatelessWidget {
     required this.section,
     required this.query,
     required this.onSearch,
-    required this.onNewChat,
-    required this.onNewSms,
+    required this.createChatBuilder,
+    required this.createSmsBuilder,
     this.style,
   });
 
@@ -29,13 +33,29 @@ class ConversationsScreenWatch extends StatelessWidget {
 
   final ValueChanged<String> onSearch;
 
-  /// Starts a new chat.
-  final VoidCallback onNewChat;
+  /// Makes the cubit of a new chat, shared with the phone's sheet.
+  final ChatConversationBuilderCubit Function(BuildContext context) createChatBuilder;
 
-  /// Starts a new SMS conversation.
-  final VoidCallback onNewSms;
+  /// Makes the cubit of a new SMS, shared with the phone's sheet.
+  final SmsConversationBuilderCubit Function(BuildContext context) createSmsBuilder;
 
   final ConversationsScreenStyle? style;
+
+  /// Opens a conversation builder on a page of its own: a face has no room
+  /// for a sheet over the list.
+  void _openBuilder(BuildContext context, WidgetBuilder builder) {
+    unawaited(Navigator.of(context).push(MaterialPageRoute<void>(builder: builder)));
+  }
+
+  void _newChat(BuildContext context) => _openBuilder(
+    context,
+    (context) => BlocProvider(create: createChatBuilder, child: const ChatConversationBuilderWatch()),
+  );
+
+  void _newSms(BuildContext context) => _openBuilder(
+    context,
+    (context) => BlocProvider(create: createSmsBuilder, child: const SmsConversationBuilderWatch()),
+  );
 
   @override
   Widget build(BuildContext context) {
@@ -48,8 +68,8 @@ class ConversationsScreenWatch extends StatelessWidget {
         query: query,
         onSearch: onSearch,
         onNew: switch (section.selected) {
-          ConversationsTab.chat => onNewChat,
-          ConversationsTab.sms => onNewSms,
+          ConversationsTab.chat => () => _newChat(context),
+          ConversationsTab.sms => () => _newSms(context),
         },
       ),
     );

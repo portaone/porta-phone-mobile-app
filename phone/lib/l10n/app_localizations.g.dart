@@ -3794,6 +3794,12 @@ abstract class AppLocalizations {
   /// **'Chats are offline'**
   String get messaging_Watch_statusDisconnected;
 
+  /// Watch: the edge button that goes on from picking a group's members, with how many are picked
+  ///
+  /// In en, this message translates to:
+  /// **'Next ({count})'**
+  String messaging_Watch_nextMembers(int count);
+
   /// On a watch, the line in place of the conversations a search found none of.
   ///
   /// In en, this message translates to:

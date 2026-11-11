@@ -2119,6 +2119,11 @@ class AppLocalizationsUk extends AppLocalizations {
   String get messaging_Watch_statusDisconnected => 'Чати не підключені';
 
   @override
+  String messaging_Watch_nextMembers(int count) {
+    return 'Далі ($count)';
+  }
+
+  @override
   String get messaging_Watch_notFound => 'Розмов не знайдено';
 
   @override

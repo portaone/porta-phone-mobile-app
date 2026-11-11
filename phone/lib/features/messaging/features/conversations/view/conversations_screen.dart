@@ -117,34 +117,49 @@ class _ConversationsScreenState extends State<ConversationsScreen> with SingleTi
     }
   }
 
+  /// The cubit of a new chat, for the phone's sheet and the watch's page.
+  ChatConversationBuilderCubit _createChatBuilder(BuildContext context) {
+    return ChatConversationBuilderCubit(
+      messagingBloc.state.client,
+      chatsRepository,
+      contactsRepository,
+      chatConversationBuilderConfig: ChatConversationBuilderConfig(
+        enableGroupChats: widget.initialTabsState.groupChatsEnabled,
+      ),
+      openDialog: (contact) async {
+        Navigator.of(context).pop();
+        await Future.delayed(const Duration(milliseconds: 300));
+        openDialog(contact);
+      },
+      openGroup: (id) async {
+        Navigator.of(context).pop();
+        await Future.delayed(const Duration(milliseconds: 300));
+        openGroup(id);
+      },
+      submitNotification: (n) {
+        notificationsBloc.add(NotificationsSubmitted(n));
+      },
+    );
+  }
+
+  /// The cubit of a new SMS, for the phone's sheet and the watch's page.
+  SmsConversationBuilderCubit _createSmsBuilder(BuildContext context) {
+    return SmsConversationBuilderCubit(
+      smsRepository,
+      contactsRepository,
+      openSmsDialog: (userNumber, recipientNumber, recipientId) async {
+        Navigator.of(context).pop();
+        await Future.delayed(const Duration(milliseconds: 300));
+        openSmsDialog(userNumber, recipientNumber, recipientId);
+      },
+    );
+  }
+
   Future<void> onNewChatConversation() async {
     context.showModalBottomSheet(
       useSafeArea: true,
       isScrollControlled: true,
-      builder: (context) => BlocProvider(
-        create: (context) => ChatConversationBuilderCubit(
-          messagingBloc.state.client,
-          chatsRepository,
-          contactsRepository,
-          chatConversationBuilderConfig: ChatConversationBuilderConfig(
-            enableGroupChats: widget.initialTabsState.groupChatsEnabled,
-          ),
-          openDialog: (contact) async {
-            Navigator.of(context).pop();
-            await Future.delayed(const Duration(milliseconds: 300));
-            openDialog(contact);
-          },
-          openGroup: (id) async {
-            Navigator.of(context).pop();
-            await Future.delayed(const Duration(milliseconds: 300));
-            openGroup(id);
-          },
-          submitNotification: (n) {
-            notificationsBloc.add(NotificationsSubmitted(n));
-          },
-        ),
-        child: const ChatConversationBuilderView(),
-      ),
+      builder: (context) => BlocProvider(create: _createChatBuilder, child: const ChatConversationBuilderView()),
     );
   }
 
@@ -152,18 +167,7 @@ class _ConversationsScreenState extends State<ConversationsScreen> with SingleTi
     context.showModalBottomSheet(
       useSafeArea: true,
       isScrollControlled: true,
-      builder: (context) => BlocProvider(
-        create: (context) => SmsConversationBuilderCubit(
-          smsRepository,
-          contactsRepository,
-          openSmsDialog: (userNumber, recipientNumber, recipientId) async {
-            Navigator.of(context).pop();
-            await Future.delayed(const Duration(milliseconds: 300));
-            openSmsDialog(userNumber, recipientNumber, recipientId);
-          },
-        ),
-        child: const SmsConversationBuilderView(),
-      ),
+      builder: (context) => BlocProvider(create: _createSmsBuilder, child: const SmsConversationBuilderView()),
     );
   }
 
@@ -215,8 +219,8 @@ class _ConversationsScreenState extends State<ConversationsScreen> with SingleTi
         ),
         query: _query,
         onSearch: _search,
-        onNewChat: onNewChatConversation,
-        onNewSms: onNewSmsConversation,
+        createChatBuilder: _createChatBuilder,
+        createSmsBuilder: _createSmsBuilder,
         style: widget.style,
       ),
     );
