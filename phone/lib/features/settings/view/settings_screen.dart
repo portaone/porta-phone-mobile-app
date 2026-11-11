@@ -35,7 +35,28 @@ class SettingsScreen extends StatelessWidget {
   final SettingScreenStyle? style;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context) => AdaptiveLayout(handset: _handset, watch: _watch);
+
+  /// No app bar: the list draws the whole face under the account's name, and
+  /// Log out is its last row.
+  Widget _watch(BuildContext context) {
+    final effectiveStyle = style ?? Theme.of(context).extension<SettingsScreenStyles>()?.primary;
+    return ThemedScaffold(
+      background: effectiveStyle?.background,
+      contentThemeOverride: effectiveStyle?.contentThemeOverride,
+      body: SettingsWatchList(
+        sections: sections,
+        sessionsEnabled: sessionsEnabled,
+        onDiagnostic: () => _onDiagnosticTap(context),
+        onSessions: () => _onSessionsTap(context),
+        onRegisterChanged: (value) => _onRegisterStatusChanged(context, value),
+        onItem: (item) => _onItemTap(context, item),
+        onLogout: () => _onLogoutTap(context),
+      ),
+    );
+  }
+
+  Widget _handset(BuildContext context) {
     final themeData = Theme.of(context);
     final effectiveStyle = style ?? themeData.extension<SettingsScreenStyles>()?.primary;
 
