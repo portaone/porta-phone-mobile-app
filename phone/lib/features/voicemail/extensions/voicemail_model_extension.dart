@@ -22,3 +22,9 @@ extension ReadStatusExtensions on ReadStatus {
     }
   }
 }
+
+extension VoicemailSenderName on Voicemail {
+  /// Who left the message, or the app's word for a caller nobody knows.
+  String senderName(BuildContext context) =>
+      hasSender ? displaySender : context.l10n.notifications_missedCall_unknownCaller;
+}

@@ -14,12 +14,6 @@ class EmptyMailboxView extends StatelessWidget {
 
   final VoicemailFilter filter;
 
-  String _title(BuildContext context) => switch (filter) {
-    VoicemailFilter.all || VoicemailFilter.unheard => context.l10n.voicemail_Label_empty,
-    VoicemailFilter.saved => context.l10n.voicemail_Label_emptySaved,
-    VoicemailFilter.trash => context.l10n.voicemail_Label_emptyTrash,
-  };
-
   String? _hint(BuildContext context) => switch (filter) {
     VoicemailFilter.all || VoicemailFilter.unheard => null,
     VoicemailFilter.saved => context.l10n.voicemail_Label_emptySavedHint,
@@ -42,7 +36,7 @@ class EmptyMailboxView extends StatelessWidget {
           child: Column(
             spacing: 8,
             children: [
-              Text(_title(context), textAlign: TextAlign.center),
+              Text(filter.emptyLabel(context), textAlign: TextAlign.center),
               if (hint != null)
                 Text(
                   hint,
@@ -55,4 +49,14 @@ class EmptyMailboxView extends StatelessWidget {
       ],
     );
   }
+}
+
+/// What a list under a filter says when it holds nothing, on the phone and on
+/// a watch.
+extension VoicemailFilterEmptyLabel on VoicemailFilter {
+  String emptyLabel(BuildContext context) => switch (this) {
+    VoicemailFilter.all || VoicemailFilter.unheard => context.l10n.voicemail_Label_empty,
+    VoicemailFilter.saved => context.l10n.voicemail_Label_emptySaved,
+    VoicemailFilter.trash => context.l10n.voicemail_Label_emptyTrash,
+  };
 }

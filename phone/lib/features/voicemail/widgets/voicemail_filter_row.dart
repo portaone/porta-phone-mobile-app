@@ -96,13 +96,6 @@ class VoicemailFilterPicker extends StatelessWidget {
     VoicemailFilter.trash => Icons.delete_outline,
   };
 
-  String _label(BuildContext context, VoicemailFilter filter) => switch (filter) {
-    VoicemailFilter.all => context.l10n.voicemail_Filter_all,
-    VoicemailFilter.unheard => context.l10n.voicemail_Filter_unheard,
-    VoicemailFilter.saved => context.l10n.voicemail_Filter_saved,
-    VoicemailFilter.trash => context.l10n.voicemail_Filter_trash,
-  };
-
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -115,7 +108,7 @@ class VoicemailFilterPicker extends StatelessWidget {
         // The name says which filter is on, because the control's own label is
         // the word it currently shows and a reader would otherwise announce the
         // value twice and the purpose not at all.
-        label: context.l10n.voicemail_SemanticsLabel_filter(_label(context, selected)),
+        label: context.l10n.voicemail_SemanticsLabel_filter(selected.label(context)),
         identifier: voicemailFilterPickerId,
         button: true,
         child: PopupMenuButton<VoicemailFilter>(
@@ -134,7 +127,7 @@ class VoicemailFilterPicker extends StatelessWidget {
                   spacing: _pickerMenuGap,
                   children: [
                     Icon(_icon(filter), size: _pickerIconSize),
-                    Expanded(child: Text(_label(context, filter))),
+                    Expanded(child: Text(filter.label(context))),
                     if (filter == selected) Icon(Icons.check, size: _pickerIconSize, color: theme.colorScheme.primary),
                   ],
                 ),
@@ -153,7 +146,7 @@ class VoicemailFilterPicker extends StatelessWidget {
                 spacing: _pickerGap,
                 children: [
                   Icon(_icon(selected), size: _pickerIconSize, color: theme.colorScheme.onSurfaceVariant),
-                  Text(_label(context, selected), style: theme.textTheme.bodyMedium),
+                  Text(selected.label(context), style: theme.textTheme.bodyMedium),
                   Icon(Icons.expand_more, size: _pickerIconSize, color: theme.colorScheme.onSurfaceVariant),
                 ],
               ),
@@ -163,4 +156,14 @@ class VoicemailFilterPicker extends StatelessWidget {
       ),
     );
   }
+}
+
+/// The name of a filter, as the picker and the watch's pill show it.
+extension VoicemailFilterLabel on VoicemailFilter {
+  String label(BuildContext context) => switch (this) {
+    VoicemailFilter.all => context.l10n.voicemail_Filter_all,
+    VoicemailFilter.unheard => context.l10n.voicemail_Filter_unheard,
+    VoicemailFilter.saved => context.l10n.voicemail_Filter_saved,
+    VoicemailFilter.trash => context.l10n.voicemail_Filter_trash,
+  };
 }

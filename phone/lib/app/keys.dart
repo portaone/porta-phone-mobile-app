@@ -336,6 +336,22 @@ const String voicemailMenuId = 'voicemailMenu';
 const String voicemailPlaybackId = 'voicemailPlayback';
 const String voicemailRetryId = 'voicemailRetry';
 
+/// The voicemail list on a watch: the filter pill, the Try again of a failed
+/// read and the Refresh of an empty mailbox; the message's page: the player,
+/// its rows and Call back.
+const String voicemailWatchFilterId = 'voicemailWatchFilter';
+const voicemailWatchFilterKey = Key(voicemailWatchFilterId);
+const String voicemailWatchRetryId = 'voicemailWatchRetry';
+const String voicemailWatchRefreshId = 'voicemailWatchRefresh';
+const String voicemailWatchPlayId = 'voicemailWatchPlay';
+const voicemailWatchPlayKey = Key(voicemailWatchPlayId);
+const String voicemailWatchHeardId = 'voicemailWatchHeard';
+const String voicemailWatchSaveId = 'voicemailWatchSave';
+const String voicemailWatchDeleteId = 'voicemailWatchDelete';
+const String voicemailWatchRestoreId = 'voicemailWatchRestore';
+const String voicemailWatchCallId = 'voicemailWatchCall';
+const voicemailWatchCallKey = Key(voicemailWatchCallId);
+
 const String scrollToBottomId = 'scrollToBottomButton';
 const scrollToBottomKey = Key(scrollToBottomId);
 const String scrollToTopId = 'scrollToTopButton';

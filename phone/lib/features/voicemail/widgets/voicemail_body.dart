@@ -13,7 +13,6 @@ import 'package:webtrit_phone/data/data.dart';
 import 'package:webtrit_phone/extensions/extensions.dart';
 import 'package:webtrit_phone/l10n/app_localizations.g.mapper.dart';
 import 'package:webtrit_phone/models/models.dart';
-import 'package:webtrit_phone/widgets/widgets.dart';
 
 import '../bloc/bloc.dart';
 import '../cubits/cubits.dart';
@@ -22,6 +21,7 @@ import '../utils/utils.dart';
 import 'empty_mailbox_view.dart';
 import 'failure_retry_view.dart';
 import 'feature_not_supported_view.dart';
+import 'voicemail_delete.dart';
 import 'voicemail_tile.dart';
 import 'voicemail_view_builder.dart';
 
@@ -38,6 +38,26 @@ class VoicemailBody extends StatelessWidget {
   /// two places, and a forward has to bring the person back to the one they
   /// started it from.
   final PageRouteInfo origin;
+
+  @override
+  Widget build(BuildContext context) {
+    return VoicemailListScope(
+      child: VoicemailViewBuilder(
+        builder: (context, view) => _VoicemailList(state: view, origin: origin),
+      ),
+    );
+  }
+}
+
+/// What a voicemail list keeps up around it, on the phone and on a watch: the
+/// playback stopped once its message leaves the list, the count of picked
+/// messages said to a screen reader, and New let go of what was heard by
+/// listening once nobody is looking.
+class VoicemailListScope extends StatelessWidget {
+  const VoicemailListScope({super.key, required this.child});
+
+  /// The list, built under the listeners.
+  final Widget child;
 
   @override
   Widget build(BuildContext context) {
@@ -62,11 +82,7 @@ class VoicemailBody extends StatelessWidget {
           listener: (context, state) => _announcePicked(context, state.selectedVoicemailsIds.length),
         ),
       ],
-      child: _HeardByListeningRelease(
-        child: VoicemailViewBuilder(
-          builder: (context, view) => _VoicemailList(state: view, origin: origin),
-        ),
-      ),
+      child: _HeardByListeningRelease(child: child),
     );
   }
 
@@ -327,7 +343,7 @@ class VoicemailListView extends StatelessWidget {
           voicemail: item,
           displayName: item.displaySender,
           selected: selectedVoicemailsIds.contains(item.id),
-          onDeleted: (it) => _onDeleteVoicemail(context, it),
+          onDeleted: (it) => deleteVoicemail(context, it, trashSupported: trashSupported),
           saveSupported: saveSupported,
           trashSupported: trashSupported,
           forwardSupported: forwardSupported,
@@ -341,7 +357,7 @@ class VoicemailListView extends StatelessWidget {
           onForwardRetried: (it, recipient) => _forwarding(context).send(it, recipient),
           onOpenContact: (it) => _onOpenContact(context, it),
           onRestored: (it) => cubit.restoreVoicemail(it.id),
-          onDeletedPermanently: (it) => _onDeletePermanently(context, it),
+          onDeletedPermanently: (it) => deleteVoicemailPermanently(context, it),
           onCall: (it) => cubit.startCall(it),
           selecting: isMultipleVoicemailsSelection,
           onLongPress: (it) => cubit.toggleSelection(it),
@@ -349,31 +365,6 @@ class VoicemailListView extends StatelessWidget {
         );
       },
     );
-  }
-
-  /// Deleting a message, which is two different things.
-  ///
-  /// Where there is a trash the message can be had back, so it goes without
-  /// asking - a question before every delete trains people to dismiss it, and
-  /// this one has nothing to warn about. Where there is no trash the same
-  /// gesture is final, so it asks first. What is said afterwards, and whether
-  /// the way back is offered, belongs to the mailbox rather than to this row.
-  void _onDeleteVoicemail(BuildContext context, Voicemail voicemail) async {
-    final cubit = context.read<VoicemailCubit>();
-
-    if (trashSupported) return cubit.removeVoicemail(voicemail.id);
-
-    final confirmed =
-        (await ConfirmDialog.showDangerous(
-          context,
-          title: context.l10n.voicemail_Dialog_deleteSingleTitle,
-          content: context.l10n.voicemail_Dialog_deleteSingleContent,
-        )) ??
-        false;
-
-    if (!confirmed) return;
-
-    await cubit.removeVoicemail(voicemail.id);
   }
 
   /// Opens the card of whoever left the message.
@@ -435,20 +426,4 @@ class VoicemailListView extends StatelessWidget {
     session: context.read<VoicemailSessionCubit>(),
     l10n: context.l10n,
   );
-
-  void _onDeletePermanently(BuildContext context, Voicemail voicemail) async {
-    final cubit = context.read<VoicemailCubit>();
-
-    final confirmed =
-        (await ConfirmDialog.showDangerous(
-          context,
-          title: context.l10n.voicemail_Dialog_deletePermanentlyTitle,
-          content: context.l10n.voicemail_Dialog_deletePermanentlyContent,
-        )) ??
-        false;
-
-    if (!confirmed) return;
-
-    await cubit.removeVoicemailPermanently(voicemail.id);
-  }
 }

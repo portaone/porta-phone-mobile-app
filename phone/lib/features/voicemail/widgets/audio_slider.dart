@@ -16,12 +16,6 @@ class AudioSlider extends StatelessWidget {
 
   final ValueChanged<Duration> onSeek;
 
-  String _formatDuration(Duration d) {
-    final minutes = d.inMinutes;
-    final seconds = d.inSeconds % 60;
-    return '$minutes:${seconds.toString().padLeft(2, '0')}';
-  }
-
   void _handleChanged(double value) {
     onSeek(Duration(milliseconds: value.toInt()));
   }
@@ -62,8 +56,8 @@ class AudioSlider extends StatelessWidget {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Text(_formatDuration(clampedPosition), style: timeStyle),
-                  Text(_formatDuration(duration), style: timeStyle),
+                  Text(drawnDuration(clampedPosition), style: timeStyle),
+                  Text(drawnDuration(duration), style: timeStyle),
                 ],
               ),
             ),
