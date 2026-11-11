@@ -115,6 +115,11 @@ class WebViewContainer extends StatefulWidget {
 
   final List<JSChannelStrategy> jSChannelStrategies;
 
+  /// [uri] told the app's language, as the container opens it: a brand's page
+  /// picks its language from `localeName`, not from the browser's.
+  static Uri withLocaleName(Uri uri, String localeName) =>
+      uri.replace(queryParameters: {...uri.queryParameters, 'localeName': localeName});
+
   @override
   State<WebViewContainer> createState() => _WebViewContainerState();
 }
@@ -161,9 +166,7 @@ class _WebViewContainerState extends State<WebViewContainer> with WidgetStateMix
     if (!widget.addLocaleNameToQueryParameters) {
       return widget.initialUri;
     } else {
-      return widget.initialUri.replace(
-        queryParameters: {...widget.initialUri.queryParameters, 'localeName': context.l10n.localeName},
-      );
+      return WebViewContainer.withLocaleName(widget.initialUri, context.l10n.localeName);
     }
   }
 

@@ -1271,6 +1271,54 @@ abstract class AppLocalizations {
   /// **'Could not refresh call history - please try again'**
   String get cdrs_refreshFailed_message;
 
+  /// On a watch, a page it cannot show (a watch has no web view): it opens on the paired phone.
+  ///
+  /// In en, this message translates to:
+  /// **'Opens on your phone'**
+  String get common_Watch_openOnPhone_message;
+
+  /// On a watch, under 'Opens on your phone'.
+  ///
+  /// In en, this message translates to:
+  /// **'Read it on the paired phone'**
+  String get common_Watch_openOnPhone_hint;
+
+  /// On a watch, the edge button that sends the page to the paired phone.
+  ///
+  /// In en, this message translates to:
+  /// **'Open on phone'**
+  String get common_Watch_openOnPhone_action;
+
+  /// On a watch, once the paired phone has taken the page.
+  ///
+  /// In en, this message translates to:
+  /// **'Check your phone'**
+  String get common_Watch_openOnPhone_sent;
+
+  /// On a watch, under 'Check your phone'.
+  ///
+  /// In en, this message translates to:
+  /// **'The page is open there'**
+  String get common_Watch_openOnPhone_sentHint;
+
+  /// On a watch, when no paired phone could take the page.
+  ///
+  /// In en, this message translates to:
+  /// **'No phone connected'**
+  String get common_Watch_openOnPhone_failed;
+
+  /// On a watch, under 'No phone connected'.
+  ///
+  /// In en, this message translates to:
+  /// **'Connect the phone and try again'**
+  String get common_Watch_openOnPhone_failedHint;
+
+  /// On a watch, the edge button under 'No phone connected': sends the page to the phone again.
+  ///
+  /// In en, this message translates to:
+  /// **'Try again'**
+  String get common_Watch_openOnPhone_retry;
+
   /// Accessibility name announced while a screen waits for a request to finish.
   ///
   /// In en, this message translates to:

@@ -730,6 +730,30 @@ class AppLocalizationsUk extends AppLocalizations {
   String get cdrs_refreshFailed_message => 'Не вдалося оновити історію дзвінків - спробуйте ще раз';
 
   @override
+  String get common_Watch_openOnPhone_message => 'Відкривається на телефоні';
+
+  @override
+  String get common_Watch_openOnPhone_hint => 'Читайте на підключеному телефоні';
+
+  @override
+  String get common_Watch_openOnPhone_action => 'Відкрити на телефоні';
+
+  @override
+  String get common_Watch_openOnPhone_sent => 'Перевірте телефон';
+
+  @override
+  String get common_Watch_openOnPhone_sentHint => 'Сторінку відкрито там';
+
+  @override
+  String get common_Watch_openOnPhone_failed => 'Телефон не підключено';
+
+  @override
+  String get common_Watch_openOnPhone_failedHint => 'Підключіть телефон і спробуйте ще раз';
+
+  @override
+  String get common_Watch_openOnPhone_retry => 'Спробувати ще раз';
+
+  @override
   String get common_SemanticsLabel_loading => 'Завантаження';
 
   @override

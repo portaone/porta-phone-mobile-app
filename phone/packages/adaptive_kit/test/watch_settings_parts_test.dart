@@ -86,4 +86,35 @@ void main() {
       });
     }
   });
+
+  group('WatchInfoRow', () {
+    testWidgets('the label, then the value as a node of its own carrying its id', (tester) async {
+      final handle = tester.ensureSemantics();
+      watchPresets.first.apply(tester);
+      await tester.pumpWidget(wrap(const WatchInfoRow(label: 'Core version', value: '1.9.2', valueIdentifier: 'core')));
+
+      expect(find.bySemanticsLabel('Core version'), findsOneWidget);
+      final value = find.semantics.byLabel('1.9.2').evaluate().single;
+      expect(value.identifier, 'core');
+      handle.dispose();
+    });
+
+    for (final preset in watchPresets) {
+      testWidgets('on $preset a long value wraps inside the face', (tester) async {
+        preset.apply(tester);
+        expect(
+          await pumpCollectingOverflows(
+            tester,
+            wrap(
+              const WatchInfoRow(
+                label: 'FCM token',
+                value: 'fZ2kQm9xT0aBcDeFgHiJkLmNoPqRsTuVwXyZ0123456789abcdefghijklmnopqrstuvwxyz',
+              ),
+            ),
+          ),
+          isEmpty,
+        );
+      });
+    }
+  });
 }

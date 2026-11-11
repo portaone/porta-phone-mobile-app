@@ -63,5 +63,6 @@ export 'unfocuser.dart';
 export 'watch_contact_avatar.dart';
 export 'watch_dial_keys.dart';
 export 'watch_logo.dart';
+export 'watch_open_on_phone.dart';
 export 'watch_section.dart';
 export 'webview/webview.dart';

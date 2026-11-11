@@ -708,6 +708,30 @@ class AppLocalizationsEn extends AppLocalizations {
   String get cdrs_refreshFailed_message => 'Could not refresh call history - please try again';
 
   @override
+  String get common_Watch_openOnPhone_message => 'Opens on your phone';
+
+  @override
+  String get common_Watch_openOnPhone_hint => 'Read it on the paired phone';
+
+  @override
+  String get common_Watch_openOnPhone_action => 'Open on phone';
+
+  @override
+  String get common_Watch_openOnPhone_sent => 'Check your phone';
+
+  @override
+  String get common_Watch_openOnPhone_sentHint => 'The page is open there';
+
+  @override
+  String get common_Watch_openOnPhone_failed => 'No phone connected';
+
+  @override
+  String get common_Watch_openOnPhone_failedHint => 'Connect the phone and try again';
+
+  @override
+  String get common_Watch_openOnPhone_retry => 'Try again';
+
+  @override
   String get common_SemanticsLabel_loading => 'Loading';
 
   @override

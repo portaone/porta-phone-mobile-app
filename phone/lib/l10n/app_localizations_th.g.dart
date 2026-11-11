@@ -697,6 +697,30 @@ class AppLocalizationsTh extends AppLocalizations {
   String get cdrs_refreshFailed_message => 'ไม่สามารถรีเฟรชประวัติการโทรได้ - โปรดลองอีกครั้ง';
 
   @override
+  String get common_Watch_openOnPhone_message => 'เปิดบนโทรศัพท์ของคุณ';
+
+  @override
+  String get common_Watch_openOnPhone_hint => 'อ่านบนโทรศัพท์ที่จับคู่ไว้';
+
+  @override
+  String get common_Watch_openOnPhone_action => 'เปิดบนโทรศัพท์';
+
+  @override
+  String get common_Watch_openOnPhone_sent => 'ตรวจดูโทรศัพท์ของคุณ';
+
+  @override
+  String get common_Watch_openOnPhone_sentHint => 'หน้านี้เปิดอยู่ที่นั่น';
+
+  @override
+  String get common_Watch_openOnPhone_failed => 'ไม่ได้เชื่อมต่อโทรศัพท์';
+
+  @override
+  String get common_Watch_openOnPhone_failedHint => 'เชื่อมต่อโทรศัพท์แล้วลองอีกครั้ง';
+
+  @override
+  String get common_Watch_openOnPhone_retry => 'ลองอีกครั้ง';
+
+  @override
   String get common_SemanticsLabel_loading => 'กำลังโหลด';
 
   @override
