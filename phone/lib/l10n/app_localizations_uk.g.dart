@@ -1074,6 +1074,15 @@ class AppLocalizationsUk extends AppLocalizations {
   String get diagnostic_permission_contacts_title => 'Контакти';
 
   @override
+  String get diagnostic_Watch_openSettings => 'Відкрити налаштування';
+
+  @override
+  String get diagnostic_Watch_allow => 'Дозволити';
+
+  @override
+  String get diagnostic_Watch_runAgain => 'Перевірити знову';
+
+  @override
   String get diagnosticPermissionDetails_button_managePermission => 'Керування дозволами';
 
   @override

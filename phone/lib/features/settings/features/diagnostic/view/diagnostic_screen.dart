@@ -12,12 +12,14 @@ import 'package:webtrit_phone/features/settings/features/diagnostic/bloc/network
 import 'package:webtrit_phone/l10n/l10n.dart';
 import 'package:webtrit_phone/models/agreement_status.dart';
 import 'package:webtrit_phone/utils/utils.dart';
+import 'package:webtrit_phone/widgets/widgets.dart';
 
 import '../../../widgets/widgets.dart';
 import '../bloc/diagnostic_cubit.dart';
 import '../models/models.dart';
 import '../widgets/widgets.dart';
 import '../extensions/extensions.dart';
+import 'diagnostic_screen_watch.dart';
 
 class DiagnosticScreen extends StatefulWidget {
   const DiagnosticScreen({super.key});
@@ -48,7 +50,9 @@ class _DiagnosticScreenState extends State<DiagnosticScreen> with WidgetsBinding
   }
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context) => AdaptiveLayout(handset: _handset, watch: (_) => const DiagnosticScreenWatch());
+
+  Widget _handset(BuildContext context) {
     final androidTarget = PlatformInfo.isAndroid;
     final contactsAgreementStatus = context.watch<AppBloc>().state.contactsAgreementStatus;
     // The system bar below the list, not the keyboard: this screen has no text

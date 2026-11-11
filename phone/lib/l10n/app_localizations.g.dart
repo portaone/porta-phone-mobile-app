@@ -1889,6 +1889,24 @@ abstract class AppLocalizations {
   /// **'Contacts'**
   String get diagnostic_permission_contacts_title;
 
+  /// On a watch, the edge button of a diagnostic check that opens the watch's settings for the app (the phone's Manage Permission, shortened to fit the edge).
+  ///
+  /// In en, this message translates to:
+  /// **'Open settings'**
+  String get diagnostic_Watch_openSettings;
+
+  /// On a watch, the edge button of a denied permission that asks the system for it (the phone's Request Permission, shortened to fit the edge).
+  ///
+  /// In en, this message translates to:
+  /// **'Allow'**
+  String get diagnostic_Watch_allow;
+
+  /// On a watch, the edge button of the network check's page: runs the check again.
+  ///
+  /// In en, this message translates to:
+  /// **'Run again'**
+  String get diagnostic_Watch_runAgain;
+
   /// No description provided for @diagnosticPermissionDetails_button_managePermission.
   ///
   /// In en, this message translates to:

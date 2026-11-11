@@ -1068,6 +1068,15 @@ class AppLocalizationsFr extends AppLocalizations {
   String get diagnostic_permission_contacts_title => 'Contacts';
 
   @override
+  String get diagnostic_Watch_openSettings => 'Ouvrir les réglages';
+
+  @override
+  String get diagnostic_Watch_allow => 'Autoriser';
+
+  @override
+  String get diagnostic_Watch_runAgain => 'Relancer';
+
+  @override
   String get diagnosticPermissionDetails_button_managePermission => 'Gérer l\'autorisation';
 
   @override
