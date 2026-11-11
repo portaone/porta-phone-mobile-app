@@ -4586,6 +4586,12 @@ abstract class AppLocalizations {
   /// **'Represents general availability for communications within SIP service. Uses  SIP \"Status\" element in pidf content with \"open/closed\" values (see RFC 3863)'**
   String get presence_settings_availability_tooltip;
 
+  /// On a watch, under the presence presets: the rest of the presence configuration is not offered there.
+  ///
+  /// In en, this message translates to:
+  /// **'Availability, note, activity and status icon: on the phone'**
+  String get presence_Watch_configOnPhone;
+
   /// No description provided for @presence_settings_config_title.
   ///
   /// In en, this message translates to:
@@ -5401,6 +5407,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Turn the speaker on when leaving the call screen'**
   String get settings_speakerOnMinimize_switch;
+
+  /// On a watch, closes a settings page whose other parts are not offered there, naming the part that stays on the phone.
+  ///
+  /// In en, this message translates to:
+  /// **'{setting}: on the phone'**
+  String settings_Watch_onPhone(String setting);
 
   /// No description provided for @settings_callerId_cancel_button.
   ///

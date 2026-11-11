@@ -10,6 +10,7 @@ import 'package:webtrit_phone/l10n/l10n.dart';
 import 'package:webtrit_phone/models/models.dart';
 import 'package:webtrit_phone/widgets/widgets.dart';
 
+import '../../../widgets/settings_watch_choice.dart';
 import '../cubit/presence_settings_cubit.dart';
 import '../models/presence_settings_preset.dart';
 import '../widgets/widgets.dart';
@@ -64,8 +65,53 @@ class _PresenceSettingsScreenState extends State<PresenceSettingsScreen> {
     super.dispose();
   }
 
+  /// The preset the settings match, null when they match none.
+  PresenceSettingsPreset? _matching(PresenceSettings state) => presets.firstWhereOrNull(
+    (element) =>
+        element.available == state.available &&
+        element.note == state.note &&
+        element.activity == state.activity &&
+        element.dndMode == state.dndMode,
+  );
+
+  /// The settings the preset sets, over what it leaves alone.
+  PresenceSettings _applied(PresenceSettings state, PresenceSettingsPreset preset) => state
+      .copyWithAvailable(preset.available)
+      .copyWithNote(preset.note)
+      .copyWithActivity(preset.activity)
+      .copyWithDndMode(preset.dndMode);
+
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context) => AdaptiveLayout(handset: _handset, watch: _watch);
+
+  /// The presets only, each with its mark; settings that match none show
+  /// "Custom" over them. The configuration itself stays on the phone.
+  Widget _watch(BuildContext context) {
+    final l10n = context.l10n;
+    return BlocBuilder<PresenceSettingsCubit, PresenceSettings>(
+      builder: (context, state) {
+        final selected = _matching(state);
+        return SettingsWatchChoicePage<PresenceSettingsPreset>(
+          title: l10n.settings_ListViewTileTitle_presence,
+          // Blank settings are the Available preset, so they never read Custom.
+          header: [if (selected == null) WatchListNote(l10n.presence_settings_presets_label_custom)],
+          options: [
+            for (final preset in presets)
+              SettingsWatchOption(
+                value: preset,
+                label: preset.name,
+                leading: _PresetMark(preset: preset),
+              ),
+          ],
+          selected: selected,
+          onChosen: (preset) => cubit.setPresenceSettings(_applied(state, preset)),
+          footer: [WatchListNote(l10n.presence_Watch_configOnPhone)],
+        );
+      },
+    );
+  }
+
+  Widget _handset(BuildContext context) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
     final l10n = context.l10n;
@@ -77,13 +123,7 @@ class _PresenceSettingsScreenState extends State<PresenceSettingsScreen> {
       appBar: AppBar(title: Text(l10n.settings_ListViewTileTitle_presence), leading: const ExtBackButton()),
       body: BlocBuilder<PresenceSettingsCubit, PresenceSettings>(
         builder: (context, state) {
-          final selectedPreset = presets.firstWhereOrNull(
-            (element) =>
-                element.available == state.available &&
-                element.note == state.note &&
-                element.activity == state.activity &&
-                element.dndMode == state.dndMode,
-          );
+          final selectedPreset = _matching(state);
 
           final isBlank = state.isBlank();
 
@@ -132,29 +172,7 @@ class _PresenceSettingsScreenState extends State<PresenceSettingsScreen> {
                                       style: _menuEntryStyle(),
                                       labelWidget: Row(
                                         children: [
-                                          SizedBox(
-                                            width: _presetMarkSide,
-                                            height: _presetMarkSide,
-                                            child: SipPresenceIndicator(
-                                              presenceInfo: [
-                                                PresenceInfo(
-                                                  id: 'id',
-                                                  number: 'number',
-                                                  available: e.available,
-                                                  note: e.note,
-                                                  activities: [if (e.activity != null) e.activity!],
-                                                  statusIcon: null,
-                                                  device: 'device',
-                                                  timeOffsetMin: 0,
-                                                  timestamp: DateTime.now(),
-                                                  source: PresenceInfoSource.direct,
-                                                  arrivalTime: DateTime.now(),
-                                                ),
-                                              ],
-                                              presenceRect: Rect.fromLTWH(0, 0, _presetMarkSide, _presetMarkSide),
-                                              dialogInfo: [],
-                                            ),
-                                          ),
+                                          _PresetMark(preset: e),
                                           SizedBox(width: 8),
                                           Flexible(
                                             child: Text(
@@ -171,12 +189,7 @@ class _PresenceSettingsScreenState extends State<PresenceSettingsScreen> {
                               initialSelection: selectedPreset,
                               onSelected: (value) {
                                 if (value == null) return;
-                                final update = state
-                                    .copyWithAvailable(value.available)
-                                    .copyWithNote(value.note)
-                                    .copyWithActivity(value.activity)
-                                    .copyWithDndMode(value.dndMode);
-                                cubit.setPresenceSettings(update);
+                                cubit.setPresenceSettings(_applied(state, value));
                                 setState(() => equalKey = DateTime.now().microsecondsSinceEpoch.toString());
                               },
                               label: DropdownMenuCaption(
@@ -461,6 +474,40 @@ class _PresenceSettingsScreenState extends State<PresenceSettingsScreen> {
             ),
           );
         },
+      ),
+    );
+  }
+}
+
+/// The presence mark of a preset, as a contact with that presence shows it.
+class _PresetMark extends StatelessWidget {
+  const _PresetMark({required this.preset});
+
+  final PresenceSettingsPreset preset;
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      width: _presetMarkSide,
+      height: _presetMarkSide,
+      child: SipPresenceIndicator(
+        presenceInfo: [
+          PresenceInfo(
+            id: 'id',
+            number: 'number',
+            available: preset.available,
+            note: preset.note,
+            activities: [?preset.activity],
+            statusIcon: null,
+            device: 'device',
+            timeOffsetMin: 0,
+            timestamp: DateTime.now(),
+            source: PresenceInfoSource.direct,
+            arrivalTime: DateTime.now(),
+          ),
+        ],
+        presenceRect: const Rect.fromLTWH(0, 0, _presetMarkSide, _presetMarkSide),
+        dialogInfo: const [],
       ),
     );
   }

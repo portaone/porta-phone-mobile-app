@@ -2518,6 +2518,9 @@ class AppLocalizationsEn extends AppLocalizations {
       'Represents general availability for communications within SIP service. Uses  SIP \"Status\" element in pidf content with \"open/closed\" values (see RFC 3863)';
 
   @override
+  String get presence_Watch_configOnPhone => 'Availability, note, activity and status icon: on the phone';
+
+  @override
   String get presence_settings_config_title => 'Configuration:';
 
   @override
@@ -2972,6 +2975,11 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get settings_speakerOnMinimize_switch => 'Turn the speaker on when leaving the call screen';
+
+  @override
+  String settings_Watch_onPhone(String setting) {
+    return '$setting: on the phone';
+  }
 
   @override
   String get settings_callerId_cancel_button => 'Cancel';

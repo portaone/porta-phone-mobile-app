@@ -2426,6 +2426,10 @@
   "@presence_settings_availability_title": {},
   "presence_settings_availability_tooltip": "Represents general availability for communications within SIP service. Uses  SIP \"Status\" element in pidf content with \"open/closed\" values (see RFC 3863)",
   "@presence_settings_availability_tooltip": {},
+  "presence_Watch_configOnPhone": "Availability, note, activity and status icon: on the phone",
+  "@presence_Watch_configOnPhone": {
+    "description": "On a watch, under the presence presets: the rest of the presence configuration is not offered there."
+  },
   "presence_settings_config_title": "Configuration:",
   "@presence_settings_config_title": {},
   "presence_settings_dnd_title": "Reject calls (DND)",
@@ -2847,6 +2851,16 @@
   "@settings_speakerOnMinimize_Section_tooltip": {},
   "settings_speakerOnMinimize_switch": "Turn the speaker on when leaving the call screen",
   "@settings_speakerOnMinimize_switch": {},
+  "settings_Watch_onPhone": "{setting}: on the phone",
+  "@settings_Watch_onPhone": {
+    "description": "On a watch, closes a settings page whose other parts are not offered there, naming the part that stays on the phone.",
+    "placeholders": {
+      "setting": {
+        "type": "String",
+        "example": "Dial code matching"
+      }
+    }
+  },
   "settings_callerId_cancel_button": "Cancel",
   "@settings_callerId_cancel_button": {},
   "settings_callerId_defaultTitle": "Default Caller ID",
