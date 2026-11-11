@@ -2505,6 +2505,9 @@ class AppLocalizationsTh extends AppLocalizations {
       'แสดงสถานะความพร้อมในการสื่อสารทั่วไปภายในบริการ SIP โดยใช้องค์ประกอบ \"Status\" ของ SIP ในเนื้อหา pidf ด้วยค่า \"open/closed\" (ดู RFC 3863)';
 
   @override
+  String get presence_Watch_configOnPhone => 'สถานะพร้อมใช้งาน บันทึก กิจกรรม และไอคอนสถานะ: บนโทรศัพท์';
+
+  @override
   String get presence_settings_config_title => 'การกำหนดค่า:';
 
   @override
@@ -2956,6 +2959,11 @@ class AppLocalizationsTh extends AppLocalizations {
 
   @override
   String get settings_speakerOnMinimize_switch => 'เปิดลำโพงเมื่อออกจากหน้าจอการโทร';
+
+  @override
+  String settings_Watch_onPhone(String setting) {
+    return '$setting: บนโทรศัพท์';
+  }
 
   @override
   String get settings_callerId_cancel_button => 'ยกเลิก';

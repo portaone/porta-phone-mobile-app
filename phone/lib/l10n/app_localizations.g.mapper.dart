@@ -1092,6 +1092,7 @@ extension AppLocalizationsExtension on AppLocalizations {
         presence_settings_availability_title,
       'presence_settings_availability_tooltip' =>
         presence_settings_availability_tooltip,
+      'presence_Watch_configOnPhone' => presence_Watch_configOnPhone,
       'presence_settings_config_title' => presence_settings_config_title,
       'presence_settings_dnd_title' => presence_settings_dnd_title,
       'presence_settings_dnd_tooltip' => presence_settings_dnd_tooltip,
@@ -2518,6 +2519,10 @@ extension AppLocalizationsExtension on AppLocalizations {
         _ => throw ArgumentError(
           'sessions_Tile_appVersion requires 1 arguments',
         ),
+      },
+      'settings_Watch_onPhone' => switch (args) {
+        [final String setting] => settings_Watch_onPhone(setting),
+        _ => throw ArgumentError('settings_Watch_onPhone requires 1 arguments'),
       },
       'socketError_defaultDescription' => switch (args) {
         [final int? errorCode] => socketError_defaultDescription(errorCode),

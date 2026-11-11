@@ -2552,6 +2552,9 @@ class AppLocalizationsUk extends AppLocalizations {
       'Відображає загальну доступність для спілкування в службі SIP. Використовує елемент SIP \"Status\" у вмісті pidf зі значеннями \"open/closed\" (див. RFC 3863)';
 
   @override
+  String get presence_Watch_configOnPhone => 'Доступність, примітка, активність і значок статусу: на телефоні';
+
+  @override
   String get presence_settings_config_title => 'Конфігурація:';
 
   @override
@@ -3026,6 +3029,11 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get settings_speakerOnMinimize_switch => 'Вмикати гучномовець при виході з екрана дзвінка';
+
+  @override
+  String settings_Watch_onPhone(String setting) {
+    return '$setting: на телефоні';
+  }
 
   @override
   String get settings_callerId_cancel_button => 'Скасувати';

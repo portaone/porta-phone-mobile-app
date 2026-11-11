@@ -2545,6 +2545,9 @@ class AppLocalizationsIt extends AppLocalizations {
       'Rappresenta la disponibilità generale per le comunicazioni all\'interno del servizio SIP. Utilizza l\'elemento SIP \"Status\" nel contenuto pidf con i valori \"open/closed\" (vedi RFC 3863)';
 
   @override
+  String get presence_Watch_configOnPhone => 'Disponibilità, nota, attività e icona di stato: sul telefono';
+
+  @override
   String get presence_settings_config_title => 'Configurazione:';
 
   @override
@@ -3002,6 +3005,11 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get settings_speakerOnMinimize_switch => 'Attiva il vivavoce quando si lascia la schermata della chiamata';
+
+  @override
+  String settings_Watch_onPhone(String setting) {
+    return '$setting: sul telefono';
+  }
 
   @override
   String get settings_callerId_cancel_button => 'Annulla';
