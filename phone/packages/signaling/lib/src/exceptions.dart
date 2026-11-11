@@ -65,6 +65,13 @@ class SignalingKeepaliveTimeoutException extends SignalingTransactionTimeoutExce
   const SignalingKeepaliveTimeoutException(super.id, super.transactionId);
 }
 
+/// The keepalive was answered on a connection whose state handshake never
+/// came. The server sends the state first, so such a connection lost frames
+/// on the way and is given up as one whose keepalive got no answer.
+class SignalingStateHandshakeMissingException extends SignalingKeepaliveTimeoutException {
+  const SignalingStateHandshakeMissingException(super.id, super.transactionId);
+}
+
 abstract class SignalingTransactionTerminateException extends SignalingTransactionException {
   const SignalingTransactionTerminateException(super.id, super.transactionId);
 }

@@ -11,6 +11,7 @@ import 'package:_web_socket_channel/_web_socket_channel.dart';
 import 'events/events.dart';
 import 'exceptions.dart';
 import 'handshakes/handshakes.dart';
+import 'receive_watchdog.dart';
 import 'requests/requests.dart';
 import 'responses/responses.dart';
 import 'transaction.dart';
@@ -77,6 +78,15 @@ class WebtritSignalingClient {
 
   Duration? _keepaliveInterval;
   Timer? _keepaliveTimer;
+  bool _keepaliveWaiting = false;
+  bool _stateReceived = false;
+
+  /// Asks for a keepalive when nothing was received for the keepalive
+  /// interval, whatever was sent meanwhile: requests put the timer of the
+  /// keepalive off, and a connection without its state has none.
+  late final _receiveWatchdog = ReceiveWatchdog(quiet: () => _currentKeepaliveInterval, onQuiet: _onQuiet);
+
+  Duration get _currentKeepaliveInterval => _keepaliveInterval ?? const Duration(seconds: 30);
 
   final _transactions = <String, Transaction>{};
 
@@ -123,6 +133,7 @@ class WebtritSignalingClient {
     _onDisconnect = onDisconnect;
 
     _wscStreamSubscription = _wsc.stream.listen(_wscStreamOnData, onError: _wscStreamOnError, onDone: _wscStreamOnDone);
+    _receiveWatchdog.start();
   }
 
   Future<void> disconnect([int? code, String? reason]) async {
@@ -132,7 +143,7 @@ class WebtritSignalingClient {
     } else {
       _logger.fine('$_id disconnect code: $code reason: $reason');
 
-      _stopKeepaliveTimer();
+      _stopTimers();
 
       _cleanupTransactions(code, reason);
 
@@ -149,8 +160,13 @@ class WebtritSignalingClient {
   void _wscStreamOnData(dynamic data) {
     _logger.fine('$_id _wsOnData: $data');
 
-    final Map<String, dynamic> messageJson = jsonDecode(data);
-    _onMessage(messageJson);
+    try {
+      final Map<String, dynamic> messageJson = jsonDecode(data);
+      _onMessage(messageJson);
+    } finally {
+      // After the message: a state handshake names the interval to watch by.
+      _receiveWatchdog.heard();
+    }
   }
 
   void _wscStreamOnError(dynamic error, StackTrace stackTrace) {
@@ -165,7 +181,7 @@ class WebtritSignalingClient {
 
     _logger.fine('$_id _wsOnDone code: $closeCode reason: $closeReason');
 
-    _stopKeepaliveTimer();
+    _stopTimers();
 
     _cleanupTransactions(closeCode, closeReason);
 
@@ -237,6 +253,7 @@ class WebtritSignalingClient {
 
       try {
         final stateHandshake = StateHandshake.fromJson(stateHandshakeJson);
+        _stateReceived = true;
         _onStateHandshake(stateHandshake);
 
         _keepaliveInterval = stateHandshake.keepaliveInterval;
@@ -312,13 +329,14 @@ class WebtritSignalingClient {
   //
 
   void _startKeepaliveTimer() {
-    final interval = _keepaliveInterval ?? const Duration(seconds: 30);
+    final interval = _currentKeepaliveInterval;
     _logger.fine('$_id keepalive timer scheduled: $interval');
     _keepaliveTimer?.cancel();
     _keepaliveTimer = Timer(interval, _onKeepalive);
   }
 
-  void _stopKeepaliveTimer() {
+  void _stopTimers() {
+    _receiveWatchdog.stop();
     _keepaliveTimer?.cancel();
   }
 
@@ -327,8 +345,33 @@ class WebtritSignalingClient {
     _startKeepaliveTimer();
   }
 
+  void _onQuiet() {
+    if (_keepaliveWaiting) return;
+    _logger.fine('$_id nothing received in $_currentKeepaliveInterval');
+    _keepaliveTimer?.cancel();
+    _onKeepalive();
+  }
+
+  /// The connection is dead though nothing closed it. It is given up as
+  /// [disconnect] gives one up, so the handlers hear nothing more of it, and
+  /// the requests waiting on it time out now and not each at its own time.
+  void _connectionLost(Object error, StackTrace stackTrace) {
+    final wscStreamSubscription = _wscStreamSubscription;
+    if (wscStreamSubscription == null) return;
+    _wscStreamSubscription = null;
+    _stopTimers();
+    unawaited(wscStreamSubscription.cancel());
+    for (final transaction in _transactions.values) {
+      transaction.timeOutNow();
+    }
+    _transactions.clear();
+    unawaited(_wsc.sink.close().catchError((_) {}));
+    _onError(error, stackTrace);
+  }
+
   void _onKeepalive() async {
     _logger.fine('$_id keepalive firing');
+    _keepaliveWaiting = true;
     try {
       final elapsed = await _executeKeepaliveTransaction(defaultExecuteTransactionTimeoutDuration);
       _logger.finest('$_id handshake keepalive latency: $elapsed');
@@ -337,9 +380,13 @@ class WebtritSignalingClient {
       // send and response; disconnect() leaves closeCode unset until the peer's close frame comes.
       if (_wscStreamSubscription != null && _wsc.closeCode == null) {
         _startKeepaliveTimer();
+      } else {
+        _receiveWatchdog.stop();
       }
+    } on SignalingStateHandshakeMissingException catch (e, stackTrace) {
+      _connectionLost(e, stackTrace);
     } on SignalingTransactionTimeoutException catch (e, stackTrace) {
-      _onError(SignalingKeepaliveTimeoutException(e.id, e.transactionId), stackTrace);
+      _connectionLost(SignalingKeepaliveTimeoutException(e.id, e.transactionId), stackTrace);
     } on SignalingBadStateException {
       _logger.fine('$_id keepalive stopped gracefully due to closed socket.');
       // Catches the specific exception thrown when attempting to write to a closed socket.
@@ -351,9 +398,12 @@ class WebtritSignalingClient {
       // Reporting this as an error would be redundant and potentially misleading.
       //
       // Gracefully terminate the recursive Keepalive loop here.
+      _receiveWatchdog.stop();
       return;
     } catch (error, stackTrace) {
       _onError(error, stackTrace);
+    } finally {
+      _keepaliveWaiting = false;
     }
   }
 
@@ -367,6 +417,13 @@ class WebtritSignalingClient {
     stopwatch.stop();
     // ignore: unused_local_variable
     final keepaliveHandshakeResponse = KeepaliveHandshake.fromJson(responseJson);
+
+    // An answer proves the connection works only after the state, which the
+    // server sends first: before it, frames were lost and nothing would
+    // renegotiate the calls on this connection.
+    if (!_stateReceived) {
+      throw SignalingStateHandshakeMissingException(_id, requestJson['transaction']);
+    }
 
     return stopwatch.elapsed;
   }
