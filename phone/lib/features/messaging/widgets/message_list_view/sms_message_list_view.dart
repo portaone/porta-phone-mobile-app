@@ -154,10 +154,9 @@ class _SmsMessageListViewState extends State<SmsMessageListView> {
         // TODO: migrate to scrollCacheExtent (deprecated after Flutter 3.41.0-0.0.pre)
         // ignore: deprecated_member_use
         cacheExtent: 500,
-        padding: EdgeInsets.only(
-          top: MediaQuery.of(context).padding.top + 24,
-          bottom: MediaQuery.of(context).padding.bottom + 64,
-        ),
+        // No padding of its own: a list without one keeps clear of what its
+        // MediaQuery says is covered, and ConversationLayout puts the app bar
+        // and the bar a message is written in there, at the height each has.
         children: [
           TypingIndicator(userId: widget.userId, typingNumbers: context.watch<SmsTypingCubit>().state),
           ...viewEntries.map((entry) {
@@ -205,6 +204,8 @@ class _SmsMessageListViewState extends State<SmsMessageListView> {
             return const SizedBox();
           }),
           HistoryFetchIndicator(widget.fetchingHistory),
+          // The oldest message does not touch the app bar.
+          const SizedBox(height: 24),
         ],
       ),
     );
