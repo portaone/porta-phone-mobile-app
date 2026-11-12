@@ -32,5 +32,4 @@ export 'ttl_cache.dart';
 export 'version_utils.dart';
 export 'view_params/view_params.dart';
 export 'api_client_factory.dart';
-export 'signaling_client.dart';
 export 'signaling_utils.dart';
