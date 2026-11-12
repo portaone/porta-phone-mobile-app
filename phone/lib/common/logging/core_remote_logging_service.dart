@@ -52,7 +52,6 @@ enum RemoteLoggingState {
 /// from the last answer of the core.
 class CoreRemoteLoggingService implements RemoteLoggingService {
   CoreRemoteLoggingService({
-    required this.defaultLevel,
     this.store,
     this.bufferCapacity = defaultBufferCapacity,
     this.bufferUntilConfigured = true,
@@ -67,22 +66,12 @@ class CoreRemoteLoggingService implements RemoteLoggingService {
     }
   }
 
-  /// Built from the dart-defines: the level when the core names none and the
-  /// size of the batches sent.
+  /// Built from the dart-defines: the size of the batches sent.
   factory CoreRemoteLoggingService.fromEnvironment({
     RemoteLoggingConfigStore? store,
     bool bufferUntilConfigured = true,
   }) {
-    final levelName = EnvironmentConfig.REMOTE_LOGZIO_LOG_LEVEL;
-    final defaultLevel = Level.LEVELS.firstWhere(
-      (l) => l.name == levelName,
-      orElse: () {
-        _logger.warning('Unknown REMOTE_LOGZIO_LOG_LEVEL "$levelName"; defaulting to INFO');
-        return Level.INFO;
-      },
-    );
     return CoreRemoteLoggingService(
-      defaultLevel: defaultLevel,
       store: store,
       bufferUntilConfigured: bufferUntilConfigured,
       appenderBatchSize: EnvironmentConfig.REMOTE_LOGZIO_LOGGING_BUFFER_SIZE,
@@ -92,8 +81,10 @@ class CoreRemoteLoggingService implements RemoteLoggingService {
   /// How many records are held while the config is unknown; the oldest go first.
   static const defaultBufferCapacity = 2000;
 
-  /// The level used when the core does not name one.
-  final Level defaultLevel;
+  /// The level used when the core does not name one. A core that carries
+  /// remote logging always names a level, so this is only a guard against a
+  /// block without one.
+  static const defaultLevel = Level.INFO;
 
   /// Where the config is kept between runs; null keeps it in memory only.
   final RemoteLoggingConfigStore? store;
