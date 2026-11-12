@@ -146,15 +146,6 @@ class EnvironmentConfig {
     const String.fromEnvironment(WEBRTC_NATIVE_LOG_SEVERITY__NAME, defaultValue: 'info'),
   );
 
-  // Remote logging to WebTrit Core: the level sent when the core does not name
-  // one. Whether logs are sent, and where, comes from the core's system info.
-  // The LOGZIO name is kept so that existing build configurations still apply.
-  static const REMOTE_LOGZIO_LOG_LEVEL__NAME = 'WEBTRIT_APP_REMOTE_LOGZIO_LOG_LEVEL';
-  static String get REMOTE_LOGZIO_LOG_LEVEL => _env.string(
-    REMOTE_LOGZIO_LOG_LEVEL__NAME,
-    const String.fromEnvironment(REMOTE_LOGZIO_LOG_LEVEL__NAME, defaultValue: 'INFO'),
-  );
-
   // Remote logging to WebTrit Core: how many records one request carries at
   // most. A batch is sent once it holds that many records, or 10 seconds after
   // its first record, whichever comes first; 0 or less means the default.

@@ -83,7 +83,6 @@ void main() {
     bool bufferUntilConfigured = true,
   }) {
     final service = CoreRemoteLoggingService(
-      defaultLevel: Level.INFO,
       store: store,
       bufferCapacity: bufferCapacity,
       bufferUntilConfigured: bufferUntilConfigured,

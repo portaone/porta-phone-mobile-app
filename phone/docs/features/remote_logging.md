@@ -45,8 +45,9 @@ Last reviewed: 2026-11-12
   does not parse, a flag sent as a string), `enabled: false`, and a missing or
   invalid `path` (one with a scheme or a host, a query or a fragment) all mean
   disabled.
-- `level` is a `package:logging` level name; without one the app uses
-  `WEBTRIT_APP_REMOTE_LOGZIO_LOG_LEVEL`.
+- `level` is a `package:logging` level name. The core always sends one (INFO
+  when the operator set none); a block without it is read as INFO. There is no
+  build-time remote log level.
 - `anonymization` defaults to true when the core does not send it.
 - Records are posted to the tenant URL of the core (`<core>/tenant/<id>` for a
   non-empty tenant id, as `WebtritApiClient.tenantUrl` builds it) followed by
