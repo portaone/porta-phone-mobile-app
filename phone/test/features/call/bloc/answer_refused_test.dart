@@ -22,7 +22,7 @@ class _CountingMediaBuilder extends Fake implements UserMediaBuilder {
   @override
   Future<MediaStream> build({required bool video, bool? frontCamera, bool allowAudioFallback = false}) async {
     requests++;
-    throw const WebtritSignalingTransactionTerminateByDisconnectException(1, 'test', null, 'media boundary');
+    throw const SignalingTransactionTerminateByDisconnectException(1, 'test', null, 'media boundary');
   }
 }
 

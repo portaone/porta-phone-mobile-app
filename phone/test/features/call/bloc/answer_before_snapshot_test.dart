@@ -25,7 +25,7 @@ class _RecordingMediaBuilder extends Fake implements UserMediaBuilder {
     requestedVideo.add(video);
     if (!reached.isCompleted) reached.complete();
     // The media request is the boundary under test; nothing native runs here.
-    throw const WebtritSignalingTransactionTerminateByDisconnectException(1, 'test', null, 'media boundary');
+    throw const SignalingTransactionTerminateByDisconnectException(1, 'test', null, 'media boundary');
   }
 }
 

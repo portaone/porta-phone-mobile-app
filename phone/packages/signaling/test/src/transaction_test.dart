@@ -62,7 +62,7 @@ void main() {
     test('completes future with disconnect error', () {
       final tx = Transaction(signalingClientId: clientId, timeoutDuration: timeout);
       tx.terminateByDisconnect(1000, 'normal');
-      expect(tx.future, throwsA(isA<WebtritSignalingTransactionTerminateByDisconnectException>()));
+      expect(tx.future, throwsA(isA<SignalingTransactionTerminateByDisconnectException>()));
     });
 
     test('cancels timeout — timer does not fire after disconnect', () {
@@ -81,7 +81,7 @@ void main() {
         async.flushMicrotasks();
         async.elapse(timeout * 2);
 
-        expect(capturedError, isA<WebtritSignalingTransactionTerminateByDisconnectException>());
+        expect(capturedError, isA<SignalingTransactionTerminateByDisconnectException>());
       });
     });
 
@@ -110,7 +110,7 @@ void main() {
 
         expect(capturedError, isNull);
         async.elapse(timeout);
-        expect(capturedError, isA<WebtritSignalingTransactionTimeoutException>());
+        expect(capturedError, isA<SignalingTransactionTimeoutException>());
       });
     });
 

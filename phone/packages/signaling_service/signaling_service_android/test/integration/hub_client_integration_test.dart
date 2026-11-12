@@ -302,38 +302,35 @@ Future<SignalingHubClient> _subscribeClient(String consumerId, {Duration? execut
   return client;
 }
 
-Matcher _matchesSignalingException(WebtritSignalingException expected) {
+Matcher _matchesSignalingException(SignalingException expected) {
   return predicate<Object>((error) {
-    if (error is! WebtritSignalingException) return false;
+    if (error is! SignalingException) return false;
     if (error.runtimeType != expected.runtimeType) return false;
     if (error.id != expected.id) return false;
 
     switch ((expected, error)) {
-      case (WebtritSignalingErrorException source, WebtritSignalingErrorException target):
+      case (SignalingErrorException source, SignalingErrorException target):
         return target.code == source.code && target.reason == source.reason;
-      case (WebtritSignalingUnknownMessageException source, WebtritSignalingUnknownMessageException target):
+      case (SignalingUnknownMessageException source, SignalingUnknownMessageException target):
         return target.message.toString() == source.message.toString();
-      case (WebtritSignalingUnknownResponseException source, WebtritSignalingUnknownResponseException target):
+      case (SignalingUnknownResponseException source, SignalingUnknownResponseException target):
         return target.response.toString() == source.response.toString();
-      case (
-        WebtritSignalingKeepaliveTransactionTimeoutException source,
-        WebtritSignalingKeepaliveTransactionTimeoutException target,
-      ):
+      case (SignalingKeepaliveTimeoutException source, SignalingKeepaliveTimeoutException target):
         return target.transactionId == source.transactionId;
-      case (WebtritSignalingTransactionTimeoutException source, WebtritSignalingTransactionTimeoutException target):
+      case (SignalingTransactionTimeoutException source, SignalingTransactionTimeoutException target):
         return target.transactionId == source.transactionId;
-      case (WebtritSignalingBadStateException source, WebtritSignalingBadStateException target):
+      case (SignalingBadStateException source, SignalingBadStateException target):
         return target.error.message.toString() == source.error.message.toString();
       case (
-        WebtritSignalingTransactionTerminateByDisconnectException source,
-        WebtritSignalingTransactionTerminateByDisconnectException target,
+        SignalingTransactionTerminateByDisconnectException source,
+        SignalingTransactionTerminateByDisconnectException target,
       ):
         return target.transactionId == source.transactionId &&
             target.closeCode == source.closeCode &&
             target.closeReason == source.closeReason;
-      case (WebtritSignalingDisconnectedException _, WebtritSignalingDisconnectedException _):
+      case (SignalingDisconnectedException _, SignalingDisconnectedException _):
         return true;
-      case (WebtritSignalingException _, WebtritSignalingException _):
+      case (SignalingException _, SignalingException _):
         return false;
     }
   }, 'matches ${expected.runtimeType} with the same payload');
@@ -721,8 +718,8 @@ void main() {
       );
     });
 
-    test('execute keeps WebtritSignalingErrorException type and fields', () async {
-      fakeClient.executeError = const WebtritSignalingErrorException(0, 503, 'call request on busy line error');
+    test('execute keeps SignalingErrorException type and fields', () async {
+      fakeClient.executeError = const SignalingErrorException(0, 503, 'call request on busy line error');
 
       final client = await _subscribeClient('exec-typed');
       addTearDown(client.dispose);
@@ -730,7 +727,7 @@ void main() {
       await expectLater(
         client.execute(HangupRequest(transaction: 'tx-exec-typed', line: 1, callId: 'call-e')),
         throwsA(
-          isA<WebtritSignalingErrorException>()
+          isA<SignalingErrorException>()
               .having((error) => error.id, 'id', 0)
               .having((error) => error.code, 'code', 503)
               .having((error) => error.reason, 'reason', 'call request on busy line error'),
@@ -739,15 +736,15 @@ void main() {
     });
 
     test('execute keeps all Webtrit signaling exception subtypes', () async {
-      final errors = <WebtritSignalingException>[
-        const WebtritSignalingErrorException(1, 503, 'busy'),
-        const WebtritSignalingDisconnectedException(2),
-        const WebtritSignalingUnknownMessageException(3, {'kind': 'unknown', 'tx': 'a1'}),
-        const WebtritSignalingUnknownResponseException(4, {'result': 'unknown', 'tx': 'a2'}),
-        const WebtritSignalingTransactionTimeoutException(5, 'tx-timeout'),
-        WebtritSignalingBadStateException(6, StateError('invalid state')),
-        const WebtritSignalingKeepaliveTransactionTimeoutException(7, 'tx-keepalive'),
-        const WebtritSignalingTransactionTerminateByDisconnectException(9, 'tx-disconnect', 1001, 'closed'),
+      final errors = <SignalingException>[
+        const SignalingErrorException(1, 503, 'busy'),
+        const SignalingDisconnectedException(2),
+        const SignalingUnknownMessageException(3, {'kind': 'unknown', 'tx': 'a1'}),
+        const SignalingUnknownResponseException(4, {'result': 'unknown', 'tx': 'a2'}),
+        const SignalingTransactionTimeoutException(5, 'tx-timeout'),
+        SignalingBadStateException(6, StateError('invalid state')),
+        const SignalingKeepaliveTimeoutException(7, 'tx-keepalive'),
+        const SignalingTransactionTerminateByDisconnectException(9, 'tx-disconnect', 1001, 'closed'),
       ];
 
       final client = await _subscribeClient('exec-typed-all');
@@ -915,7 +912,7 @@ void main() {
       // Simulates the observable effect of the original bug: the hub timeout
       // fires because the background takes as long as the full retry cycle.
       // The fake client delays execution directly rather than throwing
-      // WebtritSignalingTransactionTimeoutException, so no real retry happens
+      // SignalingTransactionTimeoutException, so no real retry happens
       // here — but the proportional invariant (hubTimeout < fullRetryCycle)
       // that caused the bug is preserved.
       fakeClient.executeDelay = fullRetryCycle;

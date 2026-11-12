@@ -265,7 +265,7 @@ void main() {
       expect(mixer.fakeSenders.single.track, isNotNull, reason: 'and the room is not aside for it meanwhile');
 
       // The platform asks for the hold and the server refuses it.
-      h.signaling.failure = const WebtritSignalingErrorException(1, 500, 'Server Internal Error');
+      h.signaling.failure = const SignalingErrorException(1, 500, 'Server Internal Error');
       await h.bloc.performSetHeld('b', true);
       await _settle(() => h.bloc.state.retrieveActiveCall('b')?.leavingRoom == false);
 
@@ -433,7 +433,7 @@ void main() {
       // so a refusal left the bottom controls on a room nobody could hear -
       // with End on them ending that room while the host was still talking.
       final h = await _roomOfTwoWithOutsideCall();
-      h.signaling.failure = const WebtritSignalingErrorException(1, 500, 'hold refused');
+      h.signaling.failure = const SignalingErrorException(1, 500, 'hold refused');
 
       h.bloc.add(const CallControlEvent.conversationSwitched('a'));
       await _settle(() => h.callkeep.held.isNotEmpty);
@@ -544,7 +544,7 @@ void main() {
       h.signaling.emit(ConferenceUpdatedEvent(room: 7, participants: [_participant('a', 0), _participant('d', 2)]));
       await _settle(() => h.callkeep.held.any((r) => r.callId == 'b'));
 
-      h.signaling.failure = const WebtritSignalingErrorException(1, 500, 'hold refused');
+      h.signaling.failure = const SignalingErrorException(1, 500, 'hold refused');
       await h.bloc.performSetHeld('b', true);
       await pumpEventQueue();
       h.signaling.failure = null;

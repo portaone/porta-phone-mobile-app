@@ -102,11 +102,11 @@ void main() {
     final coordinator = RenegotiationCoordinator(onCommand: (_) {});
 
     expect(coordinator.isTransientSignalingFailure(NotConnectedException('offline')), isTrue);
-    expect(coordinator.isTransientSignalingFailure(const WebtritSignalingDisconnectedException(1)), isTrue);
-    expect(coordinator.isTransientSignalingFailure(const WebtritSignalingTransactionTimeoutException(1, 'tx')), isTrue);
+    expect(coordinator.isTransientSignalingFailure(const SignalingDisconnectedException(1)), isTrue);
+    expect(coordinator.isTransientSignalingFailure(const SignalingTransactionTimeoutException(1, 'tx')), isTrue);
     expect(
       coordinator.isTransientSignalingFailure(
-        const WebtritSignalingTransactionTerminateByDisconnectException(1, 'tx', 4502, 'timeout'),
+        const SignalingTransactionTerminateByDisconnectException(1, 'tx', 4502, 'timeout'),
       ),
       isTrue,
     );

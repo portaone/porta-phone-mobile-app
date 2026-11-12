@@ -112,7 +112,7 @@ status, `hold_request.dart`); do not copy them.
 
 - Transaction: `execute(request)` registers a `Transaction` (generated id unless the request
   carries one, default timeout `defaultExecuteTransactionTimeoutDuration`, 10 s) and resolves on
-  the matching `AckResponse`, throws `WebtritSignalingErrorException` on `ErrorResponse`. A
+  the matching `AckResponse`, throws `SignalingErrorException` on `ErrorResponse`. A
   response for a transaction already gone (timed out) is logged and ignored.
 - The request is written before its `Transaction` is created: a write that fails throws to the
   caller and leaves no timeout behind to reach the zone with no listener.
@@ -120,10 +120,10 @@ status, `hold_request.dart`); do not copy them.
   (30 s when the handshake has none), restarted by every `execute`, and scheduled again after
   each keepalive answer while the client is connected and the socket is open. There is one timer:
   scheduling replaces it.
-  Timing out raises `WebtritSignalingKeepaliveTransactionTimeoutException` through `onError`; a
-  write to a closed socket (`WebtritSignalingBadStateException`) just ends the loop.
+  Timing out raises `SignalingKeepaliveTimeoutException` through `onError`; a
+  write to a closed socket (`SignalingBadStateException`) just ends the loop.
 - `disconnect([code, reason])` stops the timer, terminates open transactions with
-  `WebtritSignalingTransactionTerminateByDisconnectException`, cancels the subscription (so
+  `SignalingTransactionTerminateByDisconnectException`, cancels the subscription (so
   `onDisconnect` is not called) and closes the sink.
 - Close codes: `SignalingDisconnectCode` in
   [signaling_disconnect_code.dart](lib/src/signaling_disconnect_code.dart) (standard WebSocket
@@ -132,19 +132,19 @@ status, `hold_request.dart`); do not copy them.
 
 ## Exceptions
 
-All extend `WebtritSignalingException`:
+All extend `SignalingException`:
 
-- `WebtritSignalingErrorException` - the server answered with an error code
-- `WebtritSignalingDisconnectedException` - `execute()` with no live subscription
-- `WebtritSignalingUnknownMessageException` - an inbound message of no known kind; the client no
+- `SignalingErrorException` - the server answered with an error code
+- `SignalingDisconnectedException` - `execute()` with no live subscription
+- `SignalingUnknownMessageException` - an inbound message of no known kind; the client no
   longer raises it, the hub codec still carries it
-- `WebtritSignalingUnknownResponseException` - a response that is neither ack nor error
-- `WebtritSignalingBadStateException` - a write to a closed socket
-- `WebtritSignalingTransactionException` (abstract)
-  - `WebtritSignalingTransactionTimeoutException`
-    - `WebtritSignalingKeepaliveTransactionTimeoutException`
-  - `WebtritSignalingTransactionTerminateException` (abstract)
-    - `WebtritSignalingTransactionTerminateByDisconnectException`
+- `SignalingUnknownResponseException` - a response that is neither ack nor error
+- `SignalingBadStateException` - a write to a closed socket
+- `SignalingTransactionException` (abstract)
+  - `SignalingTransactionTimeoutException`
+    - `SignalingKeepaliveTimeoutException`
+  - `SignalingTransactionTerminateException` (abstract)
+    - `SignalingTransactionTerminateByDisconnectException`
 
 Static helpers: `generateTransactionId()`, `generateCallId()` (24 characters), `subprotocol`,
 `defaultExecuteTransactionTimeoutDuration`.

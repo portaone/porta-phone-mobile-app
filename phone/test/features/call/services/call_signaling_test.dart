@@ -120,9 +120,9 @@ void main() {
     test('a request that went with the connection is lost, with its error', () async {
       final losses = [
         NotConnectedException('not connected'),
-        const WebtritSignalingDisconnectedException(1),
-        const WebtritSignalingTransactionTimeoutException(1, 't1'),
-        const WebtritSignalingTransactionTerminateByDisconnectException(1, 't1', 4502, 'keepalive'),
+        const SignalingDisconnectedException(1),
+        const SignalingTransactionTimeoutException(1, 't1'),
+        const SignalingTransactionTerminateByDisconnectException(1, 't1', 4502, 'keepalive'),
         TimeoutException('no reply'),
       ];
       for (final loss in losses) {

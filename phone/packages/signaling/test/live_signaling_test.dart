@@ -198,7 +198,7 @@ void main() {
     tearDown(() async => proxy.stop());
 
     test(
-      'should fire WebtritSignalingKeepaliveTransactionTimeoutException when packets are dropped mid-connection',
+      'should fire SignalingKeepaliveTimeoutException when packets are dropped mid-connection',
       timeout: const Timeout(Duration(minutes: 2)),
       () async {
         final signalingClient = await WebtritSignalingClient.connect(
@@ -237,7 +237,7 @@ void main() {
           onTimeout: () => throw TimeoutException('No keepalive timeout error received'),
         );
 
-        expect(error, isA<WebtritSignalingKeepaliveTransactionTimeoutException>());
+        expect(error, isA<SignalingKeepaliveTimeoutException>());
       },
     );
   });
