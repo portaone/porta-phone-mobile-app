@@ -146,7 +146,7 @@ file changed on every pull.
 When translating with an AI assistant (Claude, Copilot, etc.), use:
 
 > Translate the following ARB entries from English into Ukrainian, Italian, and Thai for a
-> business VoIP application (WebTrit Phone). Keep every ICU placeholder (`{name}`) and
+> business VoIP application (PortaPhone). Keep every ICU placeholder (`{name}`) and
 > plural/select structure intact; use the locale's own CLDR plural categories (uk needs
 > `few`/`many`). Do not translate technical terms (WiFi, VPN, SIP, Bluetooth, codec names,
 > units). Match the tone of the existing translations in lib/l10n/arb/. Return one JSON

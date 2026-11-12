@@ -1,6 +1,6 @@
 # AGENTS.md - signaling
 
-Pure Dart client of the WebTrit Core signaling protocol over WebSocket: no Flutter, no code
+Pure Dart client of the Core signaling protocol over WebSocket: no Flutter, no code
 generation, models hand-written with `Equatable`. The connection the app keeps open - reconnect,
 buffering, background - is `../signaling_service`, not this package. Before you change what the
 app sends or how a call reacts to an event, read

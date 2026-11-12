@@ -1,6 +1,6 @@
 # Build & Development Process Overview
 
-How to build, run, sign, and ship the WebTrit Phone project.
+How to build, run, sign, and ship the PortaPhone app.
 
 Last reviewed: 2026-08-11
 

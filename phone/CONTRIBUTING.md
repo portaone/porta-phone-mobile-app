@@ -1,4 +1,4 @@
-# Contributing to WebTrit Phone
+# Contributing to PortaPhone
 
 ## Branch Naming
 

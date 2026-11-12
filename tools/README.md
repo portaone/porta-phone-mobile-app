@@ -1,7 +1,7 @@
 # webtrit_phone_tools
 
-**WebTrit Phone CLI tools** — A comprehensive toolkit for automating the preparation, configuration,
-and signing of WebTrit mobile applications.
+**PortaPhone CLI tools** - A comprehensive toolkit for automating the preparation, configuration,
+and signing of branded PortaPhone builds.
 
 ---
 

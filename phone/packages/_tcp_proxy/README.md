@@ -2,7 +2,7 @@
 
 Internal test utility - raw TCP proxy with pause/resume for network condition simulation.
 
-> **Not published.** This package is part of the WebTrit Phone monorepo and is used
+> **Not published.** This package is part of the PortaPhone repository and is used
 > exclusively in tests via workspace path dependency.
 
 ## Usage

@@ -165,7 +165,7 @@ await WebtritSignalingService.stopService(); // on logout: stops the Android ser
 | Field | Type | Description |
 | --- | --- | --- |
 | `coreUrl` | `String` | Server base URL — `https://` and `http://` are accepted and converted to `wss://` / `ws://` |
-| `tenantId` | `String` | WebTrit tenant identifier |
+| `tenantId` | `String` | Core tenant identifier |
 | `token` | `String` | Auth token |
 | `trustedCertificates` | `TrustedCertificates` | Custom CA certificates; defaults to system trust |
 
