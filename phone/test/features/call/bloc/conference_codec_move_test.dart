@@ -104,7 +104,7 @@ void main() {
 
     h.bloc.add(const CallControlEvent.merged(['a', 'b']));
     final update = await updateOf('a');
-    h.signaling.failure = const WebtritSignalingErrorException(1, 500, 'conference_already_active');
+    h.signaling.failure = const SignalingErrorException(1, 500, 'conference_already_active');
     await answer(a, update, _pcmu);
     await h.settle(() => h.signaling.requests.whereType<HoldRequest>().isNotEmpty);
 

@@ -80,7 +80,7 @@ void main() {
   });
 
   test('a refused hangup is reported, not thrown', () async {
-    h.signaling.failure = const WebtritSignalingErrorException(1, 0, 'no_conference');
+    h.signaling.failure = const SignalingErrorException(1, 0, 'no_conference');
 
     h.signaling.emitHandshake(handshake(conference: const ConferenceInfo(room: 4242)));
     await pumpEventQueue();

@@ -149,7 +149,7 @@ bool isPong(List<dynamic> msg) => msg.isNotEmpty && msg[0] == _tagPong;
 
 Object? _encodeExecuteError(Object? error) {
   if (error == null) return null;
-  if (error is WebtritSignalingErrorException) {
+  if (error is SignalingErrorException) {
     return {
       _executeErrorTypeKey: _executeErrorTypeWebtritSignalingError,
       _executeErrorIdKey: error.id,
@@ -157,45 +157,45 @@ Object? _encodeExecuteError(Object? error) {
       _executeErrorReasonKey: error.reason,
     };
   }
-  if (error is WebtritSignalingDisconnectedException) {
+  if (error is SignalingDisconnectedException) {
     return {_executeErrorTypeKey: _executeErrorTypeWebtritSignalingDisconnected, _executeErrorIdKey: error.id};
   }
-  if (error is WebtritSignalingUnknownMessageException) {
+  if (error is SignalingUnknownMessageException) {
     return {
       _executeErrorTypeKey: _executeErrorTypeWebtritSignalingUnknownMessage,
       _executeErrorIdKey: error.id,
       _executeErrorMessageKey: error.message,
     };
   }
-  if (error is WebtritSignalingUnknownResponseException) {
+  if (error is SignalingUnknownResponseException) {
     return {
       _executeErrorTypeKey: _executeErrorTypeWebtritSignalingUnknownResponse,
       _executeErrorIdKey: error.id,
       _executeErrorResponseKey: error.response,
     };
   }
-  if (error is WebtritSignalingKeepaliveTransactionTimeoutException) {
+  if (error is SignalingKeepaliveTimeoutException) {
     return {
       _executeErrorTypeKey: _executeErrorTypeWebtritSignalingKeepaliveTransactionTimeout,
       _executeErrorIdKey: error.id,
       _executeErrorTransactionIdKey: error.transactionId,
     };
   }
-  if (error is WebtritSignalingTransactionTimeoutException) {
+  if (error is SignalingTransactionTimeoutException) {
     return {
       _executeErrorTypeKey: _executeErrorTypeWebtritSignalingTransactionTimeout,
       _executeErrorIdKey: error.id,
       _executeErrorTransactionIdKey: error.transactionId,
     };
   }
-  if (error is WebtritSignalingBadStateException) {
+  if (error is SignalingBadStateException) {
     return {
       _executeErrorTypeKey: _executeErrorTypeWebtritSignalingBadState,
       _executeErrorIdKey: error.id,
       _executeErrorStateErrorMessageKey: error.error.message.toString(),
     };
   }
-  if (error is WebtritSignalingTransactionTerminateByDisconnectException) {
+  if (error is SignalingTransactionTerminateByDisconnectException) {
     return {
       _executeErrorTypeKey: _executeErrorTypeWebtritSignalingTransactionTerminateByDisconnect,
       _executeErrorIdKey: error.id,
@@ -229,46 +229,46 @@ Object? _decodeExecuteError(Object? encodedError) {
       if (id == null || code == null || reason == null) {
         return Exception('Malformed signaling_error execute payload: $map');
       }
-      return WebtritSignalingErrorException(id, code, reason);
+      return SignalingErrorException(id, code, reason);
     case _executeErrorTypeWebtritSignalingDisconnected:
       final id = map[_executeErrorIdKey] as int?;
       if (id == null) return Exception('Malformed signaling_disconnected execute payload: $map');
-      return WebtritSignalingDisconnectedException(id);
+      return SignalingDisconnectedException(id);
     case _executeErrorTypeWebtritSignalingUnknownMessage:
       final id = map[_executeErrorIdKey] as int?;
       final message = map[_executeErrorMessageKey] as Map?;
       if (id == null || message == null) {
         return Exception('Malformed signaling_unknown_message execute payload: $map');
       }
-      return WebtritSignalingUnknownMessageException(id, Map<String, dynamic>.from(message));
+      return SignalingUnknownMessageException(id, Map<String, dynamic>.from(message));
     case _executeErrorTypeWebtritSignalingUnknownResponse:
       final id = map[_executeErrorIdKey] as int?;
       final response = map[_executeErrorResponseKey] as Map?;
       if (id == null || response == null) {
         return Exception('Malformed signaling_unknown_response execute payload: $map');
       }
-      return WebtritSignalingUnknownResponseException(id, Map<String, dynamic>.from(response));
+      return SignalingUnknownResponseException(id, Map<String, dynamic>.from(response));
     case _executeErrorTypeWebtritSignalingKeepaliveTransactionTimeout:
       final id = map[_executeErrorIdKey] as int?;
       final transactionId = map[_executeErrorTransactionIdKey] as String?;
       if (id == null || transactionId == null) {
         return Exception('Malformed signaling_keepalive_transaction_timeout execute payload: $map');
       }
-      return WebtritSignalingKeepaliveTransactionTimeoutException(id, transactionId);
+      return SignalingKeepaliveTimeoutException(id, transactionId);
     case _executeErrorTypeWebtritSignalingTransactionTimeout:
       final id = map[_executeErrorIdKey] as int?;
       final transactionId = map[_executeErrorTransactionIdKey] as String?;
       if (id == null || transactionId == null) {
         return Exception('Malformed signaling_transaction_timeout execute payload: $map');
       }
-      return WebtritSignalingTransactionTimeoutException(id, transactionId);
+      return SignalingTransactionTimeoutException(id, transactionId);
     case _executeErrorTypeWebtritSignalingBadState:
       final id = map[_executeErrorIdKey] as int?;
       final stateErrorMessage = map[_executeErrorStateErrorMessageKey] as String?;
       if (id == null || stateErrorMessage == null) {
         return Exception('Malformed signaling_bad_state execute payload: $map');
       }
-      return WebtritSignalingBadStateException(id, StateError(stateErrorMessage));
+      return SignalingBadStateException(id, StateError(stateErrorMessage));
     case _executeErrorTypeWebtritSignalingTransactionTerminateByDisconnect:
       final id = map[_executeErrorIdKey] as int?;
       final transactionId = map[_executeErrorTransactionIdKey] as String?;
@@ -277,7 +277,7 @@ Object? _decodeExecuteError(Object? encodedError) {
       if (id == null || transactionId == null) {
         return Exception('Malformed signaling_transaction_terminate_by_disconnect execute payload: $map');
       }
-      return WebtritSignalingTransactionTerminateByDisconnectException(id, transactionId, closeCode, closeReason);
+      return SignalingTransactionTerminateByDisconnectException(id, transactionId, closeCode, closeReason);
     case _executeErrorTypeNotConnected:
       return NotConnectedException('ghost state: hub not connected');
     case _executeErrorTypeMessage:

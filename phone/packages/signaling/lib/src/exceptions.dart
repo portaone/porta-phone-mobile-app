@@ -1,5 +1,5 @@
-abstract class WebtritSignalingException implements Exception {
-  const WebtritSignalingException(this.id);
+abstract class SignalingException implements Exception {
+  const SignalingException(this.id);
 
   final int id;
 
@@ -7,8 +7,8 @@ abstract class WebtritSignalingException implements Exception {
   String toString() => '$runtimeType id: $id';
 }
 
-class WebtritSignalingErrorException extends WebtritSignalingException {
-  const WebtritSignalingErrorException(super.id, this.code, this.reason);
+class SignalingErrorException extends SignalingException {
+  const SignalingErrorException(super.id, this.code, this.reason);
 
   final int code;
   final String reason;
@@ -17,12 +17,12 @@ class WebtritSignalingErrorException extends WebtritSignalingException {
   String toString() => '${super.toString()}, code: $code, reason: $reason';
 }
 
-class WebtritSignalingDisconnectedException extends WebtritSignalingException {
-  const WebtritSignalingDisconnectedException(super.id);
+class SignalingDisconnectedException extends SignalingException {
+  const SignalingDisconnectedException(super.id);
 }
 
-class WebtritSignalingUnknownMessageException extends WebtritSignalingException {
-  const WebtritSignalingUnknownMessageException(super.id, this.message);
+class SignalingUnknownMessageException extends SignalingException {
+  const SignalingUnknownMessageException(super.id, this.message);
 
   final Map<String, dynamic> message;
 
@@ -30,8 +30,8 @@ class WebtritSignalingUnknownMessageException extends WebtritSignalingException 
   String toString() => '${super.toString()}, message: $message';
 }
 
-class WebtritSignalingUnknownResponseException extends WebtritSignalingException {
-  const WebtritSignalingUnknownResponseException(super.id, this.response);
+class SignalingUnknownResponseException extends SignalingException {
+  const SignalingUnknownResponseException(super.id, this.response);
 
   final Map<String, dynamic> response;
 
@@ -39,8 +39,8 @@ class WebtritSignalingUnknownResponseException extends WebtritSignalingException
   String toString() => '${super.toString()}, response: $response';
 }
 
-abstract class WebtritSignalingTransactionException extends WebtritSignalingException {
-  const WebtritSignalingTransactionException(super.id, this.transactionId);
+abstract class SignalingTransactionException extends SignalingException {
+  const SignalingTransactionException(super.id, this.transactionId);
 
   final String transactionId;
 
@@ -48,12 +48,12 @@ abstract class WebtritSignalingTransactionException extends WebtritSignalingExce
   String toString() => '${super.toString()}, transactionId: $transactionId';
 }
 
-class WebtritSignalingTransactionTimeoutException extends WebtritSignalingTransactionException {
-  const WebtritSignalingTransactionTimeoutException(super.id, super.transactionId);
+class SignalingTransactionTimeoutException extends SignalingTransactionException {
+  const SignalingTransactionTimeoutException(super.id, super.transactionId);
 }
 
-class WebtritSignalingBadStateException extends WebtritSignalingException {
-  const WebtritSignalingBadStateException(super.id, this.error);
+class SignalingBadStateException extends SignalingException {
+  const SignalingBadStateException(super.id, this.error);
 
   final StateError error;
 
@@ -61,16 +61,16 @@ class WebtritSignalingBadStateException extends WebtritSignalingException {
   String toString() => '${super.toString()}, stateError: $error';
 }
 
-class WebtritSignalingKeepaliveTransactionTimeoutException extends WebtritSignalingTransactionTimeoutException {
-  const WebtritSignalingKeepaliveTransactionTimeoutException(super.id, super.transactionId);
+class SignalingKeepaliveTimeoutException extends SignalingTransactionTimeoutException {
+  const SignalingKeepaliveTimeoutException(super.id, super.transactionId);
 }
 
-abstract class WebtritSignalingTransactionTerminateException extends WebtritSignalingTransactionException {
-  const WebtritSignalingTransactionTerminateException(super.id, super.transactionId);
+abstract class SignalingTransactionTerminateException extends SignalingTransactionException {
+  const SignalingTransactionTerminateException(super.id, super.transactionId);
 }
 
-class WebtritSignalingTransactionTerminateByDisconnectException extends WebtritSignalingTransactionTerminateException {
-  const WebtritSignalingTransactionTerminateByDisconnectException(
+class SignalingTransactionTerminateByDisconnectException extends SignalingTransactionTerminateException {
+  const SignalingTransactionTerminateByDisconnectException(
     super.id,
     super.transactionId,
     this.closeCode,

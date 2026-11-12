@@ -16,9 +16,9 @@ void main() {
 
   final transientFailures = <Object>[
     NotConnectedException('signaling disconnected'),
-    const WebtritSignalingDisconnectedException(1),
-    const WebtritSignalingTransactionTimeoutException(1, 'tx'),
-    const WebtritSignalingTransactionTerminateByDisconnectException(1, 'tx', 4502, 'keepalive timeout'),
+    const SignalingDisconnectedException(1),
+    const SignalingTransactionTimeoutException(1, 'tx'),
+    const SignalingTransactionTerminateByDisconnectException(1, 'tx', 4502, 'keepalive timeout'),
     TimeoutException('update result was not received'),
   ];
 

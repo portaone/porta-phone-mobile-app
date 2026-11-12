@@ -321,9 +321,9 @@ re-INVITE of an unhold, and the app would retry it seconds later.
 **ICE restart over a lost signaling connection** — `RenegotiationCoordinator`
 (`features/call/utils/renegotiation_coordinator.dart`) owns the per-call restart and retry
 bookkeeping. `__onMutationRenegotiate` asks it to classify a failed `update`: a loss of signaling
-(`NotConnectedException`, `WebtritSignalingDisconnectedException`,
-`WebtritSignalingTransactionTimeoutException`,
-`WebtritSignalingTransactionTerminateByDisconnectException`, or a `TimeoutException` while waiting
+(`NotConnectedException`, `SignalingDisconnectedException`,
+`SignalingTransactionTimeoutException`,
+`SignalingTransactionTerminateByDisconnectException`, or a `TimeoutException` while waiting
 for the final reply) is transient; any other error - a failed SDP or peer connection step, a
 rejection by the server - still ends the call. The other requests sent in the middle of a call judge
 the request itself the same way, each catching only around the request with `isTransientSignalingFailure`,

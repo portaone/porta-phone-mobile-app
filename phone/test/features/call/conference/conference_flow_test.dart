@@ -253,7 +253,7 @@ void main() {
     addTearDown(h.close);
     final a = h.seedEstablishedCall('a', line: 0);
     h.seedEstablishedCall('b', line: 1);
-    h.signaling.failure = const WebtritSignalingErrorException(1, 0, 'conference_already_active');
+    h.signaling.failure = const SignalingErrorException(1, 0, 'conference_already_active');
 
     await _merge(h, ['a', 'b']);
 
@@ -1004,7 +1004,7 @@ void main() {
       final h = _rejoinHarness();
       addTearDown(h.close);
       final room = await _roomUp(h);
-      h.signaling.failure = const WebtritSignalingErrorException(1, 0, 'no_conference');
+      h.signaling.failure = const SignalingErrorException(1, 0, 'no_conference');
 
       await _failMixer(room.mixer);
       h.signaling.failure = null;
@@ -1020,7 +1020,7 @@ void main() {
       final h = _rejoinHarness(deadline: deadline);
       addTearDown(h.close);
       final room = await _roomUp(h);
-      h.signaling.failure = const WebtritSignalingErrorException(1, 0, 'conference_not_established');
+      h.signaling.failure = const SignalingErrorException(1, 0, 'conference_not_established');
 
       await _failMixer(room.mixer);
       h.signaling.failure = null;
@@ -1049,7 +1049,7 @@ void main() {
       await _failMixer(room.mixer);
       expect(deadline.isArmed, isTrue, reason: 'the deadline starts with the request, not with its answer');
       await _loseSession(h);
-      h.signaling.failure = const WebtritSignalingTransactionTerminateByDisconnectException(1, 'tx', 1006, null);
+      h.signaling.failure = const SignalingTransactionTerminateByDisconnectException(1, 'tx', 1006, null);
       inFlight.complete();
       h.signaling.gate = null;
       await pumpEventQueue();
@@ -1147,7 +1147,7 @@ void main() {
       await _loseSession(h);
       h.signaling.connected = true;
 
-      h.signaling.failure = const WebtritSignalingTransactionTerminateByDisconnectException(1, 'tx', 1006, null);
+      h.signaling.failure = const SignalingTransactionTerminateByDisconnectException(1, 'tx', 1006, null);
       inFlight.complete();
       await pumpEventQueue();
       h.signaling.failure = null;
@@ -1177,7 +1177,7 @@ void main() {
       h.signaling.emitHandshake(_handshakeWithRoom());
       await pumpEventQueue();
 
-      h.signaling.failure = const WebtritSignalingErrorException(1, 0, 'no_conference');
+      h.signaling.failure = const SignalingErrorException(1, 0, 'no_conference');
       inFlight.complete();
       await pumpEventQueue();
       h.signaling.failure = null;
@@ -1199,7 +1199,7 @@ void main() {
       await _offerRoom(h, 7, [_participant('a', 0), _participant('b', 1)]);
       final answering = h.peerFactory.created.last;
       await _loseSession(h);
-      h.signaling.failure = const WebtritSignalingTransactionTerminateByDisconnectException(1, 'tx', 1006, null);
+      h.signaling.failure = const SignalingTransactionTerminateByDisconnectException(1, 'tx', 1006, null);
       inFlight.complete();
       h.signaling.gate = null;
       await pumpEventQueue();
@@ -1315,7 +1315,7 @@ void main() {
       final h = _rejoinHarness(deadline: deadline);
       addTearDown(h.close);
       final room = await _roomUp(h);
-      h.signaling.failure = const WebtritSignalingTransactionTimeoutException(1, 'tx');
+      h.signaling.failure = const SignalingTransactionTimeoutException(1, 'tx');
 
       await _failMixer(room.mixer);
       h.signaling.failure = null;

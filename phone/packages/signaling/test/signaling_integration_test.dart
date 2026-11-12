@@ -239,7 +239,7 @@ void main() {
   });
 
   group('Keepalive timeout', () {
-    test('should report WebtritSignalingKeepaliveTransactionTimeoutException when server does not respond', () {
+    test('should report SignalingKeepaliveTimeoutException when server does not respond', () {
       fakeAsync((async) {
         final client = WebtritSignalingClient.inner(mockChannel);
 
@@ -264,7 +264,7 @@ void main() {
         );
         async.flushMicrotasks();
 
-        expect(capturedError, isA<WebtritSignalingKeepaliveTransactionTimeoutException>());
+        expect(capturedError, isA<SignalingKeepaliveTimeoutException>());
       });
     });
   });
@@ -393,7 +393,7 @@ void main() {
       expect(capturedError, equals(networkError));
     });
 
-    test('should throw WebtritSignalingDisconnectedException when execute called after stream closes', () async {
+    test('should throw SignalingDisconnectedException when execute called after stream closes', () async {
       final client = WebtritSignalingClient.inner(mockChannel);
 
       client.listen(onStateHandshake: (_) {}, onEvent: (_) {}, onError: (_, _) {}, onDisconnect: (_, _) {});
@@ -402,52 +402,49 @@ void main() {
       await Future.delayed(Duration.zero);
 
       final request = HangupRequest(transaction: 'test-tx', line: 0, callId: 'test-call-id');
-      await expectLater(client.execute(request), throwsA(isA<WebtritSignalingDisconnectedException>()));
+      await expectLater(client.execute(request), throwsA(isA<SignalingDisconnectedException>()));
     });
   });
 
   group('Request transaction timeout', () {
-    test(
-      'should throw WebtritSignalingTransactionTimeoutException (not keepalive variant) when server ignores request',
-      () {
-        fakeAsync((async) {
-          final client = WebtritSignalingClient.inner(mockChannel);
+    test('should throw SignalingTransactionTimeoutException (not keepalive variant) when server ignores request', () {
+      fakeAsync((async) {
+        final client = WebtritSignalingClient.inner(mockChannel);
 
-          Object? executeError;
-          when(() => mockSink.add(any())).thenAnswer((_) {});
+        Object? executeError;
+        when(() => mockSink.add(any())).thenAnswer((_) {});
 
-          client.listen(onStateHandshake: (_) {}, onEvent: (_) {}, onError: (_, _) {}, onDisconnect: (_, _) {});
+        client.listen(onStateHandshake: (_) {}, onEvent: (_) {}, onError: (_, _) {}, onDisconnect: (_, _) {});
 
-          // Long keepalive interval to prevent interference with the request timeout.
-          streamController.add(_handshakeJson(keepaliveInterval: 100000));
-          async.flushMicrotasks();
+        // Long keepalive interval to prevent interference with the request timeout.
+        streamController.add(_handshakeJson(keepaliveInterval: 100000));
+        async.flushMicrotasks();
 
-          client
-              .execute(HangupRequest(transaction: 'test-tx', line: 0, callId: 'test-call-id'))
-              .then<void>(
-                (_) {},
-                onError: (Object e, _) {
-                  executeError = e;
-                },
-              );
+        client
+            .execute(HangupRequest(transaction: 'test-tx', line: 0, callId: 'test-call-id'))
+            .then<void>(
+              (_) {},
+              onError: (Object e, _) {
+                executeError = e;
+              },
+            );
 
-          async.flushMicrotasks();
+        async.flushMicrotasks();
 
-          // Advance past transaction timeout.
-          async.elapse(
-            WebtritSignalingClient.defaultExecuteTransactionTimeoutDuration + const Duration(milliseconds: 100),
-          );
-          async.flushMicrotasks();
+        // Advance past transaction timeout.
+        async.elapse(
+          WebtritSignalingClient.defaultExecuteTransactionTimeoutDuration + const Duration(milliseconds: 100),
+        );
+        async.flushMicrotasks();
 
-          expect(executeError, isA<WebtritSignalingTransactionTimeoutException>());
-          expect(executeError, isNot(isA<WebtritSignalingKeepaliveTransactionTimeoutException>()));
-        });
-      },
-    );
+        expect(executeError, isA<SignalingTransactionTimeoutException>());
+        expect(executeError, isNot(isA<SignalingKeepaliveTimeoutException>()));
+      });
+    });
   });
 
   group('Transaction cleanup on send failure', () {
-    test('should throw WebtritSignalingBadStateException when sink.add throws StateError', () async {
+    test('should throw SignalingBadStateException when sink.add throws StateError', () async {
       final client = WebtritSignalingClient.inner(mockChannel);
 
       client.listen(onStateHandshake: (_) {}, onEvent: (_) {}, onError: (_, _) {}, onDisconnect: (_, _) {});
@@ -461,10 +458,10 @@ void main() {
 
       final request = HangupRequest(transaction: 'test-tx', line: 0, callId: 'test-call-id');
 
-      await expectLater(client.execute(request), throwsA(isA<WebtritSignalingBadStateException>()));
+      await expectLater(client.execute(request), throwsA(isA<SignalingBadStateException>()));
     });
 
-    test('should throw WebtritSignalingBadStateException when closeCode is already set', () async {
+    test('should throw SignalingBadStateException when closeCode is already set', () async {
       final client = WebtritSignalingClient.inner(mockChannel);
 
       client.listen(onStateHandshake: (_) {}, onEvent: (_) {}, onError: (_, _) {}, onDisconnect: (_, _) {});
@@ -478,7 +475,7 @@ void main() {
 
       final request = HangupRequest(transaction: 'test-tx', line: 0, callId: 'test-call-id');
 
-      await expectLater(client.execute(request), throwsA(isA<WebtritSignalingBadStateException>()));
+      await expectLater(client.execute(request), throwsA(isA<SignalingBadStateException>()));
     });
 
     test('should not call sink.add when closeCode is detected before write', () async {
@@ -497,7 +494,7 @@ void main() {
 
       try {
         await client.execute(request);
-      } on WebtritSignalingBadStateException {
+      } on SignalingBadStateException {
         // Expected.
       }
 

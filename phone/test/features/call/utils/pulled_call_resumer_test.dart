@@ -145,7 +145,7 @@ void main() {
   });
 
   test('a signaling loss rolls the offer back and tries again within the bound', () async {
-    signaling.failure = const WebtritSignalingDisconnectedException(0);
+    signaling.failure = const SignalingDisconnectedException(0);
     await run(settledAttempt());
     expect(coordinator.hasKeptOffer('a'), isFalse);
     expect(peer.localDescriptions.map((d) => d.type), ['offer', 'rollback']);

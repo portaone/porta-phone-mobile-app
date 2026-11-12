@@ -87,7 +87,7 @@ class Transaction {
   /// Called when the WebSocket disconnects before a response is received.
   ///
   /// Completes [future] with a
-  /// [WebtritSignalingTransactionTerminateByDisconnectException]. No-op if the
+  /// [SignalingTransactionTerminateByDisconnectException]. No-op if the
   /// transaction has already been resolved.
   void terminateByDisconnect([int? closeCode, String? closeReason]) {
     if (_isDone) {
@@ -98,7 +98,7 @@ class Transaction {
     }
     _finish();
     _completer.completeError(
-      WebtritSignalingTransactionTerminateByDisconnectException(signalingClientId, id, closeCode, closeReason),
+      SignalingTransactionTerminateByDisconnectException(signalingClientId, id, closeCode, closeReason),
     );
   }
 
@@ -110,7 +110,7 @@ class Transaction {
       return;
     }
     _finish();
-    _completer.completeError(WebtritSignalingTransactionTimeoutException(signalingClientId, id), StackTrace.current);
+    _completer.completeError(SignalingTransactionTimeoutException(signalingClientId, id), StackTrace.current);
   }
 
   /// Marks the transaction as done and cancels the timeout timer.

@@ -178,7 +178,7 @@ class WebtritSignalingClient {
 
   Future<void> execute(Request request, [Duration timeoutDuration = defaultExecuteTransactionTimeoutDuration]) async {
     if (_wscStreamSubscription == null) {
-      throw WebtritSignalingDisconnectedException(_id);
+      throw SignalingDisconnectedException(_id);
     }
 
     _restartKeepaliveTimer();
@@ -189,9 +189,9 @@ class WebtritSignalingClient {
     if (response is AckResponse) {
       return;
     } else if (response is ErrorResponse) {
-      throw WebtritSignalingErrorException(_id, response.code, response.reason);
+      throw SignalingErrorException(_id, response.code, response.reason);
     } else {
-      throw WebtritSignalingUnknownResponseException(_id, responseJson);
+      throw SignalingUnknownResponseException(_id, responseJson);
     }
   }
 
@@ -298,7 +298,7 @@ class WebtritSignalingClient {
 
       _wsc.sink.add(data);
     } on StateError catch (e) {
-      throw WebtritSignalingBadStateException(_id, e);
+      throw SignalingBadStateException(_id, e);
     }
   }
 
@@ -338,9 +338,9 @@ class WebtritSignalingClient {
       if (_wscStreamSubscription != null && _wsc.closeCode == null) {
         _startKeepaliveTimer();
       }
-    } on WebtritSignalingTransactionTimeoutException catch (e, stackTrace) {
-      _onError(WebtritSignalingKeepaliveTransactionTimeoutException(e.id, e.transactionId), stackTrace);
-    } on WebtritSignalingBadStateException {
+    } on SignalingTransactionTimeoutException catch (e, stackTrace) {
+      _onError(SignalingKeepaliveTimeoutException(e.id, e.transactionId), stackTrace);
+    } on SignalingBadStateException {
       _logger.fine('$_id keepalive stopped gracefully due to closed socket.');
       // Catches the specific exception thrown when attempting to write to a closed socket.
       // This indicates a race condition where the Keepalive timer triggered shortly after
