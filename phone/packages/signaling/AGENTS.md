@@ -151,8 +151,7 @@ Static helpers: `generateTransactionId()`, `generateCallId()` (24 characters), `
 ## Tests
 
 - Unit: fixtures in `test/src/events/event_jsons.dart` and `error_event_jsons.dart`; one test
-  file per message family under `test/src/`. `FakeWebtritSignalingClient` in
-  `test/src/factories/fake_signaling.dart` for higher-level tests.
+  file per message family under `test/src/`.
 - Client: [test/signaling_integration_test.dart](test/signaling_integration_test.dart) drives
   `WebtritSignalingClient.inner` over a mocked `WebSocketChannel` with `fake_async` - keepalive,
   timeouts, disconnect, transaction cleanup. Extend it when you change those.
