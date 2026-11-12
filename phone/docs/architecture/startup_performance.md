@@ -72,15 +72,13 @@ SDK does not consistently honor its configured fetch timeout.
 On a fresh install there may be no activated or locally cached value yet. The
 first frame then uses app-config feature defaults and the live provider applies
 the fetched values afterward, which can reshape feature-driven UI. Services
-created once during bootstrap, including remote logging, keep that startup
-configuration until the next launch.
+created once during bootstrap keep that startup configuration until the next
+launch.
 Remote Config contracts are split by lifetime. Feature availability and call
 monitor tuning may update through the live stream; `feature_log_level` is
-captured when `AppLogger` is created, and `firebaseRemoteLogging` remains a
-startup opt-in gate for the logging service. Privacy-sensitive logging changes
-are one-way during a running session: a refresh may disable remote logging or
-enable anonymization, but the less restrictive direction takes effect only on
-the next launch. Monitor intervals from Remote Config are accepted only in the
+captured when `AppLogger` is created. Remote logging does not read Remote
+Config at all: WebTrit Core switches it at runtime
+([remote_logging.md](../features/remote_logging.md)). Monitor intervals from Remote Config are accepted only in the
 inclusive 0..3600 second range; zero disables monitoring.
 
 ## Baseline procedure

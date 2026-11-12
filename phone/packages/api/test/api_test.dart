@@ -145,6 +145,72 @@ void main() {
     });
   });
 
+  group('core mobile_remote_logging', () {
+    Future<SystemInfo> fetch(Map<String, Object?> core) {
+      Future<Response> handler(Request request) async {
+        return Response(jsonEncode({'core': core, 'postgres': {}}), 200, request: request);
+      }
+
+      final apiClient = WebtritApiClient.inner(Uri.https(authority), '', httpClient: MockClient(handler));
+      return apiClient.getSystemInfo();
+    }
+
+    test('is read with every field', () async {
+      final info = await fetch({
+        'version': '1.0.0',
+        'mobile_remote_logging': {
+          'available': true,
+          'enabled': true,
+          'level': 'INFO',
+          'anonymization': false,
+          'expires_at': '2026-11-12T00:00:00Z',
+          'path': '/mobile-logs',
+        },
+      });
+
+      expect(
+        info.core.mobileRemoteLogging,
+        MobileRemoteLoggingInfo(
+          available: true,
+          enabled: true,
+          level: 'INFO',
+          anonymization: false,
+          expiresAt: DateTime.utc(2026, 11, 12),
+          path: '/mobile-logs',
+        ),
+      );
+    });
+
+    test('accepts a null expires_at', () async {
+      final info = await fetch({
+        'version': '1.0.0',
+        'mobile_remote_logging': {'available': true, 'enabled': false, 'expires_at': null, 'path': '/mobile-logs'},
+      });
+
+      expect(info.core.mobileRemoteLogging?.expiresAt, isNull);
+      expect(info.core.mobileRemoteLogging?.enabled, isFalse);
+    });
+
+    test('a malformed block is read as none, and the rest of the info still is', () async {
+      for (final block in [
+        {'enabled': 'true', 'path': '/mobile-logs'},
+        {'enabled': true, 'expires_at': 'tomorrow', 'path': '/mobile-logs'},
+        'enabled',
+      ]) {
+        final info = await fetch({'version': '1.2.3', 'mobile_remote_logging': block});
+
+        expect(info.core.mobileRemoteLogging, isNull, reason: '$block');
+        expect(info.core.version, Version(1, 2, 3));
+      }
+    });
+
+    test('is null for a core that does not send it', () async {
+      final info = await fetch({'version': '1.0.0'});
+
+      expect(info.core.mobileRemoteLogging, isNull);
+    });
+  });
+
   group('user agent', () {
     test('is sent with every request when the app provides one', () {
       const userAgent = 'WebTrit/1.8.2 (iPhone14,3; iOS: 17.4)';

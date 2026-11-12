@@ -146,7 +146,16 @@ Future<AppDependencies> _bootstrap({
     ContactsAgreementStatusRepositoryPrefsImpl(appPreferences),
   );
   final systemInfoLocalDatasource = SystemInfoLocalRepositoryPrefsImpl(appPreferences);
-  final systemInfoRemoteDatasource = SystemInfoRemoteDatasource(apiClientFactory);
+  // Built before the system info sources, which feed it: every answer of a
+  // core - on the login screen too - carries the remote logging settings.
+  // AppLogger takes it over below and releases it.
+  final remoteLoggingService = CoreRemoteLoggingService.fromEnvironment(
+    store: RemoteLoggingConfigPrefsStore(appPreferences),
+  );
+  final systemInfoRemoteDatasource = SystemInfoRemoteDatasource(
+    apiClientFactory,
+    onFetched: (info, tenantUrl) => remoteLoggingService.applyFromCore(info.core.mobileRemoteLogging, tenantUrl),
+  );
   final systemInfoRepository = deps.share<SystemInfoRepository>(
     SystemInfoRepositoryImpl(localDatasource: systemInfoLocalDatasource, remoteDatasource: systemInfoRemoteDatasource),
   );
@@ -224,11 +233,7 @@ Future<AppDependencies> _bootstrap({
   deps.share(
     await trace.measure(
       'app-logger',
-      () => AppLogger.init(
-        featureAccess.loggingConfig,
-        LogzioLoggingService.fromEnvironment(featureAccess.loggingConfig.remoteLoggingEnabled),
-        () => metadataProvider.logLabels,
-      ),
+      () => AppLogger.init(featureAccess.loggingConfig, remoteLoggingService, () => metadataProvider.logLabels),
     ),
   );
   // File-based log storage uses dart:io and is unavailable on web; fall back to
