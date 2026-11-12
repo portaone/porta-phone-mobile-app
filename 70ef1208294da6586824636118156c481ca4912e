@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "0429a1a0_d4c8a872",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 3
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 847
+      },
+      "writtenOn": "2026-11-12T12:38:10Z",
+      "side": 1,
+      "message": "Approving as is. WEBTRIT_APP_REMOTE_LOGZIO_LOG_LEVEL never applies with\nthe Core of 369008: system-info always names the level (INFO by\ndefault). I have already removed it from the app and the configurator\nand will push that as a follow-up change in topic WT-1797 once this is\nmerged.",
+      "revId": "70ef1208294da6586824636118156c481ca4912e",
+      "serverId": "b3d83be1-eb64-49fe-9bf1-b81a817d2fd2"
+    }
+  ]
+}
