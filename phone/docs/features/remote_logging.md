@@ -111,7 +111,8 @@ sends what is still batched and waits for it before it closes the HTTP client;
 ## Anonymization
 
 `AnonymizingFormatter` masks the message, the error text and the stack trace
-(emails, IP addresses, ports, phone numbers, tokens, SIP URI user parts and the
+(emails, IP addresses, ports, phone numbers, JWTs and Core session tokens, the
+`token`, `access_token` and `refresh_token` fields, SIP URI user parts and the
 known personal JSON fields), and the error text of the `e` label. Remote text
 carries no colour codes, so a rule anchored at a word boundary also sees what
 opens the message.
