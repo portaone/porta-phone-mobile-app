@@ -482,13 +482,15 @@ class CallState with DiagnosticableTreeMixin, _$CallState {
     for (var i = 0; i < linesCount; i++) {
       final lineCall = activeCalls.firstWhereOrNull((e) => e.line == i);
       if (lineCall != null) {
-        mainLinesState.add(LineState.inUse(callId: lineCall.callId));
+        mainLinesState.add(LineState.inUse(callId: lineCall.callId, ringingOnly: lineCall.isRingingOnly));
       } else {
         mainLinesState.add(LineState.idle());
       }
     }
     final guestLineCall = activeCalls.firstWhereOrNull((e) => e.line == null);
-    final guestLineState = guestLineCall != null ? LineState.inUse(callId: guestLineCall.callId) : LineState.idle();
+    final guestLineState = guestLineCall != null
+        ? LineState.inUse(callId: guestLineCall.callId, ringingOnly: guestLineCall.isRingingOnly)
+        : LineState.idle();
     return LinesState(mainLines: mainLinesState, guestLine: guestLineState);
   }
 
