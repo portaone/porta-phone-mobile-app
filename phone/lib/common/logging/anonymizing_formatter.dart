@@ -35,6 +35,11 @@ class AnonymizingFormatter extends LogRecordFormatter {
   // otherwise be taken for an address and lose its host, which is not personal
   // and is what a reader of the log needs.
   static final _rules = <(RegExp, String Function(Match))>[
+    // A session token of WebTrit Core is a Phoenix token: `XCP.` and
+    // base64url segments when encrypted, `SFMyNTY.` when signed. It runs
+    // first, so no other rule takes a piece of it for a number or an address.
+    (RegExp(r'\b(?:XCP|SFMyNTY)\.[A-Za-z0-9_-]+(?:\.[A-Za-z0-9_-]+)*'), (Match _) => '[REDACTED_TOKEN]'),
+    (RegExp(r'"((?:access_|refresh_)?token)":"[^"]+"'), (Match m) => '"${m[1]}":"[REDACTED_TOKEN]"'),
     (RegExp(r'\b(sips?):[^@\s;>"<,]+@', caseSensitive: false), (Match m) => '${m[1]}:[REDACTED]@'),
     (RegExp(r'\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}\b'), (Match _) => '[REDACTED_EMAIL]'),
     (RegExp(r'\b(?:\d{1,3}\.){3}\d{1,3}\b'), (Match _) => '[REDACTED_IPADDRESS]'),

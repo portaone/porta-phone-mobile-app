@@ -65,6 +65,35 @@ void main() {
     });
   });
 
+  group('tokens', () {
+    test('a Core session token is masked in a JSON body and in a session dump', () {
+      final formatter = full();
+
+      expect(
+        formatter.sanitize('response body: {"token":"XCP.aB3_x-Q.9zZ.k1","user_id":"555001"}'),
+        'response body: {"token":"[REDACTED_TOKEN]",[REDACTED_USERID]}',
+      );
+      expect(
+        formatter.sanitize('Session(coreUrl: null, token: XCP.aB3_x-Q.9zZ.k1, tenantId: )'),
+        'Session(coreUrl: null, token: [REDACTED_TOKEN], tenantId: )',
+      );
+    });
+
+    test('a signed Phoenix token and the access and refresh token fields are masked', () {
+      final formatter = full();
+
+      expect(formatter.sanitize('token SFMyNTY.g2gDbQ.Zk9-x_1'), 'token [REDACTED_TOKEN]');
+      expect(
+        formatter.sanitize('{"access_token":"opaque-1","refresh_token":"opaque-2"}'),
+        '{"access_token":"[REDACTED_TOKEN]","refresh_token":"[REDACTED_TOKEN]"}',
+      );
+    });
+
+    test('a word that only starts like a token stays', () {
+      expect(full().sanitize('XCPU load and XCP alone'), 'XCPU load and XCP alone');
+    });
+  });
+
   group('a record', () {
     test('has its error text masked', () {
       final record = LogRecord(
