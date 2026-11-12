@@ -2,8 +2,8 @@ import 'package:signaling/signaling.dart';
 
 /// How an attempt to answer an update of the far end ended.
 enum CallUpdateAnswer {
-  /// The server did not take an answer: the update was dropped, it carried
-  /// no offer, the signaling was lost before the server replied, or handling
+  /// The server did not take an answer: the update was dropped, the
+  /// signaling was lost before the server replied, or handling
   /// failed on the way.
   notSent,
 
@@ -21,6 +21,18 @@ enum CallUpdateAnswer {
   /// `updating`): it took it, and from here on its own log shows the update
   /// as answered.
   acknowledged,
+}
+
+/// What came of an attempt to answer an update of the far end.
+///
+/// [answer] says how the server took the answer. [sendRecv] says whether the
+/// answer leaves the call sendrecv: an answer to an offer of the far end says
+/// it, an offer of the client says it of its own.
+final class CallUpdateOutcome {
+  const CallUpdateOutcome({required this.answer, this.sendRecv = true});
+
+  final CallUpdateAnswer answer;
+  final bool sendRecv;
 }
 
 /// One attempt to answer one update of the far end.
