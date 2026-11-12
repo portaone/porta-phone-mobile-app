@@ -172,7 +172,7 @@ void main() {
 
   // Consent
   Widget consent(Widget screen) => ConsentHarness().wrap(screen);
-  const terms = UserAgreementScreen(appTermsAndConditionsUrl: 'https://example.com/terms', appName: 'WebTrit');
+  const terms = UserAgreementScreen(appTermsAndConditionsUrl: 'https://example.com/terms', appName: 'PortaPhone');
   looks('terms', (_) async => consent(terms));
   looks(
     'terms_accepted',

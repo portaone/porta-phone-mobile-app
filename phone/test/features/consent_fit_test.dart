@@ -20,7 +20,7 @@ void main() {
 
   final screens = <String, (Widget, Key)>{
     'terms': (
-      const UserAgreementScreen(appTermsAndConditionsUrl: 'https://example.com/terms', appName: 'WebTrit'),
+      const UserAgreementScreen(appTermsAndConditionsUrl: 'https://example.com/terms', appName: 'PortaPhone'),
       userAgreementAcceptButtonKey,
     ),
     'contacts consent': (const ContactsAgreementScreen(), contactsAgreementAcceptButtonKey),
