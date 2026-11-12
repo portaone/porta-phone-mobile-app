@@ -2,8 +2,8 @@ import 'package:signaling/signaling.dart';
 
 /// How an attempt to answer an update of the far end ended.
 enum CallUpdateAnswer {
-  /// The server did not take an answer: the update was dropped, it carried
-  /// no offer, the signaling was lost before the server replied, or handling
+  /// The server did not take an answer: the update was dropped, the
+  /// signaling was lost before the server replied, or handling
   /// failed on the way.
   notSent,
 

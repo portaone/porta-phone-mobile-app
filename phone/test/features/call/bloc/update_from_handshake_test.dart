@@ -610,7 +610,7 @@ void main() {
     });
   });
 
-  test('a restored call whose missed update carries no offer makes the offer of its own', () async {
+  test('a restored call whose missed update carries no offer answers it with the offer of its own', () async {
     final harness = CallBlocHarness();
     addTearDown(harness.close);
 
@@ -621,7 +621,11 @@ void main() {
 
     final offers = harness.signaling.requests.whereType<UpdateRequest>().where((r) => r.jsep['type'] == 'offer');
     expect(_answers(harness), isEmpty);
-    expect(offers, hasLength(1), reason: 'nothing else negotiates the new connection');
+    expect(
+      offers,
+      hasLength(1),
+      reason: 'the far end asked for an offer, and nothing else negotiates the new connection',
+    );
     harness.signaling.emit(UpdatedEvent(line: 0, callId: _callId, transaction: offers.single.transaction));
     await pumpEventQueue();
   });

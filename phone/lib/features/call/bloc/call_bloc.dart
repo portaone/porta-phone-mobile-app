@@ -70,6 +70,18 @@ typedef OutgoingFromNumberResolver = String? Function(String? callerProvidedFrom
 
 const _getUserMediaPushKitTimeout = Duration(seconds: 8);
 
+/// What came of an attempt to answer an update of the far end.
+///
+/// [answer] says how the server took the answer. [sendRecv] says whether the
+/// answer leaves the call sendrecv: an answer to an offer of the far end says
+/// it, an offer of the client says it of its own.
+final class _CallUpdateOutcome {
+  const _CallUpdateOutcome({required this.answer, this.sendRecv = true});
+
+  final CallUpdateAnswer answer;
+  final bool sendRecv;
+}
+
 class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver implements CallkeepDelegate {
   final CallLogsRepository callLogsRepository;
   final void Function(String callId, String callerName) _onMissedCall;
@@ -2564,6 +2576,30 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
     if (restricted != null) description.sdp = restricted;
   }
 
+  /// The offer of the client for the call, made the way every offer of the
+  /// client is made: the constraints of the media policy, then the SDP munger
+  /// and the conference codecs.
+  ///
+  /// The explicit `OfferToReceive*` constraints keep the flutter-webrtc layer
+  /// from adding a recvonly video transceiver as a side effect of
+  /// `createOffer({})` for an audio-only call. Without them an audio-only
+  /// restoration produces a BUNDLE 0 1 offer (m=audio + m=video recvonly), and
+  /// the next renegotiation cycle drifts the mids to 2/3 - which Janus then
+  /// answers with mid:0 and libwebrtc rejects on mid mismatch, killing audio.
+  Future<RTCSessionDescription> _createClientOffer(
+    RTCPeerConnection pc, {
+    required String callId,
+    required bool hasVideo,
+  }) async {
+    final offer = await pc.createOffer(<String, dynamic>{
+      'mandatory': <String, dynamic>{'OfferToReceiveAudio': !await pc.heldByOffer(), 'OfferToReceiveVideo': hasVideo},
+      'optional': <dynamic>[],
+    });
+    sdpMunger?.apply(offer);
+    _keepConferenceCodecs(callId, offer);
+    return offer;
+  }
+
   /// The conference codecs and the move of calls onto them; see [RoomCodecs].
   late final RoomCodecs _roomCodecs;
 
@@ -3953,15 +3989,20 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
     Emitter<CallState> emit,
   ) async {
     var answer = CallUpdateAnswer.notSent;
+    // Whether the answer leaves the call sendrecv. An answer to an offer of
+    // the far end says it; an offer of the client says it of its own.
+    var sendRecv = PulledCallResumer.offersSendRecv(event.jsep?.sdp);
     try {
-      answer = await _answerCallUpdate(event, emit);
+      final outcome = await _answerCallUpdate(event, emit);
+      answer = outcome.answer;
+      sendRecv = outcome.sendRecv;
     } finally {
       // Also when the native call report below throws, which happens before
       // any of the handler's own error handling. With no answer taken no
       // exchange is in flight: the `updating` flag the first stage set must
       // not hold back the offer the attempt's end may release.
       if (answer != CallUpdateAnswer.acknowledged) emit(_updateSettled(event.callId));
-      _endUpdateAttempt(event.attempt, answer, sendRecv: PulledCallResumer.offersSendRecv(event.jsep?.sdp));
+      _endUpdateAttempt(event.attempt, answer, sendRecv: sendRecv);
     }
   }
 
@@ -4002,9 +4043,13 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
     }
   }
 
-  /// Applies the far end's offer and sends the answer. Says whether the
-  /// server acknowledged the answer.
-  Future<CallUpdateAnswer> _answerCallUpdate(
+  /// Answers an update of the far end. Says whether the server took the
+  /// answer, and whether the answer leaves the call sendrecv.
+  ///
+  /// An update that carries an offer is answered with an answer to it. One
+  /// that carries no offer is a request for one: the far end re-INVITEd the
+  /// call without an SDP, so the answer to it is an offer of the client's own.
+  Future<_CallUpdateOutcome> _answerCallUpdate(
     _CallMutationEventSignalingCallUpdating event,
     Emitter<CallState> emit,
   ) async {
@@ -4012,7 +4057,7 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
     final handle = CallkeepHandle.number(event.caller);
     final displayName = event.callerDisplayName;
     final activeCall = state.retrieveActiveCall(event.callId);
-    if (activeCall == null) return answer;
+    if (activeCall == null) return _CallUpdateOutcome(answer: answer);
 
     // The proximity flag goes only as "on". On iOS "off" switches the audio session to
     // VideoChat, whose route is the loudspeaker, so every update of the far end took a video
@@ -4027,166 +4072,311 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
 
     try {
       final jsep = event.jsep;
-      if (jsep != null) {
-        final remoteDescription = jsep.toDescription();
-        sdpSanitizer?.apply(remoteDescription);
-        _logger.infoPretty(remoteDescription.sdp, tag: '__onMutationSignalingCallUpdating received new offer SDP');
-        await state.performOnActiveCall(event.callId, (activeCall) async {
-          final peerConnection = await _callPeerConnectionManager.retrieve(event.callId);
-          if (peerConnection == null) {
-            _logger.warning('__onMutationSignalingCallUpdating: peerConnection is null - most likely some state issue');
-          } else {
-            // Optimistic pre-check for glare condition. May be stale because
-            // flutter_webrtc caches signalingState and updates it only when the
-            // onSignalingState callback fires - not when setLocalDescription completes.
-            // The try-catch below is the authoritative fallback.
-            final signalingState = peerConnection.signalingState;
-            if (signalingState == RTCSignalingState.RTCSignalingStateHaveLocalOffer) {
+      if (jsep == null) {
+        return await _answerCallUpdateWithOwnOffer(event, emit);
+      }
+      final remoteDescription = jsep.toDescription();
+      sdpSanitizer?.apply(remoteDescription);
+      _logger.infoPretty(remoteDescription.sdp, tag: '__onMutationSignalingCallUpdating received new offer SDP');
+      await state.performOnActiveCall(event.callId, (activeCall) async {
+        final peerConnection = await _callPeerConnectionManager.retrieve(event.callId);
+        if (peerConnection == null) {
+          _logger.warning('__onMutationSignalingCallUpdating: peerConnection is null - most likely some state issue');
+        } else {
+          // Optimistic pre-check for glare condition. May be stale because
+          // flutter_webrtc caches signalingState and updates it only when the
+          // onSignalingState callback fires - not when setLocalDescription completes.
+          // The try-catch below is the authoritative fallback.
+          final signalingState = peerConnection.signalingState;
+          if (signalingState == RTCSignalingState.RTCSignalingStateHaveLocalOffer) {
+            _logger.warning(
+              '__onMutationSignalingCallUpdating: glare detected via pre-check (signalingState=$signalingState), rolling back local offer',
+            );
+            await peerConnection.setLocalDescription(RTCSessionDescription('', 'rollback'));
+          }
+
+          // A remote offer replaces any local offer, rolled back above or
+          // below, so nothing kept for replay is valid after this point.
+          _renegotiationCoordinator.offerCompleted(event.callId);
+
+          try {
+            await peerConnection.setRemoteDescription(remoteDescription);
+          } on String catch (e) {
+            // Glare condition: signalingState pre-check was stale (flutter_webrtc
+            // caching), setLocalDescription completed on the native side but the
+            // Dart-side callback had not yet fired. Roll back and retry.
+            if (e.contains('have-local-offer')) {
               _logger.warning(
-                '__onMutationSignalingCallUpdating: glare detected via pre-check (signalingState=$signalingState), rolling back local offer',
+                '__onMutationSignalingCallUpdating: glare detected via catch ($e), rolling back local offer and retrying',
               );
               await peerConnection.setLocalDescription(RTCSessionDescription('', 'rollback'));
-            }
-
-            // A remote offer replaces any local offer, rolled back above or
-            // below, so nothing kept for replay is valid after this point.
-            _renegotiationCoordinator.offerCompleted(event.callId);
-
-            try {
               await peerConnection.setRemoteDescription(remoteDescription);
-            } on String catch (e) {
-              // Glare condition: signalingState pre-check was stale (flutter_webrtc
-              // caching), setLocalDescription completed on the native side but the
-              // Dart-side callback had not yet fired. Roll back and retry.
-              if (e.contains('have-local-offer')) {
-                _logger.warning(
-                  '__onMutationSignalingCallUpdating: glare detected via catch ($e), rolling back local offer and retrying',
-                );
-                await peerConnection.setLocalDescription(RTCSessionDescription('', 'rollback'));
-                await peerConnection.setRemoteDescription(remoteDescription);
-              } else {
-                rethrow;
-              }
-            }
-
-            // Apply policy AFTER setRemoteDescription so that any stopped transceivers
-            // from a previous failed negotiation are re-activated by the remote offer
-            // before addTrack runs. If addTrack runs first, it creates a duplicate
-            // transceiver (RFC 8829: stopped transceivers are ineligible for reuse),
-            // which causes setLocalDescription to fail with a mid mismatch.
-            final localStream = activeCall.localStream;
-            final hadLocalVideo = localStream?.getVideoTracks().any((t) => t.enabled) ?? false;
-            if (localStream != null) {
-              await peerConnectionPolicyApplier?.apply(
-                peerConnection,
-                hasRemoteVideo: jsep.hasVideo,
-                localStream: localStream,
-                frontCamera: activeCall.frontCamera,
-                strategy: VideoOfferStrategy.inactiveSendrecv,
-              );
-            }
-
-            // According to RFC 8829 5.6 (https://datatracker.ietf.org/doc/html/rfc8829#section-5.6),
-            // localDescription should be set before sending the answer to transition into stable state.
-            final localDescription = await peerConnection.createAnswer({});
-            sdpMunger?.apply(localDescription);
-            _keepConferenceCodecs(activeCall.callId, localDescription);
-            _logger.infoPretty(localDescription.sdp, tag: '__onMutationSignalingCallUpdating created answer SDP');
-
-            await peerConnection.setLocalDescription(localDescription);
-
-            final transaction = WebtritSignalingClient.generateTransactionId();
-            final sentOn = _renegotiationCoordinator.connection;
-
-            final acknowledgement = _callSignaling.execute(
-              UpdateRequest(
-                transaction: transaction,
-                line: activeCall.line,
-                callId: activeCall.callId,
-                jsep: localDescription.toMap(),
-              ),
-            );
-            if (acknowledgement == null) {
-              // The socket went down on the way here. Nothing was sent and
-              // nothing will come back for this transaction: the update stays
-              // unanswered, and the handshake of the next connection hands it
-              // over again.
-              _logger.warning('__onMutationSignalingCallUpdating: not connected, the answer was not sent');
-              answer = _answerLost();
-              return;
-            }
-            // A completed request is not yet a taken answer: the queue
-            // completes one whose connection was replaced on the way without
-            // an error. Only the server's reply below says it got the answer.
-            // A failure is survived only when the session that carried the
-            // answer is gone: the update is still owed and the next session's
-            // handshake hands it over again. On a session that lives on
-            // nothing will, and the media server holds every offer of ours
-            // behind the update, so the call ends.
-            bool sessionLost() => !_callSignaling.isConnected || _renegotiationCoordinator.connection != sentOn;
-            try {
-              await acknowledgement;
-            } catch (e) {
-              if (!_renegotiationCoordinator.isTransientSignalingFailure(e) || !sessionLost()) rethrow;
-              _logger.warning('__onMutationSignalingCallUpdating: the answer was lost with the signaling ($e)');
-              answer = _answerLost();
-              return;
-            }
-
-            // Some events have double comfirmation like this,
-            // so lets wait for the final result to make sure the update request is processed, and only then pass mutation queue to next event
-            final Event result;
-            try {
-              result = await _callSignaling.response(transaction, timeout: const Duration(seconds: 10));
-            } on TimeoutException {
-              // No reply because the session that carried the answer is gone:
-              // the call is not lost, the update is still owed.
-              if (!sessionLost()) rethrow;
-              _logger.warning('__onMutationSignalingCallUpdating: the signaling went down before the answer was taken');
-              answer = _answerLost();
-              return;
-            }
-
-            _logger.info('__onMutationSignalingCallUpdating: received response for update request: $result');
-
-            if (result is UpdatedEvent) {
-              answer = CallUpdateAnswer.acknowledged;
-              emit(_updateSettled(activeCall.callId));
-            } else if (result is UpdatingEvent) {
-              answer = CallUpdateAnswer.acknowledged;
-              emit(state.copyWithMappedActiveCall(activeCall.callId, (call) => call.copyWith(updating: true)));
-            } else if (result is CallErrorEvent) {
-              answer = CallUpdateAnswer.refused;
-              emit(_updateSettled(activeCall.callId));
-              _logger.warning(
-                '__onCallSignalingEventCallError: received CallErrorEvent for update request: code=${result.code} reason="${result.reason}"',
-              );
-
-              // May help to recover from the error by renegotiating the call again
-              // According to sip 491 error resolution spec, randomize the delay before retrying to avoid potential collision
-              final delaySeconds = 2 + Random().nextInt(8);
-              Future.delayed(Duration(seconds: delaySeconds), () => _scheduleIceRestart(activeCall.callId));
-              _logger.info('__onCallSignalingEventCallError: dispatch renegotiation after (delay: $delaySeconds)');
             } else {
-              throw result;
-            }
-
-            if (!hadLocalVideo && localStream?.getVideoTracks().firstOrNull?.enabled == false) {
-              emit(
-                state.copyWithMappedActiveCall(event.callId, (activeCall) {
-                  return activeCall.copyWith(localStream: localStream, video: false);
-                }),
-              );
+              rethrow;
             }
           }
-        });
-      }
+
+          // Apply policy AFTER setRemoteDescription so that any stopped transceivers
+          // from a previous failed negotiation are re-activated by the remote offer
+          // before addTrack runs. If addTrack runs first, it creates a duplicate
+          // transceiver (RFC 8829: stopped transceivers are ineligible for reuse),
+          // which causes setLocalDescription to fail with a mid mismatch.
+          final localStream = activeCall.localStream;
+          final hadLocalVideo = localStream?.getVideoTracks().any((t) => t.enabled) ?? false;
+          if (localStream != null) {
+            await peerConnectionPolicyApplier?.apply(
+              peerConnection,
+              hasRemoteVideo: jsep.hasVideo,
+              localStream: localStream,
+              frontCamera: activeCall.frontCamera,
+              strategy: VideoOfferStrategy.inactiveSendrecv,
+            );
+          }
+
+          // According to RFC 8829 5.6 (https://datatracker.ietf.org/doc/html/rfc8829#section-5.6),
+          // localDescription should be set before sending the answer to transition into stable state.
+          final localDescription = await peerConnection.createAnswer({});
+          sdpMunger?.apply(localDescription);
+          _keepConferenceCodecs(activeCall.callId, localDescription);
+          _logger.infoPretty(localDescription.sdp, tag: '__onMutationSignalingCallUpdating created answer SDP');
+
+          await peerConnection.setLocalDescription(localDescription);
+
+          final transaction = WebtritSignalingClient.generateTransactionId();
+          final sentOn = _renegotiationCoordinator.connection;
+
+          final acknowledgement = _callSignaling.execute(
+            UpdateRequest(
+              transaction: transaction,
+              line: activeCall.line,
+              callId: activeCall.callId,
+              jsep: localDescription.toMap(),
+            ),
+          );
+          if (acknowledgement == null) {
+            // The socket went down on the way here. Nothing was sent and
+            // nothing will come back for this transaction: the update stays
+            // unanswered, and the handshake of the next connection hands it
+            // over again.
+            _logger.warning('__onMutationSignalingCallUpdating: not connected, the answer was not sent');
+            answer = _answerLost();
+            return;
+          }
+          // A completed request is not yet a taken answer: the queue
+          // completes one whose connection was replaced on the way without
+          // an error. Only the server's reply below says it got the answer.
+          // A failure is survived only when the session that carried the
+          // answer is gone: the update is still owed and the next session's
+          // handshake hands it over again. On a session that lives on
+          // nothing will, and the media server holds every offer of ours
+          // behind the update, so the call ends.
+          bool sessionLost() => !_callSignaling.isConnected || _renegotiationCoordinator.connection != sentOn;
+          try {
+            await acknowledgement;
+          } catch (e) {
+            if (!_renegotiationCoordinator.isTransientSignalingFailure(e) || !sessionLost()) rethrow;
+            _logger.warning('__onMutationSignalingCallUpdating: the answer was lost with the signaling ($e)');
+            answer = _answerLost();
+            return;
+          }
+
+          // Some events have double comfirmation like this,
+          // so lets wait for the final result to make sure the update request is processed, and only then pass mutation queue to next event
+          final Event result;
+          try {
+            result = await _callSignaling.response(transaction, timeout: const Duration(seconds: 10));
+          } on TimeoutException {
+            // No reply because the session that carried the answer is gone:
+            // the call is not lost, the update is still owed.
+            if (!sessionLost()) rethrow;
+            _logger.warning('__onMutationSignalingCallUpdating: the signaling went down before the answer was taken');
+            answer = _answerLost();
+            return;
+          }
+
+          _logger.info('__onMutationSignalingCallUpdating: received response for update request: $result');
+
+          if (result is UpdatedEvent) {
+            answer = CallUpdateAnswer.acknowledged;
+            emit(_updateSettled(activeCall.callId));
+          } else if (result is UpdatingEvent) {
+            answer = CallUpdateAnswer.acknowledged;
+            emit(state.copyWithMappedActiveCall(activeCall.callId, (call) => call.copyWith(updating: true)));
+          } else if (result is CallErrorEvent) {
+            answer = CallUpdateAnswer.refused;
+            emit(_updateSettled(activeCall.callId));
+            _logger.warning(
+              '__onCallSignalingEventCallError: received CallErrorEvent for update request: code=${result.code} reason="${result.reason}"',
+            );
+
+            // May help to recover from the error by renegotiating the call again
+            // According to sip 491 error resolution spec, randomize the delay before retrying to avoid potential collision
+            final delaySeconds = 2 + Random().nextInt(8);
+            Future.delayed(Duration(seconds: delaySeconds), () => _scheduleIceRestart(activeCall.callId));
+            _logger.info('__onCallSignalingEventCallError: dispatch renegotiation after (delay: $delaySeconds)');
+          } else {
+            throw result;
+          }
+
+          if (!hadLocalVideo && localStream?.getVideoTracks().firstOrNull?.enabled == false) {
+            emit(
+              state.copyWithMappedActiveCall(event.callId, (activeCall) {
+                return activeCall.copyWith(localStream: localStream, video: false);
+              }),
+            );
+          }
+        }
+      });
     } catch (e, s) {
       callErrorReporter.handle(e, s, '__onMutationSignalingCallUpdating && jsep error:');
       _callPeerConnectionManager.completeError(event.callId, e);
       add(_ResetStateEvent.completeCall(event.callId));
     }
-    return answer;
+    return _CallUpdateOutcome(answer: answer, sendRecv: PulledCallResumer.offersSendRecv(event.jsep?.sdp));
+  }
+
+  /// Answers an update of the far end that carries no offer with an offer of
+  /// the client's own.
+  ///
+  /// The far end re-INVITEd the call without an SDP: it asked for an offer.
+  /// Answering it with an offer is what the protocol asks for - the gateway
+  /// puts that offer into the 200 OK of the re-INVITE, and the far end's
+  /// answer comes back as an accepted event with an answer, which the handler
+  /// of that event applies. Answering nothing leaves the re-INVITE without
+  /// an answer until the far end gives it up, and the call is dropped.
+  ///
+  /// The offer is made the way every offer of the client is made, and it goes
+  /// out as an `update` request, so the media server holds it behind the
+  /// update it answers like any other offer.
+  Future<_CallUpdateOutcome> _answerCallUpdateWithOwnOffer(
+    _CallMutationEventSignalingCallUpdating event,
+    Emitter<CallState> emit,
+  ) async {
+    final pc = await _callPeerConnectionManager.retrieve(event.callId);
+    if (pc == null) {
+      _logger.warning('__onMutationSignalingCallUpdating: peerConnection is null - most likely some state issue');
+      return const _CallUpdateOutcome(answer: CallUpdateAnswer.notSent);
+    }
+
+    // The call may have left while the peer connection was fetched.
+    final activeCall = state.retrieveActiveCall(event.callId);
+    if (activeCall == null) return const _CallUpdateOutcome(answer: CallUpdateAnswer.notSent);
+    if (activeCall.line == null || activeCall.line == _kUndefinedLine) {
+      _logger.info('__onMutationSignalingCallUpdating: the call has no line, the offer is not sent');
+      return const _CallUpdateOutcome(answer: CallUpdateAnswer.notSent);
+    }
+
+    // An offer of ours that is still waiting for its answer is the offer to
+    // send: a second one would collide with it. The peer connection is in
+    // have-local-offer then, and a new offer cannot be made in it.
+    final pendingOffer = _renegotiationCoordinator.replayableOffer(event.callId);
+    final cachedSigState = pc.signalingState;
+    final sigState = (cachedSigState == null || pendingOffer != null) ? await pc.getSignalingState() : cachedSigState;
+    final canReplayPendingOffer = pendingOffer != null && sigState == RTCSignalingState.RTCSignalingStateHaveLocalOffer;
+    if (sigState != RTCSignalingState.RTCSignalingStateStable && !canReplayPendingOffer) {
+      _logger.warning(
+        '__onMutationSignalingCallUpdating: the peer connection is in $sigState, the offer for the update is not sent',
+      );
+      return const _CallUpdateOutcome(answer: CallUpdateAnswer.notSent);
+    }
+
+    // An offer installed with nowhere to send it would leave the connection
+    // in have-local-offer with nothing to replay: the update is owed until
+    // the handshake of the next session hands it over again.
+    if (!_callSignaling.isConnected) {
+      _logger.info('__onMutationSignalingCallUpdating: signaling not connected, the offer is not made');
+      return _CallUpdateOutcome(answer: _answerLost());
+    }
+
+    final offer = canReplayPendingOffer
+        ? pendingOffer
+        : await _createClientOffer(pc, callId: event.callId, hasVideo: activeCall.video);
+    if (!canReplayPendingOffer) {
+      _logger.infoPretty(offer.sdp, tag: '__onMutationSignalingCallUpdating created offer SDP');
+      await pc.setLocalDescription(offer);
+      _roomCodecs.offerSent(event.callId);
+    } else {
+      _logger.info('__onMutationSignalingCallUpdating: replaying the pending local offer');
+    }
+
+    // The offer of the client says whether the call stays sendrecv: a call
+    // held by its own offer is held again on the far end by it.
+    final sendRecv = PulledCallResumer.offersSendRecv(offer.sdp);
+
+    final transaction = WebtritSignalingClient.generateTransactionId();
+    final sentOn = _renegotiationCoordinator.connection;
+    final acknowledgement = _callSignaling.execute(
+      UpdateRequest(transaction: transaction, line: activeCall.line, callId: event.callId, jsep: offer.toMap()),
+    );
+    if (acknowledgement == null) {
+      // The socket went down on the way here. Nothing was sent and nothing
+      // will come back for this transaction: the update stays unanswered, and
+      // the handshake of the next connection hands it over again.
+      _logger.warning('__onMutationSignalingCallUpdating: not connected, the offer was not sent');
+      _keepOwnOffer(event.callId, offer);
+      return _CallUpdateOutcome(answer: _answerLost(), sendRecv: sendRecv);
+    }
+    bool sessionLost() => !_callSignaling.isConnected || _renegotiationCoordinator.connection != sentOn;
+    try {
+      await acknowledgement;
+    } catch (e) {
+      if (!_renegotiationCoordinator.isTransientSignalingFailure(e) || !sessionLost()) rethrow;
+      _logger.warning('__onMutationSignalingCallUpdating: the offer was lost with the signaling ($e)');
+      _keepOwnOffer(event.callId, offer);
+      return _CallUpdateOutcome(answer: _answerLost(), sendRecv: sendRecv);
+    }
+
+    final Event result;
+    try {
+      result = await _callSignaling.response(transaction, timeout: const Duration(seconds: 10));
+    } on TimeoutException {
+      // No reply because the session that carried the offer is gone: the call
+      // is not lost, the update is still owed.
+      if (!sessionLost()) rethrow;
+      _logger.warning('__onMutationSignalingCallUpdating: the signaling went down before the offer was taken');
+      _keepOwnOffer(event.callId, offer);
+      return _CallUpdateOutcome(answer: _answerLost(), sendRecv: sendRecv);
+    }
+
+    _logger.info('__onMutationSignalingCallUpdating: received response for update request: $result');
+
+    if (result is UpdatedEvent || result is UpdatingEvent) {
+      // The offer is taken. The far end's answer comes as an accepted event
+      // with an answer, and the handler of that event applies it to this
+      // very offer - so the offer stays kept until then, and the call stays
+      // updating until its answer is in.
+      _renegotiationCoordinator.awaitAnswer(event.callId, offer);
+      emit(state.copyWithMappedActiveCall(event.callId, (call) => call.copyWith(updating: true)));
+      _roomCodecs.acknowledged(event.callId);
+      return _CallUpdateOutcome(answer: CallUpdateAnswer.acknowledged, sendRecv: sendRecv);
+    }
+    if (result is CallErrorEvent) {
+      _logger.warning(
+        '__onCallSignalingEventCallError: received CallErrorEvent for update request: code=${result.code} reason="${result.reason}"',
+      );
+      emit(_updateSettled(event.callId));
+      // The offer is still installed: nothing has answered or rolled it back,
+      // so the peer connection stays in have-local-offer and a fresh offer
+      // could not be made. The retry sends this same offer again.
+      final delaySeconds = 2 + Random().nextInt(8);
+      _renegotiationCoordinator.keepOffer(
+        event.callId,
+        offer,
+        signalingConnected: state.isSignalingEstablished,
+        retryDelay: Duration(seconds: delaySeconds),
+      );
+      _logger.info('__onCallSignalingEventCallError: dispatch renegotiation after (delay: $delaySeconds)');
+      return _CallUpdateOutcome(answer: CallUpdateAnswer.refused, sendRecv: sendRecv);
+    }
+    throw result;
+  }
+
+  /// Keeps the offer made for an update of the far end when it was lost with
+  /// the signaling. It stays installed on the peer connection, so no new
+  /// offer can be made: the update handed over again, or a renegotiation,
+  /// sends this one.
+  void _keepOwnOffer(String callId, RTCSessionDescription offer) {
+    _renegotiationCoordinator.keepOffer(callId, offer, signalingConnected: _callSignaling.isConnected);
   }
 
   /// Performs a safe renegotiation by first checking if the active call and peer connection still exist before proceeding and no "updating" state is detected on the call.
@@ -4281,21 +4471,10 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
     final renegotiateCall = state.retrieveActiveCall(e.callId);
     final renegotiateHasVideo = renegotiateCall?.video ?? false;
 
-    // Pass explicit OfferToReceive* constraints so the underlying flutter-webrtc
-    // layer does not silently add a recvonly video transceiver as a side-effect
-    // of createOffer({}) for an audio-only call. Without this, an audio-only
-    // restoration produces a BUNDLE 0 1 offer (m=audio + m=video recvonly), and
-    // the next renegotiate cycle drifts the mids to 2/3 — which Janus then
-    // answers with mid:0 and libwebrtc rejects on mid mismatch, killing audio.
+    // The constraints of the offer follow the media policy; see _createClientOffer.
     final offerCandidate = canReplayPendingOffer
         ? pendingOffer
-        : await pc.createOffer(<String, dynamic>{
-            'mandatory': <String, dynamic>{
-              'OfferToReceiveAudio': !await pc.heldByOffer(),
-              'OfferToReceiveVideo': renegotiateHasVideo,
-            },
-            'optional': <dynamic>[],
-          });
+        : await _createClientOffer(pc, callId: e.callId, hasVideo: renegotiateHasVideo);
 
     // Note: prepare all asychronous info before checking synchrounous state below
     // to avoid races as possible,
@@ -4352,8 +4531,6 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
     try {
       final offer = offerCandidate;
       if (!canReplayPendingOffer) {
-        sdpMunger?.apply(offer);
-        _keepConferenceCodecs(e.callId, offer);
         _logger.infoPretty(offer.sdp, tag: 'onRenegotiationNeeded offer SDP (callId=${e.callId}):');
         await pc.setLocalDescription(offer);
         _roomCodecs.offerSent(e.callId);

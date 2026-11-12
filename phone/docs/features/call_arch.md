@@ -365,8 +365,19 @@ app has no connection is not sent again: the server keeps it in the call's log a
 answer. The handshake of the next connection carries the log, and the plan made from it
 (`HandshakeProcessor`) gives a call the BLoC already runs a `DeliverUpdateAction` when the newest
 update in its log has no answer of the client after it. The BLoC feeds that update to the handler a
-live `UpdatingCallEvent` takes. An update that carries no offer owes no answer - the client answers
-none, live or not - so a log never shows it as pending.
+live `UpdatingCallEvent` takes.
+
+**An update that asks for an offer** — a re-INVITE that carries no SDP is not a change of media but
+a request for one: the far end asks the client to offer. Answering it means offering, not answering
+(`_answerCallUpdateWithOwnOffer`): the offer goes out as an `update` request like any other offer of
+the client, the gateway puts it into the 200 OK of the re-INVITE, and the far end's answer comes back
+as an `accepted` event with an answer, which the handler of that event applies to the offer it
+belongs to. Answering nothing leaves the re-INVITE unanswered until the far end gives it up, and the
+call is dropped. The offer is made the way every offer of the client is made (`_createClientOffer`),
+and an offer of ours that is still waiting for its answer is sent again rather than a second one
+made. The client owes an answer to such an update as to any other: the log of the call shows it
+answered once the client's own offer is in it, and a handshake that finds it there hands it over no
+more.
 
 One rule decides what happens to the far end's updates: `RemoteUpdateNegotiation` in
 `features/call/utils/`. It does no I/O; the BLoC tells it what happened and does the step it
@@ -388,11 +399,10 @@ before any offer of its own. What it holds per call:
   update being answered, or whose answer the server acknowledged, gets no second attempt: a log
   cannot say what the client has done since the socket connected, and a second answer to one offer
   is refused by the media server. An attempt that ended without an acknowledged answer - the update
-  was dropped, carried no offer, the socket was down, the native report threw - leaves the update
-  free, so the next handshake that still shows it hands it over again. A handshake that shows it
-  while its attempt is still open (an answer waiting for its reply on the session that is gone) is
-  kept with the attempt, and the attempt's end hands the update back (`AnswerUpdate`): no later
-  handshake would.
+  was dropped, the socket was down, the native report threw - leaves the update free, so the next
+  handshake that still shows it hands it over again. A handshake that shows it while its attempt is
+  still open (an answer waiting for its reply on the session that is gone) is kept with the attempt,
+  and the attempt's end hands the update back (`AnswerUpdate`): no later handshake would.
 - **No offer of the client's own while an update is open.** The media server holds every offer of
   the client back behind an unanswered update, and nothing answers it. `putOffOffer` keeps a wanted
   offer until the call has no open update and then returns it (`OfferOwn`) - not when the server

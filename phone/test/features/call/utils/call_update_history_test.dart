@@ -79,7 +79,7 @@ void main() {
     expect(history.pending?.ordinal, 2);
   });
 
-  test('an update that carries no offer is counted but owes no answer', () {
+  test('an update that carries no offer is owed the offer of the client', () {
     const noOffer = CallEventLog(
       timestamp: 10,
       callEvent: UpdatingCallEvent(line: 0, callId: _callId, callee: 'callee', caller: '1234'),
@@ -87,6 +87,24 @@ void main() {
     final history = CallUpdateHistory([noOffer, _accepted]);
 
     expect(history.count, 1);
-    expect(history.pending, isNull, reason: 'the client answers no such update, so no log ever shows it answered');
+    expect(history.pending?.ordinal, 1, reason: 'the far end asked for an offer, so one is owed');
+    expect(history.pending?.event.jsep, isNull);
+  });
+
+  test('the offer of the client closes an update that carries no offer', () {
+    const noOffer = CallEventLog(
+      timestamp: 10,
+      callEvent: UpdatingCallEvent(line: 0, callId: _callId, callee: 'callee', caller: '1234'),
+    );
+    final history = CallUpdateHistory([_request(11, _offer), noOffer, _accepted]);
+
+    expect(history.count, 1);
+    expect(history.pending, isNull, reason: 'the offer of the client answered it');
+  });
+
+  test('the offer of the client does not close an update that carries an offer', () {
+    final history = CallUpdateHistory([_request(11, _offer), _update(10), _accepted]);
+
+    expect(history.pending?.ordinal, 1, reason: 'an update with an offer is answered with an answer');
   });
 }
