@@ -1,6 +1,6 @@
 ---
 name: core-endpoint
-description: Adds a call to a WebTrit Core REST endpoint (model, `WebtritApiClient` method, failure rules, tests) and hides a feature behind a backend capability (`adapter.supported` flag, `CoreSupport`, `FeatureAccess`). Load it when a request says new or changed Core endpoint, API call, `packages/api`, `system-info`, capability, adapter flag, feature gate, "hide when the backend does not support it", or `EndpointNotSupportedException`.
+description: Adds a call to a Core REST endpoint (model, `WebtritApiClient` method, failure rules, tests) and hides a feature behind a backend capability (`adapter.supported` flag, `CoreSupport`, `FeatureAccess`). Load it when a request says new or changed Core endpoint, API call, `packages/api`, `system-info`, capability, adapter flag, feature gate, "hide when the backend does not support it", or `EndpointNotSupportedException`.
 ---
 
 # Core endpoint and backend capability

@@ -41,7 +41,7 @@ Built-in formats:
 | Format | Shape                                          | Typical producer                          |
 |--------|--------------------------------------------------|---------------------------------------------|
 | `uri`  | `scheme:USER_REF:PASSWORD@HOST[?query]`          | Provisioning portals (Cloud Softphone QR generator) |
-| `json` | Marker-discriminated JSON object (`"t"` field)   | Reserved for WebTrit-issued codes            |
+| `json` | Marker-discriminated JSON object (`"t"` field)   | Reserved for Core-issued codes               |
 
 ## URI Format
 
@@ -104,7 +104,7 @@ Rules shared with the URI format: fields that would redirect the sign-in to anot
 core (`core`, `tenant`, `core_url`, `tenant_id`) are rejected, in any letter case;
 the format's own field names (`user`, `password`, ...) stay exact; unknown fields are
 ignored so the format can grow without breaking older builds. The JSON form is
-reserved for WebTrit-issued codes (nothing produces it yet); prefer the URI form for
+reserved for Core-issued codes (nothing produces it yet); prefer the URI form for
 plain user+password codes - it makes a sparser, easier-to-scan QR.
 
 The field layout (marker, version and field names) is described by a

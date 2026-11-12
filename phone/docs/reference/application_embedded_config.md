@@ -2,7 +2,7 @@
 
 ## Overview
 
-This document describes how to integrate embedded web pages into the **WebTrit Call App**. These
+This document describes how to integrate embedded web pages into the **PortaPhone** app. These
 pages, rendered in a
 `WebView`, can extend the application with client-specific features and are configured in
 `app.embedded.config.json`.
@@ -179,7 +179,7 @@ function onDeviceInfoReady(payload) {
 
 ```json
 {
-  "app": "WebTrit Phone",
+  "app": "PortaPhone",
   "appVersion": "1.8.0",
   "manufacturer": "Google",
   "model": "Pixel 7",

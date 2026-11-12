@@ -36,7 +36,7 @@ Exposes two protected hooks for subclasses:
 | Field                 | Type                  | Description                                          |
 |-----------------------|-----------------------|------------------------------------------------------|
 | `coreUrl`             | `String`              | Server URL (scheme normalized by the implementation) |
-| `tenantId`            | `String`              | WebTrit tenant identifier                            |
+| `tenantId`            | `String`              | Core tenant identifier                               |
 | `token`               | `String`              | Auth token                                           |
 | `trustedCertificates` | `TrustedCertificates` | Custom CA certs; empty by default                    |
 

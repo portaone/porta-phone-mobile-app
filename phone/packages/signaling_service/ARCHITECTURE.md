@@ -55,7 +55,7 @@ graph TD
 
     CB & PIM & SFIM -->|" Stream&lt;SignalingModuleEvent&gt; "| SM
     SM -->|callbacks| WSC
-    WSC -->|WebSocket| Server["WebTrit Core"]
+    WSC -->|WebSocket| Server["Core"]
 ```
 
 | Layer | Knows | Does NOT know |
@@ -73,7 +73,7 @@ graph TD
     subgraph Direct["iOS, web, Android pushBound - calling isolate"]
         direction TB
         ios_cb["CallBloc"] -->|events| ios_sm["SignalingModule\n(created by app factory)"]
-        ios_sm -->|WebSocket| ios_srv["WebTrit Core"]
+        ios_sm -->|WebSocket| ios_srv["Core"]
     end
 
     subgraph Android["Android persistent - foreground service + hub"]
@@ -81,7 +81,7 @@ graph TD
         and_cb["CallBloc\n(main isolate)"] -->|events via hub| and_hm["SignalingHubModule"]
         and_hm -->|" IsolateNameServer\nSendPort "| and_hub["SignalingHub\n(background isolate)"]
         and_hub -->|owns| and_sm["SignalingModule\n(created by app factory)"]
-        and_sm -->|WebSocket| and_srv["WebTrit Core"]
+        and_sm -->|WebSocket| and_srv["Core"]
         and_hub -->|foreground| and_svc["SignalingForegroundService"]
     end
 ```

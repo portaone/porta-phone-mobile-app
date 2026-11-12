@@ -1,6 +1,7 @@
-# WebTrit Phone
+# PortaPhone
 
-WebTrit Phone is a feature-rich application designed for seamless communication.
+The PortaPhone Flutter app. What the product is and the other parts of the repository: the
+[root README](../README.md).
 
 ## Flutter Project Environment Setup
 
@@ -32,7 +33,7 @@ The application offers extensive customization options:
 - **[Pages](docs/reference/page_configuration.md)** – Customize pages and their layouts.
 - **[Features](docs/reference/application_config.md)** – Enable or disable specific features.
   - [Custom Login](docs/reference/custom_login.md) – Implement a custom login page.
-  - [Embedded pages](docs/reference/application_embedded_config.md) –  Implements embedded pages that extend the WebTrit app with custom web content.
+  - [Embedded pages](docs/reference/application_embedded_config.md) - Implements embedded pages that extend the PortaPhone app with custom web content.
 
 ## Development & Build
  - **Build and run**: See the [Build and Run](docs/guides/build.md) documentation for details on how to build and run the application.

@@ -1,4 +1,4 @@
-# Contributing to Webtrit CallKeep
+# Contributing to CallKeep
 
 Commit form, Gerrit review and hook installation are the repository's: see the root [AGENTS.md](../AGENTS.md).
 

@@ -1,6 +1,6 @@
 # AGENTS.md - phone
 
-WebTrit Phone, the Flutter VoIP app: `lib/` is the app, `packages/` the libraries it is built
+PortaPhone, the Flutter VoIP app: `lib/` is the app, `packages/` the libraries it is built
 from. This page holds what is true for every change here and says where to read before a
 particular kind of change. The explanations live in `docs/` (map: [docs/README.md](docs/README.md))
 and in each package's own `AGENTS.md`, which loads when you read files in that package.

@@ -1,6 +1,6 @@
 # AGENTS.md - api
 
-Typed REST client for WebTrit Core, pure Dart: no Flutter, nothing from `lib/` of the app. What
+Typed REST client for Core, pure Dart: no Flutter, nothing from `lib/` of the app. What
 you usually do here is add an endpoint, give an endpoint a failure of its own, or add a model;
 the steps for all three, with the tests, are the skill `core-endpoint`
 ([SKILL.md](../../../.agents/skills/core-endpoint/SKILL.md)). Which error codes Core sends and

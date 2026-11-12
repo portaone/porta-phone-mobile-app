@@ -417,7 +417,7 @@ class MainShellHarness {
 
 class _TestPackageInfo implements PackageInfo {
   @override
-  String get appName => 'WebTrit Test';
+  String get appName => 'PortaPhone Test';
 
   @override
   String get packageName => 'com.webtrit.phone.test';

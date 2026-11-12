@@ -44,7 +44,7 @@ The `loginConfig` section defines the app’s login screen behavior and embedded
       "fullScreenLaunchEmbeddedResourceId": "1"
     },
     "modeSelect": {
-      "greetingL10n": "WebTrit",
+      "greetingL10n": "PortaPhone",
       "actions": [
         {
           "enabled": true,
@@ -544,7 +544,7 @@ Each settings item includes:
 
 ## Embedded Pages
 
-Embedded pages allow extending the WebTrit app with custom web content. These pages can be
+Embedded pages allow extending the PortaPhone app with custom web content. These pages can be
 integrated either as a bottom
 menu tab or as a settings item.
 See [embedded_resources.md](application_embedded_config.md) for full details of the embedded web

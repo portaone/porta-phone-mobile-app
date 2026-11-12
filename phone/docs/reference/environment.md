@@ -1,6 +1,6 @@
 ## Variables
 
-This file describes environment variables and Dart define variables used in the WebTrit application
+This file describes environment variables and Dart define variables used in the PortaPhone application
 configuration.
 
 Last reviewed: 2026-09-11.
@@ -20,7 +20,7 @@ are used:
 
 ```json
 {
-  "WEBTRIT_APP_NAME": "WebTrit",
+  "WEBTRIT_APP_NAME": "PortaPhone",
   "_WEBTRIT_APP_FCM_VAPID_KEY": "",
   "__WEBTRIT_APP_FCM_VAPID_KEY_DESCRIPTION": "Used only for Web Push via FCM. Optional."
 }
@@ -33,7 +33,7 @@ maintainability and enabling tools to parse configuration reliably.
 
 ### Dart define
 
-- `WEBTRIT_APP_NAME` – The application name (_default: **WebTrit**_).
+- `WEBTRIT_APP_NAME` – The application name (_default: **PortaPhone**_).
 - `WEBTRIT_APP_LINK_DOMAIN` – Used to configure Android App Links and iOS Universal Links.
 - `WEBTRIT_APP_DEMO_CORE_URL` – Demo core URL (_default: **http://localhost:4000**_).
 - `WEBTRIT_APP_DATABASE_LOG_STATEMENTS` – Enables logging of database queries (

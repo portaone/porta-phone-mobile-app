@@ -48,7 +48,7 @@ void main() {
         await pumpCollectingOverflows(
           tester,
           harness.wrap(
-            const UserAgreementScreen(appTermsAndConditionsUrl: 'https://example.com/terms', appName: 'WebTrit'),
+            const UserAgreementScreen(appTermsAndConditionsUrl: 'https://example.com/terms', appName: 'PortaPhone'),
           ),
         );
 
