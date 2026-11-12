@@ -2,6 +2,7 @@ import 'package:material_ui/material_ui.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:webtrit_phone/app/constants.dart';
+import 'package:webtrit_phone/app/keys.dart';
 import 'package:webtrit_phone/features/call/call.dart';
 import 'package:webtrit_phone/l10n/l10n.dart';
 import 'package:webtrit_phone/models/models.dart';
@@ -72,6 +73,43 @@ void main() {
 
       expect(find.text(context.l10n.callNetworkQuality_yourAudioWeak), findsOneWidget);
       expect(find.text(context.l10n.call_ToolbarStatus_noiseReductionOff), findsNothing);
+    });
+
+    testWidgets('a media failure is found by the quality status identifier', (tester) async {
+      await tester.pumpWidget(
+        _buildSubject(callStatus: CallStatus.ready, iceConnectionIssue: IceConnectionIssue.iceFail),
+      );
+      final context = tester.element(find.byType(CallToolbarStatus));
+
+      expect(
+        find.descendant(
+          of: find.bySemanticsIdentifier(callScreenQualityStatusId),
+          matching: find.text(context.l10n.iceConnectionIssue_iceFail),
+        ),
+        findsOneWidget,
+      );
+    });
+
+    testWidgets('weak or recovered media is found by the quality status identifier', (tester) async {
+      await tester.pumpWidget(_buildSubject(callStatus: CallStatus.ready, networkQuality: _quality));
+      final context = tester.element(find.byType(CallToolbarStatus));
+
+      expect(
+        find.descendant(
+          of: find.bySemanticsIdentifier(callScreenQualityStatusId),
+          matching: find.text(context.l10n.callNetworkQuality_yourAudioWeak),
+        ),
+        findsOneWidget,
+      );
+    });
+
+    testWidgets('a connection state and a healthy call carry no quality status identifier', (tester) async {
+      await tester.pumpWidget(_buildSubject(callStatus: CallStatus.connectivityNone));
+      expect(find.bySemanticsIdentifier(callScreenQualityStatusId), findsNothing);
+
+      await tester.pumpWidget(_buildSubject(callStatus: CallStatus.ready));
+      await tester.pumpAndSettle();
+      expect(find.bySemanticsIdentifier(callScreenQualityStatusId), findsNothing);
     });
 
     testWidgets('renders nothing while everything is healthy', (tester) async {
