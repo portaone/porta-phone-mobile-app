@@ -18,6 +18,14 @@ void main() {
       'room_create_failed': ConferenceRefusalReason.roomCreateFailed,
       'attach_failed': ConferenceRefusalReason.attachFailed,
       'line_in_conference': ConferenceRefusalReason.lineInConference,
+      'video_disabled': ConferenceRefusalReason.videoDisabled,
+      'no_conference_video': ConferenceRefusalReason.noConferenceVideo,
+      'not_in_conference': ConferenceRefusalReason.notInConference,
+      'invalid_descriptions': ConferenceRefusalReason.invalidDescriptions,
+      'not_publishing': ConferenceRefusalReason.notPublishing,
+      'not_subscribed': ConferenceRefusalReason.notSubscribed,
+      'no_peer_connection': ConferenceRefusalReason.noPeerConnection,
+      'invalid_request': ConferenceRefusalReason.invalidRequest,
     };
 
     for (final entry in reasons.entries) {

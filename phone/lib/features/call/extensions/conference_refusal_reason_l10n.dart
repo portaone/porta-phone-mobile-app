@@ -31,6 +31,15 @@ extension ConferenceRefusalReasonL10n on ConferenceRefusalReason {
       case ConferenceRefusalReason.invalidMuted:
       case ConferenceRefusalReason.conferenceNotEstablished:
       case ConferenceRefusalReason.lineInConference:
+      // Video: the app sends none of these requests yet.
+      case ConferenceRefusalReason.videoDisabled:
+      case ConferenceRefusalReason.noConferenceVideo:
+      case ConferenceRefusalReason.notInConference:
+      case ConferenceRefusalReason.invalidDescriptions:
+      case ConferenceRefusalReason.notPublishing:
+      case ConferenceRefusalReason.notSubscribed:
+      case ConferenceRefusalReason.noPeerConnection:
+      case ConferenceRefusalReason.invalidRequest:
       case ConferenceRefusalReason.unknown:
         return context.l10n.conferenceRefusal_unavailable;
     }
