@@ -50,6 +50,7 @@ dart run example/signaling_example.dart <core-url> <token>
 | Document | What it covers |
 | --- | --- |
 | [docs/connection_liveness.md](docs/connection_liveness.md) | The keepalive and the receive watchdog, what Core does, how a connection that dies without being closed is noticed and given up |
+| [docs/transaction_registry.md](docs/transaction_registry.md) | `TransactionRegistry`: how a request is paired with its answer, late answers, what ends the waiting requests when a connection ends |
 | [docs/conference_protocol.md](docs/conference_protocol.md) | The wire format of the conference requests and events |
 | [AGENTS.md](AGENTS.md) | The message hierarchy, decoding, how to add an event or a request, the exceptions, the tests |
 | [Signaling architecture](../../docs/architecture/signaling_architecture_target.md) | The three layers of the app's signaling stack and where this package sits |

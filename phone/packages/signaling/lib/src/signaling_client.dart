@@ -15,6 +15,7 @@ import 'receive_watchdog.dart';
 import 'requests/requests.dart';
 import 'responses/responses.dart';
 import 'transaction.dart';
+import 'transaction_registry.dart';
 
 typedef StateHandshakeHandler = void Function(StateHandshake stateHandshake);
 typedef EventHandler = void Function(Event event);
@@ -60,6 +61,7 @@ class WebtritSignalingClient {
   @visibleForTesting
   WebtritSignalingClient.inner(this._wsc) : _id = _createCounter, _logger = Logger('WebtritSignalingClient') {
     _createCounter++;
+    _registry = TransactionRegistry(_wsc, clientId: _id, logger: _logger);
 
     _logger.fine('$_id connected');
   }
@@ -69,6 +71,7 @@ class WebtritSignalingClient {
   final Set<String> _ignoredTypes = {};
 
   final WebSocketChannel _wsc;
+  late final TransactionRegistry _registry;
   StreamSubscription? _wscStreamSubscription;
 
   late final StateHandshakeHandler _onStateHandshake;
@@ -87,8 +90,6 @@ class WebtritSignalingClient {
   late final _receiveWatchdog = ReceiveWatchdog(quiet: () => _currentKeepaliveInterval, onQuiet: _onQuiet);
 
   Duration get _currentKeepaliveInterval => _keepaliveInterval ?? const Duration(seconds: 30);
-
-  final _transactions = <String, Transaction>{};
 
   static Future<WebtritSignalingClient> connect(
     Uri baseUrl,
@@ -214,24 +215,10 @@ class WebtritSignalingClient {
   //
 
   void _onMessage(Map<String, dynamic> messageJson) {
-    if (messageJson.containsKey(Response.typeKey) || messageJson[Handshake.typeKey] == KeepaliveHandshake.typeValue) {
-      final responseJson = messageJson;
-
-      final transactionId = responseJson['transaction'];
-      final transaction = _transactions.remove(transactionId);
-
-      if (transaction != null) {
-        transaction.handleResponse(responseJson);
-      } else {
-        // Late server response for a transaction that already timed out and was
-        // removed from the map. This can happen under network congestion when
-        // the server ACK arrives after the client's timeout has fired.
-        // Treating this as a connection error would cause a false-positive
-        // SignalingConnectionFailed and an unnecessary reconnect — ignore it.
-        _logger.warning(
-          '$_id _onMessage: received response for unknown transactionId=$transactionId — ignoring late response',
-        );
-      }
+    if (TransactionRegistry.isAnswer(messageJson)) {
+      // A late answer, for a transaction that timed out, is ignored there:
+      // taken for a connection error it would make a needless reconnect.
+      _registry.handleAnswer(messageJson);
     } else if (messageJson.containsKey(Event.typeKey)) {
       final eventJson = messageJson;
 
@@ -270,61 +257,10 @@ class WebtritSignalingClient {
     }
   }
 
-  Future<Map<String, dynamic>> _executeTransaction(Map<String, dynamic> requestJson, Duration timeoutDuration) async {
-    final isIdGenerate = requestJson['transaction'] == null;
-    if (isIdGenerate) {
-      requestJson['transaction'] = Transaction.generateId();
-    }
+  Future<Map<String, dynamic>> _executeTransaction(Map<String, dynamic> requestJson, Duration timeoutDuration) =>
+      _registry.execute(requestJson, timeoutDuration);
 
-    // Sent before the transaction exists, so a failed write starts no timeout.
-    // The answer cannot overtake it: the socket stream delivers it asynchronously.
-    _addMessage(requestJson);
-
-    final transaction = Transaction(
-      signalingClientId: _id,
-      id: requestJson['transaction'],
-      timeoutDuration: timeoutDuration,
-    );
-    _transactions[transaction.id] = transaction;
-
-    try {
-      final responseJson = await transaction.future;
-      if (isIdGenerate) {
-        responseJson.remove('transaction');
-      }
-
-      return responseJson;
-    } catch (e) {
-      _transactions.remove(transaction.id);
-      rethrow;
-    }
-  }
-
-  void _addMessage(Map<String, dynamic> messageJson) {
-    final data = jsonEncode(messageJson);
-    _addData(data);
-  }
-
-  void _addData(dynamic data) {
-    _logger.fine(() => '$_id _addData add: $data');
-
-    try {
-      if (_wsc.closeCode != null) {
-        throw StateError('Cannot add event after closing (detected via closeCode)');
-      }
-
-      _wsc.sink.add(data);
-    } on StateError catch (e) {
-      throw SignalingBadStateException(_id, e);
-    }
-  }
-
-  void _cleanupTransactions(int? code, String? reason) {
-    for (final transaction in _transactions.values) {
-      transaction.terminateByDisconnect(code, reason);
-    }
-    _transactions.clear();
-  }
+  void _cleanupTransactions(int? code, String? reason) => _registry.terminateAll(code, reason);
 
   //
 
@@ -365,10 +301,7 @@ class WebtritSignalingClient {
     _wscStreamSubscription = null;
     _stopTimers();
     unawaited(wscStreamSubscription.cancel());
-    for (final transaction in _transactions.values) {
-      transaction.timeOutNow();
-    }
-    _transactions.clear();
+    _registry.timeOutAll();
     unawaited(_wsc.sink.close().catchError((_) {}));
     _onError(error, stackTrace);
   }
