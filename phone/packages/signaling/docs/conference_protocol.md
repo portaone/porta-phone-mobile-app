@@ -1,6 +1,7 @@
 # Conference protocol
 
-Wire-level reference for the audio-conference messages this package carries: the
+Wire-level reference for the conference messages this package carries - the audio
+conference and its video room: the
 exact JSON of every request, response and event, the Dart class for each, what
 Core does on receipt, what it refuses with, in which order things arrive, and what
 the client must do locally at each step. Enough to write a client against without
@@ -13,6 +14,15 @@ the rest 2026-09-11. Sources: `webtrit_core` origin/main 7db35cfb
 Web Dialer implementation (Gerrit `porta-phone/web-app` 5946b5c). Where the
 conference client guide shipped in `webtrit_core/docs/` differs from the code, this
 document follows the code and says so in section 12.
+
+Sections 17-19 (video and the invited far end) were written 2026-11-16 from the
+conference video Core, `porta-phone/backend` a2c563dc (`conference_video.ex`,
+`signaling_handler.ex`, `docs/signaling/features/conference.md`), Janus
+`porta-phone/external/janus` a05e89cf and the Web Dialer of the same feature branch
+(`services/signaling/ConferenceVideo.ts`). That feature branch is not on master yet;
+the app sends none of those requests yet. The same Core adds guests who join by a
+public link, on a socket of their own; the app does not take part in that, and this
+package does not carry it (section 17).
 
 Contents
 
@@ -32,6 +42,9 @@ Contents
 14. Worked example: a three-way conference, message by message
 15. Limits
 16. What the package tests cover
+17. Conference video Core: what changes for the audio conference
+18. Video and screen sharing
+19. The invited far end
 
 ## 1. The model
 
@@ -126,6 +139,18 @@ Core for the app to act on it.
 | handshake `conference` | `ConferenceInfo({room, participants})` on `StateHandshake.conference` | `handshakes/conference_info.dart` |
 | `reason` string | `ConferenceRefusalReason.fromReason(String)` | `conference_refusal_reason.dart` |
 | `{"completed": true}` | `iceCandidateFromJson` / `iceCandidateToJson` | `ice_candidate_json.dart` |
+| `conference_video_subscribe` / `_unpublish` / `_restart` / `_leave` | `ConferenceVideoSubscribeRequest`, `ConferenceVideoUnpublishRequest`, `ConferenceVideoRestartRequest`, `ConferenceVideoLeaveRequest` (`{transaction}`) | `requests/conference/conference_video_*_request.dart` |
+| `conference_video_answer` | `ConferenceVideoAnswerRequest({transaction, jsep})` | `requests/conference/conference_video_answer_request.dart` |
+| `conference_video_publish` | `ConferenceVideoPublishRequest({transaction, jsep, descriptions})` | `requests/conference/conference_video_publish_request.dart` |
+| `conference_video_ice_trickle` (req) | `ConferenceVideoIceTrickleRequest({transaction, pc, candidate})` | `requests/conference/conference_video_ice_trickle_request.dart` |
+| `pc`, `kind`, a description | `ConferenceVideoPc`, `ConferenceVideoKind`, `ConferenceVideoDescription({mid, kind})` | `conference_video_types.dart` |
+| `conference_video_offer` / `_publisher_answer` | `ConferenceVideoOfferEvent({jsep})`, `ConferenceVideoPublisherAnswerEvent({jsep})` | `events/conference/conference_video_offer_event.dart`, `..._publisher_answer_event.dart` |
+| `conference_video_updated` | `ConferenceVideoUpdatedEvent({room, self, streams, publishers, participants, speaker, presenter})` | `events/conference/conference_video_updated_event.dart` |
+| its lists | `ConferenceVideoStream`, `ConferenceVideoPublisher`, `ConferenceVideoParticipant` | `events/conference/conference_video_room.dart` |
+| `conference_video_failed` | `ConferenceVideoFailedEvent({pc, request, reason, code})` | `events/conference/conference_video_failed_event.dart` |
+| `conference_video_ice_trickle` (evt) | `ConferenceVideoIceTrickleEvent({pc, candidate})` | `events/conference/conference_video_ice_trickle_event.dart` |
+| `conference_video_invite` / `_terminated` | `ConferenceVideoInviteEvent({room, line, host})`, `ConferenceVideoTerminatedEvent({room})` | `events/conference/conference_video_invite_event.dart`, `..._terminated_event.dart` |
+| `core.conference_video` | `CoreInfo.conferenceVideo` in the app (`lib/models/system_info/components/core_info.dart`), not in this package | |
 | `peer_message` (req) | `PeerMessageRequest` - sealed, one class per inner `type` | `requests/call/peer_message_request.dart` |
 | `peer_message` (evt) | `PeerMessageEvent` - sealed, plus `sender` | `events/call/peer_message_event.dart` |
 | `type: conference_mute` | `ConferenceMutePeerMessageRequest` / `...Event({line, callId, muted})` | as the two above |
@@ -468,6 +493,10 @@ PeerConnection does not survive an app restart. On every handshake:
 | present | yes | adopt the server's `room` and `participants` as authoritative; when the conference PeerConnection is lost, send `conference_rejoin` (4.8) |
 | `null` | no | nothing |
 
+The conference video Core adds a second key, `conference_guests` (the host's guest link
+and its guests), which this package does not read (section 17). The video state is not
+in the handshake (section 18.7).
+
 Observed on the test stand: after a page reload with calls already gone the
 handshake carries `conference: null`, so the first row is hard to reach; the
 `ForgetConference` row is the one that runs after an app restart.
@@ -646,6 +675,14 @@ on that line's PeerConnection.
 | `line_not_ready` | `lineNotReady` | `conference_mute` | participant still joining; retry after it appears in a list |
 | `invalid_muted` | `invalidMuted` | `conference_mute` | `muted` present but not a boolean |
 | `line_in_conference` | `lineInConference` | LINE `hold` | not a conference refusal: a hold on a merged line, on the `HoldRequest` transaction |
+| `video_disabled` | `videoDisabled` | `conference_video_*` | the conference has no video room: no VideoRoom in Janus, or creating it failed; the conference is audio only |
+| `no_conference_video` | `noConferenceVideo` | `conference_video_*` | no conference and no invitation |
+| `not_in_conference` | `notInConference` | relayed video request | the invited far end is no longer a participant |
+| `invalid_descriptions` | `invalidDescriptions` | `conference_video_publish` | `descriptions` is not a list of `{mid, kind: camera|screen}` |
+| `not_publishing` | `notPublishing` | `conference_video_unpublish` | nothing published |
+| `not_subscribed` | `notSubscribed` | `conference_video_answer`, `conference_video_restart` | no subscription; send `conference_video_subscribe` first |
+| `no_peer_connection` | `noPeerConnection` | `conference_video_ice_trickle` | that PeerConnection is not made yet; buffer until the ack |
+| `invalid_request` | `invalidRequest` | `conference_video_*` | unknown action, a missing field, `pc` not publisher or subscriber |
 | anything else | `unknown` | | keep the raw string |
 
 `conference_answer`, `conference_ice_trickle`, `conference_remove` and
@@ -801,6 +838,9 @@ The same conference torn down by A instead:
 
 ## 15. Limits
 
+These are the limits of Core master. The conference video Core lifts the first and third
+(section 17).
+
 - Audio only. A video leg makes `merge` fail after `ack` (5.4); the client should
   not offer it.
 - Codecs Opus, PCMA, PCMU. A G.722 leg is dropped silently (8.5).
@@ -833,3 +873,205 @@ that an unknown `conference_*` event still throws.
 
 `test/src/conference_refusal_reason_test.dart`: every reason string, the two
 prefixed families, unknown and empty.
+
+The conference video messages:
+`test/src/requests/conference/conference_video_requests_test.dart`: `toJson` of every
+request against the JSON of the Core guide and the round trip; `descriptions` left out
+when empty, an unknown `kind` and `pc` refused, a description of an unknown kind refused
+before the publish is sent.
+`test/src/events/conference/conference_video_events_test.dart`: the guide example of
+`conference_video_updated`, fields Core leaves out when `null`, both shapes of
+`conference_video_failed`, the completed marker, an unknown stream kind or `pc`,
+malformed list entries left out.
+
+## 17. Conference video Core: what changes for the audio conference
+
+The conference video Core keeps every message of sections 4-7 and adds to them:
+
+- Guests by public link: `conference_offer` and `conference_updated` carry `guests`,
+  the handshake a `conference_guests` block, and the host has `conference_guest_*`
+  requests and events; a guest itself talks over `/conference/guest/v1`. Hosting
+  guests and being one are not part of the app, so none of it is read here: the extra
+  fields are left alone and the guest events are unknown types, skipped. A guest let in
+  by someone else (the Web Dialer) still shows in `conference_video_updated` as a
+  participant with `guest: true`, and is shown like any other.
+- Video calls can be merged where the conference has a video room. Discovery is
+  `core.conference_video` in `system-info` (conferences on, `CONFERENCE_ENABLED`, and
+  Janus loads its VideoRoom plugin). It is a hint: a conference whose room could not
+  be made goes on audio only, its `conference_video_*` requests are refused with
+  `video_disabled`, a `merge` that includes a video call still fails with
+  `conference_failed` `video_not_supported`, and a `conference_add` of a video call
+  ends the whole running conference (the Core guide, section 2). Where the flag is
+  false or `video_disabled` came back, do not offer to merge or add a call with
+  video.
+- Core sets no participant limit. The only ceiling is the video room's 100
+  publishers: past it the room refuses a publication with `conference_video_failed`,
+  `code: 432`.
+- `system-info` has no flag of its own for `CONFERENCE_ENABLED`; `merge` is refused
+  with `conference_disabled` when it is off.
+
+## 18. Video and screen sharing
+
+Audio stays in the mixer. Every conference also gets a VideoRoom room (an SFU) under
+the same room number. The same requests and events serve the host and an invited far
+end (section 19). Each of them opens two more
+PeerConnections, both video only:
+
+| PC | offers | carries |
+|---|---|---|
+| publisher | the client | its camera and/or screen |
+| subscriber | the room, through Core | every video stream of everyone else, one m-line each |
+
+### 18.1 Feeds
+
+Every participant is a feed, a number unique within the conference: the host is `1`,
+the far end of the host's line `N` is `N + 2`, guests (section 17) are `100`, `101`, ... in the
+order they knocked, never reused within a conference.
+
+### 18.2 Subscribing
+
+```jsonc
+{ "request": "conference_video_subscribe", "transaction": "v1" }
+{ "event": "conference_video_offer", "jsep": { "type": "offer", "sdp": "..." } }
+{ "request": "conference_video_answer", "transaction": "v2", "jsep": { "type": "answer", "sdp": "..." } }
+```
+
+From the ack on Core keeps the client subscribed to every stream of everyone else.
+`conference_video_updated` comes at once; the first offer only when there is something
+to receive, then one for every change (one offer may cover several). Each is answered
+on the subscriber PeerConnection. Sending `conference_video_subscribe` again remakes
+the subscription from scratch, and its offer goes on a new PeerConnection. When Janus
+hangs the subscriber up, Core drops the subscription and sends a new offer unasked,
+for a new PeerConnection. After `conference_video_failed` with `pc: "subscriber"`
+nothing resubscribes until the next feed change: send `conference_video_subscribe`
+again. A client that never subscribes gets no video and no `conference_video_updated`.
+
+### 18.3 Publishing
+
+```jsonc
+{ "request": "conference_video_publish", "transaction": "v3",
+  "jsep": { "type": "offer", "sdp": "..." },
+  "descriptions": [ { "mid": "0", "kind": "camera" }, { "mid": "1", "kind": "screen" } ] }
+{ "event": "conference_video_publisher_answer", "jsep": { "type": "answer", "sdp": "..." } }
+{ "request": "conference_video_unpublish", "transaction": "v4" }
+```
+
+- The offer carries no audio.
+- `descriptions` names each video m-line `camera` or `screen`. Without it Core
+  publishes every m-line as a camera; `ConferenceVideoPublishRequest` leaves an empty
+  list out. Anything else is `invalid_descriptions`.
+- The first publish joins the room, later ones renegotiate the same publication on
+  the same PeerConnection: add or remove the screen, restart ICE.
+- To stop, send `conference_video_unpublish` and then close the PeerConnection, so
+  that the room does not report the closed one as a failure.
+
+### 18.4 Codecs
+
+The room carries H.264 and VP8 and never transcodes. Offer both. Core picks the
+publisher's codec (`conference_video.ex`, `publisher_codec/2`): where the conference
+has SIP legs with video, the codec most of them negotiated, so the phones can decode
+it; otherwise the first payload type of the offer's `m=video` line if it is H.264 or
+VP8; otherwise the room's default, H.264. A SIP participant receives only streams in
+its own call's codec.
+
+### 18.5 ICE
+
+```jsonc
+{ "request": "conference_video_ice_trickle", "transaction": "v5", "pc": "publisher",
+  "candidate": { "candidate": "...", "sdpMid": "0", "sdpMLineIndex": 0 } }
+{ "event": "conference_video_ice_trickle", "pc": "subscriber", "candidate": { ... } }
+```
+
+The end of gathering is `{"completed": true}`, as for the mixer: Core hands the
+candidate to Janus as is, and turns a `null` into the same marker
+(`Janus.Connection` `trickle`). A trickle for a PeerConnection Core has not made yet
+is refused with `no_peer_connection`: buffer candidates until the publish or
+subscribe is acknowledged.
+
+### 18.6 `conference_video_updated`
+
+```jsonc
+{ "event": "conference_video_updated", "room": 4242, "self": 1,
+  "streams":      [ { "mid": "0", "feed": 2, "kind": "camera" },
+                    { "mid": "1", "feed": 3, "kind": "screen" } ],
+  "publishers":   [ { "feed": 1, "display": "Alice", "line": null, "kinds": ["camera"] },
+                    { "feed": 2, "display": "1002", "line": 0, "kinds": ["camera"] },
+                    { "feed": 3, "display": "Bob", "line": 1, "kinds": ["camera", "screen"] } ],
+  "participants": [ { "feed": 1, "display": "Alice", "host": true, "muted": false },
+                    { "feed": 2, "display": "1002", "host": false, "muted": false },
+                    { "feed": 3, "display": "Bob", "host": false, "muted": true },
+                    { "feed": 100, "display": "Ann", "host": false, "muted": false, "guest": true } ],
+  "speaker": 2, "presenter": 3 }
+```
+
+| field | meaning |
+|---|---|
+| `self` | the receiving client's own feed |
+| `streams` | what this client receives: `mid` is the m-line of its subscriber PeerConnection; match remote tracks by it. Never its own feed. |
+| `publishers` | everyone who publishes, with `kinds`. `line` is the host's line of that participant, `null` for the host and guests. |
+| `participants` | everyone in the conference, with or without video, in the same order for every participant: host, far ends by line, admitted guests (`guest: true`, left out otherwise). `muted` is the host's mute. `display` may be `null`. |
+| `speaker` | whoever started talking last; does not clear on silence. Left out when nobody has spoken. |
+| `presenter` | whoever shares a screen, the latest if several do. Left out when nobody does. |
+
+Sent to every subscribed participant on every change of streams, publishers,
+participants, speaker or presenter. Layout is the client's: the usual one is the
+presenter's screen in the main area, otherwise the speaker's camera, the rest as
+thumbnails, a name tile for a participant without video. On the host, a merged video
+call's far-end camera comes as feed `line + 2` on the subscriber PeerConnection, not
+on the call's own PeerConnection; the video the host sends on that call's
+PeerConnection is not forwarded to the phone while the call is in the room.
+
+### 18.7 Failures, restarts, reconnects
+
+```jsonc
+{ "event": "conference_video_failed", "pc": "publisher", "reason": "<Janus error text>", "code": 432 }
+{ "request": "conference_video_restart", "transaction": "v6" }
+{ "request": "conference_video_leave", "transaction": "v7" }
+```
+
+- A room refusal names `pc`, Janus's text and code. Core has dropped that handle;
+  close that PeerConnection and publish or subscribe again. A refusal relayed to an
+  invited far end names `request` instead (section 19).
+- Subscriber ICE restart: only the room can restart it. `conference_video_restart`
+  brings an offer with the restart, answered on the same PeerConnection.
+- Publisher ICE restart: a new offer with `iceRestart: true` through
+  `conference_video_publish`, with `descriptions`.
+- `conference_video_leave` stops publishing and receiving; close both video
+  PeerConnections. The participant stays in the audio conference; an invited far
+  end keeps its invitation.
+- After a signalling reconnect: events sent while the socket was down are lost and
+  the video state is not in the handshake. Close the subscriber PeerConnection and
+  send `conference_video_subscribe` again; restart ICE on the publisher with a new
+  `conference_video_publish`.
+
+## 19. The invited far end
+
+When the far end of a host's call is a user of the same tenant signed in to the app or the
+Web Dialer, and the conference has video, Core finds that user's controller (by the call's
+SIP Call-ID, or by its number) and invites it on its ordinary signalling socket:
+
+```jsonc
+{ "event": "conference_video_invite", "room": 4242, "line": 0, "host": "Alice" }
+```
+
+- `line` is the invited client's own line, the call through which it takes part.
+  `host` is the host's display name; Core leaves it out when there is none.
+- Its audio does not change: it keeps travelling on that call, which now carries the
+  mix. It has no mixer PeerConnection and must not mute that call.
+- Its video goes to the room with the requests and events of section 18. Video on the
+  SIP call itself is not used for the conference.
+- Its list of who is in the conference is `participants` of
+  `conference_video_updated`; it receives no `conference_updated`.
+- Its own controller acknowledges its requests before relaying them to the host's.
+  A refusal there arrives as an event naming the request:
+  `{"event": "conference_video_failed", "request": "conference_video_answer", "reason": "not_subscribed"}`.
+- To ignore the invitation, do nothing; to stop taking part in video, send
+  `conference_video_leave`.
+- It ends with `{"event": "conference_video_terminated", "room": 4242}`: the
+  conference is over, the participant was removed, or its call ended. Close both
+  video PeerConnections; the call carries on unless it was the one that ended.
+- The invitation is not repeated and not in the handshake. Kept in memory across a
+  signalling reconnect it still works, because the controller still relays; lost on
+  an app restart until the next conference. Of several devices of the same user only
+  the first to answer is invited. A user that hosts a video conference of its own is
+  not invited.
