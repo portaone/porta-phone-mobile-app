@@ -24,6 +24,7 @@ mixin SystemInfoApiMapper {
       mobileRemoteLogging: coreInfo.mobileRemoteLogging != null
           ? mobileRemoteLoggingInfoFromApi(coreInfo.mobileRemoteLogging!)
           : null,
+      conferenceVideo: coreInfo.conferenceVideo ?? false,
     );
   }
 

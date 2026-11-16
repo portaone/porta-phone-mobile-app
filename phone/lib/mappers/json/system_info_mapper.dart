@@ -46,6 +46,7 @@ mixin SystemInfoJsonMapper {
       mobileRemoteLogging: map['mobile_remote_logging'] != null
           ? mobileRemoteLoggingInfoFromMap(map['mobile_remote_logging'])
           : null,
+      conferenceVideo: map['conference_video'] == true,
     );
   }
 
@@ -57,6 +58,7 @@ mixin SystemInfoJsonMapper {
       'mobile_remote_logging': coreInfo.mobileRemoteLogging != null
           ? mobileRemoteLoggingInfoToMap(coreInfo.mobileRemoteLogging!)
           : null,
+      'conference_video': coreInfo.conferenceVideo,
     };
   }
 

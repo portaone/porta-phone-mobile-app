@@ -55,6 +55,7 @@ class CoreInfo with _$CoreInfo {
     this.iceServersConfigured,
     this.notificationDeletedRetentionDays,
     this.mobileRemoteLogging,
+    this.conferenceVideo,
   });
 
   @VersionConverter()
@@ -79,6 +80,12 @@ class CoreInfo with _$CoreInfo {
   /// disabled.
   @JsonKey(fromJson: _mobileRemoteLoggingFromJson)
   final MobileRemoteLoggingInfo? mobileRemoteLogging;
+
+  /// Whether conferences carry video and screen sharing (JSON key
+  /// `conference_video`): conferences are on and the media server loads its
+  /// video room. A hint, not a guarantee: a conference whose video room could
+  /// not be made goes on with audio only. `null` = the core predates it.
+  final bool? conferenceVideo;
 
   factory CoreInfo.fromJson(Map<String, Object?> json) => _$CoreInfoFromJson(json);
 

@@ -38,5 +38,13 @@ abstract class SessionRequest extends Request {
     ConferenceRemoveRequest.typeValue: ConferenceRemoveRequest.fromJson,
     ConferenceRejoinRequest.typeValue: ConferenceRejoinRequest.fromJson,
     ConferenceHangupRequest.typeValue: ConferenceHangupRequest.fromJson,
+    // Conference video: the same requests from the host and an invited far end.
+    ConferenceVideoSubscribeRequest.typeValue: ConferenceVideoSubscribeRequest.fromJson,
+    ConferenceVideoAnswerRequest.typeValue: ConferenceVideoAnswerRequest.fromJson,
+    ConferenceVideoPublishRequest.typeValue: ConferenceVideoPublishRequest.fromJson,
+    ConferenceVideoUnpublishRequest.typeValue: ConferenceVideoUnpublishRequest.fromJson,
+    ConferenceVideoRestartRequest.typeValue: ConferenceVideoRestartRequest.fromJson,
+    ConferenceVideoIceTrickleRequest.typeValue: ConferenceVideoIceTrickleRequest.fromJson,
+    ConferenceVideoLeaveRequest.typeValue: ConferenceVideoLeaveRequest.fromJson,
   };
 }

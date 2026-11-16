@@ -8,6 +8,10 @@
 /// from the exception when it wants that text. [lineInConference] is the one
 /// value that is not a conference refusal: it is the reason of a refused LINE
 /// `hold` request on a conferenced line.
+///
+/// The conference video requests answer from the same table. A video refusal
+/// relayed to an invited far end arrives as the `reason` of
+/// `conference_video_failed`; [fromReason] reads it too.
 enum ConferenceRefusalReason {
   conferenceDisabled('conference_disabled'),
   conferenceAlreadyActive('conference_already_active'),
@@ -22,6 +26,17 @@ enum ConferenceRefusalReason {
   roomCreateFailed('room_create_failed'),
   attachFailed('attach_failed'),
   lineInConference('line_in_conference'),
+
+  // Video, from the host and an invited far end.
+  videoDisabled('video_disabled'),
+  noConferenceVideo('no_conference_video'),
+  notInConference('not_in_conference'),
+  invalidDescriptions('invalid_descriptions'),
+  notPublishing('not_publishing'),
+  notSubscribed('not_subscribed'),
+  noPeerConnection('no_peer_connection'),
+  invalidRequest('invalid_request'),
+
   unknown('');
 
   const ConferenceRefusalReason(this.reason);
