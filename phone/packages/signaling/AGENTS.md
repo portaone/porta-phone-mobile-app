@@ -116,6 +116,10 @@ status, `hold_request.dart`); do not copy them.
   response for a transaction already gone (timed out) is logged and ignored.
 - The request is written before its `Transaction` is created: a write that fails throws to the
   caller and leaves no timeout behind to reach the zone with no listener.
+- Both of the above live in `TransactionRegistry` (`lib/src/transaction_registry.dart`), one per
+  connection, which the client feeds every answer and asks to end what waits on a close or a dead
+  connection: [docs/transaction_registry.md](docs/transaction_registry.md). Change request and
+  answer pairing there, not in the client.
 - Keepalive, receive watchdog and a connection given up when its keepalive is not answered, is
   answered before the state handshake, or is answered with something else:
   [connection_liveness.md](docs/connection_liveness.md) - the timers, what restarts each, what
