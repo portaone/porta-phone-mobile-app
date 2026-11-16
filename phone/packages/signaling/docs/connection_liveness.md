@@ -46,9 +46,10 @@ closed, `execute` throws `SignalingDisconnectedException`, and the requests stil
 fail at once with the timeout they would have got at their own time (`Transaction.timeOutNow`).
 `signaling_service` then reconnects as for any failure.
 
-So the longest a dead connection goes unnoticed is the interval plus one wait: 40 s with Core's
-30 s, from the last message received, whatever is sent meanwhile and whether the state has come
-or not.
+So the longest a dead connection goes unnoticed is the keepalive interval plus one transaction
+wait, from the last message received, whatever is sent meanwhile and whether the state has come or
+not. The interval is the one Core names in the state handshake; no number of the client's own
+decides it, the 30 s above only stands in until the state arrives.
 
 ## 2. What Core does
 
@@ -78,8 +79,9 @@ acknowledgements the phone's TCP stalled and the retries never left it. Core hea
 60 s, closed the socket, and hung the call up 30 s later, at about 107 s; the phone showed the
 call until the network came back.
 
-**With the watchdog**, the same steps: the watchdog sent the keepalive at 30 s, its timeout gave the
-connection up at 40 s, a new connection came 3 s later, `CallBloc` replayed the kept offer on its
+**With the watchdog**, the same steps (the stand's Core named 30 s): the watchdog sent the keepalive
+after one interval of silence, its timeout gave the connection up one wait later (40 s into the
+loss), a new connection came 3 s later, `CallBloc` replayed the kept offer on its
 state handshake and the far end heard the user again 43-50 s after the loss, in front and in the
 background, on both Android phones. The call stayed.
 
@@ -88,7 +90,7 @@ the unanswered `update`, with no keepalive involved, and the app recovered in 39
 and with the watchdog alike. Which layer closes it was not looked at.
 
 **Everything Core sends lost, on every connection** (the phone cannot reach Core at all): no build
-keeps the call. The client gives the connection up at 40 s, cannot make a new one, and Core hangs
+keeps the call. The client gives the connection up after the interval and one wait, cannot make a new one, and Core hangs
 the call up as above.
 
 **A connection that never gets its state but answers keepalives** is given up at the first
@@ -111,7 +113,7 @@ new connection got its state and the kept offer was replayed.
   connection.
 - **No fixed wait for the first state handshake.** A slow Core (a large call log, a controller
   starting over) would turn it into a reconnect loop. A connection that hears nothing at all is
-  asked at 30 s like any other, and one that answers before its state is given up (section 1):
+  asked after one keepalive interval like any other, and one that answers before its state is given up (section 1):
   that rule rests on the order Core sends in, not on a guessed time.
 
 - **A request with no answer does not ask the connection at once.** Tried as a probe (2026-11-12,
