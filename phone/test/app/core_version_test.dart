@@ -28,10 +28,10 @@ void main() {
   });
 
   test('toString', () {
-    expect(CoreInfo(version: Version(0, 1, 0)).toString(), equals('CoreInfo(0.1.0, false, null, null)'));
+    expect(CoreInfo(version: Version(0, 1, 0)).toString(), equals('CoreInfo(0.1.0, false, null, null, false)'));
     expect(
       CoreInfo(version: Version(0, 1, 0), iceServersConfigured: true).toString(),
-      equals('CoreInfo(0.1.0, true, null, null)'),
+      equals('CoreInfo(0.1.0, true, null, null, false)'),
     );
   });
 
@@ -40,6 +40,10 @@ void main() {
       CoreInfo(version: Version(0, 1, 0), iceServersConfigured: true) == CoreInfo(version: Version(0, 1, 0)),
       false,
     );
+  });
+
+  test('conferenceVideo participates in equality', () {
+    expect(CoreInfo(version: Version(0, 1, 0), conferenceVideo: true) == CoreInfo(version: Version(0, 1, 0)), false);
   });
 
   test('supportsPeerMessage', () {

@@ -94,6 +94,41 @@ void main() {
     });
   });
 
+  // Conference video. A core that predates it sends no key, and a cache written
+  // before the app read it has none.
+  group('CoreInfo conferenceVideo', () {
+    test('api: read from the JSON key of system-info', () {
+      final info = api.SystemInfo.fromJson({
+        'core': {'version': '1.3.0', 'conference_video': true},
+        'postgres': {'version': '15.0'},
+      });
+
+      expect(mapper.systemInfoFromApi(info).core.conferenceVideo, isTrue);
+    });
+
+    test('api: a core without the key has none', () {
+      expect(mapper.systemInfoFromApi(apiInfo()).core.conferenceVideo, isFalse);
+    });
+
+    test('json: round-trips it', () {
+      final info = WebtritSystemInfo(
+        core: CoreInfo(version: Version(1, 3, 0), conferenceVideo: true),
+        postgres: PostgresInfo(version: '15.0'),
+      );
+
+      final map = mapper.systemInfoToMap(info);
+      expect(map['core'], containsPair('conference_video', true));
+      expect(mapper.systemInfoFromMap(map).core, info.core);
+    });
+
+    test('json: a cache without the key reads as false', () {
+      final map = mapper.systemInfoToMap(domainInfo());
+      (map['core'] as Map<String, dynamic>).remove('conference_video');
+
+      expect(mapper.systemInfoFromMap(map).core.conferenceVideo, isFalse);
+    });
+  });
+
   // For how long the core reports a deleted notification. Absent from a core
   // that reports none - and from a cache written before the app read it, which
   // must not be taken for "zero days".

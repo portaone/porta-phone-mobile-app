@@ -9,6 +9,7 @@ class CoreInfo with EquatableMixin {
     this.iceServersConfigured = false,
     this.notificationDeletedRetentionDays,
     this.mobileRemoteLogging,
+    this.conferenceVideo = false,
   });
 
   final Version version;
@@ -33,8 +34,20 @@ class CoreInfo with EquatableMixin {
   /// does not offer it, which the app treats as remote logging disabled.
   final MobileRemoteLoggingInfo? mobileRemoteLogging;
 
+  /// Whether conferences carry video and screen sharing (`core.conference_video`):
+  /// conferences are on and the media server loads its video room. False for a
+  /// core that does not report it. A hint, not a guarantee: a conference whose
+  /// video room could not be made goes on with audio only.
+  final bool conferenceVideo;
+
   @override
-  List<Object?> get props => [version, iceServersConfigured, notificationDeletedRetentionDays, mobileRemoteLogging];
+  List<Object?> get props => [
+    version,
+    iceServersConfigured,
+    notificationDeletedRetentionDays,
+    mobileRemoteLogging,
+    conferenceVideo,
+  ];
 
   @override
   bool get stringify => true;

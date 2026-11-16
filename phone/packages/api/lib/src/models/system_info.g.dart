@@ -41,6 +41,7 @@ CoreInfo _$CoreInfoFromJson(Map<String, dynamic> json) => CoreInfo(
   mobileRemoteLogging: _mobileRemoteLoggingFromJson(
     json['mobile_remote_logging'],
   ),
+  conferenceVideo: json['conference_video'] as bool?,
 );
 
 Map<String, dynamic> _$CoreInfoToJson(CoreInfo instance) => <String, dynamic>{
@@ -49,6 +50,7 @@ Map<String, dynamic> _$CoreInfoToJson(CoreInfo instance) => <String, dynamic>{
   'notification_deleted_retention_days':
       instance.notificationDeletedRetentionDays,
   'mobile_remote_logging': instance.mobileRemoteLogging?.toJson(),
+  'conference_video': instance.conferenceVideo,
 };
 
 MobileRemoteLoggingInfo _$MobileRemoteLoggingInfoFromJson(
