@@ -321,9 +321,9 @@ re-INVITE of an unhold, and the app would retry it seconds later.
 **ICE restart over a lost signaling connection** — `RenegotiationCoordinator`
 (`features/call/utils/renegotiation_coordinator.dart`) owns the per-call restart and retry
 bookkeeping. `__onMutationRenegotiate` asks it to classify a failed `update`: a loss of signaling
-(`NotConnectedException`, `WebtritSignalingDisconnectedException`,
-`WebtritSignalingTransactionTimeoutException`,
-`WebtritSignalingTransactionTerminateByDisconnectException`, or a `TimeoutException` while waiting
+(`NotConnectedException`, `SignalingDisconnectedException`,
+`SignalingTransactionTimeoutException`,
+`SignalingTransactionTerminateByDisconnectException`, or a `TimeoutException` while waiting
 for the final reply) is transient; any other error - a failed SDP or peer connection step, a
 rejection by the server - still ends the call. The other requests sent in the middle of a call judge
 the request itself the same way, each catching only around the request with `isTransientSignalingFailure`,
@@ -337,8 +337,9 @@ server, so the two can differ until the next hold or unhold. A lost answer to th
 (`__onMutationSignalingCallUpdating`) still ends the call: Core turns Janus's auto-accept of
 re-INVITEs off, so Janus waits for that answer with no timer of its own and buffers any offer of
 this side until the re-INVITE completes - an ICE restart would get no answer and the call would hang
-without audio. The loss these meet most is the client's own: when its keepalive gets no reply it closes the
-session (4502) and terminates every transaction still queued. After a transient failure of an ICE
+without audio. The loss these meet most is the client's own: when its keepalive gets no reply it gives the
+connection up and the requests still waiting fail with their timeout at once
+([connection_liveness.md](../../packages/signaling/docs/connection_liveness.md)). After a transient failure of an ICE
 offer that has already been installed, the call stays active and the coordinator keeps that exact
 local offer. It is sent in a new
 transaction after signaling reconnects, or by a retry while signaling remains connected: two

@@ -100,7 +100,7 @@ class DefaultErrorNotification extends ErrorNotification {
           context.router.push(ErrorDetailsScreenPageRoute(title: title, fields: errorFields));
         },
       );
-    } else if (error is WebtritSignalingException) {
+    } else if (error is SignalingException) {
       final title = l10n(context);
       final errorFields = error.errorFields(context);
 

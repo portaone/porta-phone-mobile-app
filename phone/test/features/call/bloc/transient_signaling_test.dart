@@ -22,9 +22,9 @@ import 'call_bloc_harness.dart';
 
 final _transient = <Object>[
   NotConnectedException('signaling disconnected'),
-  const WebtritSignalingDisconnectedException(1),
-  const WebtritSignalingTransactionTimeoutException(1, 'tx'),
-  const WebtritSignalingTransactionTerminateByDisconnectException(1, 'tx', 4502, 'signaling keepalive timeout error'),
+  const SignalingDisconnectedException(1),
+  const SignalingTransactionTimeoutException(1, 'tx'),
+  const SignalingTransactionTerminateByDisconnectException(1, 'tx', 4502, 'signaling keepalive timeout error'),
   TimeoutException('the reply was not received'),
 ];
 
@@ -88,10 +88,7 @@ void main() {
       // A call still being set up is not renegotiated on reconnect, so nothing
       // would send the candidate again: only the two losses always tolerated
       // here keep it.
-      for (final failure in [
-        NotConnectedException('down'),
-        const WebtritSignalingTransactionTimeoutException(1, 'tx'),
-      ]) {
+      for (final failure in [NotConnectedException('down'), const SignalingTransactionTimeoutException(1, 'tx')]) {
         test('lost with $failure while the call is set up leaves it up', () async {
           final (call, peer) = await placeCall();
           h.signaling.failure = failure;
@@ -106,7 +103,7 @@ void main() {
       }
 
       for (final failure in [
-        const WebtritSignalingTransactionTerminateByDisconnectException(1, 'tx', 4502, 'keepalive'),
+        const SignalingTransactionTerminateByDisconnectException(1, 'tx', 4502, 'keepalive'),
         StateError('a fault in this client'),
       ]) {
         test('$failure while the call is set up ends it', () async {

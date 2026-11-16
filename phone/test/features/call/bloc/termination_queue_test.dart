@@ -44,7 +44,7 @@ StateHandshake _ringing(String callId, {String? alsoRinging}) {
   return buffer.snapshot.whereType<SignalingHandshakeReceived>().single.handshake;
 }
 
-const _callGone = WebtritSignalingErrorException(1, 410, 'Call gone while taking action');
+const _callGone = SignalingErrorException(1, 410, 'Call gone while taking action');
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();

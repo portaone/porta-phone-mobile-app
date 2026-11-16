@@ -44,9 +44,9 @@ bool isSignalingLoss(Object error) {
   // between the module handing it the request and the send: the same loss
   // of signaling as the others, only met a moment later.
   return error is NotConnectedException ||
-      error is WebtritSignalingDisconnectedException ||
-      error is WebtritSignalingTransactionTimeoutException ||
-      error is WebtritSignalingTransactionTerminateByDisconnectException ||
+      error is SignalingDisconnectedException ||
+      error is SignalingTransactionTimeoutException ||
+      error is SignalingTransactionTerminateByDisconnectException ||
       error is TimeoutException;
 }
 

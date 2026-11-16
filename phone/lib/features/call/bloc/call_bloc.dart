@@ -2873,13 +2873,13 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
       _callPeerConnectionManager.complete(event.callId, peerConnection);
     } catch (e, stackTrace) {
       _logger.warning(
-        '__onMutationPerformAnswer: failed callId=${event.callId} error=$e code:${e is WebtritSignalingErrorException ? e.code : 'N/A'}, reason=${e is WebtritSignalingErrorException ? e.reason : 'N/A'}',
+        '__onMutationPerformAnswer: failed callId=${event.callId} error=$e code:${e is SignalingErrorException ? e.code : 'N/A'}, reason=${e is SignalingErrorException ? e.reason : 'N/A'}',
         stackTrace,
       );
 
       // If call gone right before answer, consider it as normal flow and avoid showing error notification
       // TODO: implement signaling request response mechanism and handle request specific result instead of catching global errors
-      if (e is WebtritSignalingErrorException && e.code == _callGoneErrorCode) {
+      if (e is SignalingErrorException && e.code == _callGoneErrorCode) {
         _callPeerConnectionManager.completeError(event.callId, e, stackTrace);
         add(_ResetStateEvent.completeCall(event.callId));
         _addToRecents(call!);
@@ -2890,7 +2890,7 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
       // the call is already gone on the server side — clean up locally without sending a decline request.
       // Sending decline here would cause a reconnect loop: each reconnect attempt would send decline again,
       // receive 4610 again, disconnect again, and reconnect indefinitely.
-      if (e is WebtritSignalingTransactionTerminateByDisconnectException &&
+      if (e is SignalingTransactionTerminateByDisconnectException &&
           e.closeCode == SignalingDisconnectCode.requestCallIdError.code) {
         _callPeerConnectionManager.completeError(event.callId, e, stackTrace);
         _addToRecents(call!);
@@ -2905,7 +2905,7 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
       // If the WS was already closed when the answer flow failed, the server-side
       // call session is gone — sending DeclineRequest on the reconnected WS would
       // target a stale call and trigger another 4610 close.
-      if (e is WebtritSignalingTransactionTerminateByDisconnectException) {
+      if (e is SignalingTransactionTerminateByDisconnectException) {
         callErrorReporter.handle(e, stackTrace, '__onMutationPerformAnswer error:');
         return;
       }
@@ -3067,7 +3067,7 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
         emit(state.copyWithMappedActiveCall(event.callId, (call) => call.copyWith(transition: null)));
         await _restoreLegAudio(event.callId, emit);
       }
-    } on WebtritSignalingErrorException catch (e, stackTrace) {
+    } on SignalingErrorException catch (e, stackTrace) {
       // A hold the server declined is only a hold that did not happen: the call is
       // still up and still carrying audio, and the one thing lost is the state
       // change. Ending the call over it would turn a refused control into a
@@ -3523,7 +3523,7 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
       case SignalingLost(error: NotConnectedException()):
         _logger.warning('__onMutationControlBlindTransfer: not connected, rollback and survive');
         emit(state.copyWithMappedActiveCall(e.callId, (activeCall) => activeCall.copyWith(transfer: null)));
-      case SignalingLost(error: WebtritSignalingTransactionTimeoutException()):
+      case SignalingLost(error: SignalingTransactionTimeoutException()):
         _logger.warning('__onMutationControlBlindTransfer: transaction timeout, rollback and survive');
         emit(state.copyWithMappedActiveCall(e.callId, (activeCall) => activeCall.copyWith(transfer: null)));
       case SignalingLost(:final error, :final stackTrace) || SignalingRefused(:final error, :final stackTrace):
@@ -3592,7 +3592,7 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
       case SignalingLost(error: NotConnectedException()):
         _logger.warning('__onMutationControlAttendedTransfer: not connected, rollback and survive');
         emit(state.copyWithMappedActiveCall(referorCall.callId, (activeCall) => activeCall.copyWith(transfer: null)));
-      case SignalingLost(error: WebtritSignalingTransactionTimeoutException()):
+      case SignalingLost(error: SignalingTransactionTimeoutException()):
         _logger.warning('__onMutationControlAttendedTransfer: transaction timeout, rollback and survive');
         emit(state.copyWithMappedActiveCall(referorCall.callId, (activeCall) => activeCall.copyWith(transfer: null)));
       case SignalingLost(:final error, :final stackTrace) || SignalingRefused(:final error, :final stackTrace):
@@ -4463,7 +4463,7 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
         // set up is not renegotiated on reconnect, so there only the two losses
         // this handler always let through keep it.
         final connected = state.retrieveActiveCall(callId)?.processingStatus == CallProcessingStatus.connected;
-        if (!connected && e is! NotConnectedException && e is! WebtritSignalingTransactionTimeoutException) rethrow;
+        if (!connected && e is! NotConnectedException && e is! SignalingTransactionTimeoutException) rethrow;
         _logger.warning('__onMutationTrickleIce: ${e.runtimeType}, let call survive');
       }
     } catch (e, stackTrace) {
@@ -4497,7 +4497,7 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
         // set up is not renegotiated on reconnect, so there only the two losses
         // this handler always let through keep it.
         final connected = state.retrieveActiveCall(callId)?.processingStatus == CallProcessingStatus.connected;
-        if (!connected && e is! NotConnectedException && e is! WebtritSignalingTransactionTimeoutException) rethrow;
+        if (!connected && e is! NotConnectedException && e is! SignalingTransactionTimeoutException) rethrow;
         _logger.warning('__onMutationIceGatheringComplete: ${e.runtimeType}, let call survive');
       }
     } catch (e, stackTrace) {
@@ -6104,18 +6104,18 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
       }
       await pending;
       return const ConferenceRequestResult.taken();
-    } on WebtritSignalingErrorException catch (e) {
+    } on SignalingErrorException catch (e) {
       _logger.warning('$source: refused by the server: ${e.reason}');
       return ConferenceRequestResult.refused(e.reason);
     } on NotConnectedException {
       _logger.warning('$source: not connected');
       return const ConferenceRequestResult.notSent();
-    } on WebtritSignalingTransactionTerminateByDisconnectException {
+    } on SignalingTransactionTerminateByDisconnectException {
       // The socket closed under the request: what an outage looks like, not
       // an error to report.
       _logger.warning('$source: the session went before an answer');
       return const ConferenceRequestResult.notSent();
-    } on WebtritSignalingTransactionTimeoutException {
+    } on SignalingTransactionTimeoutException {
       _logger.warning('$source: transaction timeout');
       return const ConferenceRequestResult.unanswered();
     } catch (e, stackTrace) {
@@ -6467,7 +6467,7 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
       // Acknowledged, not yet done: the entry stays until the server's hangup
       // for the call confirms it, so a handshake planned in between still
       // sees the call as one being ended rather than as one to bring back.
-    } on WebtritSignalingErrorException catch (e, s) {
+    } on SignalingErrorException catch (e, s) {
       // The server received the request and refused it - the call is gone
       // already, or the request is not applicable to it. Sending the same
       // request again on the next handshake would get the same answer, and a

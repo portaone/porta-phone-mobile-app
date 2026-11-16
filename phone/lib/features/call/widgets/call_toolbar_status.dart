@@ -126,42 +126,48 @@ class _CallToolbarStatusState extends State<CallToolbarStatus> {
         ],
       );
     } else if (iceConnectionIssue != null) {
-      content = Row(
+      content = SemanticId(
         key: const ValueKey('toolbar-ice'),
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(Icons.warning_amber_rounded, size: 14, color: errorColor),
-          const SizedBox(width: 6),
-          Flexible(
-            child: Text(
-              iceConnectionIssue.l10n(context),
-              style: baseStyle?.copyWith(color: errorColor, fontWeight: FontWeight.w600),
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
+        identifier: callScreenQualityStatusId,
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(Icons.warning_amber_rounded, size: 14, color: errorColor),
+            const SizedBox(width: 6),
+            Flexible(
+              child: Text(
+                iceConnectionIssue.l10n(context),
+                style: baseStyle?.copyWith(color: errorColor, fontWeight: FontWeight.w600),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       );
     } else if (quality != null) {
       final labelColor = quality.recovered
           ? (semantic?.successBackgroundColor ?? baseColor)
           : (quality.severity == CallNetworkQualitySeverity.mild ? baseColor : warningColor);
-      content = Row(
+      content = SemanticId(
         key: const ValueKey('toolbar-quality'),
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          // Bars + direction arrow only; the label already says audio/video.
-          CallNetworkQualityMeter(quality: quality, baseColor: baseColor, showLabel: false, showMediaGlyph: false),
-          const SizedBox(width: 6),
-          Flexible(
-            child: Text(
-              quality.severeLabel(context),
-              style: baseStyle?.copyWith(color: labelColor, fontWeight: FontWeight.w600),
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
+        identifier: callScreenQualityStatusId,
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // Bars + direction arrow only; the label already says audio/video.
+            CallNetworkQualityMeter(quality: quality, baseColor: baseColor, showLabel: false, showMediaGlyph: false),
+            const SizedBox(width: 6),
+            Flexible(
+              child: Text(
+                quality.severeLabel(context),
+                style: baseStyle?.copyWith(color: labelColor, fontWeight: FontWeight.w600),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       );
     } else if (widget.voiceNoiseReductionFailed) {
       content = SemanticId(
@@ -191,6 +197,15 @@ class _CallToolbarStatusState extends State<CallToolbarStatus> {
       duration: const Duration(milliseconds: 250),
       switchInCurve: Curves.easeOut,
       switchOutCurve: Curves.easeIn,
+      // The fading-out state is hidden from semantics: two media states share
+      // one identifier, and a reader finds only the state being shown.
+      layoutBuilder: (current, previous) => Stack(
+        alignment: Alignment.center,
+        children: [
+          for (final child in previous) ExcludeSemantics(key: child.key, child: child),
+          if (current != null) ExcludeSemantics(key: current.key, excluding: false, child: current),
+        ],
+      ),
       child: content,
     );
   }

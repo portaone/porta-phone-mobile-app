@@ -371,8 +371,8 @@ void main() {
       expect((encoded[2] as Map)['reason'], contains('boom'));
     });
 
-    test('encodeExecuteResult with WebtritSignalingErrorException stores structured payload', () {
-      const error = WebtritSignalingErrorException(7, 503, 'busy');
+    test('encodeExecuteResult with SignalingErrorException stores structured payload', () {
+      const error = SignalingErrorException(7, 503, 'busy');
       final encoded = encodeExecuteResult('corr-3', error);
       expect(encoded[0], 'execute_result');
       expect(encoded[1], 'corr-3');
@@ -407,69 +407,69 @@ void main() {
       expect(result.error.toString(), contains('request failed'));
     });
 
-    test('decodeExecuteResult reconstructs WebtritSignalingErrorException', () {
+    test('decodeExecuteResult reconstructs SignalingErrorException', () {
       final encoded = encodeExecuteResult(
         'typed',
-        const WebtritSignalingErrorException(5, 503, 'call request on busy line error'),
+        const SignalingErrorException(5, 503, 'call request on busy line error'),
       );
       final result = decodeExecuteResult(encoded);
       expect(result.correlationId, 'typed');
-      expect(result.error, isA<WebtritSignalingErrorException>());
-      final signalingError = result.error! as WebtritSignalingErrorException;
+      expect(result.error, isA<SignalingErrorException>());
+      final signalingError = result.error! as SignalingErrorException;
       expect(signalingError.id, 5);
       expect(signalingError.code, 503);
       expect(signalingError.reason, 'call request on busy line error');
     });
 
     test('decodeExecuteResult reconstructs all Webtrit signaling exceptions', () {
-      final errors = <WebtritSignalingException>[
-        const WebtritSignalingErrorException(1, 503, 'busy'),
-        const WebtritSignalingDisconnectedException(2),
-        const WebtritSignalingUnknownMessageException(3, {'kind': 'unknown', 'tx': 'a1'}),
-        const WebtritSignalingUnknownResponseException(4, {'result': 'unknown', 'tx': 'a2'}),
-        const WebtritSignalingTransactionTimeoutException(5, 'tx-timeout'),
-        WebtritSignalingBadStateException(6, StateError('invalid state')),
-        const WebtritSignalingKeepaliveTransactionTimeoutException(7, 'tx-keepalive'),
-        const WebtritSignalingTransactionTerminateByDisconnectException(9, 'tx-disconnect', 1001, 'closed'),
+      final errors = <SignalingException>[
+        const SignalingErrorException(1, 503, 'busy'),
+        const SignalingDisconnectedException(2),
+        const SignalingUnknownMessageException(3, {'kind': 'unknown', 'tx': 'a1'}),
+        const SignalingUnknownResponseException(4, {'result': 'unknown', 'tx': 'a2'}),
+        const SignalingTransactionTimeoutException(5, 'tx-timeout'),
+        SignalingBadStateException(6, StateError('invalid state')),
+        const SignalingKeepaliveTimeoutException(7, 'tx-keepalive'),
+        const SignalingTransactionTerminateByDisconnectException(9, 'tx-disconnect', 1001, 'closed'),
       ];
 
       for (final error in errors) {
         final encoded = encodeExecuteResult('corr-${error.runtimeType}', error);
         final decoded = decodeExecuteResult(encoded);
-        expect(decoded.error, isA<WebtritSignalingException>());
+        expect(decoded.error, isA<SignalingException>());
 
-        final reconstructed = decoded.error! as WebtritSignalingException;
+        final reconstructed = decoded.error! as SignalingException;
         expect(reconstructed.runtimeType, error.runtimeType);
         expect(reconstructed.id, error.id);
 
         switch (error) {
-          case WebtritSignalingErrorException source:
-            final target = reconstructed as WebtritSignalingErrorException;
+          case SignalingErrorException source:
+            final target = reconstructed as SignalingErrorException;
             expect(target.code, source.code);
             expect(target.reason, source.reason);
-          case WebtritSignalingUnknownMessageException source:
-            final target = reconstructed as WebtritSignalingUnknownMessageException;
+          case SignalingUnknownMessageException source:
+            final target = reconstructed as SignalingUnknownMessageException;
             expect(target.message, source.message);
-          case WebtritSignalingUnknownResponseException source:
-            final target = reconstructed as WebtritSignalingUnknownResponseException;
+          case SignalingUnknownResponseException source:
+            final target = reconstructed as SignalingUnknownResponseException;
             expect(target.response, source.response);
-          case WebtritSignalingKeepaliveTransactionTimeoutException source:
-            final target = reconstructed as WebtritSignalingKeepaliveTransactionTimeoutException;
+          case SignalingKeepaliveTimeoutException source:
+            final target = reconstructed as SignalingKeepaliveTimeoutException;
             expect(target.transactionId, source.transactionId);
-          case WebtritSignalingTransactionTimeoutException source:
-            final target = reconstructed as WebtritSignalingTransactionTimeoutException;
+          case SignalingTransactionTimeoutException source:
+            final target = reconstructed as SignalingTransactionTimeoutException;
             expect(target.transactionId, source.transactionId);
-          case WebtritSignalingBadStateException source:
-            final target = reconstructed as WebtritSignalingBadStateException;
+          case SignalingBadStateException source:
+            final target = reconstructed as SignalingBadStateException;
             expect(target.error.message, source.error.message);
-          case WebtritSignalingTransactionTerminateByDisconnectException source:
-            final target = reconstructed as WebtritSignalingTransactionTerminateByDisconnectException;
+          case SignalingTransactionTerminateByDisconnectException source:
+            final target = reconstructed as SignalingTransactionTerminateByDisconnectException;
             expect(target.transactionId, source.transactionId);
             expect(target.closeCode, source.closeCode);
             expect(target.closeReason, source.closeReason);
-          case WebtritSignalingDisconnectedException():
-            expect(reconstructed, isA<WebtritSignalingDisconnectedException>());
-          case WebtritSignalingException():
+          case SignalingDisconnectedException():
+            expect(reconstructed, isA<SignalingDisconnectedException>());
+          case SignalingException():
             fail('Unhandled signaling exception type: ${error.runtimeType}');
         }
       }

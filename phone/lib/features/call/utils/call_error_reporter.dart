@@ -41,7 +41,7 @@ class DefaultCallErrorReporter implements CallErrorReporter {
   void handle(Object error, StackTrace? stack, String context, {bool recordError = true}) {
     // TODO: implement signaling request response mechanism and handle request specific result instead of catching global errors
     // In such case it will be just result of OutgoingCallRequest
-    if (error is WebtritSignalingErrorException && error.code == 503 && error.reason.contains('busy line')) {
+    if (error is SignalingErrorException && error.code == 503 && error.reason.contains('busy line')) {
       submitNotification(const CallServiceBusyLineNotification());
       return;
     }

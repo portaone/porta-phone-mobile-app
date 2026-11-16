@@ -22,14 +22,14 @@ void main() {
   tearDown(() => h.close());
 
   const survivable = [
-    WebtritSignalingErrorException(1, 0, 'line_in_conference'),
-    WebtritSignalingErrorException(1, 403, 'forbidden'),
-    WebtritSignalingErrorException(1, 500, 'internal'),
-    WebtritSignalingTransactionTimeoutException(1, 'tx'),
+    SignalingErrorException(1, 0, 'line_in_conference'),
+    SignalingErrorException(1, 403, 'forbidden'),
+    SignalingErrorException(1, 500, 'internal'),
+    SignalingTransactionTimeoutException(1, 'tx'),
     // Lost with the signaling: the socket closed under the request, or the
     // client gave up on its keepalive (4502) and terminated every transaction.
-    WebtritSignalingDisconnectedException(1),
-    WebtritSignalingTransactionTerminateByDisconnectException(1, 'tx', 4502, 'signaling keepalive timeout error'),
+    SignalingDisconnectedException(1),
+    SignalingTransactionTerminateByDisconnectException(1, 'tx', 4502, 'signaling keepalive timeout error'),
   ];
 
   for (final held in [false, true]) {
@@ -62,7 +62,7 @@ void main() {
     }
   }
 
-  for (final failure in [const WebtritSignalingErrorException(1, 410, 'call not found'), StateError('bad state')]) {
+  for (final failure in [const SignalingErrorException(1, 410, 'call not found'), StateError('bad state')]) {
     test('$failure still ends the call and releases its peer connection', () async {
       final peer = h.seedEstablishedCall('a');
       h.signaling.failure = failure;
@@ -90,7 +90,7 @@ void main() {
     expect(osAnswer, isTrue);
     expect(h.signaling.gate!.isCompleted, isFalse, reason: 'the server has not answered yet');
 
-    h.signaling.failure = const WebtritSignalingErrorException(1, 0, 'line_in_conference');
+    h.signaling.failure = const SignalingErrorException(1, 0, 'line_in_conference');
     h.signaling.gate!.complete();
     await pumpEventQueue();
 

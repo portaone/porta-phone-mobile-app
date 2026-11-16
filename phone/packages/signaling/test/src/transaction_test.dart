@@ -58,11 +58,28 @@ void main() {
     });
   });
 
+  group('Transaction.timeOutNow', () {
+    test('ends the wait with the timeout exception before the timeout', () {
+      final tx = Transaction(signalingClientId: clientId, timeoutDuration: timeout);
+      tx.timeOutNow();
+
+      expect(tx.future, throwsA(isA<SignalingTransactionTimeoutException>()));
+    });
+
+    test('does nothing to a transaction already answered', () async {
+      final tx = Transaction(signalingClientId: clientId, timeoutDuration: timeout);
+      tx.handleResponse({'response': 'ack'});
+      tx.timeOutNow();
+
+      expect(await tx.future, {'response': 'ack'});
+    });
+  });
+
   group('Transaction.terminateByDisconnect', () {
     test('completes future with disconnect error', () {
       final tx = Transaction(signalingClientId: clientId, timeoutDuration: timeout);
       tx.terminateByDisconnect(1000, 'normal');
-      expect(tx.future, throwsA(isA<WebtritSignalingTransactionTerminateByDisconnectException>()));
+      expect(tx.future, throwsA(isA<SignalingTransactionTerminateByDisconnectException>()));
     });
 
     test('cancels timeout — timer does not fire after disconnect', () {
@@ -81,7 +98,7 @@ void main() {
         async.flushMicrotasks();
         async.elapse(timeout * 2);
 
-        expect(capturedError, isA<WebtritSignalingTransactionTerminateByDisconnectException>());
+        expect(capturedError, isA<SignalingTransactionTerminateByDisconnectException>());
       });
     });
 
@@ -110,7 +127,7 @@ void main() {
 
         expect(capturedError, isNull);
         async.elapse(timeout);
-        expect(capturedError, isA<WebtritSignalingTransactionTimeoutException>());
+        expect(capturedError, isA<SignalingTransactionTimeoutException>());
       });
     });
 

@@ -10,7 +10,7 @@ final _logger = Logger('SignalingRequestQueue');
 /// then flushes them once the connection is established.
 ///
 /// Handles per-request timeouts, execution retries on
-/// [WebtritSignalingTransactionTimeoutException], and bulk failure on dispose.
+/// [SignalingTransactionTimeoutException], and bulk failure on dispose.
 class SignalingRequestQueue {
   static const int defaultMaxRetryCount = 3;
 
@@ -59,7 +59,7 @@ class SignalingRequestQueue {
   ///
   /// Stops when the queue is empty or [isActive] returns false.
   /// Each request is retried up to [maxRetryCount] times on
-  /// [WebtritSignalingTransactionTimeoutException].
+  /// [SignalingTransactionTimeoutException].
   Future<void> flush({required Future<void> Function(Request) execute, required bool Function() isActive}) async {
     while (_queue.isNotEmpty && isActive()) {
       final entry = _queue.first;
@@ -155,7 +155,7 @@ class SignalingRequestQueue {
   ]) async {
     try {
       await execute(request);
-    } on WebtritSignalingTransactionTimeoutException catch (error) {
+    } on SignalingTransactionTimeoutException catch (error) {
       if (!isActive() || retryCount >= maxRetryCount) rethrow;
 
       _logger.warning('_executeWithRetry retrying ${error.transactionId}, (retry #$retryCount)/$maxRetryCount');

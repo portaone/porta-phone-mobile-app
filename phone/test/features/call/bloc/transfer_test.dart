@@ -130,7 +130,7 @@ void main() {
 
     for (final (name, failure) in [
       ('the session is not connected', NotConnectedException()),
-      ('the server does not answer in time', const WebtritSignalingTransactionTimeoutException(1, 'tx')),
+      ('the server does not answer in time', const SignalingTransactionTimeoutException(1, 'tx')),
     ]) {
       test('a REFER that fails because $name drops the transfer, and nothing else', () async {
         h.seedEstablishedCall('b', line: 1);
@@ -155,7 +155,7 @@ void main() {
       // and a timeout roll the transfer back; anything else is reported and
       // leaves the call marked as looking for a destination, the screen away.
       h.seedEstablishedCall('b', line: 1);
-      h.signaling.failure = const WebtritSignalingErrorException(1, 500, 'Server Internal Error');
+      h.signaling.failure = const SignalingErrorException(1, 500, 'Server Internal Error');
       await initiate();
 
       h.bloc.add(const CallControlEvent.blindTransferSubmitted(number: '300'));

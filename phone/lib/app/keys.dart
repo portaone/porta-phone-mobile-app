@@ -329,6 +329,11 @@ const String watchOpenOnPhoneRetryId = 'watchOpenOnPhoneRetry';
 /// is shown above it.
 const String callPeerNumberId = 'callPeerNumber';
 const String callToolbarNoiseReductionOffId = 'callToolbarNoiseReductionOff';
+
+/// The media state of the call on the call screen's status line: the media
+/// connection failed, or the call's audio or video is weak or has recovered.
+/// Which of them, its words say.
+const String callScreenQualityStatusId = 'callScreenQualityStatus';
 const String signupVerifyResendButtonId = 'signupVerifyResendButton';
 const String statusIconPickerId = 'statusIconPicker';
 const String statusIconPickerSearchId = 'statusIconPickerSearch';

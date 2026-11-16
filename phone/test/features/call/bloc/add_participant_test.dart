@@ -121,7 +121,7 @@ void main() {
     test('a refused merge leaves the answered call as an ordinary one', () async {
       h.seedEstablishedCall('b', line: 0);
       final c = await _add(h, anchorCallId: 'b');
-      h.signaling.failure = const WebtritSignalingErrorException(1, 500, 'conference_already_active');
+      h.signaling.failure = const SignalingErrorException(1, 500, 'conference_already_active');
 
       await _answer(h, c);
 
@@ -151,7 +151,7 @@ void main() {
       h.seedEstablishedCall('b', line: 0);
       final c = await _add(h, anchorCallId: 'b');
       h.signaling.gate = Completer<void>();
-      h.signaling.failure = const WebtritSignalingErrorException(1, 500, 'no_such_line');
+      h.signaling.failure = const SignalingErrorException(1, 500, 'no_such_line');
 
       h.signaling.emit(AcceptedEvent(line: 1, callId: c));
       await h.settle(() => h.signaling.requests.whereType<MergeRequest>().isNotEmpty);

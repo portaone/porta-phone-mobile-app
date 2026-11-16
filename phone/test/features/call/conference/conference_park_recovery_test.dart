@@ -88,7 +88,7 @@ void main() {
     factory.mixer.failuresRemaining = 2;
     h.seedEstablishedCall('c', line: 2);
     await pumpEventQueue();
-    h.signaling.failure = const WebtritSignalingErrorException(1, 500, 'hold refused');
+    h.signaling.failure = const SignalingErrorException(1, 500, 'hold refused');
 
     await _confirmHolds(h);
     await h.bloc.performSetMuted('a', false);

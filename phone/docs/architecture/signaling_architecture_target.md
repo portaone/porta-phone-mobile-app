@@ -52,7 +52,8 @@ Future<void> disconnect([int? code, String? reason])
 
 - Subscribes to `WebSocketChannel.stream` internally — not exposed outside
 - Routes inbound JSON to the appropriate callback
-- Keepalive timer starts after `StateHandshake`; sends `KeepaliveHandshake` on each tick
+- Keepalive and receive watchdog: how a dead connection is noticed and given up -
+  [connection_liveness.md](../../packages/signaling/docs/connection_liveness.md)
 - Transaction map: each `execute()` registers a `Completer` keyed by transaction ID; resolved when matching response arrives
 
 ```

@@ -87,7 +87,7 @@ the result of `execute`:
 `ack` means accepted, not done: what actually happened arrives later as an event.
 A refusal always has `code: 0`; the meaning is the `reason` string (section 10).
 In Dart, `execute` returns normally on `ack` and throws
-`WebtritSignalingErrorException(id, 0, reason)` on `error`. The numeric
+`SignalingErrorException(id, 0, reason)` on `error`. The numeric
 `SignalingResponseCode` table does not apply; `SignalingResponseCode.values.byCode(0)`
 is `null`.
 

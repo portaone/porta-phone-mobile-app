@@ -56,7 +56,7 @@ class _FakeSignalingClient extends Fake implements WebtritSignalingClient {
   void injectEvent(Event event) => _onEvent?.call(event);
   void injectError(Object error, [StackTrace? st]) => _onError?.call(error, st);
   void injectDisconnect(int? code, String? reason) => _onDisconnect?.call(code, reason);
-  void enqueueExecuteTimeout() => _executeResponses.add(WebtritSignalingTransactionTimeoutException(1, 'tx-timeout'));
+  void enqueueExecuteTimeout() => _executeResponses.add(SignalingTransactionTimeoutException(1, 'tx-timeout'));
   void enqueueExecuteError(Object error) => _executeResponses.add(error);
   void enqueueExecuteSuccess() => _executeResponses.add(null);
 }
@@ -349,7 +349,7 @@ void main() {
       module.connect();
       await pumpEventQueue();
 
-      await expectLater(module.execute(_buildRequest()), throwsA(isA<WebtritSignalingTransactionTimeoutException>()));
+      await expectLater(module.execute(_buildRequest()), throwsA(isA<SignalingTransactionTimeoutException>()));
       expect(client.executeCallCount, equals(4));
     });
 
