@@ -56,6 +56,9 @@ class AnonymizingFormatter extends LogRecordFormatter {
     (RegExp(r'"pending_login_token":"[^"]+"'), (Match _) => '[REDACTED_PENDINGLOGINTOKEN]'),
     (RegExp(r'"login":"[^"]+"'), (Match _) => '[REDACTED_LOGIN]'),
     (RegExp(r'"password":"[^"]+"'), (Match _) => '[REDACTED_PASSWORD]'),
+    // A conference guest link PIN, in the link's events and requests and in a
+    // guest's knock. It is free text and may carry an escaped quote.
+    (RegExp(r'"pin":"(?:[^"\\]|\\.)*"'), (Match _) => '"pin":"[REDACTED_PIN]"'),
     (RegExp(r'"otp_id":"[^"]+"'), (Match _) => '[REDACTED_OTPID]'),
     (RegExp(r'"user_ref":"[^"]+"'), (Match _) => '[REDACTED_USERREF]'),
     (RegExp(r'"code":"[^"]+"'), (Match _) => '[REDACTED_CODE]'),
