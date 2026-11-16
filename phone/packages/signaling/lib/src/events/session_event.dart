@@ -48,5 +48,13 @@ abstract class SessionEvent extends Event {
     ConferenceUpdatedEvent.typeValue: ConferenceUpdatedEvent.fromJson,
     ConferenceFailedEvent.typeValue: ConferenceFailedEvent.fromJson,
     ConferenceTerminatedEvent.typeValue: ConferenceTerminatedEvent.fromJson,
+    // Conference video, to the host and to an invited far end alike.
+    ConferenceVideoOfferEvent.typeValue: ConferenceVideoOfferEvent.fromJson,
+    ConferenceVideoPublisherAnswerEvent.typeValue: ConferenceVideoPublisherAnswerEvent.fromJson,
+    ConferenceVideoUpdatedEvent.typeValue: ConferenceVideoUpdatedEvent.fromJson,
+    ConferenceVideoFailedEvent.typeValue: ConferenceVideoFailedEvent.fromJson,
+    ConferenceVideoIceTrickleEvent.typeValue: ConferenceVideoIceTrickleEvent.fromJson,
+    ConferenceVideoInviteEvent.typeValue: ConferenceVideoInviteEvent.fromJson,
+    ConferenceVideoTerminatedEvent.typeValue: ConferenceVideoTerminatedEvent.fromJson,
   };
 }
