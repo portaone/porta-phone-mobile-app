@@ -89,6 +89,19 @@ void main() {
       );
     });
 
+    test('a conference guest link PIN is masked, an escaped quote in it too', () {
+      final formatter = full();
+
+      expect(
+        formatter.sanitize('{"request":"join","transaction":"j1","name":"Ann","pin":"blue \\"door\\""}'),
+        '{"request":"join","transaction":"j1","name":"Ann","pin":"[REDACTED_PIN]"}',
+      );
+      expect(
+        formatter.sanitize('{"event":"conference_guest_link","token":"SFMyNTY.g2gDbQ.Zk9","pin":"0042"}'),
+        '{"event":"conference_guest_link","token":"[REDACTED_TOKEN]","pin":"[REDACTED_PIN]"}',
+      );
+    });
+
     test('a word that only starts like a token stays', () {
       expect(full().sanitize('XCPU load and XCP alone'), 'XCPU load and XCP alone');
     });
