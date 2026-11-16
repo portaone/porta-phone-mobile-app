@@ -169,15 +169,12 @@ extension AppLocalizationsExtension on AppLocalizations {
       'call_ConferencePanel_hostStatus' => call_ConferencePanel_hostStatus,
       'call_ConferencePanel_hostStatusAside' =>
         call_ConferencePanel_hostStatusAside,
+      'call_ConferencePanel_parkedNote' => call_ConferencePanel_parkedNote,
       'call_ConferencePanel_participantStatus' =>
         call_ConferencePanel_participantStatus,
       'call_ConferencePanel_participantMuted' =>
         call_ConferencePanel_participantMuted,
       'call_ConferencePanel_end' => call_ConferencePanel_end,
-      'call_SemanticsLabel_conferenceSelfMute' =>
-        call_SemanticsLabel_conferenceSelfMute,
-      'call_SemanticsLabel_conferenceSelfUnmute' =>
-        call_SemanticsLabel_conferenceSelfUnmute,
       'call_SemanticsLabel_conferenceEnd' => call_SemanticsLabel_conferenceEnd,
       'call_CallList_merge' => call_CallList_merge,
       'call_SemanticsLabel_merge' => call_SemanticsLabel_merge,

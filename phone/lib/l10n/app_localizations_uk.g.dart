@@ -472,6 +472,9 @@ class AppLocalizationsUk extends AppLocalizations {
   String get call_ConferencePanel_hostStatusAside => 'В іншому дзвінку';
 
   @override
+  String get call_ConferencePanel_parkedNote => 'Ви в іншому дзвінку';
+
+  @override
   String get call_ConferencePanel_participantStatus => 'У конференції';
 
   @override
@@ -479,12 +482,6 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get call_ConferencePanel_end => 'Завершити';
-
-  @override
-  String get call_SemanticsLabel_conferenceSelfMute => 'Вимкнути ваш мікрофон';
-
-  @override
-  String get call_SemanticsLabel_conferenceSelfUnmute => 'Увімкнути ваш мікрофон';
 
   @override
   String call_SemanticsLabel_conferenceParticipantMute(String name) {

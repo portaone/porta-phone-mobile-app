@@ -141,7 +141,7 @@ what it does.
 | `CallInfoBlock`          | `widgets/call_info_block.dart`         | Who the screen is about: the roster with several calls, `CallInfo` with one |
 | `CallActionArea`         | `widgets/call_action_area.dart`        | What can be pressed: the control grid, or Decline/Answer with the hint      |
 | `CallList` / `CallRow`   | `widgets/call_list.dart`               | Tappable per-call rows with status badge + duration                         |
-| `ConferencePanel`        | `widgets/conference_panel.dart`        | The room as one block: the host's own row and a row per leg, above the roster of the calls outside it |
+| `ConferencePanel`        | `widgets/conference_panel.dart`        | The room as one block: a row per leg, above the roster of the calls outside it |
 | `FocusedActionHint`      | `widgets/focused_action_hint.dart`     | "Acting on" hint + answer side effect                                       |
 | `CallInfo`               | `widgets/call_info.dart`               | Focused-call name / number / call description / timer                       |
 | `IncomingCallActions`    | `widgets/incoming_call_actions.dart`   | Decline / Answer for the focused ringing call                               |

@@ -9,7 +9,6 @@ import '../models/models.dart';
 import '../view/call_screen_style.dart';
 import '../utils/contact_resolver.dart';
 import 'call_action_button.dart';
-import 'call_attention_dot.dart';
 import 'call_row_frame.dart';
 
 /// The conference room: who is in it, who is muted for everyone, and the way
@@ -23,6 +22,11 @@ import 'call_row_frame.dart';
 /// The membership is the client's record of what it merged, ordered by line
 /// so the rows do not move about; whether the server has the participant
 /// ready is a separate question and only gates the room-wide mute.
+///
+/// The host has no row of his own: the screen around the list is his, and
+/// his microphone is the call screen's own mute, which reaches the room the
+/// same way. What only a row of his could say - that the room is standing
+/// aside - is a line under the header.
 class ConferencePanel extends StatelessWidget {
   const ConferencePanel({
     super.key,
@@ -30,10 +34,8 @@ class ConferencePanel extends StatelessWidget {
     required this.calls,
     required this.roomParked,
     required this.onSwitchToConference,
-    required this.onSelfMutedChanged,
     required this.onParticipantMutedChanged,
     required this.onParticipantHangup,
-    this.noiseReductionFailed = false,
     this.contactResolver,
     this.style,
     this.listStyle,
@@ -48,21 +50,13 @@ class ConferencePanel extends StatelessWidget {
 
   /// Whether the room has stood aside for a call the host took outside it
   /// ([CallState.conferenceMustPark]): it neither hears him nor is heard, so
-  /// the host's row says so and its microphone is not his to press - lifting a
-  /// mute would change nothing while the room is silent either way.
+  /// the header says so and the participants' controls step back.
   final bool roomParked;
 
   /// Takes the user back into the room from a call they took outside it: any
   /// row of the room is that way in. `null` where there is nothing to come
   /// back from.
   final ValueChanged<String>? onSwitchToConference;
-
-  /// Mutes the host's own microphone towards the room. Nobody in the room is
-  /// told; it is the local microphone, not a room-wide mute.
-  final ValueChanged<bool> onSelfMutedChanged;
-
-  /// Marks the host's microphone: the noise reduction asked for did not start on it.
-  final bool noiseReductionFailed;
 
   /// Mutes a participant for everyone in the room. The outcome arrives as the
   /// server's next participant list, so nothing is assumed here.
@@ -81,53 +75,18 @@ class ConferencePanel extends StatelessWidget {
   /// hangup one so they read as what they are and stay themeable.
   final CallScreenActionsStyle? actionsStyle;
 
-  /// The name of the host's mute control, with the words beside the dot for whoever cannot see it.
-  String _selfMuteLabel(BuildContext context) {
-    final label = conference.selfMuted || roomParked
-        ? context.l10n.call_SemanticsLabel_conferenceSelfUnmute
-        : context.l10n.call_SemanticsLabel_conferenceSelfMute;
-    if (!noiseReductionFailed) return label;
-    return context.l10n.call_SemanticsLabel_noiseReductionOff(label);
-  }
-
   @override
   Widget build(BuildContext context) {
-    final statusStyle = style?.callStatus ?? const TextStyle();
     final legs = conference.legs.entries.toList()..sort((a, b) => a.value.compareTo(b.value));
 
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
-        CallRowHeader(label: context.l10n.call_ConferencePanel_header(legs.length), style: style),
-        CallRowFrame(
-          name: context.l10n.call_ConferencePanel_you,
-          onTap: onSwitchToConference == null ? null : () => onSwitchToConference!(legs.first.key),
-          status: roomParked
-              ? context.l10n.call_ConferencePanel_hostStatusAside
-              : context.l10n.call_ConferencePanel_hostStatus,
+        CallRowHeader(
+          label: context.l10n.call_ConferencePanel_header(legs.length),
+          note: roomParked ? context.l10n.call_ConferencePanel_parkedNote : null,
+          noteIdentifier: conferenceParkedNoteId,
           style: style,
-          listStyle: listStyle,
-          // The room is a conversation like the call outside it, and only one
-          // of the two can be the one the user is in: while the room stands
-          // aside, the frame belongs to that other call.
-          focused: !roomParked,
-          leading: CallRowSelfAvatar(style: style),
-          trailing: [
-            CallAttentionDot(
-              shown: noiseReductionFailed,
-              child: _MuteToggle(
-                // A room that has stood aside hears nothing of the host either
-                // way, so the icon says so rather than reporting an intent the
-                // room is not acting on. The intent itself is not touched: it
-                // comes back as it was when he does.
-                muted: conference.selfMuted || roomParked,
-                identifier: conferenceSelfMuteId,
-                label: _selfMuteLabel(context),
-                onPressed: roomParked ? null : () => onSelfMutedChanged(!conference.selfMuted),
-                style: statusStyle,
-              ),
-            ),
-          ],
         ),
         for (final (index, leg) in legs.indexed)
           _ParticipantRow(

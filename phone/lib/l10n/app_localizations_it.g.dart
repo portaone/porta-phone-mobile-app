@@ -455,6 +455,9 @@ class AppLocalizationsIt extends AppLocalizations {
   String get call_ConferencePanel_hostStatusAside => 'In un\'altra chiamata';
 
   @override
+  String get call_ConferencePanel_parkedNote => 'Sei in un\'altra chiamata';
+
+  @override
   String get call_ConferencePanel_participantStatus => 'In conferenza';
 
   @override
@@ -462,12 +465,6 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get call_ConferencePanel_end => 'Termina';
-
-  @override
-  String get call_SemanticsLabel_conferenceSelfMute => 'Disattiva il tuo microfono';
-
-  @override
-  String get call_SemanticsLabel_conferenceSelfUnmute => 'Attiva il tuo microfono';
 
   @override
   String call_SemanticsLabel_conferenceParticipantMute(String name) {

@@ -1,5 +1,7 @@
 import 'package:material_ui/material_ui.dart';
 
+import 'package:webtrit_phone/widgets/widgets.dart';
+
 import '../models/models.dart';
 import '../utils/contact_resolver.dart';
 import '../view/call_screen_style.dart';
@@ -75,14 +77,17 @@ class CallRowFrame extends StatelessWidget {
 
   /// What every row colour is derived from: the row's own text colour, or the
   /// surface behind it where the theme says nothing.
+  /// The small line over a row's name - its status - and anything else in
+  /// the list that speaks in that voice, such as a note under a list header.
+  static TextStyle captionStyle(CallInfoStyle? style) =>
+      (style?.callStatus ?? const TextStyle()).copyWith(fontSize: 10, letterSpacing: 1.1);
+
   static Color baseColor(BuildContext context, CallInfoStyle? style) =>
       style?.callStatus?.color ?? Theme.of(context).colorScheme.surface;
 
   @override
   Widget build(BuildContext context) {
     final nameStyle = style?.number ?? const TextStyle();
-    final statusStyle = style?.callStatus ?? const TextStyle();
-
     final base = baseColor(context, style);
     final listStyle = this.listStyle;
     final rowColor = CallRowFrame.rowColor(context, focused: focused, style: style, listStyle: listStyle);
@@ -105,13 +110,11 @@ class CallRowFrame extends StatelessWidget {
                 if (statusBuilder case final statusBuilder?)
                   CallDuration(
                     since: since,
-                    builder: (context, elapsed) => Text(
-                      statusBuilder(context, elapsed),
-                      style: statusStyle.copyWith(fontSize: 10, letterSpacing: 1.1),
-                    ),
+                    builder: (context, elapsed) =>
+                        Text(statusBuilder(context, elapsed), style: CallRowFrame.captionStyle(style)),
                   )
                 else
-                  Text(status ?? '', style: statusStyle.copyWith(fontSize: 10, letterSpacing: 1.1)),
+                  Text(status ?? '', style: CallRowFrame.captionStyle(style)),
                 Text(name, style: nameStyle.copyWith(fontSize: 16), maxLines: 1, overflow: TextOverflow.ellipsis),
               ],
             ),
@@ -187,27 +190,6 @@ class CallRowAvatar extends StatelessWidget {
   }
 }
 
-/// Stands where a picture would, for a row about somebody the app has no
-/// picture of - the host's own row. Without it the panel's names would start
-/// at two different places down the list.
-class CallRowSelfAvatar extends StatelessWidget {
-  const CallRowSelfAvatar({super.key, this.style});
-
-  final CallInfoStyle? style;
-
-  @override
-  Widget build(BuildContext context) {
-    final color = CallRowFrame.baseColor(context, style);
-    return SizedBox.square(
-      dimension: CallRowAvatar.radius * 2,
-      child: DecoratedBox(
-        decoration: BoxDecoration(shape: BoxShape.circle, color: color.withValues(alpha: 0.18)),
-        child: Icon(Icons.person, size: CallRowAvatar.radius, color: color),
-      ),
-    );
-  }
-}
-
 /// What a list of rows is, above the rows, with whatever that list offers
 /// beside it.
 ///
@@ -215,9 +197,16 @@ class CallRowSelfAvatar extends StatelessWidget {
 /// this is the one place that says how: the panel's header went without an
 /// action slot for as long as the two were written separately.
 class CallRowHeader extends StatelessWidget {
-  const CallRowHeader({super.key, required this.label, this.action, this.style});
+  const CallRowHeader({super.key, required this.label, this.action, this.note, this.noteIdentifier, this.style});
 
   final String label;
+
+  /// A line under the label about the list as a whole, in the voice of a
+  /// row's status; absent where there is nothing to say.
+  final String? note;
+
+  /// The automation anchor of [note], from `lib/app/keys.dart`.
+  final String? noteIdentifier;
 
   /// The control offered beside the label; absent where the list offers none.
   final CallListAction? action;
@@ -226,19 +215,35 @@ class CallRowHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final header = Row(
+      children: [
+        Expanded(
+          child: Text(
+            label.toUpperCase(),
+            style: (style?.callStatus ?? const TextStyle()).copyWith(fontSize: 11, letterSpacing: 1.2),
+          ),
+        ),
+        if (action case final action?) CallListActionButton(action: action, style: style),
+      ],
+    );
+    final note = this.note;
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      child: Row(
-        children: [
-          Expanded(
-            child: Text(
-              label.toUpperCase(),
-              style: (style?.callStatus ?? const TextStyle()).copyWith(fontSize: 11, letterSpacing: 1.2),
+      child: note == null
+          ? header
+          : Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              spacing: 4,
+              children: [
+                header,
+                _identified(Text(note, style: CallRowFrame.captionStyle(style))),
+              ],
             ),
-          ),
-          if (action case final action?) CallListActionButton(action: action, style: style),
-        ],
-      ),
     );
+  }
+
+  Widget _identified(Widget child) {
+    final identifier = noteIdentifier;
+    return identifier == null ? child : SemanticId(identifier: identifier, child: child);
   }
 }

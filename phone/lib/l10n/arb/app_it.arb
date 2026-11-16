@@ -401,6 +401,10 @@
   },
   "call_ConferencePanel_hostStatusAside": "In un'altra chiamata",
   "@call_ConferencePanel_hostStatusAside": {},
+  "call_ConferencePanel_parkedNote": "Sei in un'altra chiamata",
+  "@call_ConferencePanel_parkedNote": {
+    "description": "Line under the conference panel header while the host is on a call outside the room, so the room neither hears him nor is heard."
+  },
   "call_ConferencePanel_participantStatus": "In conferenza",
   "@call_ConferencePanel_participantStatus": {
     "description": "Status line of a participant row in the conference panel."
@@ -412,14 +416,6 @@
   "call_ConferencePanel_end": "Termina",
   "@call_ConferencePanel_end": {
     "description": "Label of the button that ends the conference and every call in it."
-  },
-  "call_SemanticsLabel_conferenceSelfMute": "Disattiva il tuo microfono",
-  "@call_SemanticsLabel_conferenceSelfMute": {
-    "description": "Accessibility name of the control that mutes the host's microphone towards the conference."
-  },
-  "call_SemanticsLabel_conferenceSelfUnmute": "Attiva il tuo microfono",
-  "@call_SemanticsLabel_conferenceSelfUnmute": {
-    "description": "Accessibility name of the control that unmutes the host's microphone towards the conference."
   },
   "call_SemanticsLabel_conferenceParticipantMute": "Silenzia {name} per tutti",
   "@call_SemanticsLabel_conferenceParticipantMute": {

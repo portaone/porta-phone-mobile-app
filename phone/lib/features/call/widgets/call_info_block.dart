@@ -27,9 +27,7 @@ class CallInfoBlock extends StatelessWidget {
     required this.onCallSelected,
     this.conference = const ConferenceState(),
     this.conferenceParked = false,
-    this.voiceNoiseReductionFailed = false,
     this.onConversationSwitched,
-    this.onSelfMutedChanged,
     this.onParticipantMutedChanged,
     this.onParticipantHangup,
     this.onAddPressed,
@@ -48,9 +46,7 @@ class CallInfoBlock extends StatelessWidget {
       onCallSelected = params.onCallSelected,
       conference = params.conference,
       conferenceParked = params.conferenceParked,
-      voiceNoiseReductionFailed = params.voiceNoiseReductionFailed,
       onConversationSwitched = params.onConversationSwitched,
-      onSelfMutedChanged = params.onConferenceSelfMuted,
       onParticipantMutedChanged = params.onConferenceParticipantMuted,
       onParticipantHangup = params.onConferenceParticipantHangup,
       onAddPressed = params.onConferenceAdd,
@@ -71,15 +67,11 @@ class CallInfoBlock extends StatelessWidget {
   /// Whether that room has stood aside for a call outside it.
   final bool conferenceParked;
 
-  /// Whether the voice noise reduction asked for did not start on the open microphone.
-  final bool voiceNoiseReductionFailed;
-
   /// Moves the user between the room and a call outside it. While a room
   /// stands, a row is tapped to go to that conversation rather than merely to
   /// point the controls at it.
   final ValueChanged<String>? onConversationSwitched;
 
-  final ValueChanged<bool>? onSelfMutedChanged;
   final void Function(String callId, bool muted)? onParticipantMutedChanged;
   final ValueChanged<String>? onParticipantHangup;
 
@@ -118,9 +110,7 @@ class CallInfoBlock extends StatelessWidget {
             conference: conference,
             calls: activeCalls,
             roomParked: conferenceParked,
-            noiseReductionFailed: voiceNoiseReductionFailed,
             onSwitchToConference: onConversationSwitched,
-            onSelfMutedChanged: onSelfMutedChanged ?? (_) {},
             onParticipantMutedChanged: onParticipantMutedChanged ?? (_, _) {},
             onParticipantHangup: onParticipantHangup ?? (_) {},
             contactResolver: contactResolver,

@@ -26,25 +26,16 @@ ConferenceState _room({
     ConferenceParticipant(line: 0, callId: 'a'),
     ConferenceParticipant(line: 1, callId: 'b'),
   ],
-  bool selfMuted = false,
-}) => ConferenceState(
-  room: 7,
-  phase: ConferencePhase.active,
-  legs: const {'a': 0, 'b': 1},
-  participants: participants,
-  selfMuted: selfMuted,
-);
+}) => ConferenceState(room: 7, phase: ConferencePhase.active, legs: const {'a': 0, 'b': 1}, participants: participants);
 
 Widget _maybeScroll(bool scrollable, Widget child) => scrollable ? SingleChildScrollView(child: child) : child;
 
 void main() {
-  late List<bool> selfMutes;
   late List<({String callId, bool muted})> participantMutes;
   late List<String> hangups;
   late List<String> switched;
 
   setUp(() {
-    selfMutes = [];
     participantMutes = [];
     hangups = [];
     switched = [];
@@ -55,7 +46,6 @@ void main() {
     List<ActiveCall>? calls,
     bool scrollable = false,
     bool roomParked = false,
-    bool noiseReductionFailed = false,
   }) => MaterialApp(
     locale: const Locale('en'),
     localizationsDelegates: appLocalizationsDelegates,
@@ -69,9 +59,7 @@ void main() {
           conference: conference ?? _room(),
           calls: calls ?? [_call('a', displayName: 'Anna Marchenko'), _call('b', line: 1, displayName: 'Boris Klein')],
           roomParked: roomParked,
-          noiseReductionFailed: noiseReductionFailed,
           onSwitchToConference: switched.add,
-          onSelfMutedChanged: selfMutes.add,
           onParticipantMutedChanged: (callId, muted) => participantMutes.add((callId: callId, muted: muted)),
           onParticipantHangup: hangups.add,
         ),
@@ -80,18 +68,14 @@ void main() {
   );
 
   group('ConferencePanel', () {
-    testWidgets('marks the host microphone when the noise reduction did not start', (tester) async {
-      await tester.pumpWidget(subject(noiseReductionFailed: true));
-
-      expect(find.byKey(const ValueKey('call-attention-dot')), findsOneWidget);
-      await tester.pumpWidget(const SizedBox());
-    });
-
-    testWidgets('lists the host and every leg, by line', (tester) async {
+    testWidgets('lists every leg, by line, and no row of the host', (tester) async {
+      // The screen around the list is the host's, and his microphone is the
+      // screen's own mute: a row of his only repeated the two.
       await tester.pumpWidget(subject());
       final context = tester.element(find.byType(ConferencePanel));
 
-      expect(find.text(context.l10n.call_ConferencePanel_you), findsOneWidget);
+      expect(find.text(context.l10n.call_ConferencePanel_you), findsNothing);
+      expect(find.bySemanticsIdentifier(conferenceSelfMuteId), findsNothing);
       expect(find.text('Anna Marchenko'), findsOneWidget);
       expect(find.text('Boris Klein'), findsOneWidget);
       expect(find.text(context.l10n.call_ConferencePanel_header(2).toUpperCase()), findsOneWidget);
@@ -99,21 +83,6 @@ void main() {
       // Ordered by line, whatever order the legs were recorded in.
       final names = tester.widgetList<Text>(find.byType(Text)).map((text) => text.data).toList();
       expect(names.indexOf('Anna Marchenko'), lessThan(names.indexOf('Boris Klein')));
-      await tester.pumpWidget(const SizedBox());
-    });
-
-    testWidgets('the host microphone says what the room hears, not what he intended', (tester) async {
-      // A room standing aside hears nothing of him either way, so an unstruck
-      // microphone there would claim the room hears him while nobody does.
-      await tester.pumpWidget(subject());
-      expect(find.byIcon(Icons.mic_off), findsNothing, reason: 'nobody is muted in the room itself');
-
-      await tester.pumpWidget(subject(roomParked: true));
-      expect(
-        find.byIcon(Icons.mic_off),
-        findsOneWidget,
-        reason: "the host's own row, and only his - the participants are still heard by each other",
-      );
       await tester.pumpWidget(const SizedBox());
     });
 
@@ -132,19 +101,15 @@ void main() {
       await tester.pumpWidget(const SizedBox());
     });
 
-    testWidgets('the room carries the frame only while it is the conversation in use', (tester) async {
-      // Both blocks drew it at once once the rows became tappable: the room's
-      // own row asked for the frame unconditionally, so a user on the outside
-      // call saw two selected conversations that differed only in wording.
-      await tester.pumpWidget(subject());
-      expect(tester.widget<CallRowFrame>(find.byType(CallRowFrame).first).focused, isTrue);
-
-      await tester.pumpWidget(subject(roomParked: true));
-      expect(
-        tester.widget<CallRowFrame>(find.byType(CallRowFrame).first).focused,
-        isFalse,
-        reason: 'the frame belongs to the call the room stood aside for',
-      );
+    testWidgets('no row of the room carries the frame', (tester) async {
+      // The frame marks the conversation in use among several; the room's
+      // participants are one conversation, and while the room stands aside the
+      // frame belongs to the call outside it.
+      for (final parked in [false, true]) {
+        await tester.pumpWidget(subject(roomParked: parked));
+        final frames = tester.widgetList<CallRowFrame>(find.byType(CallRowFrame));
+        expect(frames.any((frame) => frame.focused), isFalse, reason: 'parked: $parked');
+      }
       await tester.pumpWidget(const SizedBox());
     });
 
@@ -156,38 +121,33 @@ void main() {
       await tester.tap(find.text('Anna Marchenko'));
       await tester.pump();
       expect(switched, ['a'], reason: 'a leg row names its own leg');
-
-      await tester.tap(find.byType(CallRowSelfAvatar));
-      await tester.pump();
-      expect(switched, ['a', 'a'], reason: "the host's own row leads back too");
       await tester.pumpWidget(const SizedBox());
     });
 
-    testWidgets('says the host is elsewhere while the room stands aside, and offers no mute of it', (tester) async {
-      // The room neither hears him nor is heard (CallState.conferenceMustPark),
-      // so a mute of it would change nothing - and a row that said nothing
-      // would read as a conference that had quietly died.
-      await tester.pumpWidget(subject(roomParked: true));
+    testWidgets('says the host is elsewhere while the room stands aside', (tester) async {
+      // The room neither hears him nor is heard (CallState.conferenceMustPark);
+      // a list that said nothing would read as a conference that had quietly died.
+      await tester.pumpWidget(subject());
       final context = tester.element(find.byType(ConferencePanel));
+      expect(find.text(context.l10n.call_ConferencePanel_parkedNote), findsNothing);
+      expect(find.bySemanticsIdentifier(conferenceParkedNoteId), findsNothing);
 
-      expect(find.text(context.l10n.call_ConferencePanel_hostStatusAside), findsOneWidget);
-      expect(find.text(context.l10n.call_ConferencePanel_hostStatus), findsNothing);
-
-      await tester.tap(find.bySemanticsIdentifier(conferenceSelfMuteId));
-      await tester.pump();
-      expect(selfMutes, isEmpty, reason: 'the control is not the host\'s to press while the room is silent');
+      await tester.pumpWidget(subject(roomParked: true));
+      expect(find.text(context.l10n.call_ConferencePanel_parkedNote), findsOneWidget);
+      expect(
+        find.bySemanticsIdentifier(conferenceParkedNoteId),
+        findsOneWidget,
+        reason: 'automation tells a room standing aside from one in use without reading the words',
+      );
       await tester.pumpWidget(const SizedBox());
     });
 
-    testWidgets('every row leads with a picture, the host included', (tester) async {
+    testWidgets('every row leads with a picture', (tester) async {
       // The panel and the roster are the same kind of list, so a leg says who
-      // it is with the same way a call outside the room does. The host has no
-      // contact of their own, and a row without a picture would start its
-      // name at a different place down the list.
+      // it is with the same way a call outside the room does.
       await tester.pumpWidget(subject());
 
       expect(find.byType(CallRowAvatar), findsNWidgets(2), reason: 'one per leg');
-      expect(find.byType(CallRowSelfAvatar), findsOneWidget, reason: 'and one standing for the host');
       await tester.pumpWidget(const SizedBox());
     });
 
@@ -196,17 +156,6 @@ void main() {
 
       expect(find.text('+380991234567'), findsOneWidget);
       expect(find.text('b'), findsOneWidget, reason: 'the call is gone but the server still lists the leg');
-      await tester.pumpWidget(const SizedBox());
-    });
-
-    testWidgets('the host mic reports the opposite of what the room says', (tester) async {
-      await tester.pumpWidget(subject());
-      await tester.tap(find.bySemanticsIdentifier(conferenceSelfMuteId));
-      expect(selfMutes, [true]);
-
-      await tester.pumpWidget(subject(conference: _room(selfMuted: true)));
-      await tester.tap(find.bySemanticsIdentifier(conferenceSelfMuteId));
-      expect(selfMutes, [true, false]);
       await tester.pumpWidget(const SizedBox());
     });
 

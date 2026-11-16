@@ -141,6 +141,7 @@ const String callRowStateOnCallId = 'callRowStateOnCall';
 const String callMergeButtonId = 'callMergeButton';
 const String callAddToConferenceButtonId = 'callAddToConferenceButton';
 const String conferenceSelfMuteId = 'conferenceSelfMute';
+const String conferenceParkedNoteId = 'conferenceParkedNote';
 const String conferenceParticipantMuteId = 'conferenceParticipantMute';
 const String conferenceParticipantHangupId = 'conferenceParticipantHangup';
 const String conferenceEndId = 'conferenceEnd';

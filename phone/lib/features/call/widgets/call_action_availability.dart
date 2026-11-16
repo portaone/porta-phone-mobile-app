@@ -26,11 +26,23 @@ class CallActionAvailability {
   /// room instead.
   bool get focusedIsLeg => params.conference.isLeg(_call.callId);
 
-  /// What the microphone control shows: the room's mute for a leg. What it
-  /// does is the ordinary mute of the focused call, which the bloc routes to
-  /// the room for a leg - keeping the operating system's own mute state in
-  /// step with the room.
-  bool get muted => focusedIsLeg ? params.conference.selfMuted : _call.muted;
+  /// Whether the microphone control is the room's: on a leg, and on any call
+  /// while a room hears the host - one he is calling in, say, or one coming
+  /// in - since the room keeps hearing him until it stands aside, and this is
+  /// the only control left on the screen that mutes him towards it.
+  bool get micActsOnRoom => focusedIsLeg || (params.conference.isPresent && !params.conferenceParked);
+
+  /// What the microphone control shows: the room's mute where it acts on the
+  /// room, the focused call's own otherwise.
+  bool get muted => micActsOnRoom ? params.conference.selfMuted : _call.muted;
+
+  /// What the microphone control does. On a leg it is the ordinary mute of
+  /// the focused call, which the bloc routes to the room - keeping the
+  /// operating system's own mute state in step with it. On a call outside
+  /// the room while the room still hears the host it is the room's mute
+  /// itself: the call's own would silence a call that is not answered yet.
+  ValueChanged<bool>? get onMutedChanged =>
+      micActsOnRoom && !focusedIsLeg ? params.onConferenceSelfMuted : params.onMutedChanged;
 
   /// Hold pauses just the focused call; Resume brings it back as the only
   /// live one. Not for a leg.

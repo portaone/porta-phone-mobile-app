@@ -785,23 +785,29 @@ abstract class AppLocalizations {
   /// **'{count, plural, one{Conference - {count} participant} other{Conference - {count} participants}}'**
   String call_ConferencePanel_header(int count);
 
-  /// Name of the host's own row in the conference panel.
+  /// Name of the host's own item in the watch's conference menu.
   ///
   /// In en, this message translates to:
   /// **'You'**
   String get call_ConferencePanel_you;
 
-  /// Status line of the host's own row in the conference panel.
+  /// Status line of the host's own item in the watch's conference menu.
   ///
   /// In en, this message translates to:
   /// **'Host'**
   String get call_ConferencePanel_hostStatus;
 
-  /// Status on the host row of the conference panel while the host is on a call outside the room, so the room neither hears him nor is heard
+  /// Status of the host's own item in the watch's conference menu while the host is on a call outside the room, so the room neither hears him nor is heard
   ///
   /// In en, this message translates to:
   /// **'On another call'**
   String get call_ConferencePanel_hostStatusAside;
+
+  /// Line under the conference panel header while the host is on a call outside the room, so the room neither hears him nor is heard.
+  ///
+  /// In en, this message translates to:
+  /// **'You are on another call'**
+  String get call_ConferencePanel_parkedNote;
 
   /// Status line of a participant row in the conference panel.
   ///
@@ -820,18 +826,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'End'**
   String get call_ConferencePanel_end;
-
-  /// Accessibility name of the control that mutes the host's microphone towards the conference.
-  ///
-  /// In en, this message translates to:
-  /// **'Mute your microphone'**
-  String get call_SemanticsLabel_conferenceSelfMute;
-
-  /// Accessibility name of the control that unmutes the host's microphone towards the conference.
-  ///
-  /// In en, this message translates to:
-  /// **'Unmute your microphone'**
-  String get call_SemanticsLabel_conferenceSelfUnmute;
 
   /// Accessibility name of the control that mutes one conference participant for everyone; the name identifies which participant.
   ///
