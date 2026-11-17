@@ -20,6 +20,9 @@ void main() {
     ActiveCall? focused,
     CallCapabilitiesConfig config = const CallCapabilitiesConfig(),
     ConferenceState conference = const ConferenceState(),
+    bool conferenceParked = false,
+    ValueChanged<bool>? onMutedChanged,
+    ValueChanged<bool>? onConferenceSelfMuted,
     bool interactionsEnabled = true,
     bool canStartAttendedTransfer = false,
     HandOver? handOver,
@@ -39,7 +42,7 @@ void main() {
         onKeypadToggle: (_) {},
         onCameraChanged: (_) {},
         onCameraPermissionDeniedPressed: () {},
-        onMutedChanged: (_) {},
+        onMutedChanged: onMutedChanged ?? (_) {},
         onAudioDeviceChanged: (_) {},
         onBlindTransferInitiated: () {},
         onAttendedTransferInitiated: () {},
@@ -49,6 +52,8 @@ void main() {
         onHangup: () {},
         onAccept: () {},
         conference: conference,
+        conferenceParked: conferenceParked,
+        onConferenceSelfMuted: onConferenceSelfMuted,
         canStartAttendedTransfer: canStartAttendedTransfer,
         handOver: handOver,
         addParticipantAvailability: addParticipantAvailability,
@@ -78,6 +83,62 @@ void main() {
     expect(actions.onBlindTransfer, isNull);
     expect(actions.transferableCalls, isEmpty);
     expect(actions.transferMenuEnabled, isFalse, reason: 'nothing to transfer and nobody to invite');
+  });
+
+  test('while the room hears the host, the microphone is the room\'s on any call', () {
+    // Calling somebody in from the room: the new call is focused and not
+    // answered yet, so the room is not standing aside and still hears him.
+    // The panel has no microphone of the host's own, so this control is the
+    // only way left to mute him towards the room.
+    const room = ConferenceState(phase: ConferencePhase.active, legs: {'active': 0}, selfMuted: true);
+    final callMutes = <bool>[];
+    final roomMutes = <bool>[];
+    final calling = availability(
+      calls: [active, ringingOut],
+      focused: ringingOut,
+      conference: room,
+      onMutedChanged: callMutes.add,
+      onConferenceSelfMuted: roomMutes.add,
+    );
+
+    expect(calling.micActsOnRoom, isTrue);
+    expect(calling.muted, isTrue, reason: "the room's mute, not the ringing call's");
+    calling.onMutedChanged!(false);
+    expect(roomMutes, [false]);
+    expect(callMutes, isEmpty, reason: 'the ringing call is not what the room hears');
+  });
+
+  test('while the room stands aside, the microphone is the call\'s own', () {
+    const room = ConferenceState(phase: ConferencePhase.active, legs: {'active': 0}, selfMuted: true);
+    final outside = makeCall(callId: 'outside', acceptedTime: DateTime(2024));
+    final callMutes = <bool>[];
+    final aside = availability(
+      calls: [active, outside],
+      focused: outside,
+      conference: room,
+      conferenceParked: true,
+      onMutedChanged: callMutes.add,
+      onConferenceSelfMuted: (_) => fail('the room is not what the host is talking to'),
+    );
+
+    expect(aside.micActsOnRoom, isFalse);
+    expect(aside.muted, isFalse, reason: "the outside call's own mute");
+    aside.onMutedChanged!(true);
+    expect(callMutes, [true]);
+  });
+
+  test('a leg mutes the room through the ordinary mute, keeping the platform in step', () {
+    const room = ConferenceState(phase: ConferencePhase.active, legs: {'active': 0});
+    final callMutes = <bool>[];
+    final leg = availability(
+      calls: [active],
+      conference: room,
+      onMutedChanged: callMutes.add,
+      onConferenceSelfMuted: (_) => fail('a leg goes through the ordinary mute'),
+    );
+
+    leg.onMutedChanged!(true);
+    expect(callMutes, [true]);
   });
 
   test('the camera is offered only where video calls are on', () {

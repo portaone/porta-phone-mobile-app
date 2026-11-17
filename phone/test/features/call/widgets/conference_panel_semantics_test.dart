@@ -34,7 +34,7 @@ void main() {
     switched = [];
   });
 
-  Widget subject({bool selfMuted = false, bool ready = true}) => MaterialApp(
+  Widget subject({bool borisMuted = false, bool ready = true, bool parked = false}) => MaterialApp(
     locale: const Locale('en'),
     localizationsDelegates: appLocalizationsDelegates,
     supportedLocales: AppLocalizations.supportedLocales,
@@ -45,17 +45,18 @@ void main() {
           phase: ConferencePhase.active,
           legs: const {'a': 0, 'b': 1},
           participants: ready
-              ? const [ConferenceParticipant(line: 0, callId: 'a'), ConferenceParticipant(line: 1, callId: 'b')]
+              ? [
+                  const ConferenceParticipant(line: 0, callId: 'a'),
+                  ConferenceParticipant(line: 1, callId: 'b', muted: borisMuted),
+                ]
               : const [],
-          selfMuted: selfMuted,
         ),
         calls: [
           _call('a', displayName: 'Anna Marchenko'),
           _call('b', line: 1, displayName: 'Boris Klein'),
         ],
-        roomParked: false,
+        roomParked: parked,
         onSwitchToConference: switched.add,
-        onSelfMutedChanged: (muted) => acted.add('self:$muted'),
         onParticipantMutedChanged: (callId, muted) => acted.add('mute:$callId:$muted'),
         onParticipantHangup: (callId) => acted.add('hangup:$callId'),
       ),
@@ -67,13 +68,6 @@ void main() {
       final semantics = tester.ensureSemantics();
       await tester.pumpWidget(subject());
 
-      expectTapTargetSemantics(
-        tester,
-        find.bySemanticsIdentifier(conferenceSelfMuteId),
-        label: 'Mute your microphone',
-        identifier: conferenceSelfMuteId,
-        isButton: true,
-      );
       // Named, because there is one of these per row and they act on
       // different people.
       expectTapTargetSemantics(
@@ -115,11 +109,10 @@ void main() {
       final semantics = tester.ensureSemantics();
       await tester.pumpWidget(subject());
 
-      await tapViaSemantics(tester, find.bySemanticsIdentifier(conferenceSelfMuteId));
       await tapViaSemantics(tester, find.bySemanticsIdentifier(numberedId(conferenceParticipantMuteId, 1)));
       await tapViaSemantics(tester, find.bySemanticsIdentifier(numberedId(conferenceParticipantHangupId, 1)));
 
-      expect(acted, ['self:true', 'mute:b:true', 'hangup:b']);
+      expect(acted, ['mute:b:true', 'hangup:b']);
 
       await tester.pumpWidget(const SizedBox());
       semantics.dispose();
@@ -142,11 +135,14 @@ void main() {
 
     testWidgets('a muted microphone offers to unmute, not to mute again', (tester) async {
       final semantics = tester.ensureSemantics();
-      await tester.pumpWidget(subject(selfMuted: true));
+      await tester.pumpWidget(subject(borisMuted: true));
 
       expect(
-        tester.getSemantics(find.bySemanticsIdentifier(conferenceSelfMuteId)).getSemanticsData().label,
-        'Unmute your microphone',
+        tester
+            .getSemantics(find.bySemanticsIdentifier(numberedId(conferenceParticipantMuteId, 1)))
+            .getSemanticsData()
+            .label,
+        'Unmute Boris Klein for everyone',
       );
 
       await tester.pumpWidget(const SizedBox());
@@ -159,6 +155,31 @@ void main() {
 
       await expectLater(tester, meetsGuideline(labeledTapTargetGuideline));
       await expectLater(tester, meetsGuideline(androidTapTargetGuideline));
+
+      await tester.pumpWidget(const SizedBox());
+      semantics.dispose();
+    });
+
+    testWidgets('a room standing aside keeps every control named, its note read once and in order', (tester) async {
+      // The state the panel changes most when the host steps out: a note joins
+      // the header and the participants' controls step back, dimmed but alive.
+      final semantics = tester.ensureSemantics();
+      await tester.pumpWidget(subject(parked: true));
+
+      await expectLater(tester, meetsGuideline(labeledTapTargetGuideline));
+      await expectLater(tester, meetsGuideline(androidTapTargetGuideline));
+      expect(find.bySemanticsIdentifier(conferenceParkedNoteId), findsOneWidget);
+      expect(
+        tester.getSemantics(find.bySemanticsIdentifier(conferenceParkedNoteId)).getSemanticsData().label,
+        'You are on another call',
+      );
+      final header = tester.getTopLeft(find.textContaining('PARTICIPANTS')).dy;
+      final note = tester.getTopLeft(find.bySemanticsIdentifier(conferenceParkedNoteId)).dy;
+      final firstRow = tester.getTopLeft(find.text('Anna Marchenko')).dy;
+      expect(header < note && note < firstRow, isTrue, reason: 'header, then the note, then the rows');
+
+      await tapViaSemantics(tester, find.bySemanticsIdentifier(numberedId(conferenceParticipantHangupId, 1)));
+      expect(acted, ['hangup:b'], reason: 'dimmed, not disabled');
 
       await tester.pumpWidget(const SizedBox());
       semantics.dispose();

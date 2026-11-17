@@ -22,7 +22,7 @@ lib/features/call/
   models/linked_call.dart             LinkedCall: a call placed to join a call or the room (purpose join)
   bloc/call_bloc.dart                 the handlers, in the "conference" section
   bloc/call_state.dart                the derivations: mergeableCallIds, mergeableLegs, canMerge, canAdd
-  widgets/conference_panel.dart       the room on screen: the host, the participants
+  widgets/conference_panel.dart       the room on screen: its participants
   widgets/call_row_frame.dart         the row every list on the call screen is made of
   widgets/call_list_action.dart       the Merge and Add controls in a roster header
 ```
@@ -381,14 +381,22 @@ call is with, its status dot riding on it as a badge. A single call keeps the
 large one.
 
 While a room stands the roster gives way to a panel (`ConferencePanel`): the
-legs are one conversation, not calls to choose between. It lists the host and
-every participant by line, each row carrying the room-wide mute for that
-person and a way to drop them. A panel row and a roster row are the same
-widget (`CallRowFrame`) - the panel is a list of calls like any other - so a
-leg shows the picture of whoever it is with, and the host's own row a
-placeholder in its place, which is what keeps the names in one column. Calls outside the room keep their rows
+legs are one conversation, not calls to choose between. It lists every
+participant by line, each row carrying the room-wide mute for that person and a
+way to drop them. A panel row and a roster row are the same widget
+(`CallRowFrame`) - the panel is a list of calls like any other - so a leg shows
+the picture of whoever it is with. Calls outside the room keep their rows
 underneath, under a header that says so, with the same control offered as
 `Add`.
+
+The host has no row of his own. The screen around the list is his, and the row
+only repeated it: its microphone was the room's mute, which the call screen's
+own mute button reaches as well, and a tap on it led back into the room, which
+every participant row does. That button is the room's whenever the room hears
+the host - on a leg, and on a call outside the room that is not yet answered,
+such as one he is calling in, since the room stays live until that call is up
+(`CallActionAvailability.micActsOnRoom`). While the room stands aside, a note
+under the panel's header says so (`conferenceParkedNote`).
 
 Ending the room is the grid's hangup and nothing else. The panel had a
 labelled End of its own for a while, and it did exactly what the hangup below

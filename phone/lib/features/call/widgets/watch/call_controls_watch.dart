@@ -365,6 +365,7 @@ class _Active extends StatelessWidget {
     final actions = CallActionAvailability(params);
     final call = params.focusedCall;
     final muted = actions.muted;
+    final onMutedChanged = actions.onMutedChanged;
     final speakerOn = params.audioDevice?.type == CallAudioDeviceType.speaker;
 
     return WatchEdgeLayout(
@@ -419,7 +420,7 @@ class _Active extends StatelessWidget {
                 buttonKey: callActionsMuteKey,
                 tone: WatchRoundTone.onDark,
                 emphasis: muted ? WatchRoundEmphasis.filled : WatchRoundEmphasis.tonal,
-                onPressed: () => params.onMutedChanged(!muted),
+                onPressed: onMutedChanged == null ? null : () => onMutedChanged(!muted),
               ),
               if (params.availableAudioDevices.onlyBuiltIn)
                 WatchRoundButton(

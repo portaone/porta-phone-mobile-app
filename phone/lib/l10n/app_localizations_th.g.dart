@@ -442,6 +442,9 @@ class AppLocalizationsTh extends AppLocalizations {
   String get call_ConferencePanel_hostStatusAside => 'อยู่ในสายอื่น';
 
   @override
+  String get call_ConferencePanel_parkedNote => 'คุณอยู่ในสายอื่น';
+
+  @override
   String get call_ConferencePanel_participantStatus => 'อยู่ในการประชุมสาย';
 
   @override
@@ -449,12 +452,6 @@ class AppLocalizationsTh extends AppLocalizations {
 
   @override
   String get call_ConferencePanel_end => 'สิ้นสุด';
-
-  @override
-  String get call_SemanticsLabel_conferenceSelfMute => 'ปิดไมโครโฟนของคุณ';
-
-  @override
-  String get call_SemanticsLabel_conferenceSelfUnmute => 'เปิดไมโครโฟนของคุณ';
 
   @override
   String call_SemanticsLabel_conferenceParticipantMute(String name) {
