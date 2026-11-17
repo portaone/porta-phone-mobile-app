@@ -798,8 +798,12 @@ class FakePeerConnection extends Fake implements RTCPeerConnection {
   Future<RTCSessionDescription> createOffer([Map<String, dynamic>? constraints]) async {
     offerConstraints.add(constraints);
     await offerGate?.future;
+    if (offerError case final error?) throw error;
     return RTCSessionDescription(offerSdp, 'offer');
   }
+
+  /// What [createOffer] throws, to model an offer the platform cannot make.
+  Object? offerError;
 
   /// The constraints of every [createOffer], in order.
   final List<Map<String, dynamic>?> offerConstraints = [];
@@ -1072,9 +1076,18 @@ class FakeUserMediaBuilder extends Fake implements UserMediaBuilder {
   /// Whether the microphone is still captured; the last release stops it.
   bool get microphoneLive => !microphone.stopped;
 
+  /// Whether a camera track is handed out turned on; off stands for the
+  /// shared camera a call has turned off.
+  bool cameraEnabled = true;
+
+  /// Which camera each build asked for, in order.
+  final List<bool?> frontCameras = [];
+
   @override
-  Future<MediaStream> build({required bool video, bool? frontCamera, bool allowAudioFallback = false}) async =>
-      buildSync(video: video);
+  Future<MediaStream> build({required bool video, bool? frontCamera, bool allowAudioFallback = false}) async {
+    frontCameras.add(frontCamera);
+    return buildSync(video: video);
+  }
 
   /// [build] without the await, for seeding a call.
   FakeMediaStream buildSync({bool video = false}) {
@@ -1082,7 +1095,7 @@ class FakeUserMediaBuilder extends Fake implements UserMediaBuilder {
       'media-${built.length}',
       tracks: [
         microphone,
-        if (video) FakeMediaStreamTrack(kind: 'video', id: 'cam-${built.length}'),
+        if (video) FakeMediaStreamTrack(kind: 'video', id: 'cam-${built.length}')..enabled = cameraEnabled,
       ],
     );
     _references++;
@@ -1109,6 +1122,9 @@ class FakePeerConnectionFactory implements PeerConnectionFactory {
   /// can see in which order the side effects of a state change ran.
   List<String>? order;
 
+  /// What every connection made from now on throws from createOffer.
+  Object? offerError;
+
   @override
   Future<RTCPeerConnection> create([
     Map<String, dynamic> configuration = const {},
@@ -1116,6 +1132,7 @@ class FakePeerConnectionFactory implements PeerConnectionFactory {
   ]) async {
     final peerConnection = FakePeerConnection(offerSdp: offerSdp);
     peerConnection.order = order;
+    peerConnection.offerError = offerError;
     created.add(peerConnection);
     return peerConnection;
   }
