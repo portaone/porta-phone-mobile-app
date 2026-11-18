@@ -1,0 +1,102 @@
+{
+  "about": "Shared cases of the call attempt rule (resolve): each platform's registry runs every case and must give the same decisions. An offer names the attempt it creates or expects with `as` / `of`. Times are milliseconds; `at` of an end is the phone's clock.",
+  "cases": [
+    {
+      "name": "the push and the socket of one offer are one attempt",
+      "steps": [
+        {"op": "offer", "callId": "X", "at": 1000, "from": "core", "via": "socket", "expect": "new", "as": "a"},
+        {"op": "offer", "callId": "X", "at": 1000, "from": "core", "via": "push", "expect": "same", "of": "a"}
+      ]
+    },
+    {
+      "name": "a late push of an ended attempt is a ghost (Core's offered_at, by equality)",
+      "steps": [
+        {"op": "offer", "callId": "X", "at": 1000, "from": "core", "via": "socket", "expect": "new", "as": "a"},
+        {"op": "end", "attempt": "a", "at": 5000},
+        {"op": "offer", "callId": "X", "at": 1000, "from": "core", "via": "push", "expect": "ghost", "of": "a"}
+      ]
+    },
+    {
+      "name": "a transfer back by push is a new attempt (another offered_at)",
+      "steps": [
+        {"op": "offer", "callId": "X", "at": 1000, "from": "core", "via": "socket", "expect": "new", "as": "a"},
+        {"op": "end", "attempt": "a", "at": 20000},
+        {"op": "offer", "callId": "X", "at": 25600, "from": "core", "via": "push", "expect": "new", "as": "b"}
+      ]
+    },
+    {
+      "name": "a new offered_at earlier than the phone's end time is still new (clocks are never compared)",
+      "steps": [
+        {"op": "offer", "callId": "X", "at": 1000, "from": "core", "via": "socket", "expect": "new", "as": "a"},
+        {"op": "end", "attempt": "a", "at": 30000},
+        {"op": "offer", "callId": "X", "at": 26000, "from": "core", "via": "push", "expect": "new", "as": "b"}
+      ]
+    },
+    {
+      "name": "an offer on the socket after the end is new, whatever its time",
+      "steps": [
+        {"op": "offer", "callId": "X", "at": 1000, "from": "device", "via": "socket", "expect": "new", "as": "a"},
+        {"op": "end", "attempt": "a", "at": 5000},
+        {"op": "offer", "callId": "X", "at": 6000, "from": "device", "via": "socket", "expect": "new", "as": "b"}
+      ]
+    },
+    {
+      "name": "a handshake replay of an ended attempt is a ghost",
+      "steps": [
+        {"op": "offer", "callId": "X", "at": 1000, "from": "core", "via": "socket", "expect": "new", "as": "a"},
+        {"op": "end", "attempt": "a", "at": 5000},
+        {"op": "offer", "callId": "X", "at": 1000, "from": "core", "via": "handshake", "expect": "ghost", "of": "a"}
+      ]
+    },
+    {
+      "name": "the Core time of a later delivery replaces the phone's for the live attempt",
+      "steps": [
+        {"op": "offer", "callId": "X", "at": 1500, "from": "device", "via": "socket", "expect": "new", "as": "a"},
+        {"op": "offer", "callId": "X", "at": 1000, "from": "core", "via": "push", "expect": "same", "of": "a"},
+        {"op": "end", "attempt": "a", "at": 5000},
+        {"op": "offer", "callId": "X", "at": 1000, "from": "core", "via": "push", "expect": "ghost", "of": "a"}
+      ]
+    },
+    {
+      "name": "TEMPORARY old Core: an FCM time after the end is new",
+      "steps": [
+        {"op": "offer", "callId": "X", "at": 1000, "from": "device", "via": "socket", "expect": "new", "as": "a"},
+        {"op": "end", "attempt": "a", "at": 5000},
+        {"op": "offer", "callId": "X", "at": 9000, "from": "fcm", "via": "push", "expect": "new", "as": "b"}
+      ]
+    },
+    {
+      "name": "TEMPORARY old Core: an FCM time before the end is a ghost",
+      "steps": [
+        {"op": "offer", "callId": "X", "at": 1000, "from": "device", "via": "socket", "expect": "new", "as": "a"},
+        {"op": "end", "attempt": "a", "at": 5000},
+        {"op": "offer", "callId": "X", "at": 900, "from": "fcm", "via": "push", "expect": "ghost", "of": "a"}
+      ]
+    },
+    {
+      "name": "TEMPORARY old Core: a push with no time after an end is unconfirmed",
+      "steps": [
+        {"op": "offer", "callId": "X", "at": 1000, "from": "device", "via": "socket", "expect": "new", "as": "a"},
+        {"op": "end", "attempt": "a", "at": 5000},
+        {"op": "offer", "callId": "X", "via": "push", "expect": "unconfirmed", "as": "b"}
+      ]
+    },
+    {
+      "name": "another call id is never affected",
+      "steps": [
+        {"op": "offer", "callId": "X", "at": 1000, "from": "core", "via": "socket", "expect": "new", "as": "a"},
+        {"op": "end", "attempt": "a", "at": 5000},
+        {"op": "offer", "callId": "Y", "at": 1000, "from": "core", "via": "push", "expect": "new", "as": "b"}
+      ]
+    },
+    {
+      "name": "an ended attempt is forgotten after its time to live: an offer is then new",
+      "steps": [
+        {"op": "offer", "callId": "X", "at": 1000, "from": "core", "via": "socket", "expect": "new", "as": "a"},
+        {"op": "end", "attempt": "a", "at": 5000},
+        {"op": "clock", "at": 700000},
+        {"op": "offer", "callId": "X", "at": 1000, "from": "core", "via": "push", "expect": "new", "as": "b"}
+      ]
+    }
+  ]
+}
