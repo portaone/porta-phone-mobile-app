@@ -15,6 +15,7 @@ import '../../view/call_screen_style.dart';
 import '../../view/call_screen_styles.dart';
 import '../call_action_availability.dart';
 import '../call_controls.dart';
+import '../call_screen_home_scope.dart';
 import '../call_toolbar_status.dart';
 import '../remote_video_view_overlay.dart';
 import 'call_watch_parts.dart';
@@ -145,19 +146,26 @@ class _CallControlsWatchState extends State<CallControlsWatch> {
     final params = widget.params;
     final keypad = params.keypadShown && !params.focusedCall.isIncomingRinging;
 
-    return CallWatchScope(
-      params: params,
-      video: widget.video,
-      callStatus: widget.callStatus,
-      // The keypad is the screen's, shared with the phone, and closes as the
-      // phone's does: back hides it.
-      child: keypad
-          ? PopScope(
-              canPop: false,
-              onPopInvokedWithResult: (didPop, _) => didPop ? null : params.onKeypadToggle(false),
-              child: CallWatchKeypad(params: params),
-            )
-          : AutoRouter(key: _pages, navigatorObservers: () => [_pagesShown]),
+    return CallScreenHomeScope(
+      builder: (_) => const CallWatchFace(),
+      child: CallWatchScope(
+        params: params,
+        video: widget.video,
+        callStatus: widget.callStatus,
+        // Off the system's areas, as the face and its pages are laid out.
+        child: Padding(
+          padding: MediaQuery.paddingOf(context),
+          // The keypad is the screen's, shared with the phone, and closes as
+          // the phone's does: back hides it.
+          child: keypad
+              ? PopScope(
+                  canPop: false,
+                  onPopInvokedWithResult: (didPop, _) => didPop ? null : params.onKeypadToggle(false),
+                  child: CallWatchKeypad(params: params),
+                )
+              : AutoRouter(key: _pages, navigatorObservers: () => [_pagesShown]),
+        ),
+      ),
     );
   }
 }

@@ -19,6 +19,7 @@ export 'conference_panel.dart';
 export 'linked_call_picking.dart';
 export 'focused_action_hint.dart';
 export 'call_network_quality_meter.dart';
+export 'call_screen_home_scope.dart';
 export 'call_toolbar_status.dart';
 export 'draggable_thumbnail.dart';
 export 'local_camera_preview_thumbnail.dart';

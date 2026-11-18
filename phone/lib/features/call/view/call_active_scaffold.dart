@@ -373,7 +373,6 @@ class CallActiveScaffoldState extends State<CallActiveScaffold> {
     // act on the focused one and take what they need for themselves.
     final activeCall = widget.activeCalls.current;
 
-    final MediaQueryData mediaQueryData = MediaQuery.of(context);
     final style = Theme.of(context).extension<CallScreenStyles>()?.primary;
 
     // One set of values for whichever arrangement shows them.
@@ -432,15 +431,9 @@ class CallActiveScaffoldState extends State<CallActiveScaffold> {
     return AdaptiveLayout(
       handset: (_) => _frame(
         activeCall: activeCall,
-        mediaQueryData: mediaQueryData,
         style: style,
-        // The phone's routes take the whole screen, so that a menu's barrier
-        // covers it and the menu is placed against it; the controls inside
-        // keep off the system's areas themselves.
-        insetControls: false,
         controls: CallScreenHandset(
           compact: _compactController,
-          padding: mediaQueryData.padding,
           callStatus: widget.callStatus,
           popupMenuItems: _buildPopupMenuItems,
           params: controlsParams,
@@ -448,7 +441,6 @@ class CallActiveScaffoldState extends State<CallActiveScaffold> {
       ),
       watch: (_) => _frame(
         activeCall: activeCall,
-        mediaQueryData: mediaQueryData,
         style: style,
         controls: CallControlsWatch(
           onPageOpenChanged: _onWatchPageOpenChanged,
@@ -462,13 +454,7 @@ class CallActiveScaffoldState extends State<CallActiveScaffold> {
 
   /// The call screen around its [controls]: the remote picture under them,
   /// the gesture that shows and hides them and the layer that does it.
-  Widget _frame({
-    required ActiveCall activeCall,
-    required MediaQueryData mediaQueryData,
-    required CallScreenStyle? style,
-    required Widget controls,
-    bool insetControls = true,
-  }) {
+  Widget _frame({required ActiveCall activeCall, required CallScreenStyle? style, required Widget controls}) {
     // One gesture owns showing and hiding the controls, and it wraps the whole
     // screen rather than sitting inside it: a layer under the controls would
     // never see a tap on the toolbar, which paints over it and swallows it.
@@ -542,11 +528,11 @@ class CallActiveScaffoldState extends State<CallActiveScaffold> {
                 AnimatedBuilder(
                   key: const ValueKey('callControlsLayer'),
                   animation: _compactController,
-                  builder: (context, child) => HideableLayer(
-                    hidden: _compactController.compact,
-                    padding: insetControls ? mediaQueryData.padding : EdgeInsets.zero,
-                    child: child!,
-                  ),
+                  // No inset here: each host of the controls keeps its own
+                  // routes off the system's areas (CallScreenHandset,
+                  // CallControlsWatch), so a menu in them covers the screen.
+                  builder: (context, child) =>
+                      HideableLayer(hidden: _compactController.compact, padding: EdgeInsets.zero, child: child!),
                   child: controls,
                 ),
               ],
