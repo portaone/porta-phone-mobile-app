@@ -14839,7 +14839,7 @@ class $CdrTableTable extends CdrTable
   }
 
   @override
-  Set<GeneratedColumn> get $primaryKey => {callId};
+  Set<GeneratedColumn> get $primaryKey => {callId, connectTimeUsec, direction};
   @override
   CdrRecordData map(Map<String, dynamic> data, {String? tablePrefix}) {
     final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';

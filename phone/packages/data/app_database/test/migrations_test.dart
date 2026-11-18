@@ -18,6 +18,7 @@ import 'package:app_database/src/migrations/generated/schema_v25.dart' as v25;
 import 'package:app_database/src/migrations/generated/schema_v26.dart' as v26;
 import 'package:app_database/src/migrations/generated/schema_v27.dart' as v27;
 import 'package:app_database/src/migrations/generated/schema_v28.dart' as v28;
+import 'package:app_database/src/migrations/generated/schema_v29.dart' as v29;
 
 void main() {
   driftRuntimeOptions.dontWarnAboutMultipleDatabases = true;
@@ -440,6 +441,40 @@ void main() {
       }
     });
   });
+  group('migration v29 data integrity', () {
+    const insertCdr = """
+      INSERT INTO cdrs (call_id, direction, status, callee, caller, connect_time_usec,
+        disconnect_time_usec, disconnect_reason, duration_seconds)
+      VALUES (?, ?, 'accepted', '555006', '555011', ?, ?, 'Normal call clearing', 5)
+    """;
+
+    test('keeps the stored records and lets one call id carry several', () async {
+      final schema = await verifier.schemaAt(28);
+      try {
+        final oldDb = v28.DatabaseAtV28(schema.newConnection());
+        await oldDb.customStatement(insertCdr, ['KNMZ', 'incoming', 1000, 2000]);
+        await oldDb.customStatement(insertCdr, ['OTHER', 'outgoing', 3000, 4000]);
+        await oldDb.close();
+
+        final appDatabase = AppDatabase(schema.newConnection());
+        await verifier.migrateAndValidate(appDatabase, 29);
+        await appDatabase.close();
+
+        final checkDb = v29.DatabaseAtV29(schema.newConnection());
+        expect(await checkDb.customSelect('SELECT call_id FROM cdrs').get(), hasLength(2));
+
+        // A transfer back: the same call id, a record of its own for each leg.
+        await checkDb.customStatement(insertCdr, ['KNMZ', 'forwarded', 1500, 2000]);
+        await checkDb.customStatement(insertCdr, ['KNMZ', 'incoming', 2500, 3000]);
+        final rows = await checkDb.customSelect("SELECT direction FROM cdrs WHERE call_id = 'KNMZ'").get();
+        expect(rows, hasLength(3));
+        await checkDb.close();
+      } finally {
+        schema.close();
+      }
+    });
+  });
+
   group('migration v28 data integrity', () {
     test('keeps stored conversations and knows no mute until the next sync', () async {
       final schema = await verifier.schemaAt(27);

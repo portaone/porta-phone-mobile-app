@@ -13,8 +13,12 @@ class CdrTable extends Table {
   @override
   String get tableName => 'cdrs';
 
+  // One row per record of the history, not per call id: the backend reuses a SIP Call-ID (a
+  // transfer back, a retried transfer, the legs of an IVR call), and every leg and attempt is a
+  // record of its own. A record has no id of its own; its call id, its connect time and its
+  // direction tell it apart (two legs of one moment differ by direction).
   @override
-  Set<Column> get primaryKey => {callId};
+  Set<Column> get primaryKey => {callId, connectTimeUsec, direction};
 
   TextColumn get callId => text()();
 

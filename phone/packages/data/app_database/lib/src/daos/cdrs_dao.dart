@@ -7,28 +7,14 @@ part 'cdrs_dao.g.dart';
 class CdrsDao extends DatabaseAccessor<AppDatabase> with _$CdrsDaoMixin {
   CdrsDao(super.db);
 
-  /// Upserts by `callId`, last write winning.
+  /// Upserts by record: the call id, the connect time and the direction. The backend reports
+  /// several records under one Call-ID - a transfer back, a retried transfer, the legs of a
+  /// forwarded call - and each is a row of its own.
   ///
-  /// The backend can report ONE call twice under the same `callId`: an IVR call
-  /// comes back as an outgoing leg and as the leg the IVR created onward, which
-  /// carries no direction at all and reaches us as `unknown`. Only one of them
-  /// can survive the primary key, and nothing here chooses between them - the
-  /// row written last wins.
-  ///
-  /// What that means in practice, so the next reader does not have to work it
-  /// out from a bug report:
-  ///
-  /// * within one page the attributed copy wins, but only as a side effect.
-  ///   The API returns a page newest-first and the sync worker upserts it
-  ///   reversed, because repository events have to run oldest to newest; that
-  ///   reversal puts the attributed leg last. Change either and the surviving
-  ///   direction changes with it.
-  /// * across pages nothing protects it at all. History pages 50 records at a
-  ///   time, so the two legs can land in different calls to this method, and if
-  ///   the unattributed one lands second the call is stored - and shown - with
-  ///   no direction.
-  ///
-  /// `cdrs_dao_test.dart` pins both cases as they behave today.
+  /// One case is a single call reported twice: an IVR call comes back as an outgoing leg and as
+  /// the leg the IVR created onward, at the same moment, which carries no direction and reaches us
+  /// as `unknown`. Both rows are kept; [getHistory] shows the attributed one only, whatever order
+  /// or page the two arrived in. `cdrs_dao_test.dart` pins it.
   Future<void> upsertCdrs(List<CdrRecordData> cdrs) {
     return batch((batch) => batch.insertAllOnConflictUpdate(cdrTable, cdrs));
   }
@@ -47,6 +33,21 @@ class CdrsDao extends DatabaseAccessor<AppDatabase> with _$CdrsDaoMixin {
   }) {
     final query = select(cdrTable);
     query.orderBy([(t) => OrderingTerm.desc(t.connectTimeUsec)]);
+    // An unattributed leg of a record that has an attributed one at the same moment (the IVR
+    // case of [upsertCdrs]) is the same call: it is not shown.
+    final attributed = alias(cdrTable, 'attributed');
+    query.where(
+      (t) =>
+          t.direction.equals(CallDirectionData.unknown.name).not() |
+          notExistsQuery(
+            select(attributed)..where(
+              (o) =>
+                  o.callId.equalsExp(t.callId) &
+                  o.connectTimeUsec.equalsExp(t.connectTimeUsec) &
+                  o.direction.equals(CallDirectionData.unknown.name).not(),
+            ),
+          ),
+    );
 
     if (number != null) query.where((tbl) => tbl.callerNumber.equals(number) | tbl.calleeNumber.equals(number));
     if (destination != null) query.where((tbl) => tbl.caller.equals(destination) | tbl.callee.equals(destination));
