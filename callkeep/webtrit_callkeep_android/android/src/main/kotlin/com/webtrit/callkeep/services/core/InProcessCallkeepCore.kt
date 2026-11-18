@@ -57,6 +57,8 @@ class InProcessCallkeepCore internal constructor(
     private val queuesWhileRinging: () -> Boolean = {
         runCatching { StorageDelegate.IncomingCall.queuesWhileRinging(ContextHolder.context) }.getOrDefault(true)
     },
+    // The attempts of incoming calls: a reused call id is told apart by its attempt (CallAttempts).
+    private val attempts: CallAttempts = CallAttempts(),
 ) : CallkeepCore {
     // The context is read per call (not at construction time) so the singleton can be
     // created early without risking a NullPointerException. ContextHolder.init() must
@@ -220,7 +222,7 @@ class InProcessCallkeepCore internal constructor(
                 }
                 // Connected-call UI effects still belong to the existing bridge. Without one,
                 // the shadow state and groups must follow the backend's terminal event anyway.
-                if (listeners.none { it is CallEndListener }) tracker.markTerminated(callId)
+                if (listeners.none { it is CallEndListener }) terminate(callId)
             }
 
             else -> {
@@ -302,6 +304,12 @@ class InProcessCallkeepCore internal constructor(
 
     override fun markAnswered(callId: String) = tracker.markAnswered(callId)
 
+    /** The call [callId] is over: the tracker's terminal fact, and the end of its live attempt. */
+    private fun terminate(callId: String) {
+        tracker.markTerminated(callId)
+        attempts.liveFor(callId)?.let { attempts.end(it.instanceId) }
+    }
+
     override fun updateState(
         callId: String,
         state: CallConnectionState,
@@ -312,7 +320,7 @@ class InProcessCallkeepCore internal constructor(
             // The terminal fact is recorded on the calling thread, so nothing that reads the
             // tracker waits for the main looper. The registrations live on the main looper: a
             // registration still waiting on this call is rejected there, a moment later.
-            tracker.markTerminated(callId)
+            terminate(callId)
             mainHandler.post { markTerminated(callId) }
             return
         }
@@ -320,7 +328,7 @@ class InProcessCallkeepCore internal constructor(
             rejectIncomingRegistration(it, "app reported call ended", RaiseEnd.APP_ENDED)
             return
         }
-        tracker.markTerminated(callId)
+        terminate(callId)
     }
 
     override fun reportCallEnded(
@@ -353,10 +361,14 @@ class InProcessCallkeepCore internal constructor(
         // An incoming-call service started for this call after its end would present a call that
         // is over: the pending release lets its launch end the call without showing it. A running
         // service has its receiver up and takes the IC_RELEASE_ENDED that follows directly; a
-        // post for it would be an orphan entry, never consumed. The check is atomic against the
-        // service's start only on the main looper, so that is where it runs.
+        // post for it would be an orphan entry, never consumed. A presented call with no incoming
+        // attempt is one this phone made: it never starts that service, and a release for it would
+        // end the next incoming call of the same id (a transfer back of the call). An end the app
+        // never presented keeps its release, registered here or not. The check is atomic against
+        // the service's start only on the main looper, so that is where it runs.
+        val mayStartService = reason.keepsEndWithoutFlutterState() || attempts.latest(callId) != null
         runOnMain {
-            if (!IncomingCallService.isRunning) {
+            if (mayStartService && !IncomingCallService.isRunning) {
                 PendingBroadcastQueue.post(PendingBroadcastQueue.incomingReleaseKey(callId))
             }
         }
@@ -368,7 +380,7 @@ class InProcessCallkeepCore internal constructor(
     }
 
     override fun clearAndMarkEndCallDispatched(callId: String): Boolean {
-        tracker.markTerminated(callId)
+        terminate(callId)
         // Remove the main-process ConnectionManager pending reservation so a subsequent
         // reportNewIncomingCall with the same callId (e.g. blind transfer-back) is not
         // permanently blocked by the stale pendingCallIds entry from the original registration.
@@ -386,6 +398,7 @@ class InProcessCallkeepCore internal constructor(
         endIncomingRegistrations()
         incomingRegistrations.clearRejections()
         tracker.clear()
+        attempts.clear()
     }
 
     // -------------------------------------------------------------------------
@@ -438,7 +451,7 @@ class InProcessCallkeepCore internal constructor(
         why: String,
     ) {
         Log.w(TAG, "Waiting call ${metadata.callId} could not be put through ($why): it ends")
-        tracker.markTerminated(metadata.callId)
+        terminate(metadata.callId)
         // Nobody asked for this end: it reads as the system's (no initiator).
         val data = metadata.copy(endedBy = null).toBundle()
         listeners.forEach { it.onConnectionEvent(CallLifecycleEvent.HungUp, data) }
@@ -480,7 +493,7 @@ class InProcessCallkeepCore internal constructor(
         queueNotifier.cancel(callId)
         Log.i(TAG, "Waiting call $callId left the queue")
         if (neverPresented) markEndedWithoutFlutterState(callId)
-        tracker.markTerminated(callId)
+        terminate(callId)
         tracker.markEndCallDispatched(callId)
         return true
     }
@@ -681,6 +694,17 @@ class InProcessCallkeepCore internal constructor(
         Log.i(TAG, "Incoming call $callId offered at $offeredAtMs, after its end at $endedAt: a new attempt (pending release dropped=$releaseDropped)")
     }
 
+    /** Drops the pending release the end of [ended] left, so the new attempt of [callId] is shown. */
+    private fun dropReleaseOfEndedAttempt(
+        callId: String,
+        ended: CallAttempts.Attempt,
+    ) {
+        val releaseDropped = PendingBroadcastQueue.consume(PendingBroadcastQueue.incomingReleaseKey(callId))
+        Log.i(TAG, "Incoming call $callId: a new attempt after the end of ${ended.instanceId} (pending release dropped=$releaseDropped)")
+    }
+
+    private fun via(client: Any): CallAttempts.Via = if (client is CallEndListener) CallAttempts.Via.OTHER else CallAttempts.Via.PUSH
+
     override suspend fun registerIncomingCall(
         metadata: CallMetadata,
         client: Any,
@@ -688,11 +712,23 @@ class InProcessCallkeepCore internal constructor(
     ): PIncomingCallError? {
         ensureReceiving()
         val callId = metadata.callId
-        if (isOfferedAfterEnd(callId, offeredAtMs)) {
-            reopenForNewAttempt(callId, offeredAtMs)
-        } else if (wasEndedWithoutFlutterState(callId)) {
-            Log.i(TAG, "Incoming call $callId refused: the app ended it before it was presented (offered at $offeredAtMs)")
-            return PIncomingCallError(PIncomingCallErrorEnum.CALL_ID_ALREADY_TERMINATED)
+        val decision = attempts.resolve(callId, offeredAtMs?.let { CallAttempts.OfferTime(it, OFFER_TIME_SOURCE) }, via(client))
+        if (wasEndedWithoutFlutterState(callId)) {
+            // The app ended an earlier attempt before presenting it: only an offer after that end
+            // is let in (the rule of the tracker's mark, unchanged).
+            if (isOfferedAfterEnd(callId, offeredAtMs)) {
+                reopenForNewAttempt(callId, offeredAtMs)
+            } else {
+                Log.i(TAG, "Incoming call $callId refused: the app ended it before it was presented (offered at $offeredAtMs)")
+                if (decision is CallAttempts.Decision.New || decision is CallAttempts.Decision.Unconfirmed) {
+                    attempts.end(decision.attempt.instanceId)
+                }
+                return PIncomingCallError(PIncomingCallErrorEnum.CALL_ID_ALREADY_TERMINATED)
+            }
+        } else if (decision is CallAttempts.Decision.New && decision.replaces != null) {
+            // A new attempt of an id whose earlier attempt the app presented and ended (a transfer
+            // back): what that end left for the incoming-call service is not this attempt's.
+            dropReleaseOfEndedAttempt(callId, decision.replaces)
         }
         // The foreground bridge is the app itself: a call it reports is the app's already.
         if (client is CallEndListener) tracker.markReportedByApp(callId)
@@ -886,6 +922,11 @@ class InProcessCallkeepCore internal constructor(
 
     companion object {
         private const val TAG = "InProcessCallkeepCore"
+
+        // TEMPORARY(old Core without offered_at): a report names no source for its offer time (the
+        // push reports the FCM sentTime, the app the time it has), so it is compared with the end
+        // as before. Goes once the reports carry Core's offered_at and its source.
+        private val OFFER_TIME_SOURCE = CallAttempts.OfferTimeSource.FCM
 
         // How long an incoming registration waits for Telecom before it is rejected. The safety
         // net, not the normal path: a refusal arrives as IncomingFailure long before this; the

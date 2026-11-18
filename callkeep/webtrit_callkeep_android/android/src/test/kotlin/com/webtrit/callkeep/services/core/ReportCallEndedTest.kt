@@ -69,6 +69,7 @@ class ReportCallEndedTest {
 
     @Test
     fun `a reported end with no incoming-call service running leaves it a pending release`() {
+        report("c1", offeredAtMs = 1_000)
         core.reportCallEnded(CallMetadata(callId = "c1"), PEndCallReasonEnum.REMOTE_ENDED)
 
         assertTrue(
@@ -154,6 +155,7 @@ class ReportCallEndedTest {
 
     @Test
     fun `an end reported off the main looper leaves the pending release once the main looper has looked`() {
+        report("c1", offeredAtMs = 1_000)
         offMain { core.reportCallEnded(CallMetadata(callId = "c1"), PEndCallReasonEnum.REMOTE_ENDED) }
 
         assertFalse(
@@ -219,6 +221,59 @@ class ReportCallEndedTest {
 
         assertFalse("a transfer-back reuses the id and registers", reused.isCompleted)
         assertTrue(core.isPending("c1"))
+    }
+
+    // A transfer back offers the id of a call the app presented and ended (call-id-reuse, A10).
+
+    @Test
+    fun `a new attempt after the end of a presented call drops the release that end left`() {
+        report("c1", offeredAtMs = 1_000)
+        core.reportCallEnded(CallMetadata(callId = "c1"), PEndCallReasonEnum.REMOTE_ENDED)
+
+        val back = report("c1", offeredAtMs = System.currentTimeMillis() + 60_000)
+
+        assertFalse("the transfer back waits for Telecom", back.isCompleted)
+        assertFalse(
+            "a service started for the transfer back must show it, not end it",
+            PendingBroadcastQueue.consume(PendingBroadcastQueue.incomingReleaseKey("c1")),
+        )
+    }
+
+    @Test
+    fun `the end of an outgoing call leaves no release for a transfer back of it`() {
+        core.reportCallEnded(CallMetadata(callId = "c1"), PEndCallReasonEnum.REMOTE_ENDED)
+        idle()
+
+        val back = report("c1")
+
+        assertFalse("the transfer back waits for Telecom", back.isCompleted)
+        assertFalse(
+            "a service started for the transfer back must show it, not end it",
+            PendingBroadcastQueue.consume(PendingBroadcastQueue.incomingReleaseKey("c1")),
+        )
+    }
+
+    @Test
+    fun `a late copy of a presented call offered before its end keeps the release`() {
+        report("c1", offeredAtMs = 1_000)
+        core.reportCallEnded(CallMetadata(callId = "c1"), PEndCallReasonEnum.REMOTE_ENDED)
+
+        report("c1", offeredAtMs = 1_000)
+
+        assertTrue(
+            "a service started for the late copy must still end it without showing it",
+            PendingBroadcastQueue.consume(PendingBroadcastQueue.incomingReleaseKey("c1")),
+        )
+    }
+
+    @Test
+    fun `an offer with no time after the end of a presented call keeps the release`() {
+        report("c1", offeredAtMs = 1_000)
+        core.reportCallEnded(CallMetadata(callId = "c1"), PEndCallReasonEnum.REMOTE_ENDED)
+
+        report("c1")
+
+        assertTrue(PendingBroadcastQueue.consume(PendingBroadcastQueue.incomingReleaseKey("c1")))
     }
 
     private fun offMain(block: () -> Unit) {

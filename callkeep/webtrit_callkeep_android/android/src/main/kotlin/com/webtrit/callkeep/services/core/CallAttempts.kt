@@ -73,9 +73,10 @@ internal class CallAttempts(
             override val attempt: Attempt,
         ) : Decision
 
-        /** A new attempt, live from now on. */
+        /** A new attempt, live from now on; [replaces] is the ended attempt of the same id it follows, if any. */
         data class New(
             override val attempt: Attempt,
+            val replaces: Attempt? = null,
         ) : Decision
 
         /** A late copy of the ended [attempt]: not to be presented. */
@@ -116,16 +117,16 @@ internal class CallAttempts(
             return Decision.Same(upgraded)
         }
         val ended = lastEnded[callId] ?: return Decision.New(start(callId, offeredAt))
-        if (via == Via.SOCKET) return Decision.New(start(callId, offeredAt))
+        if (via == Via.SOCKET) return Decision.New(start(callId, offeredAt), ended)
         if (offeredAt != null && offeredAt.source == OfferTimeSource.CORE && ended.offeredAt?.source == OfferTimeSource.CORE) {
-            return if (offeredAt.ms == ended.offeredAt.ms) Decision.Ghost(ended) else Decision.New(start(callId, offeredAt))
+            return if (offeredAt.ms == ended.offeredAt.ms) Decision.Ghost(ended) else Decision.New(start(callId, offeredAt), ended)
         }
         // TEMPORARY(old Core without offered_at): no equality to go by. An offer with a server-side
         // time (Core's or FCM's) after the end is new, at or before it a ghost; the end is this
         // phone's time, so a clock that is off moves the line.
         if (offeredAt != null && offeredAt.source != OfferTimeSource.DEVICE) {
-            val endedAt = ended.endedAtMs ?: return Decision.New(start(callId, offeredAt))
-            return if (offeredAt.ms > endedAt) Decision.New(start(callId, offeredAt)) else Decision.Ghost(ended)
+            val endedAt = ended.endedAtMs ?: return Decision.New(start(callId, offeredAt), ended)
+            return if (offeredAt.ms > endedAt) Decision.New(start(callId, offeredAt), ended) else Decision.Ghost(ended)
         }
         return Decision.Unconfirmed(start(callId, offeredAt))
     }
