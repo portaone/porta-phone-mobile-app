@@ -54,7 +54,7 @@ class NumberCdrsScreenWatch extends StatelessWidget {
                   if (index == records.length) return HistoryFetchIndicator(state.fetchingHistory);
                   final cdr = records[index];
                   return CallLogWatchRow(
-                    key: Key(cdr.callId),
+                    key: Key(cdr.recordKey),
                     direction: cdr.direction,
                     complete: cdr.status == CdrStatus.accepted,
                     missed: cdr.isMissedIncoming,

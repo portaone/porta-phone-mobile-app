@@ -96,7 +96,7 @@ class _CdrsWatchListState<C extends CdrsListCubit> extends State<CdrsWatchList<C
         final cdr = records[index];
         final number = cdr.participantNumber;
         return ContactInfoBuilder(
-          key: Key(cdr.callId),
+          key: Key(cdr.recordKey),
           source: ContactSourcePhone(number ?? cdr.participant),
           builder: (context, contact) {
             final pick = context.pickOfferFor(DestinationCandidate(number: number, contact: contact));

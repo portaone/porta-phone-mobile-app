@@ -198,7 +198,7 @@ class CdrsSyncWorker implements PollingWorker {
   /// Found among [fetched], it is still there; otherwise the backend is asked
   /// for the range around it.
   Future<bool> _clearedSince(CdrRecord newest, List<CdrRecord> fetched) async {
-    if (fetched.any((cdr) => cdr.callId == newest.callId)) return false;
+    if (fetched.any((cdr) => cdr.recordKey == newest.recordKey)) return false;
 
     final page = await remoteRepo.getHistory(
       timeFrom: newest.connectTime.subtract(clearCheckMargin),
@@ -206,7 +206,7 @@ class CdrsSyncWorker implements PollingWorker {
       page: 1,
       limit: pageSize,
     );
-    return !page.records.any((cdr) => cdr.callId == newest.callId);
+    return !page.records.any((cdr) => cdr.recordKey == newest.recordKey);
   }
 
   Future<void> _notifyInitialSyncFailed() async {

@@ -41,10 +41,10 @@ class _MissedRecentCdrsListState extends State<MissedRecentCdrsList> {
   late final scrollController = ScrollController();
 
   bool scrolledAway = false;
-  String? _expandedCallId;
+  String? _expandedKey;
 
-  void _toggleExpanded(String callId) {
-    setState(() => _expandedCallId = _expandedCallId == callId ? null : callId);
+  void _toggleExpanded(String key) {
+    setState(() => _expandedKey = _expandedKey == key ? null : key);
   }
 
   @override
@@ -162,7 +162,7 @@ class _MissedRecentCdrsListState extends State<MissedRecentCdrsList> {
 
                       return FadeIn(
                         child: SizedBox(
-                          key: Key(cdr.callId.toString()),
+                          key: Key(cdr.recordKey),
                           child: ContactInfoBuilder(
                             source: ContactSourcePhone(participantNumber ?? participant),
                             builder: (context, contact) {
@@ -180,8 +180,8 @@ class _MissedRecentCdrsListState extends State<MissedRecentCdrsList> {
                                   contact: contact,
                                   callNumbers: callNumbers,
                                   pick: pick,
-                                  onTap: pick != null ? pick.onPressed : () => _toggleExpanded(cdr.callId),
-                                  expanded: pick == null && _expandedCallId == cdr.callId,
+                                  onTap: pick != null ? pick.onPressed : () => _toggleExpanded(cdr.recordKey),
+                                  expanded: pick == null && _expandedKey == cdr.recordKey,
                                   onDialPressed: pick == null && participantNumber != null
                                       ? () => _callController.createCall(
                                           destination: participantNumber,

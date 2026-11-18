@@ -40,6 +40,19 @@ class CdrRecord extends Equatable {
   final Duration duration;
   final dynamic recordingId;
 
+  /// What tells this record from the others of its call id: the backend reports several records
+  /// under one Call-ID (a transfer back, a retried transfer, the legs of an IVR call), the store
+  /// keeps one per call id, connect time and direction, and a list keys its rows by the same.
+  late final String recordKey = '$callId|${connectTime.microsecondsSinceEpoch}|${direction.name}';
+
+  /// The unattributed copy of an IVR call: the same call id and moment as [other], no direction
+  /// of its own while [other] has one. Not shown beside it.
+  bool isUnattributedCopyOf(CdrRecord other) =>
+      direction == CallDirection.unknown &&
+      other.direction != CallDirection.unknown &&
+      callId == other.callId &&
+      connectTime == other.connectTime;
+
   /// The other party in the call, depending on the call direction
   late final String participant = direction == CallDirection.outgoing ? callee : caller;
 
@@ -78,12 +91,18 @@ class CdrRecord extends Equatable {
 }
 
 extension CdrRecordIterableExtension on Iterable<CdrRecord> {
+  /// Puts [v] in its place: a record the list holds already (by [CdrRecord.recordKey]) is
+  /// replaced, a new one goes first. The unattributed copy of an IVR call the list holds attributed
+  /// is left out, and an attributed one replaces the unattributed copy the list holds.
   Iterable<CdrRecord> mergeWithUpdate(CdrRecord v) {
-    final isNew = !any((n) => n.callId == v.callId);
+    if (any((n) => v.isUnattributedCopyOf(n))) return this;
+    final copy = firstWhereOrNull((n) => n.isUnattributedCopyOf(v));
+    if (copy != null) return map((n) => identical(n, copy) ? v : n);
+    final isNew = !any((n) => n.recordKey == v.recordKey);
     if (isNew) {
       return [v, ...this];
     } else {
-      return map((n) => n.callId == v.callId ? v : n);
+      return map((n) => n.recordKey == v.recordKey ? v : n);
     }
   }
 
@@ -91,8 +110,8 @@ extension CdrRecordIterableExtension on Iterable<CdrRecord> {
     return where((n) => n.callId != callId);
   }
 
-  /// Appends older records, and replaces in place a call id the list already
-  /// holds rather than showing it twice.
+  /// Appends older records, and replaces in place a record ([CdrRecord.recordKey]) the list
+  /// already holds rather than showing it twice.
   ///
   /// A record can arrive twice: the boundary of one history range overlaps the
   /// next, and a range boundary on the wire is only as precise as the backend's
@@ -101,8 +120,8 @@ extension CdrRecordIterableExtension on Iterable<CdrRecord> {
   /// different data, and a list left holding the older copy would disagree with
   /// the database it was read from.
   Iterable<CdrRecord> mergeWithHistory(Iterable<CdrRecord> history) {
-    final byId = {for (final cdr in history) cdr.callId: cdr};
-    final merged = [for (final cdr in this) byId.remove(cdr.callId) ?? cdr];
-    return [...merged, ...history.where((cdr) => byId.containsKey(cdr.callId))];
+    final byKey = {for (final cdr in history) cdr.recordKey: cdr};
+    final merged = [for (final cdr in this) byKey.remove(cdr.recordKey) ?? cdr];
+    return [...merged, ...history.where((cdr) => byKey.containsKey(cdr.recordKey))];
   }
 }

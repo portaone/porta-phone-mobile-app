@@ -126,7 +126,7 @@ class _NumberCdrsScreenState extends State<NumberCdrsScreen> {
 
                     return FadeIn(
                       child: SizedBox(
-                        key: Key(cdr.callId.toString()),
+                        key: Key(cdr.recordKey),
                         child: NumberCdrTile(cdr: cdr, timeFormat: timeFormat, dateFormat: dateFormat),
                       ),
                     );
