@@ -86,18 +86,28 @@ void main() {
       );
       expectTapTargetSemantics(
         tester,
-        find.bySemanticsIdentifier(conferenceParticipantHangupId),
-        label: 'End the call with Anna Marchenko',
-        identifier: conferenceParticipantHangupId,
+        find.bySemanticsIdentifier(conferenceParticipantMenuId),
+        label: 'More for Anna Marchenko',
+        identifier: conferenceParticipantMenuId,
         isButton: true,
       );
       expectTapTargetSemantics(
         tester,
-        find.bySemanticsIdentifier(numberedId(conferenceParticipantHangupId, 1)),
-        label: 'End the call with Boris Klein',
-        identifier: numberedId(conferenceParticipantHangupId, 1),
+        find.bySemanticsIdentifier(numberedId(conferenceParticipantMenuId, 1)),
+        label: 'More for Boris Klein',
+        identifier: numberedId(conferenceParticipantMenuId, 1),
         isButton: true,
       );
+
+      // End, one tap further, is named for the person as well.
+      await tester.tap(find.bySemanticsIdentifier(numberedId(conferenceParticipantMenuId, 1)));
+      await tester.pumpAndSettle();
+      expect(
+        find.bySemanticsIdentifier(numberedId(conferenceParticipantHangupId, 1)),
+        findsOneWidget,
+        reason: 'the entry carries its own id',
+      );
+      expect(find.bySemanticsLabel(RegExp('End the call with Boris Klein')), findsOneWidget);
 
       await tester.pumpWidget(const SizedBox());
       semantics.dispose();
@@ -110,7 +120,10 @@ void main() {
       await tester.pumpWidget(subject());
 
       await tapViaSemantics(tester, find.bySemanticsIdentifier(numberedId(conferenceParticipantMuteId, 1)));
+      await tapViaSemantics(tester, find.bySemanticsIdentifier(numberedId(conferenceParticipantMenuId, 1)));
+      await tester.pumpAndSettle();
       await tapViaSemantics(tester, find.bySemanticsIdentifier(numberedId(conferenceParticipantHangupId, 1)));
+      await tester.pumpAndSettle();
 
       expect(acted, ['mute:b:true', 'hangup:b']);
 
@@ -178,7 +191,10 @@ void main() {
       final firstRow = tester.getTopLeft(find.text('Anna Marchenko')).dy;
       expect(header < note && note < firstRow, isTrue, reason: 'header, then the note, then the rows');
 
+      await tapViaSemantics(tester, find.bySemanticsIdentifier(numberedId(conferenceParticipantMenuId, 1)));
+      await tester.pumpAndSettle();
       await tapViaSemantics(tester, find.bySemanticsIdentifier(numberedId(conferenceParticipantHangupId, 1)));
+      await tester.pumpAndSettle();
       expect(acted, ['hangup:b'], reason: 'dimmed, not disabled');
 
       await tester.pumpWidget(const SizedBox());

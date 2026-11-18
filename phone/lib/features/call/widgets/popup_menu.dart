@@ -6,8 +6,11 @@ class CallPopupMenuButton<T> extends StatelessWidget {
     this.menuKey,
     this.enabled = true,
     this.onSelected,
+    this.onOpened,
+    this.onCanceled,
     this.child,
     this.offset = Offset.zero,
+    this.position,
     required this.items,
   });
 
@@ -21,8 +24,16 @@ class CallPopupMenuButton<T> extends StatelessWidget {
   final bool enabled;
 
   final PopupMenuItemSelected<T>? onSelected;
+
+  /// The menu opened; [onCanceled] - it closed with nothing chosen.
+  final VoidCallback? onOpened;
+  final PopupMenuCanceled? onCanceled;
+
   final Widget? child;
   final Offset offset;
+
+  /// Where the menu opens against its trigger; over it unless said otherwise.
+  final PopupMenuPosition? position;
   final List<PopupMenuEntry<T>> items;
 
   @override
@@ -44,7 +55,10 @@ class CallPopupMenuButton<T> extends StatelessWidget {
         // the tooltip build its child bare, leaving both to the caller.
         tooltip: '',
         onSelected: onSelected,
+        onOpened: onOpened,
+        onCanceled: onCanceled,
         offset: offset,
+        position: position,
         elevation: 4,
         padding: EdgeInsets.zero,
         splashRadius: 0,

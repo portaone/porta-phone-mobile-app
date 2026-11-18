@@ -188,11 +188,17 @@ hold and mute callbacks; a successful explicit resume restores the leg's audio
 with its own mute intent preserved. Rejoining a room transfers isolation back
 to conference membership, and ending a call removes its barrier.
 
+On a phone each participant's row carries the mute for everyone and a menu holding
+End their call: the two are never side by side, so a slip on the mute does not drop a
+person from the room. The menu opens under its trigger, so a second tap on the trigger
+does not land on End, and closes when the participant's row goes. A watch shows one
+participant on a page of its own, with both as round buttons.
+
 While the room is the one standing aside, its participants' controls step back
-to half weight - the hangups especially, which would otherwise shout from a
-conversation the user is not in. They are dimmed and never disabled: a room-wide
-mute and a hangup still reach the room while the host is elsewhere, and the
-semantics are untouched, so a screen reader offers both exactly as before.
+to half weight, so that they do not shout from a conversation the user is not in.
+They are dimmed and never disabled: a room-wide mute and the end of a call still
+reach the room while the host is elsewhere, and the semantics are untouched, so a
+screen reader offers both exactly as before.
 
 Moving between the two is a tap on either of them: any row of the room leads
 back into it, and the row of the call outside leads out to that call. The tap

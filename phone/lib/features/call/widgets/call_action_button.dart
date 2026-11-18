@@ -65,7 +65,10 @@ class CallActionMenuButton<T> extends StatefulWidget {
     this.enabled = true,
     required this.items,
     this.onSelected,
+    this.onOpened,
+    this.onCanceled,
     this.offset = Offset.zero,
+    this.position,
     this.statesController,
     this.style,
     required this.child,
@@ -83,7 +86,15 @@ class CallActionMenuButton<T> extends StatefulWidget {
 
   final List<PopupMenuEntry<T>> items;
   final PopupMenuItemSelected<T>? onSelected;
+
+  /// The menu opened; [onCanceled] - it closed with nothing chosen.
+  final VoidCallback? onOpened;
+  final PopupMenuCanceled? onCanceled;
+
   final Offset offset;
+
+  /// Where the menu opens against the trigger; over it unless said otherwise.
+  final PopupMenuPosition? position;
   final WidgetStatesController? statesController;
   final ButtonStyle? style;
   final Widget child;
@@ -109,7 +120,10 @@ class _CallActionMenuButtonState<T> extends State<CallActionMenuButton<T>> {
           enabled: enabled,
           items: widget.items,
           onSelected: widget.onSelected,
+          onOpened: widget.onOpened,
+          onCanceled: widget.onCanceled,
           offset: widget.offset,
+          position: widget.position,
           child: TextButton(
             onPressed: enabled ? () => _menuKey.currentState?.showButtonMenu() : null,
             statesController: widget.statesController,

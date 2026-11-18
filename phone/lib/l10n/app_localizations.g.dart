@@ -827,6 +827,12 @@ abstract class AppLocalizations {
   /// **'End'**
   String get call_ConferencePanel_end;
 
+  /// Name of the menu of one conference participant that holds ending their call.
+  ///
+  /// In en, this message translates to:
+  /// **'More for {name}'**
+  String call_SemanticsLabel_conferenceParticipantMenu(String name);
+
   /// Accessibility name of the control that mutes one conference participant for everyone; the name identifies which participant.
   ///
   /// In en, this message translates to:

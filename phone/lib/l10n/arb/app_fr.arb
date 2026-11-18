@@ -499,6 +499,15 @@
   "@call_ConferencePanel_end": {
     "description": "Label of the button that ends the conference and every call in it."
   },
+  "call_SemanticsLabel_conferenceParticipantMenu": "Plus pour {name}",
+  "@call_SemanticsLabel_conferenceParticipantMenu": {
+    "description": "Name of the menu of one conference participant that holds ending their call.",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "call_SemanticsLabel_conferenceParticipantMute": "Couper le micro de {name} pour tous",
   "@call_SemanticsLabel_conferenceParticipantMute": {
     "description": "Accessibility name of the control that mutes one conference participant for everyone; the name identifies which participant.",
