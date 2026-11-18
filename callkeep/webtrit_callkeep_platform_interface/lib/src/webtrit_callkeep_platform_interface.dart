@@ -73,13 +73,17 @@ abstract class WebtritCallkeepPlatform extends PlatformInterface {
   ///
   /// [offeredAt] is when the server offered the call, null when unknown. A call the app ended before presenting it is refused with
   /// [CallkeepIncomingCallError.callIdAlreadyTerminated], so a replay of it does not ring; a call
-  /// offered after that end is a new attempt of the id and is registered.
+  /// offered after that end is a new attempt of the id and is registered. [offeredAtSource] says
+  /// where [offeredAt] comes from and [offeredVia] how the offer reached the app; null when the
+  /// caller does not say.
   Future<CallkeepIncomingCallError?> reportNewIncomingCall(
     String callId,
     CallkeepHandle handle,
     String? displayName,
     bool hasVideo, {
     DateTime? offeredAt,
+    CallkeepOfferTimeSource? offeredAtSource,
+    CallkeepOfferVia? offeredVia,
   }) {
     throw UnimplementedError('reportNewIncomingCall() has not been implemented.');
   }
@@ -382,13 +386,15 @@ abstract class WebtritCallkeepPlatform extends PlatformInterface {
   /// This method sets up the push notification signaling service with the provided options.
   ///
   /// Report a new incoming call with the given [callId], [handle], [displayName] and [hasVideo] flag.
-  /// Returns [CallkeepIncomingCallError] if there is an error. [offeredAt]: see [reportNewIncomingCall].
+  /// Returns [CallkeepIncomingCallError] if there is an error. [offeredAt] and [offeredAtSource]:
+  /// see [reportNewIncomingCall].
   Future<CallkeepIncomingCallError?> incomingCallPushNotificationService(
     String callId,
     CallkeepHandle handle,
     String? displayName,
     bool hasVideo, {
     DateTime? offeredAt,
+    CallkeepOfferTimeSource? offeredAtSource,
   }) {
     throw UnimplementedError('reportNewIncomingCall() has not been implemented.');
   }

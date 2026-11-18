@@ -12,6 +12,7 @@ class IncomingCallEvent extends CallEvent {
     this.replaceCallId,
     this.isFocus,
     this.jsep,
+    this.offeredAt,
   });
 
   final String callee;
@@ -21,6 +22,15 @@ class IncomingCallEvent extends CallEvent {
   final String? replaceCallId;
   final bool? isFocus;
   final Map<String, dynamic>? jsep;
+
+  /// Core's `offered_at`, epoch milliseconds by Core's clock: the moment Core learned of this
+  /// offer, when Janus reported its incomingcall - once per INVITE to this app.
+  ///
+  /// The event, its push (`offeredAt`) and the handshake's call log carry the same value; a new
+  /// offer of the same Call-ID (a transfer back, a retried transfer) gets another. Two apps of one
+  /// user get different values for one call. It identifies the offer: compare it for equality only,
+  /// never with a clock. Null from a Core that does not send it.
+  final int? offeredAt;
 
   @override
   List<Object?> get props => [
@@ -32,6 +42,7 @@ class IncomingCallEvent extends CallEvent {
     replaceCallId,
     isFocus,
     jsep,
+    offeredAt,
   ];
 
   static const typeValue = 'incoming_call';
@@ -46,6 +57,7 @@ class IncomingCallEvent extends CallEvent {
     if (replaceCallId != null) 'replace_call_id': replaceCallId,
     if (isFocus != null) 'is_focus': isFocus,
     if (jsep != null) 'jsep': jsep,
+    if (offeredAt != null) 'offered_at': offeredAt,
   };
 
   factory IncomingCallEvent.fromJson(Map<String, dynamic> json) {
@@ -65,6 +77,11 @@ class IncomingCallEvent extends CallEvent {
       replaceCallId: json['replace_call_id'],
       isFocus: json['is_focus'],
       jsep: json['jsep'],
+      // Epoch milliseconds; a number of any kind is taken, anything else as none.
+      offeredAt: switch (json['offered_at']) {
+        final num ms => ms.toInt(),
+        _ => null,
+      },
     );
   }
 }

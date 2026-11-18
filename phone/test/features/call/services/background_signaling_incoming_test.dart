@@ -16,6 +16,7 @@ class _ReportingPlatform extends WebtritCallkeepPlatform {
     String? displayName,
     bool hasVideo, {
     DateTime? offeredAt,
+    CallkeepOfferTimeSource? offeredAtSource,
   }) async {
     reports.add((callId, offeredAt));
     return null;

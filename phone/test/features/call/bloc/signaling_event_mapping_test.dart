@@ -5,6 +5,7 @@ import 'package:equatable/equatable.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_webrtc/flutter_webrtc.dart';
 import 'package:signaling/signaling.dart';
+import 'package:webtrit_callkeep/webtrit_callkeep.dart';
 
 import 'package:webtrit_phone/features/call/call.dart';
 
@@ -59,7 +60,39 @@ final _cases = <_Case>[
       jsep: _offer,
     ),
     '_CallSignalingEventIncoming',
-    [0, 'c1', '200', '100', 'Ann', '300', 'r1', true, _jsep('offer', 'v=0'), isA<DateTime>()],
+    [
+      0,
+      'c1',
+      '200',
+      '100',
+      'Ann',
+      '300',
+      'r1',
+      true,
+      _jsep('offer', 'v=0'),
+      isA<DateTime>(),
+      CallkeepOfferTimeSource.device,
+      CallkeepOfferVia.socket,
+    ],
+  ),
+  // Core's offered_at, when it sends one, is the offer's time and its source.
+  _Case(
+    IncomingCallEvent(line: 0, callId: 'c1', callee: '200', caller: '100', jsep: _offer, offeredAt: 1795000000123),
+    '_CallSignalingEventIncoming',
+    [
+      0,
+      'c1',
+      '200',
+      '100',
+      null,
+      null,
+      null,
+      null,
+      _jsep('offer', 'v=0'),
+      DateTime.fromMillisecondsSinceEpoch(1795000000123),
+      CallkeepOfferTimeSource.core,
+      CallkeepOfferVia.socket,
+    ],
   ),
   _Case(RingingEvent(line: 0, callId: 'c1'), '_CallSignalingEventRinging', [0, 'c1']),
   _Case(ProceedingEvent(line: 0, callId: 'c1', code: 183), '_CallSignalingEventProceeding', [0, 'c1', 183]),

@@ -80,6 +80,8 @@ class WebtritCallkeep extends WebtritCallkeepPlatform {
     bool hasVideo, {
     // CallKit keeps no end of a call the app never presented, so there is nothing to compare.
     DateTime? offeredAt,
+    CallkeepOfferTimeSource? offeredAtSource,
+    CallkeepOfferVia? offeredVia,
   }) async {
     final uuid = _uuidToCallIdMapping.put(callId: callId);
     _callGroups.callReported(callId);

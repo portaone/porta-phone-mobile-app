@@ -27,6 +27,8 @@ import com.webtrit.callkeep.PHostApi
 import com.webtrit.callkeep.PIncomingCallError
 import com.webtrit.callkeep.PIncomingCallErrorEnum
 import com.webtrit.callkeep.PIncomingCallWhileRinging
+import com.webtrit.callkeep.POfferTimeSource
+import com.webtrit.callkeep.POfferVia
 import com.webtrit.callkeep.POptions
 import com.webtrit.callkeep.common.ActivityHolder
 import com.webtrit.callkeep.common.Log
@@ -56,6 +58,8 @@ import com.webtrit.callkeep.services.core.AnswerCallRoute
 import com.webtrit.callkeep.services.core.CallEndListener
 import com.webtrit.callkeep.services.core.CallGroupOutcome
 import com.webtrit.callkeep.services.core.CallkeepCore
+import com.webtrit.callkeep.services.core.toOfferTimeSource
+import com.webtrit.callkeep.services.core.toVia
 import com.webtrit.callkeep.services.services.incoming_call.IncomingCallRelease
 import com.webtrit.callkeep.services.services.incoming_call.IncomingCallService
 import kotlinx.coroutines.CancellableContinuation
@@ -478,6 +482,8 @@ class ForegroundService :
         displayName: String?,
         hasVideo: Boolean,
         offeredAtMs: Long?,
+        offeredAtSource: POfferTimeSource?,
+        offeredVia: POfferVia?,
     ): PIncomingCallError? {
         val metadata =
             CallMetadata(
@@ -487,7 +493,8 @@ class ForegroundService :
                 hasVideo = hasVideo,
                 ringtonePath = StorageDelegate.Sound.getRingtonePath(baseContext),
             )
-        val result = core.registerIncomingCall(metadata, this, offeredAtMs)
+        val result =
+            core.registerIncomingCall(metadata, this, offeredAtMs, offeredAtSource?.toOfferTimeSource(), offeredVia?.toVia())
         if (result?.value == PIncomingCallErrorEnum.CALL_ID_ALREADY_EXISTS_AND_ANSWERED) {
             // The backend already answered before this engine learned the call's offer.
             // Core adopted it; the bridge only delivers the Flutter-side answer effect.

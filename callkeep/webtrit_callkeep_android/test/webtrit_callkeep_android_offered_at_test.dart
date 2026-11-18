@@ -44,7 +44,7 @@ void main() {
 
       expect(result, isNull);
       final args = sent.single;
-      expect(args, hasLength(5));
+      expect(args, hasLength(7));
       expect(args[0], 'call-1');
       expect((args[1]! as PHandle).value, '555');
       expect(args[2], 'Alice');
@@ -55,8 +55,23 @@ void main() {
     test('sends null when the offer time is not known', () async {
       await WebtritCallkeepPlatform.instance.reportNewIncomingCall('call-1', _handle, null, false);
 
-      expect(sent.single, hasLength(5));
+      expect(sent.single, hasLength(7));
       expect(sent.single[4], isNull);
+    });
+
+    test('sends where the offer time comes from and how the offer arrived after it', () async {
+      await WebtritCallkeepPlatform.instance.reportNewIncomingCall(
+        'call-1',
+        _handle,
+        null,
+        false,
+        offeredAt: DateTime.utc(2026),
+        offeredAtSource: CallkeepOfferTimeSource.core,
+        offeredVia: CallkeepOfferVia.socket,
+      );
+
+      expect(sent.single[5], POfferTimeSource.core);
+      expect(sent.single[6], POfferVia.socket);
     });
 
     test('sends the same instant for a local and a UTC offer time', () async {
@@ -91,7 +106,7 @@ void main() {
 
       expect(result, isNull);
       final args = sent.single;
-      expect(args, hasLength(5));
+      expect(args, hasLength(6));
       expect(args[0], 'call-1');
       expect((args[1]! as PHandle).value, '555');
       expect(args[2], 'Alice');
@@ -102,8 +117,21 @@ void main() {
     test('sends null when the offer time is not known', () async {
       await WebtritCallkeepPlatform.instance.incomingCallPushNotificationService('call-1', _handle, null, false);
 
-      expect(sent.single, hasLength(5));
+      expect(sent.single, hasLength(6));
       expect(sent.single[4], isNull);
+    });
+
+    test('sends where the offer time comes from after it', () async {
+      await WebtritCallkeepPlatform.instance.incomingCallPushNotificationService(
+        'call-1',
+        _handle,
+        null,
+        false,
+        offeredAt: DateTime.utc(2026),
+        offeredAtSource: CallkeepOfferTimeSource.fcm,
+      );
+
+      expect(sent.single[5], POfferTimeSource.fcm);
     });
 
     test('maps the error the native side answers', () async {

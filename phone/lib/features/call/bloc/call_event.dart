@@ -165,6 +165,8 @@ sealed class _CallSignalingEvent extends CallEvent {
     JsepValue? jsep,
     bool? remoteVideo,
     required DateTime? offeredAt,
+    CallkeepOfferTimeSource? offeredAtSource,
+    CallkeepOfferVia? offeredVia,
   }) = _CallSignalingEventIncoming;
 
   const factory _CallSignalingEvent.ringing({required int? line, required String callId}) = _CallSignalingEventRinging;
@@ -309,6 +311,8 @@ class _CallSignalingEventIncoming extends _CallSignalingEvent {
     this.jsep,
     this.remoteVideo,
     required this.offeredAt,
+    this.offeredAtSource,
+    this.offeredVia,
   });
 
   final int? line;
@@ -339,6 +343,13 @@ class _CallSignalingEventIncoming extends _CallSignalingEvent {
   /// carries no time (an offer handed to a call the app already holds).
   final DateTime? offeredAt;
 
+  /// Where [offeredAt] comes from: Core's `offered_at`, else this phone's clock (the moment the
+  /// socket delivered it); null when the offer carries no time.
+  final CallkeepOfferTimeSource? offeredAtSource;
+
+  /// How the offer reached the app: the live socket or a handshake replay.
+  final CallkeepOfferVia? offeredVia;
+
   @override
   List<Object?> get props => [
     line,
@@ -351,6 +362,8 @@ class _CallSignalingEventIncoming extends _CallSignalingEvent {
     isFocus,
     jsep,
     offeredAt,
+    offeredAtSource,
+    offeredVia,
   ];
 }
 
@@ -1607,6 +1620,8 @@ sealed class _CallMutationEvent extends CallEvent {
     JsepValue? jsep,
     bool? remoteVideo,
     required DateTime? offeredAt,
+    CallkeepOfferTimeSource? offeredAtSource,
+    CallkeepOfferVia? offeredVia,
   }) = _CallMutationEventSignalingIncoming;
   const factory _CallMutationEvent.signalingAccepted({required String callId, JsepValue? jsep}) =
       _CallMutationEventSignalingAccepted;
@@ -1883,6 +1898,8 @@ class _CallMutationEventSignalingIncoming extends _CallMutationEvent {
     this.jsep,
     this.remoteVideo,
     required this.offeredAt,
+    this.offeredAtSource,
+    this.offeredVia,
   });
   final int? line;
   final String callId;
@@ -1897,6 +1914,12 @@ class _CallMutationEventSignalingIncoming extends _CallMutationEvent {
 
   /// See [_CallSignalingEventIncoming.offeredAt].
   final DateTime? offeredAt;
+
+  /// See [_CallSignalingEventIncoming.offeredAtSource].
+  final CallkeepOfferTimeSource? offeredAtSource;
+
+  /// See [_CallSignalingEventIncoming.offeredVia].
+  final CallkeepOfferVia? offeredVia;
   @override
   List<Object?> get props => [
     line,
@@ -1910,6 +1933,8 @@ class _CallMutationEventSignalingIncoming extends _CallMutationEvent {
     jsep,
     remoteVideo,
     offeredAt,
+    offeredAtSource,
+    offeredVia,
   ];
 }
 

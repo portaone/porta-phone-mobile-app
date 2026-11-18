@@ -73,7 +73,9 @@ internal class ForegroundServiceProxy : PHostApi {
         displayName: String?,
         hasVideo: Boolean,
         offeredAtMs: Long?,
-    ): PIncomingCallError? = service().reportNewIncomingCall(callId, handle, displayName, hasVideo, offeredAtMs)
+        offeredAtSource: POfferTimeSource?,
+        offeredVia: POfferVia?,
+    ): PIncomingCallError? = service().reportNewIncomingCall(callId, handle, displayName, hasVideo, offeredAtMs, offeredAtSource, offeredVia)
 
     override suspend fun reportConnectingOutgoingCall(callId: String) = service().reportConnectingOutgoingCall(callId)
 

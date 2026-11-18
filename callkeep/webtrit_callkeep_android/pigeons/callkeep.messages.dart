@@ -133,6 +133,16 @@ enum PIncomingCallErrorEnum {
 }
 
 // TODO: See https://github.com/flutter/flutter/issues/87307
+/// Where the offer time of an incoming call report comes from (the call attempt registry).
+/// [core] is Core's `offered_at`, taken once per offer and compared by equality.
+/// TEMPORARY(old Core without offered_at): [fcm] (the push's sentTime) and [device] (when this
+/// phone got the offer) exist only while the app supports a Core without `offered_at`.
+enum POfferTimeSource { core, fcm, device }
+
+/// How an incoming call report reached the app. A socket delivers in order: an offer on it after
+/// the call's hangup is a new attempt of the call id.
+enum POfferVia { socket, push, handshake, other }
+
 class PIncomingCallError {
   late PIncomingCallErrorEnum value;
 }
@@ -269,8 +279,9 @@ abstract class PHostBackgroundPushNotificationIsolateBootstrapApi {
   /// passed, in which case the backend is asked to cancel it and the app declines it on the
   /// server.
   ///
-  /// [offeredAtMs] is when the server offered the call (FCM `sentTime` of the push, epoch
-  /// milliseconds), null if unknown: see `CallkeepCore.registerIncomingCall`.
+  /// [offeredAtMs] is when the server offered the call (epoch milliseconds), null if unknown:
+  /// see `CallkeepCore.registerIncomingCall`. [offeredAtSource] says where that time comes from
+  /// (Core's `offered_at` of the push, else its FCM `sentTime`); null is taken as [POfferTimeSource.fcm].
   @async
   PIncomingCallError? reportNewIncomingCall(
     String callId,
@@ -278,6 +289,7 @@ abstract class PHostBackgroundPushNotificationIsolateBootstrapApi {
     String? displayName,
     bool hasVideo,
     int? offeredAtMs,
+    POfferTimeSource? offeredAtSource,
   );
 }
 
@@ -424,7 +436,9 @@ abstract class PHostApi {
 
   /// [offeredAtMs] is when the server offered the call (epoch milliseconds), null if unknown: a
   /// call the app ended before presenting it is refused unless offered after that end.
-  @ObjCSelector('reportNewIncomingCall:handle:displayName:hasVideo:offeredAtMs:')
+  /// [offeredAtSource] says where that time comes from and [offeredVia] how the offer reached the
+  /// app; null leaves them to the core's temporary default for a report that names neither.
+  @ObjCSelector('reportNewIncomingCall:handle:displayName:hasVideo:offeredAtMs:offeredAtSource:offeredVia:')
   @async
   PIncomingCallError? reportNewIncomingCall(
     String callId,
@@ -432,6 +446,8 @@ abstract class PHostApi {
     String? displayName,
     bool hasVideo,
     int? offeredAtMs,
+    POfferTimeSource? offeredAtSource,
+    POfferVia? offeredVia,
   );
 
   @ObjCSelector('reportConnectingOutgoingCall:')

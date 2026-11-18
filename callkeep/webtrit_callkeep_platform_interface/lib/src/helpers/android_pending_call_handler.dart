@@ -8,6 +8,7 @@ class PendingCall {
     this.hasVideo = false,
     this.hasMute = false,
     this.hasHold = false,
+    this.offeredAt,
   });
 
   /// Creates a new instance of [PendingCall] from a map.
@@ -19,6 +20,7 @@ class PendingCall {
       hasVideo: map['hasVideo'] == 'true',
       hasMute: map['hasMute'] == 'true',
       hasHold: map['hasHold'] == 'true',
+      offeredAt: int.tryParse(map['offeredAt'] as String? ?? ''),
     );
   }
 
@@ -40,8 +42,15 @@ class PendingCall {
   /// Whether the call is on hold
   final bool hasHold;
 
+  /// Core's `offered_at` of the offer, the push's `offeredAt` (epoch milliseconds by Core's clock):
+  /// the moment Core learned of this offer, when Janus reported its incomingcall. The same value
+  /// as the offer's incoming_call event and its handshake call log; a new offer of the same Call-ID
+  /// gets another. It identifies the offer: compared for equality only, never with a clock. Null
+  /// from a Core that does not send it.
+  final int? offeredAt;
+
   @override
   String toString() {
-    return 'PendingCall{id: $id, displayName: $displayName, handle: $handle, hasVideo: $hasVideo, hasMute: $hasMute, hasHold: $hasHold}';
+    return 'PendingCall{id: $id, displayName: $displayName, handle: $handle, hasVideo: $hasVideo, hasMute: $hasMute, hasHold: $hasHold, offeredAt: $offeredAt}';
   }
 }

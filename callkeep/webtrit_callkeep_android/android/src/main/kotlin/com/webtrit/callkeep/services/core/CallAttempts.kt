@@ -23,7 +23,7 @@ import java.util.UUID
  *
  * Thread-safety: every public method is synchronized on this instance.
  */
-internal class CallAttempts(
+class CallAttempts(
     private val now: () -> Long = System::currentTimeMillis,
     private val newInstanceId: () -> String = { UUID.randomUUID().toString() },
     private val endedLimit: Int = ENDED_LIMIT,

@@ -231,8 +231,10 @@ Future<void> onSignalingBackgroundCallEvent(Event event) async {
             event.callId,
             CallkeepHandle.number(event.caller),
             displayName: event.callerDisplayName?.isEmpty == true ? null : event.callerDisplayName,
-            // The socket delivers a call as the server offers it, so it is offered now.
-            offeredAt: clock.now(),
+            // Core's offered_at when it sends one; otherwise the socket delivers a call as the
+            // server offers it, so it is offered now (TEMPORARY(old Core without offered_at)).
+            offeredAt: event.offeredAt != null ? DateTime.fromMillisecondsSinceEpoch(event.offeredAt!) : clock.now(),
+            offeredAtSource: event.offeredAt != null ? CallkeepOfferTimeSource.core : CallkeepOfferTimeSource.device,
           )
           .timeout(
             const Duration(seconds: 10),

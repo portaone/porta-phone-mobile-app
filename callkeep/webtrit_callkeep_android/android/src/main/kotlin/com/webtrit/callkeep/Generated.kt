@@ -357,6 +357,41 @@ enum class PIncomingCallErrorEnum(val raw: Int) {
   }
 }
 
+/**
+ * Where the offer time of an incoming call report comes from (the call attempt registry).
+ * [core] is Core's `offered_at`, taken once per offer and compared by equality.
+ * TEMPORARY(old Core without offered_at): [fcm] (the push's sentTime) and [device] (when this
+ * phone got the offer) exist only while the app supports a Core without `offered_at`.
+ */
+enum class POfferTimeSource(val raw: Int) {
+  CORE(0),
+  FCM(1),
+  DEVICE(2);
+
+  companion object {
+    fun ofRaw(raw: Int): POfferTimeSource? {
+      return values().firstOrNull { it.raw == raw }
+    }
+  }
+}
+
+/**
+ * How an incoming call report reached the app. A socket delivers in order: an offer on it after
+ * the call's hangup is a new attempt of the call id.
+ */
+enum class POfferVia(val raw: Int) {
+  SOCKET(0),
+  PUSH(1),
+  HANDSHAKE(2),
+  OTHER(3);
+
+  companion object {
+    fun ofRaw(raw: Int): POfferVia? {
+      return values().firstOrNull { it.raw == raw }
+    }
+  }
+}
+
 enum class PCallRequestErrorEnum(val raw: Int) {
   UNKNOWN(0),
   UNENTITLED(1),
@@ -1151,90 +1186,100 @@ private open class GeneratedPigeonCodec : StandardMessageCodec() {
       }
       139.toByte() -> {
         return (readValue(buffer) as Long?)?.let {
-          PCallRequestErrorEnum.ofRaw(it.toInt())
+          POfferTimeSource.ofRaw(it.toInt())
         }
       }
       140.toByte() -> {
         return (readValue(buffer) as Long?)?.let {
-          PCallkeepLifecycleEvent.ofRaw(it.toInt())
+          POfferVia.ofRaw(it.toInt())
         }
       }
       141.toByte() -> {
         return (readValue(buffer) as Long?)?.let {
-          PCallkeepConnectionState.ofRaw(it.toInt())
+          PCallRequestErrorEnum.ofRaw(it.toInt())
         }
       }
       142.toByte() -> {
         return (readValue(buffer) as Long?)?.let {
-          PCallkeepDisconnectCauseType.ofRaw(it.toInt())
+          PCallkeepLifecycleEvent.ofRaw(it.toInt())
         }
       }
       143.toByte() -> {
         return (readValue(buffer) as Long?)?.let {
-          PEndedByEnum.ofRaw(it.toInt())
+          PCallkeepConnectionState.ofRaw(it.toInt())
         }
       }
       144.toByte() -> {
-        return (readValue(buffer) as? List<Any?>)?.let {
-          PIOSOptions.fromList(it)
+        return (readValue(buffer) as Long?)?.let {
+          PCallkeepDisconnectCauseType.ofRaw(it.toInt())
         }
       }
       145.toByte() -> {
-        return (readValue(buffer) as? List<Any?>)?.let {
-          PAndroidOptions.fromList(it)
+        return (readValue(buffer) as Long?)?.let {
+          PEndedByEnum.ofRaw(it.toInt())
         }
       }
       146.toByte() -> {
         return (readValue(buffer) as? List<Any?>)?.let {
-          POptions.fromList(it)
+          PIOSOptions.fromList(it)
         }
       }
       147.toByte() -> {
         return (readValue(buffer) as? List<Any?>)?.let {
-          PAudioDevice.fromList(it)
+          PAndroidOptions.fromList(it)
         }
       }
       148.toByte() -> {
         return (readValue(buffer) as? List<Any?>)?.let {
-          PPermissionResult.fromList(it)
+          POptions.fromList(it)
         }
       }
       149.toByte() -> {
         return (readValue(buffer) as? List<Any?>)?.let {
-          PHandle.fromList(it)
+          PAudioDevice.fromList(it)
         }
       }
       150.toByte() -> {
         return (readValue(buffer) as? List<Any?>)?.let {
-          PEndCallReason.fromList(it)
+          PPermissionResult.fromList(it)
         }
       }
       151.toByte() -> {
         return (readValue(buffer) as? List<Any?>)?.let {
-          PIncomingCallError.fromList(it)
+          PHandle.fromList(it)
         }
       }
       152.toByte() -> {
         return (readValue(buffer) as? List<Any?>)?.let {
-          PCallRequestError.fromList(it)
+          PEndCallReason.fromList(it)
         }
       }
       153.toByte() -> {
         return (readValue(buffer) as? List<Any?>)?.let {
-          PCallkeepIncomingCallData.fromList(it)
+          PIncomingCallError.fromList(it)
         }
       }
       154.toByte() -> {
         return (readValue(buffer) as? List<Any?>)?.let {
-          PCallkeepServiceStatus.fromList(it)
+          PCallRequestError.fromList(it)
         }
       }
       155.toByte() -> {
         return (readValue(buffer) as? List<Any?>)?.let {
-          PCallkeepDisconnectCause.fromList(it)
+          PCallkeepIncomingCallData.fromList(it)
         }
       }
       156.toByte() -> {
+        return (readValue(buffer) as? List<Any?>)?.let {
+          PCallkeepServiceStatus.fromList(it)
+        }
+      }
+      157.toByte() -> {
+        return (readValue(buffer) as? List<Any?>)?.let {
+          PCallkeepDisconnectCause.fromList(it)
+        }
+      }
+      158.toByte() -> {
         return (readValue(buffer) as? List<Any?>)?.let {
           PCallkeepConnection.fromList(it)
         }
@@ -1284,76 +1329,84 @@ private open class GeneratedPigeonCodec : StandardMessageCodec() {
         stream.write(138)
         writeValue(stream, value.raw.toLong())
       }
-      is PCallRequestErrorEnum -> {
+      is POfferTimeSource -> {
         stream.write(139)
         writeValue(stream, value.raw.toLong())
       }
-      is PCallkeepLifecycleEvent -> {
+      is POfferVia -> {
         stream.write(140)
         writeValue(stream, value.raw.toLong())
       }
-      is PCallkeepConnectionState -> {
+      is PCallRequestErrorEnum -> {
         stream.write(141)
         writeValue(stream, value.raw.toLong())
       }
-      is PCallkeepDisconnectCauseType -> {
+      is PCallkeepLifecycleEvent -> {
         stream.write(142)
         writeValue(stream, value.raw.toLong())
       }
-      is PEndedByEnum -> {
+      is PCallkeepConnectionState -> {
         stream.write(143)
         writeValue(stream, value.raw.toLong())
       }
-      is PIOSOptions -> {
+      is PCallkeepDisconnectCauseType -> {
         stream.write(144)
-        writeValue(stream, value.toList())
+        writeValue(stream, value.raw.toLong())
       }
-      is PAndroidOptions -> {
+      is PEndedByEnum -> {
         stream.write(145)
-        writeValue(stream, value.toList())
+        writeValue(stream, value.raw.toLong())
       }
-      is POptions -> {
+      is PIOSOptions -> {
         stream.write(146)
         writeValue(stream, value.toList())
       }
-      is PAudioDevice -> {
+      is PAndroidOptions -> {
         stream.write(147)
         writeValue(stream, value.toList())
       }
-      is PPermissionResult -> {
+      is POptions -> {
         stream.write(148)
         writeValue(stream, value.toList())
       }
-      is PHandle -> {
+      is PAudioDevice -> {
         stream.write(149)
         writeValue(stream, value.toList())
       }
-      is PEndCallReason -> {
+      is PPermissionResult -> {
         stream.write(150)
         writeValue(stream, value.toList())
       }
-      is PIncomingCallError -> {
+      is PHandle -> {
         stream.write(151)
         writeValue(stream, value.toList())
       }
-      is PCallRequestError -> {
+      is PEndCallReason -> {
         stream.write(152)
         writeValue(stream, value.toList())
       }
-      is PCallkeepIncomingCallData -> {
+      is PIncomingCallError -> {
         stream.write(153)
         writeValue(stream, value.toList())
       }
-      is PCallkeepServiceStatus -> {
+      is PCallRequestError -> {
         stream.write(154)
         writeValue(stream, value.toList())
       }
-      is PCallkeepDisconnectCause -> {
+      is PCallkeepIncomingCallData -> {
         stream.write(155)
         writeValue(stream, value.toList())
       }
-      is PCallkeepConnection -> {
+      is PCallkeepServiceStatus -> {
         stream.write(156)
+        writeValue(stream, value.toList())
+      }
+      is PCallkeepDisconnectCause -> {
+        stream.write(157)
+        writeValue(stream, value.toList())
+      }
+      is PCallkeepConnection -> {
+        stream.write(158)
         writeValue(stream, value.toList())
       }
       else -> super.writeValue(stream, value)
@@ -1381,10 +1434,11 @@ interface PHostBackgroundPushNotificationIsolateBootstrapApi {
    * passed, in which case the backend is asked to cancel it and the app declines it on the
    * server.
    *
-   * [offeredAtMs] is when the server offered the call (FCM `sentTime` of the push, epoch
-   * milliseconds), null if unknown: see `CallkeepCore.registerIncomingCall`.
+   * [offeredAtMs] is when the server offered the call (epoch milliseconds), null if unknown:
+   * see `CallkeepCore.registerIncomingCall`. [offeredAtSource] says where that time comes from
+   * (Core's `offered_at` of the push, else its FCM `sentTime`); null is taken as [POfferTimeSource.fcm].
    */
-  suspend fun reportNewIncomingCall(callId: String, handle: PHandle, displayName: String?, hasVideo: Boolean, offeredAtMs: Long?): PIncomingCallError?
+  suspend fun reportNewIncomingCall(callId: String, handle: PHandle, displayName: String?, hasVideo: Boolean, offeredAtMs: Long?, offeredAtSource: POfferTimeSource?): PIncomingCallError?
 
   companion object {
     /** The codec used by PHostBackgroundPushNotificationIsolateBootstrapApi. */
@@ -1426,9 +1480,10 @@ interface PHostBackgroundPushNotificationIsolateBootstrapApi {
             val displayNameArg = args[2] as String?
             val hasVideoArg = args[3] as Boolean
             val offeredAtMsArg = args[4] as Long?
+            val offeredAtSourceArg = args[5] as POfferTimeSource?
             CoroutineScope(Dispatchers.Main).launch {
               val wrapped: List<Any?> = try {
-                listOf(api.reportNewIncomingCall(callIdArg, handleArg, displayNameArg, hasVideoArg, offeredAtMsArg))
+                listOf(api.reportNewIncomingCall(callIdArg, handleArg, displayNameArg, hasVideoArg, offeredAtMsArg, offeredAtSourceArg))
               } catch (exception: Throwable) {
                 GeneratedPigeonUtils.wrapError(exception)
               }
@@ -2005,8 +2060,10 @@ interface PHostApi {
   /**
    * [offeredAtMs] is when the server offered the call (epoch milliseconds), null if unknown: a
    * call the app ended before presenting it is refused unless offered after that end.
+   * [offeredAtSource] says where that time comes from and [offeredVia] how the offer reached the
+   * app; null leaves them to the core's temporary default for a report that names neither.
    */
-  suspend fun reportNewIncomingCall(callId: String, handle: PHandle, displayName: String?, hasVideo: Boolean, offeredAtMs: Long?): PIncomingCallError?
+  suspend fun reportNewIncomingCall(callId: String, handle: PHandle, displayName: String?, hasVideo: Boolean, offeredAtMs: Long?, offeredAtSource: POfferTimeSource?, offeredVia: POfferVia?): PIncomingCallError?
   suspend fun reportConnectingOutgoingCall(callId: String)
   suspend fun reportConnectedOutgoingCall(callId: String)
   suspend fun reportUpdateCall(callId: String, handle: PHandle?, displayName: String?, hasVideo: Boolean?, proximityEnabled: Boolean?)
@@ -2100,9 +2157,11 @@ interface PHostApi {
             val displayNameArg = args[2] as String?
             val hasVideoArg = args[3] as Boolean
             val offeredAtMsArg = args[4] as Long?
+            val offeredAtSourceArg = args[5] as POfferTimeSource?
+            val offeredViaArg = args[6] as POfferVia?
             CoroutineScope(Dispatchers.Main).launch {
               val wrapped: List<Any?> = try {
-                listOf(api.reportNewIncomingCall(callIdArg, handleArg, displayNameArg, hasVideoArg, offeredAtMsArg))
+                listOf(api.reportNewIncomingCall(callIdArg, handleArg, displayNameArg, hasVideoArg, offeredAtMsArg, offeredAtSourceArg, offeredViaArg))
               } catch (exception: Throwable) {
                 GeneratedPigeonUtils.wrapError(exception)
               }

@@ -154,9 +154,19 @@ class Callkeep {
     String? displayName,
     bool hasVideo = false,
     DateTime? offeredAt,
+    CallkeepOfferTimeSource? offeredAtSource,
+    CallkeepOfferVia? offeredVia,
   }) async {
     final reportedAs = _endsReportedUnseen[callId];
-    final result = await platform.reportNewIncomingCall(callId, handle, displayName, hasVideo, offeredAt: offeredAt);
+    final result = await platform.reportNewIncomingCall(
+      callId,
+      handle,
+      displayName,
+      hasVideo,
+      offeredAt: offeredAt,
+      offeredAtSource: offeredAtSource,
+      offeredVia: offeredVia,
+    );
     if (reportedAs != null && result == null && _endsReportedUnseen[callId] == reportedAs) {
       _endsReportedUnseen.remove(callId);
     }

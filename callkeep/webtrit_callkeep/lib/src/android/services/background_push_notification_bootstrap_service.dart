@@ -37,7 +37,15 @@ class BackgroundPushNotificationBootstrapService {
     String? displayName,
     bool hasVideo = false,
     DateTime? offeredAt,
+    CallkeepOfferTimeSource? offeredAtSource,
   }) {
-    return platform.incomingCallPushNotificationService(callId, handle, displayName, hasVideo, offeredAt: offeredAt);
+    return platform.incomingCallPushNotificationService(
+      callId,
+      handle,
+      displayName,
+      hasVideo,
+      offeredAt: offeredAt,
+      offeredAtSource: offeredAtSource,
+    );
   }
 }

@@ -5,7 +5,9 @@ import com.webtrit.callkeep.common.Log
 import com.webtrit.callkeep.common.StorageDelegate
 import com.webtrit.callkeep.models.CallMetadata
 import com.webtrit.callkeep.models.toCallHandle
+import com.webtrit.callkeep.services.core.CallAttempts
 import com.webtrit.callkeep.services.core.CallkeepCore
+import com.webtrit.callkeep.services.core.toOfferTimeSource
 
 class BackgroundPushNotificationIsolateBootstrapApi(
     private val context: Context,
@@ -24,8 +26,9 @@ class BackgroundPushNotificationIsolateBootstrapApi(
         displayName: String?,
         hasVideo: Boolean,
         offeredAtMs: Long?,
+        offeredAtSource: POfferTimeSource?,
     ): PIncomingCallError? {
-        Log.d(TAG, "reportNewIncomingCall: $callId, $handle, $displayName, $hasVideo, offered at $offeredAtMs")
+        Log.d(TAG, "reportNewIncomingCall: $callId, $handle, $displayName, $hasVideo, offered at $offeredAtMs ($offeredAtSource)")
         val core = CallkeepCore.instance
         val ringtonePath = StorageDelegate.Sound.getRingtonePath(context)
 
@@ -38,7 +41,7 @@ class BackgroundPushNotificationIsolateBootstrapApi(
                 ringtonePath = ringtonePath,
             )
 
-        return core.registerIncomingCall(metadata, PushClient, offeredAtMs)
+        return core.registerIncomingCall(metadata, PushClient, offeredAtMs, offeredAtSource?.toOfferTimeSource(), CallAttempts.Via.PUSH)
     }
 
     /** The push path as a client of the core's incoming registration. */

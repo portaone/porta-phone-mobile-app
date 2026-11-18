@@ -596,8 +596,13 @@ Future<void> _handleBackgroundMessage(RemoteMessage message, Logger logger) asyn
           CallkeepHandle.number(appPush.call.handle),
           displayName: displayName,
           hasVideo: appPush.call.hasVideo,
-          // When the server sent the push: a late copy of an ended call's push is older than its end.
-          offeredAt: message.sentTime,
+          // Core's offered_at of the push when it sends one; otherwise when the server sent the push
+          // (TEMPORARY(old Core without offered_at)): a late copy of an ended call's push is older
+          // than its end.
+          offeredAt: appPush.call.offeredAt != null
+              ? DateTime.fromMillisecondsSinceEpoch(appPush.call.offeredAt!)
+              : message.sentTime,
+          offeredAtSource: appPush.call.offeredAt != null ? CallkeepOfferTimeSource.core : CallkeepOfferTimeSource.fcm,
         )
         .timeout(const Duration(seconds: 10), onTimeout: () => _onReportIncomingCallTimeout(logger));
     // A refused push is otherwise silent: the call simply never rings.

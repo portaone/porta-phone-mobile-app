@@ -51,6 +51,8 @@ class ForegroundServiceProxyTest {
             displayName: String?,
             hasVideo: Boolean,
             offeredAtMs: Long?,
+            offeredAtSource: POfferTimeSource?,
+            offeredVia: POfferVia?,
         ): PIncomingCallError? {
             incomingReports += callId to offeredAtMs
             return null
@@ -186,7 +188,7 @@ class ForegroundServiceProxyTest {
     ): () -> List<Any?>? {
         val handler = handlers.getValue("dev.flutter.pigeon.webtrit_callkeep_android.PHostApi.reportNewIncomingCall")
         var reply: List<Any?>? = null
-        val args = listOf(callId, PHandle(PHandleTypeEnum.NUMBER, "1002"), null, false, offeredAtMs)
+        val args = listOf(callId, PHandle(PHandleTypeEnum.NUMBER, "1002"), null, false, offeredAtMs, null, null)
         val message = PHostApi.codec.encodeMessage(args)!!.also { it.rewind() }
         handler.onMessage(message) { bytes: ByteBuffer? ->
             bytes!!.rewind()

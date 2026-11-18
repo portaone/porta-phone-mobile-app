@@ -106,9 +106,10 @@ final class HandleIncomingCallAction extends HandshakeAction {
 
   final IncomingCallEvent event;
 
-  /// When the server offered the call: the server's time of the newest offer in the line's log.
-  /// A call the server offers again under the same id (a blind transfer repeated) is offered
-  /// after the end of its earlier attempt; a line still listing that earlier attempt is not.
+  /// The server's time of the newest offer in the line's log. From a Core that sends `offered_at`
+  /// it is that offer's `offered_at` (see [IncomingCallEvent.offeredAt]), which identifies the offer
+  /// by equality. TEMPORARY(old Core without offered_at): otherwise it is only compared with the end
+  /// of an earlier attempt - an offer made again under the same id comes after that end.
   final DateTime? offeredAt;
 
   /// The remote side's latest media state after the offer, when the log
@@ -620,7 +621,8 @@ class _LineLog {
   /// missed call.
   late final bool isTerminated = latest is HangupEvent || latest is MissedCallEvent;
 
-  /// When the server logged the newest incoming call of the line, by its clock.
+  /// When the server logged the newest incoming call of the line, by its clock: the offer's
+  /// `offered_at` from a Core that sends it.
   late final DateTime? offeredAt = switch (_events.where((log) => log.callEvent is IncomingCallEvent).firstOrNull) {
     final log? => DateTime.fromMillisecondsSinceEpoch(log.timestamp, isUtc: true),
     null => null,

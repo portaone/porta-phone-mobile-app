@@ -18,6 +18,8 @@ class _RecordingPlatform extends WebtritCallkeepPlatform with MockPlatformInterf
     String? displayName,
     bool hasVideo, {
     DateTime? offeredAt,
+    CallkeepOfferTimeSource? offeredAtSource,
+    CallkeepOfferVia? offeredVia,
   }) async {
     reported.add((callId, handle, displayName, hasVideo, offeredAt));
     return result;
@@ -30,6 +32,7 @@ class _RecordingPlatform extends WebtritCallkeepPlatform with MockPlatformInterf
     String? displayName,
     bool hasVideo, {
     DateTime? offeredAt,
+    CallkeepOfferTimeSource? offeredAtSource,
   }) async {
     pushReported.add((callId, handle, displayName, hasVideo, offeredAt));
     return result;

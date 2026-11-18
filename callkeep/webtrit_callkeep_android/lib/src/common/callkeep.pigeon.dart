@@ -201,6 +201,25 @@ enum PIncomingCallErrorEnum {
   callRejectedBySystem;
 }
 
+/// Where the offer time of an incoming call report comes from (the call attempt registry).
+/// [core] is Core's `offered_at`, taken once per offer and compared by equality.
+/// TEMPORARY(old Core without offered_at): [fcm] (the push's sentTime) and [device] (when this
+/// phone got the offer) exist only while the app supports a Core without `offered_at`.
+enum POfferTimeSource {
+  core,
+  fcm,
+  device;
+}
+
+/// How an incoming call report reached the app. A socket delivers in order: an offer on it after
+/// the call's hangup is a new attempt of the call id.
+enum POfferVia {
+  socket,
+  push,
+  handshake,
+  other;
+}
+
 enum PCallRequestErrorEnum {
   unknown,
   unentitled,
@@ -1063,59 +1082,65 @@ class _PigeonCodec extends StandardMessageCodec {
     }    else if (value is PIncomingCallErrorEnum) {
       buffer.putUint8(138);
       writeValue(buffer, value.index);
-    }    else if (value is PCallRequestErrorEnum) {
+    }    else if (value is POfferTimeSource) {
       buffer.putUint8(139);
       writeValue(buffer, value.index);
-    }    else if (value is PCallkeepLifecycleEvent) {
+    }    else if (value is POfferVia) {
       buffer.putUint8(140);
       writeValue(buffer, value.index);
-    }    else if (value is PCallkeepConnectionState) {
+    }    else if (value is PCallRequestErrorEnum) {
       buffer.putUint8(141);
       writeValue(buffer, value.index);
-    }    else if (value is PCallkeepDisconnectCauseType) {
+    }    else if (value is PCallkeepLifecycleEvent) {
       buffer.putUint8(142);
       writeValue(buffer, value.index);
-    }    else if (value is PEndedByEnum) {
+    }    else if (value is PCallkeepConnectionState) {
       buffer.putUint8(143);
       writeValue(buffer, value.index);
-    }    else if (value is PIOSOptions) {
+    }    else if (value is PCallkeepDisconnectCauseType) {
       buffer.putUint8(144);
-      writeValue(buffer, value.encode());
-    }    else if (value is PAndroidOptions) {
+      writeValue(buffer, value.index);
+    }    else if (value is PEndedByEnum) {
       buffer.putUint8(145);
-      writeValue(buffer, value.encode());
-    }    else if (value is POptions) {
+      writeValue(buffer, value.index);
+    }    else if (value is PIOSOptions) {
       buffer.putUint8(146);
       writeValue(buffer, value.encode());
-    }    else if (value is PAudioDevice) {
+    }    else if (value is PAndroidOptions) {
       buffer.putUint8(147);
       writeValue(buffer, value.encode());
-    }    else if (value is PPermissionResult) {
+    }    else if (value is POptions) {
       buffer.putUint8(148);
       writeValue(buffer, value.encode());
-    }    else if (value is PHandle) {
+    }    else if (value is PAudioDevice) {
       buffer.putUint8(149);
       writeValue(buffer, value.encode());
-    }    else if (value is PEndCallReason) {
+    }    else if (value is PPermissionResult) {
       buffer.putUint8(150);
       writeValue(buffer, value.encode());
-    }    else if (value is PIncomingCallError) {
+    }    else if (value is PHandle) {
       buffer.putUint8(151);
       writeValue(buffer, value.encode());
-    }    else if (value is PCallRequestError) {
+    }    else if (value is PEndCallReason) {
       buffer.putUint8(152);
       writeValue(buffer, value.encode());
-    }    else if (value is PCallkeepIncomingCallData) {
+    }    else if (value is PIncomingCallError) {
       buffer.putUint8(153);
       writeValue(buffer, value.encode());
-    }    else if (value is PCallkeepServiceStatus) {
+    }    else if (value is PCallRequestError) {
       buffer.putUint8(154);
       writeValue(buffer, value.encode());
-    }    else if (value is PCallkeepDisconnectCause) {
+    }    else if (value is PCallkeepIncomingCallData) {
       buffer.putUint8(155);
       writeValue(buffer, value.encode());
-    }    else if (value is PCallkeepConnection) {
+    }    else if (value is PCallkeepServiceStatus) {
       buffer.putUint8(156);
+      writeValue(buffer, value.encode());
+    }    else if (value is PCallkeepDisconnectCause) {
+      buffer.putUint8(157);
+      writeValue(buffer, value.encode());
+    }    else if (value is PCallkeepConnection) {
+      buffer.putUint8(158);
       writeValue(buffer, value.encode());
     } else {
       super.writeValue(buffer, value);
@@ -1157,44 +1182,50 @@ class _PigeonCodec extends StandardMessageCodec {
         return value == null ? null : PIncomingCallErrorEnum.values[value];
       case 139:
         final value = readValue(buffer) as int?;
-        return value == null ? null : PCallRequestErrorEnum.values[value];
+        return value == null ? null : POfferTimeSource.values[value];
       case 140:
         final value = readValue(buffer) as int?;
-        return value == null ? null : PCallkeepLifecycleEvent.values[value];
+        return value == null ? null : POfferVia.values[value];
       case 141:
         final value = readValue(buffer) as int?;
-        return value == null ? null : PCallkeepConnectionState.values[value];
+        return value == null ? null : PCallRequestErrorEnum.values[value];
       case 142:
         final value = readValue(buffer) as int?;
-        return value == null ? null : PCallkeepDisconnectCauseType.values[value];
+        return value == null ? null : PCallkeepLifecycleEvent.values[value];
       case 143:
         final value = readValue(buffer) as int?;
-        return value == null ? null : PEndedByEnum.values[value];
+        return value == null ? null : PCallkeepConnectionState.values[value];
       case 144:
-        return PIOSOptions.decode(readValue(buffer)!);
+        final value = readValue(buffer) as int?;
+        return value == null ? null : PCallkeepDisconnectCauseType.values[value];
       case 145:
-        return PAndroidOptions.decode(readValue(buffer)!);
+        final value = readValue(buffer) as int?;
+        return value == null ? null : PEndedByEnum.values[value];
       case 146:
-        return POptions.decode(readValue(buffer)!);
+        return PIOSOptions.decode(readValue(buffer)!);
       case 147:
-        return PAudioDevice.decode(readValue(buffer)!);
+        return PAndroidOptions.decode(readValue(buffer)!);
       case 148:
-        return PPermissionResult.decode(readValue(buffer)!);
+        return POptions.decode(readValue(buffer)!);
       case 149:
-        return PHandle.decode(readValue(buffer)!);
+        return PAudioDevice.decode(readValue(buffer)!);
       case 150:
-        return PEndCallReason.decode(readValue(buffer)!);
+        return PPermissionResult.decode(readValue(buffer)!);
       case 151:
-        return PIncomingCallError.decode(readValue(buffer)!);
+        return PHandle.decode(readValue(buffer)!);
       case 152:
-        return PCallRequestError.decode(readValue(buffer)!);
+        return PEndCallReason.decode(readValue(buffer)!);
       case 153:
-        return PCallkeepIncomingCallData.decode(readValue(buffer)!);
+        return PIncomingCallError.decode(readValue(buffer)!);
       case 154:
-        return PCallkeepServiceStatus.decode(readValue(buffer)!);
+        return PCallRequestError.decode(readValue(buffer)!);
       case 155:
-        return PCallkeepDisconnectCause.decode(readValue(buffer)!);
+        return PCallkeepIncomingCallData.decode(readValue(buffer)!);
       case 156:
+        return PCallkeepServiceStatus.decode(readValue(buffer)!);
+      case 157:
+        return PCallkeepDisconnectCause.decode(readValue(buffer)!);
+      case 158:
         return PCallkeepConnection.decode(readValue(buffer)!);
       default:
         return super.readValueOfType(type, buffer);
@@ -1250,16 +1281,17 @@ class PHostBackgroundPushNotificationIsolateBootstrapApi {
   /// passed, in which case the backend is asked to cancel it and the app declines it on the
   /// server.
   ///
-  /// [offeredAtMs] is when the server offered the call (FCM `sentTime` of the push, epoch
-  /// milliseconds), null if unknown: see `CallkeepCore.registerIncomingCall`.
-  Future<PIncomingCallError?> reportNewIncomingCall(String callId, PHandle handle, String? displayName, bool hasVideo, int? offeredAtMs) async {
+  /// [offeredAtMs] is when the server offered the call (epoch milliseconds), null if unknown:
+  /// see `CallkeepCore.registerIncomingCall`. [offeredAtSource] says where that time comes from
+  /// (Core's `offered_at` of the push, else its FCM `sentTime`); null is taken as [POfferTimeSource.fcm].
+  Future<PIncomingCallError?> reportNewIncomingCall(String callId, PHandle handle, String? displayName, bool hasVideo, int? offeredAtMs, POfferTimeSource? offeredAtSource) async {
     final pigeonVar_channelName = 'dev.flutter.pigeon.webtrit_callkeep_android.PHostBackgroundPushNotificationIsolateBootstrapApi.reportNewIncomingCall$pigeonVar_messageChannelSuffix';
     final pigeonVar_channel = BasicMessageChannel<Object?>(
       pigeonVar_channelName,
       pigeonChannelCodec,
       binaryMessenger: pigeonVar_binaryMessenger,
     );
-    final Future<Object?> pigeonVar_sendFuture = pigeonVar_channel.send(<Object?>[callId, handle, displayName, hasVideo, offeredAtMs]);
+    final Future<Object?> pigeonVar_sendFuture = pigeonVar_channel.send(<Object?>[callId, handle, displayName, hasVideo, offeredAtMs, offeredAtSource]);
     final pigeonVar_replyList = await pigeonVar_sendFuture as List<Object?>?;
 
     final Object? pigeonVar_replyValue = _extractReplyValueOrThrow(
@@ -1895,14 +1927,16 @@ class PHostApi {
 
   /// [offeredAtMs] is when the server offered the call (epoch milliseconds), null if unknown: a
   /// call the app ended before presenting it is refused unless offered after that end.
-  Future<PIncomingCallError?> reportNewIncomingCall(String callId, PHandle handle, String? displayName, bool hasVideo, int? offeredAtMs) async {
+  /// [offeredAtSource] says where that time comes from and [offeredVia] how the offer reached the
+  /// app; null leaves them to the core's temporary default for a report that names neither.
+  Future<PIncomingCallError?> reportNewIncomingCall(String callId, PHandle handle, String? displayName, bool hasVideo, int? offeredAtMs, POfferTimeSource? offeredAtSource, POfferVia? offeredVia) async {
     final pigeonVar_channelName = 'dev.flutter.pigeon.webtrit_callkeep_android.PHostApi.reportNewIncomingCall$pigeonVar_messageChannelSuffix';
     final pigeonVar_channel = BasicMessageChannel<Object?>(
       pigeonVar_channelName,
       pigeonChannelCodec,
       binaryMessenger: pigeonVar_binaryMessenger,
     );
-    final Future<Object?> pigeonVar_sendFuture = pigeonVar_channel.send(<Object?>[callId, handle, displayName, hasVideo, offeredAtMs]);
+    final Future<Object?> pigeonVar_sendFuture = pigeonVar_channel.send(<Object?>[callId, handle, displayName, hasVideo, offeredAtMs, offeredAtSource, offeredVia]);
     final pigeonVar_replyList = await pigeonVar_sendFuture as List<Object?>?;
 
     final Object? pigeonVar_replyValue = _extractReplyValueOrThrow(

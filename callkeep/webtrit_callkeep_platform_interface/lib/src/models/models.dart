@@ -10,6 +10,7 @@ export 'callkeep_ended_by.dart';
 export 'callkeep_handle.dart';
 export 'callkeep_incoming_call_error.dart';
 export 'callkeep_lifecycle_event.dart';
+export 'callkeep_offer.dart';
 export 'callkeep_options.dart';
 export 'callkeep_permission.dart';
 export 'callkeep_service_status.dart';

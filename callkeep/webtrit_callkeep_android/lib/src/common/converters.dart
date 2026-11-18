@@ -389,3 +389,31 @@ extension PCallkeepConnectionConverter on PCallkeepConnection {
     return CallkeepConnection(callId: callId, state: state.toCallkeep(), disconnectCause: disconnectCause.toCallkeep());
   }
 }
+
+extension CallkeepOfferTimeSourceConverter on CallkeepOfferTimeSource {
+  POfferTimeSource toPigeon() {
+    switch (this) {
+      case CallkeepOfferTimeSource.core:
+        return POfferTimeSource.core;
+      case CallkeepOfferTimeSource.fcm:
+        return POfferTimeSource.fcm;
+      case CallkeepOfferTimeSource.device:
+        return POfferTimeSource.device;
+    }
+  }
+}
+
+extension CallkeepOfferViaConverter on CallkeepOfferVia {
+  POfferVia toPigeon() {
+    switch (this) {
+      case CallkeepOfferVia.socket:
+        return POfferVia.socket;
+      case CallkeepOfferVia.push:
+        return POfferVia.push;
+      case CallkeepOfferVia.handshake:
+        return POfferVia.handshake;
+      case CallkeepOfferVia.other:
+        return POfferVia.other;
+    }
+  }
+}

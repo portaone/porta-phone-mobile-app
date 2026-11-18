@@ -1311,6 +1311,8 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
         jsep: event.jsep,
         remoteVideo: event.remoteVideo,
         offeredAt: event.offeredAt,
+        offeredAtSource: event.offeredAtSource,
+        offeredVia: event.offeredVia,
       ),
     );
   }
@@ -3672,6 +3674,8 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
       // A call offered after the end of an earlier attempt of the id is a new attempt and is not
       // refused by it; a call offered before that end, or with no offer time, stays refused.
       offeredAt: event.offeredAt,
+      offeredAtSource: event.offeredAtSource,
+      offeredVia: event.offeredVia,
     );
 
     // Check if a call instance already exists in the callkeep, which might have been added via push notifications
@@ -5133,7 +5137,20 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
           // media state dispatched after it would run before the mutation that
           // creates the call and find nothing to apply to.
           _logger.info('_handleHandshakeReceived: HandleIncomingCallAction, callId=${action.event.callId}');
-          add(action.event.toCallEvent(offeredAt: action.offeredAt, remoteVideo: action.mediaState?.video));
+          // The time of a handshake line's offer is Core's: the event's offered_at, or the time its
+          // call log gives it (the same value from a Core that sends offered_at).
+          final coreOfferedAt = action.event.offeredAt;
+          final offeredAt = coreOfferedAt != null
+              ? DateTime.fromMillisecondsSinceEpoch(coreOfferedAt)
+              : action.offeredAt;
+          add(
+            action.event.toCallEvent(
+              offeredAt: offeredAt,
+              offeredAtSource: offeredAt != null ? CallkeepOfferTimeSource.core : null,
+              offeredVia: CallkeepOfferVia.handshake,
+              remoteVideo: action.mediaState?.video,
+            ),
+          );
 
         case DeliverOfferAction():
           // The handler is the same as for a live offer: it stores the offer
@@ -5144,7 +5161,13 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
           final waiting = state.retrieveActiveCall(action.event.callId);
           if (waiting != null && waiting.awaitsOffer) {
             _logger.info('_handleHandshakeReceived: delivering offer to push-registered call ${action.event.callId}');
-            add(action.event.toCallEvent(offeredAt: null, remoteVideo: action.mediaState?.video));
+            add(
+              action.event.toCallEvent(
+                offeredAt: null,
+                offeredVia: CallkeepOfferVia.handshake,
+                remoteVideo: action.mediaState?.video,
+              ),
+            );
           } else {
             _logger.info('_handleHandshakeReceived: offer for ${action.event.callId} no longer needed, skipping');
           }

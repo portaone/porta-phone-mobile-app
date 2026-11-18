@@ -91,6 +91,8 @@ class ForegroundServiceIncomingFailureTest {
                         displayName = null,
                         hasVideo = false,
                         offeredAtMs = null,
+                        offeredAtSource = null,
+                        offeredVia = null,
                     )
                 }
             shadowOf(service.mainLooper).idle()

@@ -90,6 +90,8 @@ class ForegroundServiceIncomingRegistrationTest {
                     displayName = null,
                     hasVideo = false,
                     offeredAtMs = offeredAtMs,
+                    offeredAtSource = null,
+                    offeredVia = null,
                 )
             }.also { idle() }
 
@@ -378,7 +380,7 @@ class ForegroundServiceIncomingRegistrationTest {
         offeredAtMs: Long? = null,
     ): Deferred<PIncomingCallError?> =
         scope
-            .async { push.reportNewIncomingCall(callId, PHandle(PHandleTypeEnum.NUMBER, "1003"), null, false, offeredAtMs) }
+            .async { push.reportNewIncomingCall(callId, PHandle(PHandleTypeEnum.NUMBER, "1003"), null, false, offeredAtMs, null) }
             .also { idle() }
 
     @Test
@@ -599,7 +601,7 @@ class ForegroundServiceIncomingRegistrationTest {
 
         val handler = handlers.getValue("dev.flutter.pigeon.webtrit_callkeep_android.PHostBackgroundPushNotificationIsolateBootstrapApi.reportNewIncomingCall")
         var reply: List<Any?>? = null
-        val args = listOf(callId, PHandle(PHandleTypeEnum.NUMBER, "1003"), null, false, offeredAtMs)
+        val args = listOf(callId, PHandle(PHandleTypeEnum.NUMBER, "1003"), null, false, offeredAtMs, null)
         val message = PHostBackgroundPushNotificationIsolateBootstrapApi.codec.encodeMessage(args)!!.also { it.rewind() }
         handler.onMessage(message) { bytes: ByteBuffer? ->
             bytes!!.rewind()

@@ -685,7 +685,11 @@ class InProcessCallkeepCore internal constructor(
         return offeredAtMs != null && offeredAtMs > endedAt
     }
 
-    /** Lets a new attempt of [callId] in: the end of the earlier one goes, with the release it left. */
+    /**
+     * Lets a new attempt of [callId] in: what the end of the earlier attempt left goes - the tracker's
+     * mark of an end the app never presented, and the release the end left for the incoming-call
+     * service.
+     */
     private fun reopenForNewAttempt(
         callId: String,
         offeredAtMs: Long?,
@@ -696,42 +700,56 @@ class InProcessCallkeepCore internal constructor(
         Log.i(TAG, "Incoming call $callId offered at $offeredAtMs, after its end at $endedAt: a new attempt (pending release dropped=$releaseDropped)")
     }
 
-    /** Drops the pending release the end of [ended] left, so the new attempt of [callId] is shown. */
-    private fun dropReleaseOfEndedAttempt(
-        callId: String,
-        ended: CallAttempts.Attempt,
-    ) {
-        val releaseDropped = PendingBroadcastQueue.consume(PendingBroadcastQueue.incomingReleaseKey(callId))
-        Log.i(TAG, "Incoming call $callId: a new attempt after the end of ${ended.instanceId} (pending release dropped=$releaseDropped)")
-    }
-
     private fun via(client: Any): CallAttempts.Via = if (client is CallEndListener) CallAttempts.Via.OTHER else CallAttempts.Via.PUSH
+
+    /** Whether the offer and the ended attempt it follows both carry Core's offered_at. */
+    private fun bothFromCore(
+        decision: CallAttempts.Decision,
+        offeredAt: CallAttempts.OfferTime?,
+    ): Boolean {
+        val ended =
+            when (decision) {
+                is CallAttempts.Decision.New -> decision.replaces
+                is CallAttempts.Decision.Ghost -> decision.attempt
+                else -> null
+            }
+        return offeredAt?.source == CallAttempts.OfferTimeSource.CORE && ended?.offeredAt?.source == CallAttempts.OfferTimeSource.CORE
+    }
 
     override suspend fun registerIncomingCall(
         metadata: CallMetadata,
         client: Any,
         offeredAtMs: Long?,
+        offeredAtSource: CallAttempts.OfferTimeSource?,
+        via: CallAttempts.Via?,
     ): PIncomingCallError? {
         ensureReceiving()
         val callId = metadata.callId
-        val decision = attempts.resolve(callId, offeredAtMs?.let { CallAttempts.OfferTime(it, OFFER_TIME_SOURCE) }, via(client))
-        if (wasEndedWithoutFlutterState(callId)) {
-            // The app ended an earlier attempt before presenting it: only an offer after that end
-            // is let in (the rule of the tracker's mark, unchanged).
-            if (isOfferedAfterEnd(callId, offeredAtMs)) {
-                reopenForNewAttempt(callId, offeredAtMs)
-            } else {
-                Log.i(TAG, "Incoming call $callId refused: the app ended it before it was presented (offered at $offeredAtMs)")
-                if (decision is CallAttempts.Decision.New || decision is CallAttempts.Decision.Unconfirmed) {
-                    attempts.end(decision.attempt.instanceId)
-                }
-                return PIncomingCallError(PIncomingCallErrorEnum.CALL_ID_ALREADY_TERMINATED)
+        val offeredAt = offeredAtMs?.let { CallAttempts.OfferTime(it, offeredAtSource ?: OFFER_TIME_SOURCE) }
+        val decision = attempts.resolve(callId, offeredAt, via ?: via(client))
+        // Whether the offer is a new attempt of an id whose earlier attempt ended (true), a late copy
+        // of that attempt (false), or nothing ended to tell it against (null). With Core's offered_at
+        // on the offer and on the ended attempt the registry tells it by equality, whatever ended the
+        // attempt. TEMPORARY(old Core without offered_at): otherwise only an end the app never
+        // presented is told against, by the time of the offer after it (the tracker's mark).
+        val newAttempt =
+            when {
+                bothFromCore(decision, offeredAt) -> decision is CallAttempts.Decision.New
+                wasEndedWithoutFlutterState(callId) -> isOfferedAfterEnd(callId, offeredAtMs)
+                decision is CallAttempts.Decision.New && decision.replaces != null -> true
+                else -> null
             }
-        } else if (decision is CallAttempts.Decision.New && decision.replaces != null) {
-            // A new attempt of an id whose earlier attempt the app presented and ended (a transfer
-            // back): what that end left for the incoming-call service is not this attempt's.
-            dropReleaseOfEndedAttempt(callId, decision.replaces)
+        if (newAttempt == false) {
+            val why = if (wasEndedWithoutFlutterState(callId)) "the app ended it before it was presented" else "a late copy of its ended attempt"
+            Log.i(TAG, "Incoming call $callId refused: $why (offered at $offeredAtMs)")
+            if (decision is CallAttempts.Decision.New || decision is CallAttempts.Decision.Unconfirmed) {
+                attempts.end(decision.attempt.instanceId)
+            }
+            return PIncomingCallError(PIncomingCallErrorEnum.CALL_ID_ALREADY_TERMINATED)
         }
+        // A new attempt (a transfer back, a retried transfer): what the end of the earlier attempt
+        // left is not this attempt's.
+        if (newAttempt == true) reopenForNewAttempt(callId, offeredAtMs)
         // The attempt goes with the call to the backend: a late Telecom callback or a cancellation
         // of an earlier attempt of this id is told apart from this one by it.
         val call = metadata.copy(attemptId = decision.attempt.instanceId)
@@ -932,9 +950,8 @@ class InProcessCallkeepCore internal constructor(
     companion object {
         private const val TAG = "InProcessCallkeepCore"
 
-        // TEMPORARY(old Core without offered_at): a report names no source for its offer time (the
-        // push reports the FCM sentTime, the app the time it has), so it is compared with the end
-        // as before. Goes once the reports carry Core's offered_at and its source.
+        // TEMPORARY(old Core without offered_at): the source of a report that names none (an SMS, a
+        // caller of the old shape): compared with the end as before.
         private val OFFER_TIME_SOURCE = CallAttempts.OfferTimeSource.FCM
 
         // How long an incoming registration waits for Telecom before it is rejected. The safety

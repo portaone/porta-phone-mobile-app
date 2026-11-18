@@ -110,6 +110,8 @@ class WebtritCallkeepWeb extends WebtritCallkeepPlatform {
     String? displayName,
     bool hasVideo, {
     DateTime? offeredAt,
+    CallkeepOfferTimeSource? offeredAtSource,
+    CallkeepOfferVia? offeredVia,
   }) async {
     if (_connections.containsKey(callId)) {
       final state = _connections[callId]!.state;
@@ -371,6 +373,7 @@ class WebtritCallkeepWeb extends WebtritCallkeepPlatform {
     String? displayName,
     bool hasVideo, {
     DateTime? offeredAt,
+    CallkeepOfferTimeSource? offeredAtSource,
   }) async => null;
 
   @override

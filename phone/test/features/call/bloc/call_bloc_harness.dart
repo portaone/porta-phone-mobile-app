@@ -568,6 +568,8 @@ class FakeCallkeep extends Fake implements Callkeep {
     String? displayName,
     bool hasVideo = false,
     DateTime? offeredAt,
+    CallkeepOfferTimeSource? offeredAtSource,
+    CallkeepOfferVia? offeredVia,
   }) async {
     incomingReports.add((callId, offeredAt));
     if (incomingRegistrationError == null) endedUnseen.remove(callId);

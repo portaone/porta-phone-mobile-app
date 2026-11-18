@@ -314,12 +314,16 @@ interface CallkeepCore {
      * [offeredAtMs] is when the server offered the call (epoch milliseconds), null when unknown. A
      * call the app ended before it presented it is refused, so a replay of it does not ring; a call
      * offered after that end is a new attempt of the id (a blind transfer repeated offers the same
-     * id again) and is registered.
+     * id again) and is registered. [offeredAtSource] says where that time comes from and [via] how
+     * the offer reached the app (CallAttempts); null leaves the temporary default of a report that
+     * names neither.
      */
     suspend fun registerIncomingCall(
         metadata: CallMetadata,
         client: Any,
         offeredAtMs: Long? = null,
+        offeredAtSource: CallAttempts.OfferTimeSource? = null,
+        via: CallAttempts.Via? = null,
     ): PIncomingCallError?
 
     /** The activity bridge is gone; other clients and their calls remain live. */

@@ -276,6 +276,51 @@ class ReportCallEndedTest {
         assertTrue(PendingBroadcastQueue.consume(PendingBroadcastQueue.incomingReleaseKey("c1")))
     }
 
+    // With Core's offered_at on both offers a new attempt is told by equality, not by clocks.
+
+    @Test
+    fun `a new offered_at after an unpresented end is a new attempt even when this phone's clock is ahead`() {
+        report("c1", offeredAtMs = 1_000, source = CallAttempts.OfferTimeSource.CORE)
+        core.reportCallEnded(CallMetadata(callId = "c1"), PEndCallReasonEnum.MISSED_WHILE_CONNECTING)
+
+        val retried = report("c1", offeredAtMs = 2_000, source = CallAttempts.OfferTimeSource.CORE)
+
+        assertFalse("the retried transfer waits for Telecom", retried.isCompleted)
+        assertFalse(core.wasEndedWithoutFlutterState("c1"))
+    }
+
+    @Test
+    fun `a late copy of a presented call with its offered_at is refused`() {
+        report("c1", offeredAtMs = 1_000, source = CallAttempts.OfferTimeSource.CORE)
+        core.reportCallEnded(CallMetadata(callId = "c1"), PEndCallReasonEnum.REMOTE_ENDED)
+
+        val late = report("c1", offeredAtMs = 1_000, source = CallAttempts.OfferTimeSource.CORE)
+
+        assertEquals(PIncomingCallErrorEnum.CALL_ID_ALREADY_TERMINATED, late.result()?.value)
+    }
+
+    @Test
+    fun `a transfer back of a presented call with another offered_at registers`() {
+        report("c1", offeredAtMs = 1_000, source = CallAttempts.OfferTimeSource.CORE)
+        core.reportCallEnded(CallMetadata(callId = "c1"), PEndCallReasonEnum.REMOTE_ENDED)
+
+        val back = report("c1", offeredAtMs = 2_000, source = CallAttempts.OfferTimeSource.CORE)
+
+        assertFalse("the transfer back waits for Telecom", back.isCompleted)
+        assertFalse(PendingBroadcastQueue.consume(PendingBroadcastQueue.incomingReleaseKey("c1")))
+    }
+
+    @Test
+    fun `the offered_at of the unpresented attempt is refused as its late copy`() {
+        report("c1", offeredAtMs = 1_000, source = CallAttempts.OfferTimeSource.CORE)
+        core.reportCallEnded(CallMetadata(callId = "c1"), PEndCallReasonEnum.MISSED_WHILE_CONNECTING)
+
+        val late = report("c1", offeredAtMs = 1_000, source = CallAttempts.OfferTimeSource.CORE)
+
+        assertEquals(PIncomingCallErrorEnum.CALL_ID_ALREADY_TERMINATED, late.result()?.value)
+        assertTrue(core.wasEndedWithoutFlutterState("c1"))
+    }
+
     private fun offMain(block: () -> Unit) {
         val worker = Executors.newSingleThreadExecutor()
         try {
@@ -288,7 +333,8 @@ class ReportCallEndedTest {
     private fun report(
         callId: String,
         offeredAtMs: Long? = null,
-    ): Deferred<PIncomingCallError?> = scope.async { core.registerIncomingCall(CallMetadata(callId = callId), "push", offeredAtMs) }.also { idle() }
+        source: CallAttempts.OfferTimeSource? = null,
+    ): Deferred<PIncomingCallError?> = scope.async { core.registerIncomingCall(CallMetadata(callId = callId), "push", offeredAtMs, source) }.also { idle() }
 
     private fun event(
         event: CallLifecycleEvent,

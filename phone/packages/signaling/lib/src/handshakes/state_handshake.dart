@@ -40,6 +40,9 @@ class Line extends Equatable {
 abstract class CallLog extends Equatable {
   const CallLog({required this.timestamp});
 
+  /// The server's time of the logged request or event, epoch milliseconds by Core's clock. For an
+  /// incoming_call it is the event's `offered_at` from a Core that sends it: the same value the app
+  /// got in the event and the push, which identifies the offer.
   final int timestamp;
 
   @override

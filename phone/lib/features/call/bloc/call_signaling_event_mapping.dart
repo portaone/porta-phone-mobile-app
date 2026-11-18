@@ -21,8 +21,15 @@ extension _SignalingEventMapping on Event {
         _logger.info(
           'toCallEvent: IncomingCallEvent callId=${event.callId} caller=${event.caller} callee=${event.callee}',
         );
-        // The socket delivers a call as the server offers it: taken now, before any queue of the bloc.
-        return _IncomingCallEventMapping(event).toCallEvent(offeredAt: clock.now());
+        // Core's offered_at when it sends one; otherwise the socket delivers a call as the server
+        // offers it, so it is taken now, before any queue of the bloc.
+        final coreOfferedAt = event.offeredAt;
+        return _IncomingCallEventMapping(event).toCallEvent(
+          offeredAt: coreOfferedAt != null ? DateTime.fromMillisecondsSinceEpoch(coreOfferedAt) : clock.now(),
+          // TEMPORARY(old Core without offered_at): device.
+          offeredAtSource: coreOfferedAt != null ? CallkeepOfferTimeSource.core : CallkeepOfferTimeSource.device,
+          offeredVia: CallkeepOfferVia.socket,
+        );
       case RingingEvent():
         _logger.info('toCallEvent: RingingEvent');
         return _CallSignalingEvent.ringing(line: event.line, callId: event.callId);
@@ -233,7 +240,12 @@ extension _SignalingEventMapping on Event {
 extension _IncomingCallEventMapping on IncomingCallEvent {
   /// [remoteVideo] is the caller's camera as a log last reported it, which
   /// only a restored call has.
-  CallEvent toCallEvent({required DateTime? offeredAt, bool? remoteVideo}) {
+  CallEvent toCallEvent({
+    required DateTime? offeredAt,
+    CallkeepOfferTimeSource? offeredAtSource,
+    CallkeepOfferVia? offeredVia,
+    bool? remoteVideo,
+  }) {
     return _CallSignalingEvent.incoming(
       line: line,
       callId: callId,
@@ -246,6 +258,8 @@ extension _IncomingCallEventMapping on IncomingCallEvent {
       jsep: JsepValue.fromOptional(jsep),
       remoteVideo: remoteVideo,
       offeredAt: offeredAt,
+      offeredAtSource: offeredAtSource,
+      offeredVia: offeredVia,
     );
   }
 }
