@@ -64,6 +64,7 @@ class ConferenceVideoSession {
     required ConferenceVideoSend send,
     required this.onFeedsChanged,
     this.callsWantCamera,
+    this.onCameraError,
     this.retryDelay = const Duration(seconds: 2),
   }) : _factory = factory,
        _userMediaBuilder = userMediaBuilder,
@@ -78,6 +79,11 @@ class ConferenceVideoSession {
   /// the room lets the track go: they may have changed their mind while the
   /// room held it. Without it the track goes back as the room found it.
   final bool Function()? callsWantCamera;
+
+  /// Told when the camera or the publisher connection could not be opened
+  /// for a publication - no permission, a camera in use - so that the owner
+  /// can say so; the publication is given up.
+  final void Function(Object error, StackTrace stackTrace)? onCameraError;
 
   /// How long a request the room could not take yet (`attach_failed`) waits
   /// before it is asked again.
@@ -305,9 +311,10 @@ class ConferenceVideoSession {
     final RTCPeerConnection peerConnection;
     try {
       peerConnection = await _openPublisher(frontCamera: _frontCamera);
-    } catch (e) {
+    } catch (e, stackTrace) {
       _logger.warning('publish: the camera or the connection could not be opened', e);
       _publishing = false;
+      onCameraError?.call(e, stackTrace);
       return false;
     }
     return _offer(peerConnection, iceRestart: false, firstOffer: true);

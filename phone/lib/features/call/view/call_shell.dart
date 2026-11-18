@@ -155,7 +155,11 @@ class _CallShellState extends State<CallShell> {
 
     // Can't compare muted track because its mutated in prev and next states together
     // TODO: optimize later
-    return prevCall != nextCall;
+    // A call joining a room that already stands changes neither the call nor
+    // whether there is a room, and its preview goes all the same.
+    final nextId = nextCall?.callId;
+    final joinedOrLeft = nextId != null && previous.conference.isLeg(nextId) != current.conference.isLeg(nextId);
+    return prevCall != nextCall || previous.conference.isPresent != current.conference.isPresent || joinedOrLeft;
   }
 
   void _updateOrientations(BuildContext context, CallDisplay display) {
@@ -199,7 +203,9 @@ class _CallShellState extends State<CallShell> {
 
       case CallDisplay.screen:
         final activeCall = state.activeCalls.current;
-        if (activeCall.isCameraActive) {
+        // In a room the host's own camera is not on the default screen; a
+        // video call outside the room keeps its preview.
+        if (activeCall.isCameraActive && !state.conference.isLeg(activeCall.callId)) {
           _showLocalCameraPreview(context, state);
         } else {
           _hideOverlay();

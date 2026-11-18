@@ -424,6 +424,10 @@ class FakeSignalingModule extends Fake implements SignalingModule {
   /// Thrown by [execute] instead of an ack while set.
   Object? failure;
 
+  /// What [execute] throws for one request, `null` for an ack; asked before
+  /// [failure], to refuse some requests and take the rest.
+  Object? Function(Request request)? failureFor;
+
   /// While set, [execute] records the request and then waits for this to
   /// complete before answering - to interleave something with a request in
   /// flight.
@@ -469,7 +473,7 @@ class FakeSignalingModule extends Fake implements SignalingModule {
     requests.add(request);
     await gate?.future;
     answered.add(request);
-    final error = failure;
+    final error = failureFor?.call(request) ?? failure;
     if (error != null) throw error;
   }
 

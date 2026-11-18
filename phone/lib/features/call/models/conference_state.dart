@@ -1,4 +1,5 @@
 import 'package:collection/collection.dart';
+import 'package:flutter_webrtc/flutter_webrtc.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:signaling/signaling.dart';
 
@@ -38,6 +39,9 @@ class ConferenceState with _$ConferenceState {
     this.legs = const {},
     this.participants = const [],
     this.selfMuted = false,
+    this.videoFeeds = const {},
+    this.selfVideo,
+    this.videoDisabled = false,
   });
 
   /// The room the server assigned, from the conference offer; `null` before it.
@@ -53,6 +57,26 @@ class ConferenceState with _$ConferenceState {
 
   /// Whether the host's own microphone is muted towards the room.
   final bool selfMuted;
+
+  /// The cameras this client receives from the video room, by feed
+  /// (`ConferenceVideoSession`); empty without a video room.
+  final Map<int, MediaStream> videoFeeds;
+
+  /// The host's own camera as it is published to the video room; `null`
+  /// while it is not.
+  final MediaStream? selfVideo;
+
+  /// The server refused this room's video with `video_disabled`: it has no
+  /// video room, whatever the server's rooms have in general, and is audio
+  /// only to its end.
+  final bool videoDisabled;
+
+  /// Whether the room carries any video at all, the host's own included.
+  bool get hasVideo => videoFeeds.isNotEmpty || selfVideo != null;
+
+  /// The camera of the far end of [line], when the room sends one: the far
+  /// end of the host's line N is feed N + 2.
+  MediaStream? videoOfLine(int line) => videoFeeds[line + 2];
 
   /// A room exists, whether still assembling or already active.
   bool get isPresent => phase != ConferencePhase.none;

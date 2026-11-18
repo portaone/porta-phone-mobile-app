@@ -559,6 +559,9 @@ abstract final class CallMapper {
     // socket on it instead of refusing (see CoreInfo.supportsConferenceRejoin).
     final isConferenceRejoinEnabled = systemInfo?.core.supportsConferenceRejoin ?? false;
 
+    // Capability-gated: the core says whether its conferences have a video room.
+    final isConferenceVideoEnabled = systemInfo?.core.conferenceVideo ?? false;
+
     return CallConfig(
       capabilities: CallCapabilitiesConfig(
         isVideoCallEnabled: isVideoEnabled,
@@ -568,6 +571,7 @@ abstract final class CallMapper {
         isPeerMessageEnabled: isPeerMessageEnabled,
         isConferenceEnabled: isConferenceEnabled,
         isConferenceRejoinEnabled: isConferenceRejoinEnabled,
+        isConferenceVideoEnabled: isConferenceVideoEnabled,
       ),
       triggerConfig: CallTriggerConfig(
         smsFallback: SmsFallbackTriggerConfig(
