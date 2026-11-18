@@ -45,7 +45,7 @@ Widget callWatchFace({
 }) {
   final focusedCall = focused ?? calls.first;
   final state = CallState(linesCount: 3, activeCalls: calls, conference: conference);
-  return CallControlsWatch(
+  return CallScreenWatch(
     onPageOpenChanged: onPageOpenChanged,
     callStatus: CallStatus.ready,
     video: CallWatchVideoOptions(
@@ -54,7 +54,7 @@ Widget callWatchFace({
       backgroundMode: VideoBackgroundMode.blur,
       onBackgroundToggled: () => sent.add('blur'),
     ),
-    params: CallControlsParams(
+    params: CallScreenParams(
       activeCalls: calls,
       focusedCall: focusedCall,
       availableAudioDevices: devices,

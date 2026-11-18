@@ -15,13 +15,14 @@ import 'call_controls_portrait.dart';
 import 'call_toolbar_status.dart';
 import 'popup_menu.dart';
 
-/// Everything the call layouts present and dispatch, bundled once: the calls
+/// Everything the call screen presents and dispatches, bundled once: the calls
 /// on screen, the display state around them, and the intent callbacks the
-/// controls fire. One object travels from the screen through the orientation
-/// selector into both layouts and the action area, so a new control means one
-/// new field instead of a change in every constructor on the way.
-class CallControlsParams {
-  const CallControlsParams({
+/// controls fire. One object travels from the screen into its arrangement -
+/// the phone's layouts and action area, the watch's face and pages - so a new
+/// control means one new field instead of a change in every constructor on
+/// the way.
+class CallScreenParams {
+  const CallScreenParams({
     required this.activeCalls,
     required this.focusedCall,
     required this.availableAudioDevices,
@@ -224,7 +225,7 @@ class CallControls extends StatelessWidget {
   /// owns how the video is fitted and what is behind it.
   final List<PopupMenuEntry<void>> popupMenuItems;
 
-  final CallControlsParams params;
+  final CallScreenParams params;
 
   @override
   Widget build(BuildContext context) {

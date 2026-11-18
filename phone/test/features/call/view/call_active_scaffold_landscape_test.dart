@@ -456,7 +456,7 @@ void main() {
         held: false,
         acceptedTime: DateTime(2024),
       );
-      final params = CallControlsParams(
+      final params = CallScreenParams(
         activeCalls: [videoCall],
         focusedCall: videoCall,
         availableAudioDevices: const [],

@@ -15,7 +15,7 @@ import 'call_controls.dart';
 class CallActionAvailability {
   CallActionAvailability(this.params);
 
-  final CallControlsParams params;
+  final CallScreenParams params;
 
   ActiveCall get _call => params.focusedCall;
   CallCapabilitiesConfig get _config => params.callConfig;

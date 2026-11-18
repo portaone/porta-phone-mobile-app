@@ -1,7 +1,7 @@
 // The first page of the call screen's routes (callScreenRoutes of the app
 // router): the call itself. It shows what the routes' host hands over in
 // CallScreenHomeScope - the default screen from CallScreenHandset, the face from
-// CallControlsWatch. The watch's other pages are in
+// CallScreenWatch. The watch's other pages are in
 // call_watch_screen_pages.dart.
 import 'package:material_ui/material_ui.dart';
 

@@ -20,7 +20,7 @@ import 'incoming_call_actions.dart';
 class CallActionArea extends StatelessWidget {
   const CallActionArea({super.key, required this.params, this.hangupRowShown = true, this.padded = true});
 
-  final CallControlsParams params;
+  final CallScreenParams params;
 
   /// Whether the control grid keeps its own hangup row (see
   /// [ActiveCallActions.hangupRowShown]); the landscape layout renders the

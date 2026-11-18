@@ -15,7 +15,7 @@ import 'call_remote_avatar.dart';
 class CallControlsPortrait extends StatelessWidget {
   const CallControlsPortrait({super.key, required this.params});
 
-  final CallControlsParams params;
+  final CallScreenParams params;
 
   @override
   Widget build(BuildContext context) {

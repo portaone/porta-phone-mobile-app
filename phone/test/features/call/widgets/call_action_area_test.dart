@@ -35,7 +35,7 @@ void main() {
         canStartAttendedTransfer ??
         state.canLinkCallTo(focusedCall.callId, purpose: LinkedCallPurpose.attendedTransfer, isConferenceEnabled: true);
     return CallActionArea(
-      params: CallControlsParams(
+      params: CallScreenParams(
         activeCalls: activeCalls,
         focusedCall: focusedCall,
         availableAudioDevices: const [],

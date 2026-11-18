@@ -28,7 +28,7 @@ import 'call_remote_avatar.dart';
 class CallControlsLandscape extends StatelessWidget {
   const CallControlsLandscape({super.key, required this.params});
 
-  final CallControlsParams params;
+  final CallScreenParams params;
 
   @override
   Widget build(BuildContext context) {
@@ -151,7 +151,7 @@ class CallControlsLandscape extends StatelessWidget {
 class _InfoZone extends StatelessWidget {
   const _InfoZone({required this.params, required this.style});
 
-  final CallControlsParams params;
+  final CallScreenParams params;
   final CallScreenStyle? style;
 
   @override

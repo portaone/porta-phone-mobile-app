@@ -136,7 +136,7 @@ what it does.
 |--------------------------|----------------------------------------|-----------------------------------------------------------------------------|
 | `CallActiveScaffold`     | `view/call_active_scaffold.dart`       | Active call screen; owns keypad/DTMF state and the control intents          |
 | `CallScreenHandset`      | `view/call_screen_handset.dart`     | The phone's routes under the call screen (`callScreenRoutes`), the whole screen: it hands `CallControls`, off the system's areas, to their first page `CallHomeScreenPage` (`view/call_home_screen_page.dart`) through `CallScreenHomeScope`; the menus the controls open sit in these routes, so they close with the call screen, and are closed when the controls hide |
-| `CallControls`           | `widgets/call_controls.dart`           | Toolbar + orientation selector; also defines `CallControlsParams`, the one object all wiring travels in |
+| `CallControls`           | `widgets/call_controls.dart`           | Toolbar + orientation selector; also defines `CallScreenParams`, the one object all wiring travels in |
 | `CallControlsPortrait`   | `widgets/call_controls_portrait.dart`  | Portrait arrangement: info on top, avatar flexing, actions at the bottom    |
 | `CallControlsLandscape`  | `widgets/call_controls_landscape.dart` | Landscape arrangement: info zone, action grid, hangup apart behind a rule |
 | `CallInfoBlock`          | `widgets/call_info_block.dart`         | Who the screen is about: the roster with several calls, `CallInfo` with one |

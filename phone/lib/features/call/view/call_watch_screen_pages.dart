@@ -4,7 +4,7 @@ import 'package:auto_route/auto_route.dart';
 
 import 'package:webtrit_phone/app/router/app_router.dart';
 
-import '../widgets/watch/call_controls_watch.dart';
+import '../widgets/watch/call_watch_face.dart';
 import '../widgets/watch/call_watch_menus.dart';
 
 /// The call's other actions.

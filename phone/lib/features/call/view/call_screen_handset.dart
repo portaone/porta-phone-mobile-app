@@ -1,7 +1,7 @@
 // The call screen on a phone: the call screen's routes, a stack of one page,
 // the default screen with the call's controls (CallControls). Used by
 // CallActiveScaffold in its handset layout; the watch's counterpart is
-// CallControlsWatch, on the same routes.
+// CallScreenWatch, on the same routes.
 //
 // The first page shows what this widget hands over in CallScreenHomeScope; the
 // routes are callScreenRoutes of the app router. They cover the whole screen
@@ -35,7 +35,7 @@ class CallScreenHandset extends StatelessWidget {
 
   final CallStatus callStatus;
   final List<PopupMenuEntry<void>> popupMenuItems;
-  final CallControlsParams params;
+  final CallScreenParams params;
 
   @override
   Widget build(BuildContext context) {

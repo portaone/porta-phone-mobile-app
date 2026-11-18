@@ -1,6 +1,6 @@
 // What the first page of the call screen's routes shows, put over the routes
 // by their host: CallScreenHandset hands over the phone's default screen,
-// CallControlsWatch the face. The page is CallHomeScreenPage
+// CallScreenWatch the face. The page is CallHomeScreenPage
 // (view/call_home_screen_page.dart).
 import 'package:material_ui/material_ui.dart';
 
@@ -17,7 +17,7 @@ class CallScreenHomeScope extends InheritedWidget {
   /// one, since the routes are built by a host only.
   static CallScreenHomeScope of(BuildContext context) {
     final home = context.dependOnInheritedWidgetOfExactType<CallScreenHomeScope>();
-    assert(home != null, 'The call screen routes are built under CallScreenHandset or CallControlsWatch');
+    assert(home != null, 'The call screen routes are built under CallScreenHandset or CallScreenWatch');
     return home!;
   }
 

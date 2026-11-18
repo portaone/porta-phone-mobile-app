@@ -376,7 +376,7 @@ class CallActiveScaffoldState extends State<CallActiveScaffold> {
     final style = Theme.of(context).extension<CallScreenStyles>()?.primary;
 
     // One set of values for whichever arrangement shows them.
-    final controlsParams = CallControlsParams(
+    final controlsParams = CallScreenParams(
       voiceNoiseReductionFailed: widget.voiceNoiseReductionFailed,
       activeCalls: widget.activeCalls,
       focusedCall: widget.focusedCall,
@@ -442,7 +442,7 @@ class CallActiveScaffoldState extends State<CallActiveScaffold> {
       watch: (_) => _frame(
         activeCall: activeCall,
         style: style,
-        controls: CallControlsWatch(
+        controls: CallScreenWatch(
           onPageOpenChanged: _onWatchPageOpenChanged,
           callStatus: widget.callStatus,
           params: controlsParams,
@@ -530,7 +530,7 @@ class CallActiveScaffoldState extends State<CallActiveScaffold> {
                   animation: _compactController,
                   // No inset here: each host of the controls keeps its own
                   // routes off the system's areas (CallScreenHandset,
-                  // CallControlsWatch), so a menu in them covers the screen.
+                  // CallScreenWatch), so a menu in them covers the screen.
                   builder: (context, child) =>
                       HideableLayer(hidden: _compactController.compact, padding: EdgeInsets.zero, child: child!),
                   child: controls,
