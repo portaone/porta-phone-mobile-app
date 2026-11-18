@@ -57,7 +57,7 @@ class CallActionArea extends StatelessWidget {
         // Blocks signaling-dependent actions (hold, transfer, camera).
         // False during: interaction debounce, signaling not ready, SDP renegotiation.
         enableInteractions: interactionsEnabled,
-        cameraValue: focusedCall.isCameraActive,
+        cameraValue: actions.cameraValue,
         cameraPermissionDenied: actions.cameraPermissionDenied,
         onCameraPermissionDeniedPressed: params.onCameraPermissionDeniedPressed,
         onCameraChanged: actions.onCameraChanged,

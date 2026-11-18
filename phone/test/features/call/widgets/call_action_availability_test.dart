@@ -4,6 +4,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:webtrit_phone/features/call/call.dart';
 import 'package:webtrit_phone/models/models.dart';
 
+import '../bloc/call_bloc_harness.dart' show FakeMediaStream;
 import '../view/call_active_scaffold_harness.dart';
 
 void main() {
@@ -20,9 +21,12 @@ void main() {
     ActiveCall? focused,
     CallCapabilitiesConfig config = const CallCapabilitiesConfig(),
     ConferenceState conference = const ConferenceState(),
+    InvitedConferenceVideo? invitedVideo,
     bool conferenceParked = false,
     ValueChanged<bool>? onMutedChanged,
     ValueChanged<bool>? onConferenceSelfMuted,
+    ValueChanged<bool>? onCameraChanged,
+    ValueChanged<bool>? onConferenceCameraChanged,
     bool interactionsEnabled = true,
     bool canStartAttendedTransfer = false,
     HandOver? handOver,
@@ -40,7 +44,8 @@ void main() {
         dtmfInput: ValueNotifier(''),
         onCallSelected: (_) {},
         onKeypadToggle: (_) {},
-        onCameraChanged: (_) {},
+        onCameraChanged: onCameraChanged ?? (_) {},
+        onConferenceCameraChanged: onConferenceCameraChanged,
         onCameraPermissionDeniedPressed: () {},
         onMutedChanged: onMutedChanged ?? (_) {},
         onAudioDeviceChanged: (_) {},
@@ -52,6 +57,7 @@ void main() {
         onHangup: () {},
         onAccept: () {},
         conference: conference,
+        invitedVideo: invitedVideo,
         conferenceParked: conferenceParked,
         onConferenceSelfMuted: onConferenceSelfMuted,
         canStartAttendedTransfer: canStartAttendedTransfer,
@@ -83,6 +89,94 @@ void main() {
     expect(actions.onBlindTransfer, isNull);
     expect(actions.transferableCalls, isEmpty);
     expect(actions.transferMenuEnabled, isFalse, reason: 'nothing to transfer and nobody to invite');
+  });
+
+  test('on a leg of a room with video the camera is the room\'s', () {
+    // The leg's own video is not forwarded in the room.
+    final room = ConferenceState(
+      phase: ConferencePhase.active,
+      legs: const {'active': 0},
+      selfVideo: FakeMediaStream('camera', tracks: const []),
+    );
+    final callCameras = <bool>[];
+    final roomCameras = <bool>[];
+    final actions = availability(
+      calls: [active],
+      conference: room,
+      config: const CallCapabilitiesConfig(isConferenceVideoEnabled: true),
+      onCameraChanged: callCameras.add,
+      onConferenceCameraChanged: roomCameras.add,
+    );
+
+    expect(actions.cameraActsOnRoom, isTrue);
+    expect(actions.cameraValue, isTrue, reason: 'the host\'s camera is published to the room');
+    actions.onCameraChanged!(false);
+    expect(roomCameras, [false]);
+    expect(callCameras, isEmpty);
+  });
+
+  test('without video in the rooms the camera of a leg is the call\'s own', () {
+    const room = ConferenceState(phase: ConferencePhase.active, legs: {'active': 0});
+    final callCameras = <bool>[];
+    final actions = availability(calls: [active], conference: room, onCameraChanged: callCameras.add);
+
+    expect(actions.cameraActsOnRoom, isFalse);
+    actions.onCameraChanged!(true);
+    expect(callCameras, [true]);
+  });
+
+  test('for a room the server gave no video the camera of a leg offers nothing', () {
+    const room = ConferenceState(phase: ConferencePhase.active, legs: {'active': 0}, videoDisabled: true);
+    final actions = availability(
+      calls: [active],
+      conference: room,
+      config: const CallCapabilitiesConfig(isConferenceVideoEnabled: true, isVideoCallEnabled: true),
+      onConferenceCameraChanged: (_) {},
+    );
+
+    expect(actions.onCameraChanged, isNull, reason: 'neither the room nor the leg has a camera anyone would see');
+  });
+
+  test('on the call an invitation came through, the camera is the room\'s', () {
+    // The call's own video is not used by the room this client was invited to.
+    final callCameras = <bool>[];
+    final roomCameras = <bool>[];
+    final actions = availability(
+      calls: [active],
+      invitedVideo: InvitedConferenceVideo(line: 0, selfVideo: FakeMediaStream('camera', tracks: const [])),
+      config: const CallCapabilitiesConfig(isConferenceVideoEnabled: true, isVideoCallEnabled: true),
+      onCameraChanged: callCameras.add,
+      onConferenceCameraChanged: roomCameras.add,
+    );
+
+    expect(actions.cameraActsOnRoom, isTrue);
+    expect(actions.cameraValue, isTrue, reason: 'the camera is published to that room');
+    actions.onCameraChanged!(false);
+    expect(roomCameras, [false]);
+    expect(callCameras, isEmpty);
+  });
+
+  test('an invitation through another line leaves this call its own camera', () {
+    final actions = availability(
+      calls: [active],
+      invitedVideo: const InvitedConferenceVideo(line: 1),
+      config: const CallCapabilitiesConfig(isConferenceVideoEnabled: true, isVideoCallEnabled: true),
+    );
+
+    expect(actions.cameraActsOnRoom, isFalse);
+  });
+
+  test('a call outside the room keeps its own camera', () {
+    const room = ConferenceState(phase: ConferencePhase.active, legs: {'active': 0});
+    final outside = makeCall(callId: 'outside', acceptedTime: DateTime(2024));
+    final actions = availability(
+      calls: [active, outside],
+      focused: outside,
+      conference: room,
+      config: const CallCapabilitiesConfig(isConferenceVideoEnabled: true),
+    );
+
+    expect(actions.cameraActsOnRoom, isFalse);
   });
 
   test('while the room hears the host, the microphone is the room\'s on any call', () {

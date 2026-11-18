@@ -176,6 +176,26 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
   /// The host's connection to the conference room's mixer; idle without a room.
   late final ConferencePeerConnection _conferencePeerConnection;
 
+  /// The room's video: everyone else's cameras in, this client's camera out
+  /// (protocol section 18). Used only where [CallCapabilitiesConfig.isConferenceVideoEnabled].
+  late final ConferenceVideoSession _conferenceVideo;
+
+  /// What the user asked of the camera in the room's video, and the line of
+  /// an invitation to someone else's room (protocol section 19): set by
+  /// `conference_video_invite`, ended by `conference_video_terminated` or the
+  /// end of that call.
+  final ConferenceCameraPlan _cameraPlan = ConferenceCameraPlan();
+
+  /// Whether the last publication of the room's camera was given up because
+  /// the camera could not be opened, and the reason the room last refused one
+  /// for; read once when a publication comes back failed.
+  bool _cameraOpenFailed = false;
+  String? _cameraRefusal;
+
+  /// Whether this client takes part in a room's video: its own, or one it was
+  /// invited to.
+  bool get _inConferenceVideo => state.conference.isPresent || _cameraPlan.invitedLine != null;
+
   /// The wait for the mixer's offer - after a merge, and after a rejoin: which
   /// attempt is current, whether this session was asked, and the deadline.
   late final RoomOfferWait _offerWait;
@@ -241,7 +261,7 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
   }) : _onMissedCall = onMissedCall,
        _connectivityService = connectivityService,
        _speakerOnMinimize = SpeakerOnMinimize(isEnabled: speakerOnMinimize ?? () => false),
-       super(const CallState()) {
+       super(CallState(conferenceVideo: capabilities.isConferenceVideoEnabled)) {
     _mediaManager = mediaManager ?? CallMediaManager(callkeep: callkeep);
     _offerWait = RoomOfferWait(timeout: conferenceAssemblyTimeout, createTimer: roomOfferDeadlineTimer);
     _roomCodecs = RoomCodecs(
@@ -281,6 +301,22 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
       onConnectionFailed: ({required hadConnected}) {
         if (!isClosed) add(_CallMutationEvent.conferenceConnectionFailed(hadConnected: hadConnected));
       },
+    );
+
+    _conferenceVideo = ConferenceVideoSession(
+      factory: callPeerConnectionManager.factory,
+      userMediaBuilder: userMediaBuilder,
+      send: _sendConferenceVideoRequest,
+      onFeedsChanged: (feeds) {
+        if (!isClosed) add(_CallMutationEvent.conferenceVideoFeeds(feeds));
+      },
+      onCameraError: (error, stackTrace) {
+        _logger.warning('the room camera could not be opened: $error');
+        _cameraOpenFailed = true;
+      },
+      // The camera track is shared with the calls: when the room lets it go
+      // it stays on only for a call whose own camera the user has on.
+      callsWantCamera: () => state.activeCalls.any((call) => call.video && call.hasLocalVideoTrack),
     );
 
     _reconnectController = signalingReconnect;
@@ -405,6 +441,7 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
     // waits for one that is mid-answer, and a teardown racing it would find
     // nothing to close and leave the microphone captured.
     await _conferencePeerConnection.teardown();
+    await _conferenceVideo.teardown();
   }
 
   @override
@@ -431,7 +468,9 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
   /// into the bloc's own event and adds it, which queues it for its handler.
   /// An update of the far end is numbered as the next one of its call.
   void _handleSignalingEvent(Event event) {
-    if (event is UpdatingCallEvent) {
+    if (_isConferenceVideoEvent(event)) {
+      add(_CallMutationEvent.conferenceVideo(event));
+    } else if (event is UpdatingCallEvent) {
       _queueUpdate(event, _remoteUpdates.heardLive(event));
     } else if (event.toCallEvent(activeCalls: state.activeCalls) case final callEvent?) {
       add(callEvent);
@@ -461,6 +500,7 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
     _dropStaleConversationSwitch(change);
     _followActiveCallList(change);
     _followLinkedCall(change);
+    _followInvitedVideoCall(change);
     _logStatusTransitions(change);
     _handleRegistrationChange(change);
 
@@ -786,8 +826,10 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
 
     if (appLifecycleState == AppLifecycleState.paused || appLifecycleState == AppLifecycleState.detached) {
       _reconnectController.notifyAppPaused(hasActiveCalls: state.isActive);
+      _pauseConferenceCameraIfAny();
     } else if (appLifecycleState == AppLifecycleState.resumed) {
       _reconnectController.notifyAppResumed();
+      _resumeConferenceCameraIfPaused();
     }
   }
 
@@ -884,7 +926,11 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
       // still in flight would speak for a room this client has forgotten.
       _offerWait.end();
       await _conferencePeerConnection.teardown();
+      await _conferenceVideo.teardown();
+      _cameraPlan.end();
       emit(state.copyWith(conference: const ConferenceState()));
+    } else if (_cameraPlan.invitedLine != null) {
+      await _endInvitedVideo('every call is reset');
     }
 
     for (var element in state.activeCalls) {
@@ -1187,6 +1233,9 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
 
   Future<void> _onHandshakeSignalingEventState(_HandshakeSignalingEventState event, Emitter<CallState> emit) async {
     emit(state.copyWith(linesCount: event.linesCount));
+    if (_cameraPlan.invitedLine != null && !state.conference.isPresent) {
+      _remakeConferenceVideo('the signalling session came back with an invitation standing');
+    }
 
     add(_RegistrationChange(registration: event.registration));
   }
@@ -1851,6 +1900,8 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
       _CallControlEventConferenceAdded() => __onCallControlEventConferenceAdded(event, emit),
       _CallControlEventConferenceParticipantMuted() => __onCallControlEventConferenceParticipantMuted(event, emit),
       _CallControlEventConferenceSelfMuted() => __onCallControlEventConferenceSelfMuted(event, emit),
+      _CallControlEventConferenceCameraEnabled() => __onCallControlEventConferenceCameraEnabled(event),
+      _CallControlEventConferenceCameraSwitched() => __onCallControlEventConferenceCameraSwitched(emit),
       _CallControlEventConferenceEnded() => __onCallControlEventConferenceEnded(event, emit),
       _CallControlEventAttendedTransferCallPlaced() => __onCallControlEventAttendedTransferCallPlaced(event, emit),
       _CallControlEventLinkedCallPickingStarted() => __onCallControlEventLinkedCallPickingStarted(event, emit),
@@ -2546,6 +2597,10 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
       _CallMutationEventConferenceRejoinReplied() => __onMutationConferenceRejoinReplied(event, emit),
       _CallMutationEventConferenceAnswered() => __onMutationConferenceAnswered(event, emit),
       _CallMutationEventConferenceAnswerFailed() => __onMutationConferenceAnswerFailed(event, emit),
+      _CallMutationEventConferenceVideo() => __onMutationConferenceVideo(event, emit),
+      _CallMutationEventConferenceVideoFeeds() => __onMutationConferenceVideoFeeds(event, emit),
+      _CallMutationEventConferenceVideoDisabled() => __onMutationConferenceVideoDisabled(emit),
+      _CallMutationEventConferenceCameraFacing() => __onMutationConferenceCameraFacing(event, emit),
       _CallMutationEventControlLink() => __onMutationControlLink(event, emit),
       _CallMutationEventLinkedCallJoin() => __onMutationLinkedCallJoin(event, emit),
       _CallMutationEventLinkedCallFinish() => __onMutationLinkedCallFinish(event, emit),
@@ -5145,6 +5200,9 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
           // too is that connection's to say - see [RejoinConferenceAction].
           _logger.info('_handleHandshakeReceived: keeping conference room ${action.room}');
           add(_CallMutationEvent.conferenceUpdated(room: action.room, participants: action.participants));
+          // Events of the room's video sent while the socket was down are
+          // lost and it is not in the handshake (protocol section 18.7).
+          _remakeConferenceVideo('the signalling session came back with the room standing');
 
         case RejoinConferenceAction():
           _logger.info('_handleHandshakeReceived: still on the way back into conference room ${action.room}');
@@ -5427,8 +5485,12 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
   // The wire format and the obligations followed here are in
   // packages/signaling/docs/conference_protocol.md.
 
-  Future<void> __onMutationControlMerge(_CallMutationEventControlMerge e, Emitter<CallState> emit) =>
-      _merge(e.callIds, emit, source: '__onMutationControlMerge');
+  Future<void> __onMutationControlMerge(_CallMutationEventControlMerge e, Emitter<CallState> emit) async {
+    // A client that hosts a room of its own takes no part in the video of
+    // somebody else's: left first, while the leave still goes to that room.
+    if (_cameraPlan.invitedLine != null) await _endInvitedVideo('this client starts a room of its own', leave: true);
+    await _merge(e.callIds, emit, source: '__onMutationControlMerge');
+  }
 
   /// Asks the server to merge [callIds] into a room; [source] names whoever
   /// asked, in the log and on the request.
@@ -5572,12 +5634,20 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
     // hold the link put on is the link's to take off. The room is not held.
     final anchorWasLive = !intoRoom && state.retrieveActiveCall(e.anchorCallId)?.held == false;
 
+    // A participant added to a video conversation is called with video: to a
+    // room that carries video, or for a video call that a room is to be made
+    // of. A SIP participant called without video would never get the room's.
+    final video =
+        e.purpose == LinkedCallPurpose.join &&
+        state.roomTakesVideo &&
+        (intoRoom ? state.conference.hasVideo : state.retrieveActiveCall(e.anchorCallId)?.video == true);
+
     // Always from the main line: a call from another number is placed on the
     // guest line, which has no line number, and a transfer names a call by line.
     await _startOutgoing(
       emit,
       handle: e.handle,
-      video: false,
+      video: video,
       displayName: e.displayName,
       fromNumber: null,
       fromReplaces: null,
@@ -5821,8 +5891,295 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
       _logger.warning('__onMutationConferenceAnswered: ${e.room} is not the room here');
       return;
     }
+    final wasRejoining = state.conference.phase == ConferencePhase.rejoining;
     _offerWait.offerAnswered();
     emit(state.copyWith(conference: state.conference.copyWith(phase: ConferencePhase.active)));
+    _startConferenceVideo(rejoined: wasRejoining);
+  }
+
+  /// Joins the room's video once the host is in the room: everyone else's
+  /// cameras, and his own when one of the merged calls was a video call. After
+  /// a rejoin the video is remade over the new signalling session.
+  void _startConferenceVideo({required bool rejoined}) {
+    if (!capabilities.isConferenceVideoEnabled || state.conference.videoDisabled) return;
+    if (rejoined && (_conferenceVideo.isSubscribed || _conferenceVideo.isPublishing)) {
+      _remakeConferenceVideo('the host is back in the room');
+      return;
+    }
+    if (_conferenceVideo.isSubscribed) return;
+    unawaited(_conferenceVideo.subscribe().catchError(_conferenceVideoError('subscribe')));
+    final camera = state.activeCalls.any((call) => state.conference.isLeg(call.callId) && call.video);
+    if (_cameraPlan.start(camera: camera, inBackground: _appInBackground)) _publishConferenceCamera();
+  }
+
+  /// Makes the room's video again over the signalling session that is up now:
+  /// the subscription from scratch, the publisher with an ICE restart.
+  void _remakeConferenceVideo(String why) {
+    if (!capabilities.isConferenceVideoEnabled) return;
+    if (!_conferenceVideo.isSubscribed && !_conferenceVideo.isPublishing) return;
+    _logger.info('_remakeConferenceVideo: $why');
+    unawaited(_conferenceVideo.reconnected().catchError(_conferenceVideoError('reconnected')));
+  }
+
+  /// Sends a request of the room's video and notes what the bloc itself has
+  /// to know of its answer: a room with no video at all, and why a camera was
+  /// refused.
+  Future<ConferenceRequestResult> _sendConferenceVideoRequest(Request request) async {
+    final result = await _sendConferenceRequest(request, source: 'ConferenceVideoSession');
+    if (result.outcome == ConferenceRequestOutcome.refused) {
+      if (request is ConferenceVideoPublishRequest) _cameraRefusal = result.reason;
+      if (result.reason == _videoDisabled && !isClosed) add(const _CallMutationEvent.conferenceVideoDisabled());
+    }
+    return result;
+  }
+
+  static const _videoDisabled = 'video_disabled';
+
+  /// Publishes the room's camera and, when the publication is given up - the
+  /// camera could not be opened, or the room refused it - says so and takes
+  /// the camera for unwanted, so that the control shows what is.
+  void _publishConferenceCamera() {
+    _cameraOpenFailed = false;
+    _cameraRefusal = null;
+    unawaited(
+      _conferenceVideo.publish().then((taken) {
+        if (taken || isClosed || _conferenceVideo.isPublishing) return;
+        // Taken off by the user or by the background meanwhile: not a failure.
+        if (!_cameraPlan.cameraWanted || _cameraPlan.cameraPaused) return;
+        _cameraPlan.setCamera(false, inBackground: _appInBackground);
+        if (_cameraOpenFailed) {
+          submitNotification(const CallUserMediaErrorNotification());
+        } else if (_cameraRefusal case final reason? when reason != _videoDisabled) {
+          submitNotification(ConferenceRefusedNotification(reason));
+        }
+      }, onError: (Object error, StackTrace stackTrace) => _conferenceVideoError('publish')(error, stackTrace)),
+    );
+  }
+
+  bool get _appInBackground => switch (state.currentAppLifecycleState) {
+    AppLifecycleState.paused || AppLifecycleState.detached || AppLifecycleState.hidden => true,
+    _ => false,
+  };
+
+  /// The camera button of the room: publish the camera, or take it off.
+  ///
+  /// The camera is opened once and shared, so the calls of the room that send
+  /// video turn theirs on and off with it: their video is not forwarded in the
+  /// room, and a call left alone when the room is gone goes on as the camera
+  /// was. A call without a camera is not given one.
+  Future<void> __onCallControlEventConferenceCameraEnabled(_CallControlEventConferenceCameraEnabled event) async {
+    if (!capabilities.isConferenceVideoEnabled || !_inConferenceVideo || state.conference.videoDisabled) return;
+    for (final call in _callsInConferenceVideo) {
+      if (call.video != event.enabled && call.localStream?.getVideoTracks().isNotEmpty == true) {
+        add(_CallMutationEvent.controlSetCameraEnabled(call.callId, event.enabled));
+      }
+    }
+    if (!event.enabled) {
+      // The track the legs just turned off is the one camera every call
+      // shares: a video call outside the room that has its camera on keeps
+      // it, turned on again after them.
+      final inVideo = _callsInConferenceVideo.map((call) => call.callId).toSet();
+      for (final call in state.activeCalls) {
+        if (inVideo.contains(call.callId) || !call.video || !call.hasLocalVideoTrack) continue;
+        add(_CallMutationEvent.controlSetCameraEnabled(call.callId, true));
+      }
+    }
+    if (_cameraPlan.setCamera(event.enabled, inBackground: _appInBackground)) {
+      _publishConferenceCamera();
+    } else if (!event.enabled) {
+      unawaited(_conferenceVideo.unpublish().catchError(_conferenceVideoError('unpublish')));
+    }
+  }
+
+  /// Switches the camera of the room; the calls that share the track switch
+  /// with it, and are told which camera they now show. Not awaited here: the
+  /// session runs its own queue, and a signalling round trip ahead of the
+  /// switch must not hold the controls behind it - ending a call among them.
+  Future<void> __onCallControlEventConferenceCameraSwitched(Emitter<CallState> emit) async {
+    if (!_inConferenceVideo) return;
+    final track = _conferenceVideo.cameraTrack;
+    if (track == null) return;
+    final trackId = track.id;
+    if (trackId == null) return;
+    unawaited(
+      _conferenceVideo.switchCamera().then((frontCamera) {
+        if (frontCamera == null || isClosed) return;
+        add(_CallMutationEvent.conferenceCameraFacing(frontCamera: frontCamera, trackId: trackId));
+      }, onError: (Object error, StackTrace stackTrace) => _conferenceVideoError('switchCamera')(error, stackTrace)),
+    );
+  }
+
+  Future<void> __onMutationConferenceCameraFacing(
+    _CallMutationEventConferenceCameraFacing e,
+    Emitter<CallState> emit,
+  ) async {
+    var next = state;
+    for (final call in _callsInConferenceVideo) {
+      if (call.localStream?.getVideoTracks().firstOrNull?.id != e.trackId) continue;
+      next = next.copyWithMappedActiveCall(call.callId, (call) => call.copyWith(frontCamera: e.frontCamera));
+    }
+    emit(next);
+  }
+
+  /// The room has no video at all (`video_disabled`): nothing more is asked
+  /// of it, and a video call is not offered to it - the server would end the
+  /// whole conference over one (protocol section 17).
+  Future<void> __onMutationConferenceVideoDisabled(Emitter<CallState> emit) async {
+    _logger.info('__onMutationConferenceVideoDisabled');
+    _cameraPlan.setCamera(false, inBackground: _appInBackground);
+    if (state.conference.isPresent && !state.conference.videoDisabled) {
+      emit(state.copyWith(conference: state.conference.copyWith(videoDisabled: true)));
+    }
+  }
+
+  /// The calls the room's video stands on: the legs of the host's room, or
+  /// the call an invitation came through.
+  Iterable<ActiveCall> get _callsInConferenceVideo {
+    final invitedLine = _cameraPlan.invitedLine;
+    return state.activeCalls.where(
+      (call) => state.conference.isLeg(call.callId) || (invitedLine != null && call.line == invitedLine),
+    );
+  }
+
+  /// In the background the camera leaves the room - the others see the avatar
+  /// - and comes back with the app; the audio stays.
+  void _pauseConferenceCameraIfAny() {
+    if (!_inConferenceVideo) return;
+    if (!_cameraPlan.pause(publishing: _conferenceVideo.isPublishing)) return;
+    unawaited(_conferenceVideo.unpublish().catchError(_conferenceVideoError('unpublish')));
+  }
+
+  void _resumeConferenceCameraIfPaused() {
+    if (!_cameraPlan.resume() || !_inConferenceVideo) return;
+    _publishConferenceCamera();
+  }
+
+  /// The call an invitation came through is gone, whether or not
+  /// `conference_video_terminated` arrived for it: the room's video goes with
+  /// it, or the camera would stay captured for a call nobody has.
+  void _followInvitedVideoCall(Change<CallState> change) {
+    final line = _cameraPlan.invitedLine;
+    if (line == null || change.nextState.conference.isPresent) return;
+    if (change.nextState.activeCalls.any((call) => call.line == line)) return;
+    unawaited(_endInvitedVideo('the call on line $line ended'));
+  }
+
+  /// Ends this client's part in somebody else's room; with [leave] the room
+  /// is told, where it is this client that goes and the room that stays.
+  Future<void> _endInvitedVideo(String why, {bool leave = false}) async {
+    _logger.info('_endInvitedVideo: $why');
+    _cameraPlan.end();
+    // The teardown reports the streams gone only when there were some.
+    if (!isClosed) add(const _CallMutationEvent.conferenceVideoFeeds([]));
+    try {
+      await (leave ? _conferenceVideo.leave() : _conferenceVideo.teardown());
+    } catch (error, stackTrace) {
+      _conferenceVideoError('teardown')(error, stackTrace);
+    }
+  }
+
+  bool Function(Object, StackTrace) _conferenceVideoError(String step) => (error, stackTrace) {
+    callErrorReporter.handle(error, stackTrace, '_conferenceVideo $step error');
+    return false;
+  };
+
+  static bool _isConferenceVideoEvent(Event event) =>
+      event is ConferenceVideoInviteEvent ||
+      event is ConferenceVideoTerminatedEvent ||
+      event is ConferenceVideoOfferEvent ||
+      event is ConferenceVideoPublisherAnswerEvent ||
+      event is ConferenceVideoIceTrickleEvent ||
+      event is ConferenceVideoUpdatedEvent ||
+      event is ConferenceVideoFailedEvent;
+
+  /// An event of the room's video, handed to the session; nothing of it is
+  /// taken while no room is up here.
+  Future<void> __onMutationConferenceVideo(_CallMutationEventConferenceVideo e, Emitter<CallState> emit) async {
+    switch (e.event) {
+      case ConferenceVideoInviteEvent(:final line):
+        _acceptVideoInvite(line);
+        return;
+      case ConferenceVideoTerminatedEvent():
+        if (_cameraPlan.invitedLine != null && !state.conference.isPresent) {
+          unawaited(_endInvitedVideo('the video room of line ${_cameraPlan.invitedLine} is over'));
+        }
+        return;
+    }
+    if (!_inConferenceVideo) {
+      _logger.info('__onMutationConferenceVideo: no room here, ${e.event.runtimeType} dropped');
+      return;
+    }
+    if (e.event case ConferenceVideoFailedEvent(request: _?, reason: _videoDisabled)) {
+      add(const _CallMutationEvent.conferenceVideoDisabled());
+    }
+    final Future<void> work = switch (e.event) {
+      ConferenceVideoOfferEvent(:final jsep) => _conferenceVideo.handleOffer(jsep),
+      ConferenceVideoPublisherAnswerEvent(:final jsep) => _conferenceVideo.handlePublisherAnswer(jsep),
+      ConferenceVideoIceTrickleEvent(:final pc?, :final candidate) => _conferenceVideo.handleRemoteCandidate(
+        pc,
+        candidate,
+      ),
+      final ConferenceVideoUpdatedEvent updated => Future.sync(() => _conferenceVideo.handleUpdated(updated)),
+      ConferenceVideoFailedEvent(:final pc?, :final code) => _conferenceVideo.handleFailed(pc, code: code),
+      ConferenceVideoFailedEvent(:final request?, :final reason) => _conferenceVideo.handleRefused(
+        request,
+        reason: reason,
+      ),
+      _ => Future<void>.value(),
+    };
+    // Not awaited: the session runs its own queue, and a media round trip
+    // must not hold the bloc's.
+    unawaited(work.catchError(_conferenceVideoError('${e.event.runtimeType}')));
+  }
+
+  /// Takes part in the video of the room the far end of [line] hosts: this
+  /// client's camera goes to it when that call is a video call, and everyone
+  /// else's comes back (protocol section 19). Ignored without a call there, or
+  /// while this client hosts a room of its own.
+  void _acceptVideoInvite(int line) {
+    if (!capabilities.isConferenceVideoEnabled || state.conference.isPresent) return;
+    final call = state.activeCalls.firstWhereOrNull((call) => call.line == line);
+    if (call == null) {
+      _logger.info('_acceptVideoInvite: no call on line $line, ignoring');
+      return;
+    }
+    _logger.info('_acceptVideoInvite: line $line, video ${call.video}');
+    unawaited(_conferenceVideo.subscribe().catchError(_conferenceVideoError('subscribe')));
+    final publish = _cameraPlan.start(camera: call.video, inBackground: _appInBackground, invitedLine: line);
+    // The invitation is in the state from now on, cameras or not: the camera
+    // control of that call is the room's from here.
+    add(const _CallMutationEvent.conferenceVideoFeeds([]));
+    if (publish) _publishConferenceCamera();
+  }
+
+  /// The cameras the room sends changed.
+  Future<void> __onMutationConferenceVideoFeeds(
+    _CallMutationEventConferenceVideoFeeds e,
+    Emitter<CallState> emit,
+  ) async {
+    final feeds = {
+      for (final feed in e.feeds)
+        if (feed.kind == ConferenceVideoKind.camera) feed.feed: feed.stream,
+    };
+    if (state.conference.isPresent) {
+      emit(
+        // A room of this client's own: an invitation that stood before it is
+        // over, and its video with it.
+        state.copyWith(
+          conference: state.conference.copyWith(videoFeeds: feeds, selfVideo: _conferenceVideo.camera),
+          invitedVideo: null,
+        ),
+      );
+      return;
+    }
+    final invitedLine = _cameraPlan.invitedLine;
+    emit(
+      state.copyWith(
+        invitedVideo: invitedLine == null
+            ? null
+            : InvitedConferenceVideo(line: invitedLine, feeds: feeds, selfVideo: _conferenceVideo.camera),
+      ),
+    );
   }
 
   /// Without a way into the room the host would hear nothing of it: give it
@@ -6376,6 +6733,8 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
     // as the operation this teardown exists to cut short. Giving the legs
     // their audio back touches their own connections, not this one.
     unawaited(_conferencePeerConnection.teardown());
+    unawaited(_conferenceVideo.teardown());
+    _cameraPlan.end();
     if (legIds.isNotEmpty) {
       final error = await callkeep.unsetCallGroup(legIds);
       if (error != null) _logger.warning('_leaveRoom: unsetCallGroup error: $error');

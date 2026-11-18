@@ -45,6 +45,7 @@ class CallScreenParams {
     required this.dtmfInput,
     this.voiceNoiseReductionFailed = false,
     this.conference = const ConferenceState(),
+    this.invitedVideo,
     this.conferenceParked = false,
     this.onConversationSwitched,
     this.onMerge,
@@ -55,6 +56,8 @@ class CallScreenParams {
     this.onConferenceSelfMuted,
     this.onConferenceParticipantMuted,
     this.onConferenceParticipantHangup,
+    this.onConferenceCameraChanged,
+    this.onConferenceCameraSwitched,
     this.audioDevice,
     this.contactResolver,
     this.keypadShown = false,
@@ -116,6 +119,10 @@ class CallScreenParams {
   /// not to any one leg.
   final ConferenceState conference;
 
+  /// The video of somebody else's room this client was invited to through one
+  /// of its calls; the camera control of that call is the room's.
+  final InvitedConferenceVideo? invitedVideo;
+
   /// Whether the room has stood aside for a call outside it
   /// ([CallState.conferenceMustPark]). The action area needs no branch of its
   /// own for it - the focus has already moved to that call - but the panel says
@@ -143,6 +150,12 @@ class CallScreenParams {
   /// Brings the calls outside the room into it; `null` while none of them
   /// can join, which shows the control disabled rather than hiding it.
   final VoidCallback? onConferenceAdd;
+
+  /// Publishes this client's camera to the room's video, or takes it off.
+  final ValueChanged<bool>? onConferenceCameraChanged;
+
+  /// Switches the camera published to the room.
+  final VoidCallback? onConferenceCameraSwitched;
 
   /// Whether somebody can be called into the conversation on the screen;
   /// see [CallState.addParticipantAvailability].

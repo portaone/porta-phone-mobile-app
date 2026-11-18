@@ -17,7 +17,8 @@ that joins it, and how it is taken down.
 lib/features/call/
   conference/
     conference_peer_connection.dart   the client's own connection to the mixer
-    conference_video_session.dart     the room's video: subscriber and publisher connections (not wired yet)
+    conference_camera_plan.dart       what the user asked of the camera in the room's video, and an invitation
+    conference_video_session.dart     the room's video: subscriber and publisher connections
     leg_mute_sync.dart                keeps the platform's mute for each leg in step with the room's
   models/conference_state.dart        ConferenceState, ConferencePhase
   models/linked_call.dart             LinkedCall: a call placed to join a call or the room (purpose join)
@@ -572,12 +573,11 @@ all while there is nothing to tell apart - is taken as this one.
 A room does not survive a Janus restart, and there is exactly one room per
 signalling session.
 
-## Video (not wired yet)
+## Video
 
 `ConferenceVideoSession` is the client's side of the conference video room
 (protocol section 18): two video-only connections next to the mixer's audio one.
-Nothing in `CallBloc` creates it yet; it is the component the video conference will
-be built on.
+`CallBloc` owns one, used only where `CallCapabilitiesConfig.isConferenceVideoEnabled`.
 
 - The **subscriber** receives everyone else's video. `subscribe` asks the room, which
   offers through Core; every offer is answered on the same connection, except the
@@ -629,3 +629,44 @@ be built on.
   the last `conference_video_updated`; a stream the room has not named yet is not
   reported.
 
+### In the bloc
+
+- The host joins the room's video once the mixer's answer is taken: everyone else's
+  cameras, and his own when one of the merged calls was a video call. After a
+  signalling reconnect with the room standing, and after a rejoin, the video is made
+  again over the session that is up: the subscription from scratch, the publisher
+  with an ICE restart (18.7).
+- An invited far end (protocol section 19) joins on `conference_video_invite` through
+  the call on that line; its video ends with `conference_video_terminated`, with the
+  end of that call (whether or not the event arrived) and with a reset of every call.
+  After a signalling reconnect it remakes the video as the host does. The invitation
+  is in `CallState.invitedVideo` from the moment it is taken. A client that merges
+  calls of its own leaves the invitation first (`conference_video_leave`), and its
+  own room gets its own video.
+- A room the server refuses the video of (`video_disabled`) is audio only to its end:
+  `ConferenceState.videoDisabled` is set, nothing more is asked of its video, and a
+  video call is not offered to it (`CallState.roomTakesVideo`) - the server would end
+  the whole conference over one (section 17).
+- What the user asked of the camera is `ConferenceCameraPlan`: it outlives the app
+  going to the background, where the camera is unpublished (the others see the
+  avatar) and from where it is published again. A room that starts while the app is
+  in the background publishes the camera when the app returns. A camera that could
+  not be opened, or that the room refused, is said to the user and taken for
+  unwanted.
+- The camera is opened once and shared with the calls that send video. The room's
+  camera button turns the legs' camera on and off with it - their video is not
+  forwarded in the room, and a call left alone when the room is gone goes on as the
+  camera was - and a camera switch tells the legs which camera they show. A video
+  call outside the room that has its camera on keeps it when the room's is turned
+  off, and when the room lets the camera go it stays on only for a call whose own
+  camera the user has on.
+- The camera control of the default screen is the room's on a leg, and on the call
+  an invitation came through (`CallActionAvailability.cameraActsOnRoom`); for a room
+  with no video it offers nothing.
+- A participant called into a room is called with video when the room carries any
+  (`ConferenceState.hasVideo`); one called for a video call that a room is to be made
+  of, when that call is a video call.
+- Received cameras go to `ConferenceState.videoFeeds` for the host and to
+  `CallState.invitedVideo` for an invited far end; the host's own published camera is
+  `ConferenceState.selfVideo`. A video call outside the room keeps its own preview;
+  one that joins a room loses it.

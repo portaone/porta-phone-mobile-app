@@ -832,6 +832,12 @@ sealed class CallControlEvent extends CallEvent {
   /// Mutes or unmutes the host's own microphone towards the room.
   const factory CallControlEvent.conferenceSelfMuted(bool muted) = _CallControlEventConferenceSelfMuted;
 
+  /// Publishes this client's camera to the room's video, or takes it off.
+  const factory CallControlEvent.conferenceCameraEnabled(bool enabled) = _CallControlEventConferenceCameraEnabled;
+
+  /// Switches the camera published to the room between the front and the rear.
+  const factory CallControlEvent.conferenceCameraSwitched() = _CallControlEventConferenceCameraSwitched;
+
   /// Ends the conference and hangs up every leg.
   /// [endedBy]: who ends the room - the user's hang-up on the call screen passes
   /// [CallkeepEndedBy.user]; each leg's end carries it.
@@ -1106,6 +1112,22 @@ class _CallControlEventConferenceSelfMuted extends CallControlEvent {
 
   @override
   List<Object?> get props => [muted];
+}
+
+class _CallControlEventConferenceCameraEnabled extends CallControlEvent {
+  const _CallControlEventConferenceCameraEnabled(this.enabled);
+
+  final bool enabled;
+
+  @override
+  List<Object?> get props => [enabled];
+}
+
+class _CallControlEventConferenceCameraSwitched extends CallControlEvent {
+  const _CallControlEventConferenceCameraSwitched();
+
+  @override
+  List<Object?> get props => [];
 }
 
 class _CallControlEventConferenceEnded extends CallControlEvent {
@@ -1653,6 +1675,21 @@ sealed class _CallMutationEvent extends CallEvent {
       _CallMutationEventConferenceFailed;
   const factory _CallMutationEvent.conferenceTerminated({int? room}) = _CallMutationEventConferenceTerminated;
 
+  /// An event of the room's video (protocol section 18), for the video session.
+  const factory _CallMutationEvent.conferenceVideo(Event event) = _CallMutationEventConferenceVideo;
+
+  /// The cameras the room sends, as the video session last reported them.
+  const factory _CallMutationEvent.conferenceVideoFeeds(List<ConferenceVideoFeed> feeds) =
+      _CallMutationEventConferenceVideoFeeds;
+
+  /// The server refused the room's video with `video_disabled`.
+  const factory _CallMutationEvent.conferenceVideoDisabled() = _CallMutationEventConferenceVideoDisabled;
+
+  /// The room's camera was switched: [frontCamera] is in use on the track
+  /// [trackId] now.
+  const factory _CallMutationEvent.conferenceCameraFacing({required bool frontCamera, required String trackId}) =
+      _CallMutationEventConferenceCameraFacing;
+
   /// The room has to be given up: it never finished being built, its audio
   /// could not be applied, or there is no way back into it.
   const factory _CallMutationEvent.conferenceLost() = _CallMutationEventConferenceLost;
@@ -2124,6 +2161,34 @@ class _CallMutationEventConferenceTerminated extends _CallMutationEvent {
   final int? room;
   @override
   List<Object?> get props => [room];
+}
+
+class _CallMutationEventConferenceVideo extends _CallMutationEvent {
+  const _CallMutationEventConferenceVideo(this.event);
+  final Event event;
+  @override
+  List<Object?> get props => [event];
+}
+
+class _CallMutationEventConferenceVideoFeeds extends _CallMutationEvent {
+  const _CallMutationEventConferenceVideoFeeds(this.feeds);
+  final List<ConferenceVideoFeed> feeds;
+  @override
+  List<Object?> get props => [feeds];
+}
+
+class _CallMutationEventConferenceVideoDisabled extends _CallMutationEvent {
+  const _CallMutationEventConferenceVideoDisabled();
+  @override
+  List<Object?> get props => const [];
+}
+
+class _CallMutationEventConferenceCameraFacing extends _CallMutationEvent {
+  const _CallMutationEventConferenceCameraFacing({required this.frontCamera, required this.trackId});
+  final bool frontCamera;
+  final String trackId;
+  @override
+  List<Object?> get props => [frontCamera, trackId];
 }
 
 class _CallMutationEventConferenceLost extends _CallMutationEvent {
