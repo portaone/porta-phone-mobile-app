@@ -1,11 +1,10 @@
 // The watch call face on its own, with the callbacks it fires recorded.
+export '../call_screen_router.dart';
+
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:auto_route/auto_route.dart';
 import 'package:flutter_webrtc/flutter_webrtc.dart';
-
-import 'package:webtrit_phone/app/router/app_router.dart';
 
 import 'package:webtrit_phone/features/call/call.dart';
 import 'package:webtrit_phone/l10n/l10n.dart';
@@ -13,6 +12,7 @@ import 'package:webtrit_phone/models/models.dart';
 import 'package:webtrit_phone/widgets/widgets.dart';
 
 import '../../../helpers/screen_presets.dart';
+import '../call_screen_router.dart';
 import '../view/call_active_scaffold_harness.dart';
 
 /// What the face sent to the screen, by callback.
@@ -45,7 +45,7 @@ Widget callWatchFace({
 }) {
   final focusedCall = focused ?? calls.first;
   final state = CallState(linesCount: 3, activeCalls: calls, conference: conference);
-  return CallControlsWatch(
+  return CallScreenWatch(
     onPageOpenChanged: onPageOpenChanged,
     callStatus: CallStatus.ready,
     video: CallWatchVideoOptions(
@@ -54,7 +54,7 @@ Widget callWatchFace({
       backgroundMode: VideoBackgroundMode.blur,
       onBackgroundToggled: () => sent.add('blur'),
     ),
-    params: CallControlsParams(
+    params: CallScreenParams(
       activeCalls: calls,
       focusedCall: focusedCall,
       availableAudioDevices: devices,
@@ -100,56 +100,8 @@ Widget callWatchApp(Widget face) => MaterialApp(
   localizationsDelegates: appLocalizationsDelegates,
   supportedLocales: AppLocalizations.supportedLocales,
   debugShowCheckedModeBanner: false,
-  home: CallWatchBackground(child: CallWatchRouter(child: face)),
+  home: CallWatchBackground(child: CallScreenRouter(child: face)),
 );
-
-/// [child] where the call screen puts the face: under a route that has the
-/// app's call pages as its children, so the face opens and closes them as in
-/// the app. The router lives as long as this widget does, so a test can pump
-/// the face over and over with new calls and keep the pages it opened.
-class CallWatchRouter extends StatefulWidget {
-  const CallWatchRouter({super.key, required this.child});
-
-  final Widget child;
-
-  @override
-  State<CallWatchRouter> createState() => _CallWatchRouterState();
-}
-
-class _CallWatchRouterState extends State<CallWatchRouter> {
-  final _router = _CallScreenRouter();
-
-  @override
-  void dispose() {
-    _router.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) => _Hosted(
-    face: widget.child,
-    child: Router.withConfig(config: _router.config()),
-  );
-}
-
-class _Hosted extends InheritedWidget {
-  const _Hosted({required this.face, required super.child});
-
-  final Widget face;
-
-  @override
-  bool updateShouldNotify(_Hosted oldWidget) => face != oldWidget.face;
-}
-
-class _CallScreenRouter extends RootStackRouter {
-  static final _screen = PageInfo(
-    'CallScreen',
-    builder: (_) => Builder(builder: (context) => context.dependOnInheritedWidgetOfExactType<_Hosted>()!.face),
-  );
-
-  @override
-  List<AutoRoute> get routes => [AutoRoute(page: _screen, initial: true, children: callWatchRoutes)];
-}
 
 /// The call screen's own background behind [child]: the theme's, as the
 /// screen draws it.
@@ -168,7 +120,7 @@ class CallWatchBackground extends StatelessWidget {
   }
 }
 
-/// [pumpCollectingOverflows] for a face under [CallWatchRouter]: the router
+/// [pumpCollectingOverflows] for a face under [CallScreenRouter]: the router
 /// takes its first page a frame later, so the face is laid out - and checked -
 /// in the second round.
 Future<List<String>> pumpCallWatch(WidgetTester tester, Widget app) async => [

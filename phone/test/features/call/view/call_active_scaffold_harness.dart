@@ -23,6 +23,8 @@ import 'package:webtrit_phone/l10n/l10n.dart';
 import 'package:webtrit_phone/models/models.dart';
 import 'package:webtrit_phone/theme/theme.dart';
 
+import '../call_screen_router.dart';
+
 class MockCallBloc extends MockBloc<CallEvent, CallState> implements CallBloc {}
 
 /// Pins the test surface to a phone held upright (360x800 logical).
@@ -230,9 +232,22 @@ Widget buildCallScaffold(
       theme: ThemeData(
         extensions: [CallScreenStyles(primary: CallScreenStyle(appBar: const AppBarStyle(showBackButton: false)))],
       ),
-      home: scaffold,
+      // Under a route with the call screen's pages as children, as in the
+      // app: the handset's controls are the first of them.
+      home: CallScreenRouter(child: scaffold),
     ),
   );
+}
+
+/// Pumps [scaffold] from [buildCallScaffold] until the controls are on it:
+/// the harness's router and the call screen's own each bring up their first
+/// page a frame later.
+Future<void> pumpCallScaffold(WidgetTester tester, Widget scaffold) async {
+  await tester.pumpWidget(scaffold);
+  for (var frame = 0; frame < 4 && find.byType(CallHomeScreenPage).evaluate().isEmpty; frame++) {
+    await tester.pump();
+  }
+  expect(find.byType(CallHomeScreenPage), findsOneWidget, reason: 'the call screen brings up its first page');
 }
 
 /// Disposes the scaffold (cancelling its periodic probe timer) and flushes the

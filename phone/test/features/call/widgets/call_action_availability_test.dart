@@ -30,7 +30,7 @@ void main() {
     void Function(ActiveCall referor, ActiveCall replace)? onAttendedTransferSubmitted,
   }) {
     return CallActionAvailability(
-      CallControlsParams(
+      CallScreenParams(
         activeCalls: calls,
         focusedCall: focused ?? calls.first,
         availableAudioDevices: const [],

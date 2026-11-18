@@ -12,7 +12,7 @@ import '../../models/models.dart';
 import '../../view/call_screen_styles.dart';
 import '../call_action_availability.dart';
 import '../call_controls.dart';
-import 'call_controls_watch.dart';
+import 'call_watch_face.dart';
 import 'call_watch_parts.dart';
 
 /// The call's other actions as a grid: those the call allows, a blocked one
@@ -20,7 +20,7 @@ import 'call_watch_parts.dart';
 class CallWatchMore extends StatelessWidget {
   const CallWatchMore({super.key, required this.params, required this.video, required this.onOpen});
 
-  final CallControlsParams params;
+  final CallScreenParams params;
   final CallWatchVideoOptions video;
   final ValueChanged<PageRouteInfo> onOpen;
 
@@ -130,7 +130,7 @@ class CallWatchMore extends StatelessWidget {
 class CallWatchAudio extends StatelessWidget {
   const CallWatchAudio({super.key, required this.params, required this.onDone});
 
-  final CallControlsParams params;
+  final CallScreenParams params;
   final VoidCallback onDone;
 
   @override
@@ -164,7 +164,7 @@ class CallWatchAudio extends StatelessWidget {
 class CallWatchTransfer extends StatelessWidget {
   const CallWatchTransfer({super.key, required this.params, required this.onDone});
 
-  final CallControlsParams params;
+  final CallScreenParams params;
   final VoidCallback onDone;
 
   @override
@@ -261,7 +261,7 @@ class CallWatchTransfer extends StatelessWidget {
 class CallWatchCalls extends StatelessWidget {
   const CallWatchCalls({super.key, required this.params, required this.onDone});
 
-  final CallControlsParams params;
+  final CallScreenParams params;
   final VoidCallback onDone;
 
   @override
@@ -306,7 +306,7 @@ class CallWatchCalls extends StatelessWidget {
 class CallWatchConference extends StatelessWidget {
   const CallWatchConference({super.key, required this.params, required this.onParticipantOpened, required this.onDone});
 
-  final CallControlsParams params;
+  final CallScreenParams params;
 
   final ValueChanged<String> onParticipantOpened;
   final VoidCallback onDone;
@@ -394,7 +394,7 @@ class CallWatchConference extends StatelessWidget {
 class CallWatchParticipant extends StatelessWidget {
   const CallWatchParticipant({super.key, required this.params, required this.callId, required this.onDone});
 
-  final CallControlsParams params;
+  final CallScreenParams params;
   final String callId;
   final VoidCallback onDone;
 

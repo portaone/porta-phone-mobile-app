@@ -40,7 +40,7 @@ class CallInfoBlock extends StatelessWidget {
   /// The block as every layout wants it: one bundle, so a control added to it
   /// reaches both orientations. Written out twice, a new callback reaches
   /// whichever file was edited and silently goes missing from the other.
-  CallInfoBlock.fromParams(CallControlsParams params, {super.key, this.textAlign = TextAlign.center})
+  CallInfoBlock.fromParams(CallScreenParams params, {super.key, this.textAlign = TextAlign.center})
     : activeCalls = params.activeCalls,
       focusedCall = params.focusedCall,
       onCallSelected = params.onCallSelected,
