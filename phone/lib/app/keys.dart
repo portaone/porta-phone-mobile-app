@@ -145,6 +145,7 @@ const String conferenceParkedNoteId = 'conferenceParkedNote';
 const String conferenceParticipantMuteId = 'conferenceParticipantMute';
 const String conferenceParticipantHangupId = 'conferenceParticipantHangup';
 const String conferenceEndId = 'conferenceEnd';
+const String conferenceParticipantMenuId = 'conferenceParticipantMenu';
 
 // Bottom navigation of the main screen: which tabs are there and what they are
 // called both come from the server-side menu configuration, so the entry is

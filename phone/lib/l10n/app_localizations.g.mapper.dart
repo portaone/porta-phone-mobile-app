@@ -2194,6 +2194,14 @@ extension AppLocalizationsExtension on AppLocalizations {
           'call_ConferencePanel_header requires 1 arguments',
         ),
       },
+      'call_SemanticsLabel_conferenceParticipantMenu' => switch (args) {
+        [final String name] => call_SemanticsLabel_conferenceParticipantMenu(
+          name,
+        ),
+        _ => throw ArgumentError(
+          'call_SemanticsLabel_conferenceParticipantMenu requires 1 arguments',
+        ),
+      },
       'call_SemanticsLabel_conferenceParticipantMute' => switch (args) {
         [final String name] => call_SemanticsLabel_conferenceParticipantMute(
           name,

@@ -484,6 +484,11 @@ class AppLocalizationsUk extends AppLocalizations {
   String get call_ConferencePanel_end => 'Завершити';
 
   @override
+  String call_SemanticsLabel_conferenceParticipantMenu(String name) {
+    return 'Ще для $name';
+  }
+
+  @override
   String call_SemanticsLabel_conferenceParticipantMute(String name) {
     return 'Заглушити $name для всіх';
   }

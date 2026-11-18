@@ -474,6 +474,11 @@ class AppLocalizationsFr extends AppLocalizations {
   String get call_ConferencePanel_end => 'Terminer';
 
   @override
+  String call_SemanticsLabel_conferenceParticipantMenu(String name) {
+    return 'Plus pour $name';
+  }
+
+  @override
   String call_SemanticsLabel_conferenceParticipantMute(String name) {
     return 'Couper le micro de $name pour tous';
   }

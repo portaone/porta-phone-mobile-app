@@ -454,6 +454,11 @@ class AppLocalizationsTh extends AppLocalizations {
   String get call_ConferencePanel_end => 'สิ้นสุด';
 
   @override
+  String call_SemanticsLabel_conferenceParticipantMenu(String name) {
+    return 'เพิ่มเติมสำหรับ $name';
+  }
+
+  @override
   String call_SemanticsLabel_conferenceParticipantMute(String name) {
     return 'ปิดเสียง $name สำหรับทุกคน';
   }

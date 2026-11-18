@@ -435,7 +435,10 @@ void main() {
         buildCallScaffold(callBloc, activeCalls: [legA, legB], focusedCall: legA, conference: room),
       );
 
+      await tester.tap(find.bySemanticsIdentifier(numberedId(conferenceParticipantMenuId, 1)));
+      await tester.pumpAndSettle();
       await tester.tap(find.bySemanticsIdentifier(numberedId(conferenceParticipantHangupId, 1)));
+      await tester.pumpAndSettle();
       verify(() => callBloc.add(const CallControlEvent.ended('b', endedBy: CallkeepEndedBy.user))).called(1);
       await teardownCallScaffold(tester);
     });

@@ -10,6 +10,7 @@ import '../view/call_screen_style.dart';
 import '../utils/contact_resolver.dart';
 import 'call_action_button.dart';
 import 'call_row_frame.dart';
+import 'popup_menu.dart';
 
 /// The conference room: who is in it, who is muted for everyone, and the way
 /// out of it.
@@ -71,8 +72,8 @@ class ConferencePanel extends StatelessWidget {
   final CallInfoStyle? style;
   final CallListStyle? listStyle;
 
-  /// The screen's own button styles; the room's destructive controls take the
-  /// hangup one so they read as what they are and stay themeable.
+  /// The screen's own button styles; ending a participant's call takes the
+  /// hangup's colour, so it reads as what it is and stays themeable.
   final CallScreenActionsStyle? actionsStyle;
 
   @override
@@ -101,14 +102,14 @@ class ConferencePanel extends StatelessWidget {
             muted: conference.participantMuted(leg.key),
             onTap: onSwitchToConference == null ? null : () => onSwitchToConference!(leg.key),
             // The room is not the conversation in use, so its own controls step
-            // back rather than shout from it - the hangups especially.
+            // back rather than shout from it.
             dimmed: roomParked,
             onMutedChanged: (muted) => onParticipantMutedChanged(leg.key, muted),
             onHangup: () => onParticipantHangup(leg.key),
+            endColor: actionsStyle?.hangup?.backgroundColor?.resolve(const {}),
             contactResolver: contactResolver,
             style: style,
             listStyle: listStyle,
-            hangupStyle: actionsStyle?.hangup,
           ),
       ],
     );
@@ -129,10 +130,10 @@ class _ParticipantRow extends StatelessWidget {
     required this.dimmed,
     required this.onMutedChanged,
     required this.onHangup,
+    this.endColor,
     required this.contactResolver,
     required this.style,
     required this.listStyle,
-    required this.hangupStyle,
   });
 
   final int index;
@@ -146,17 +147,20 @@ class _ParticipantRow extends StatelessWidget {
   final VoidCallback? onTap;
 
   /// Whether the room is standing aside, so this row's controls are not what
-  /// the user is acting through. They keep working - a room-wide mute and a
-  /// hangup still reach the room while the host is elsewhere - they simply
-  /// stop competing with the conversation he is actually in.
+  /// the user is acting through. They keep working - a room-wide mute and
+  /// ending a call still reach the room while the host is elsewhere - they
+  /// simply stop competing with the conversation he is actually in.
   final bool dimmed;
 
   final ValueChanged<bool> onMutedChanged;
   final VoidCallback onHangup;
+
+  /// The colour of ending a call, the screen's hangup one; the theme's error
+  /// colour where the screen sets none.
+  final Color? endColor;
   final ContactResolver? contactResolver;
   final CallInfoStyle? style;
   final CallListStyle? listStyle;
-  final ButtonStyle? hangupStyle;
 
   Widget? _leading() {
     final call = this.call;
@@ -193,33 +197,126 @@ class _ParticipantRow extends StatelessWidget {
         // reader still offers both controls with their own names.
         Opacity(
           opacity: dimmed ? _dimmedControls : 1,
-          child: _MuteToggle(
-            muted: muted,
-            identifier: numberedId(conferenceParticipantMuteId, index),
-            // Named, not "this participant": four rows of identical
-            // destructive controls say nothing about which one they act on
-            // (docs/guides/accessibility.md, naming a control that is one of many).
-            label: muted
-                ? context.l10n.call_SemanticsLabel_conferenceParticipantUnmute(name)
-                : context.l10n.call_SemanticsLabel_conferenceParticipantMute(name),
-            onPressed: ready ? () => onMutedChanged(!muted) : null,
-            style: statusStyle,
-          ),
-        ),
-        Opacity(
-          opacity: dimmed ? _dimmedControls : 1,
-          child: CallActionButton(
-            label: context.l10n.call_SemanticsLabel_conferenceParticipantHangup(name),
-            identifier: numberedId(conferenceParticipantHangupId, index),
-            onPressed: onHangup,
-            style: (hangupStyle ?? _fallbackHangupStyle(context)).copyWith(
-              minimumSize: const WidgetStatePropertyAll(Size(40, 40)),
-              padding: const WidgetStatePropertyAll(EdgeInsets.zero),
-            ),
-            child: const Icon(Icons.call_end, size: 20),
+          // One group, with no gap of the row's between: the menu's glyph is
+          // thin, and the row's spacing on top of both tap targets would set
+          // it far from the mute it belongs with.
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              _MuteToggle(
+                muted: muted,
+                identifier: numberedId(conferenceParticipantMuteId, index),
+                // Named, not "this participant": four rows of identical
+                // destructive controls say nothing about which one they act on
+                // (docs/guides/accessibility.md, naming a control that is one of many).
+                label: muted
+                    ? context.l10n.call_SemanticsLabel_conferenceParticipantUnmute(name)
+                    : context.l10n.call_SemanticsLabel_conferenceParticipantMute(name),
+                onPressed: ready ? () => onMutedChanged(!muted) : null,
+                style: statusStyle,
+              ),
+              // End their call lives in a menu: mute and end are never side by
+              // side, so a slip on one does not drop a person from the room.
+              ConferenceParticipantMenu(
+                name: name,
+                index: index,
+                onHangup: onHangup,
+                style: statusStyle,
+                endColor: endColor,
+              ),
+            ],
           ),
         ),
       ],
+    );
+  }
+}
+
+/// The menu of one participant: End their call, the destructive control kept
+/// one tap away from the mute beside it. It opens under its trigger, so a
+/// second tap on the trigger does not land on End, and closes when the
+/// participant's row goes - the call it would end is gone or leaving.
+class ConferenceParticipantMenu extends StatefulWidget {
+  const ConferenceParticipantMenu({
+    super.key,
+    required this.name,
+    required this.index,
+    required this.onHangup,
+    required this.style,
+    this.endColor,
+  });
+
+  /// Who the participant is, in the names of the trigger and of End.
+  final String name;
+
+  /// The participant's place in the room, numbering the automation ids.
+  final int index;
+
+  /// Ends the participant's call.
+  final VoidCallback onHangup;
+
+  /// The row's status text style; its colour is the trigger's.
+  final TextStyle style;
+
+  /// The colour of End; the theme's error colour where none is given.
+  final Color? endColor;
+
+  @override
+  State<ConferenceParticipantMenu> createState() => _ConferenceParticipantMenuState();
+}
+
+class _ConferenceParticipantMenuState extends State<ConferenceParticipantMenu> {
+  bool _open = false;
+  NavigatorState? _navigator;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _navigator = Navigator.maybeOf(context);
+  }
+
+  @override
+  void dispose() {
+    final navigator = _navigator;
+    if (_open && navigator != null) {
+      // The row is gone with the menu still open: a navigator cannot be told
+      // to pop while the tree is being torn down, so on the next frame.
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (navigator.mounted) navigator.popUntil((route) => route is! PopupRoute);
+      });
+    }
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
+    final color = widget.style.color ?? colors.onSurface;
+    return CallActionMenuButton<void>(
+      label: context.l10n.call_SemanticsLabel_conferenceParticipantMenu(widget.name),
+      identifier: numberedId(conferenceParticipantMenuId, widget.index),
+      position: PopupMenuPosition.under,
+      onOpened: () => _open = true,
+      onCanceled: () => _open = false,
+      style: TextButton.styleFrom(
+        minimumSize: const Size(40, 40),
+        padding: EdgeInsets.zero,
+        shape: const CircleBorder(),
+        foregroundColor: color,
+      ),
+      items: [
+        CallPopupMenuItem<void>(
+          identifier: numberedId(conferenceParticipantHangupId, widget.index),
+          onTap: () {
+            _open = false;
+            widget.onHangup();
+          },
+          text: context.l10n.call_SemanticsLabel_conferenceParticipantHangup(widget.name),
+          icon: Icon(Icons.call_end, size: 20, color: widget.endColor ?? colors.error),
+          textStyle: Theme.of(context).textTheme.bodyMedium,
+        ),
+      ],
+      child: const Icon(Icons.more_vert, size: 20),
     );
   }
 }
@@ -263,13 +360,4 @@ class _MuteToggle extends StatelessWidget {
       child: Icon(muted ? Icons.mic_off : Icons.mic, size: 20),
     );
   }
-}
-
-/// The style the screen gives its hangup, for a deployment that themes none
-/// of this: a filled control rather than red lettering, which is what every
-/// other destructive control on the call screen is and what keeps it legible
-/// on the screen's own dark ground.
-ButtonStyle _fallbackHangupStyle(BuildContext context) {
-  final colors = Theme.of(context).colorScheme;
-  return TextButton.styleFrom(backgroundColor: colors.error, foregroundColor: colors.onError);
 }

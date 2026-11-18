@@ -151,6 +151,43 @@ void main() {
       await tester.pumpWidget(const SizedBox());
     });
 
+    testWidgets("a participant's menu opens under its trigger, so a second tap does not end the call", (tester) async {
+      await tester.pumpWidget(subject());
+      final trigger = find.bySemanticsIdentifier(numberedId(conferenceParticipantMenuId, 1));
+      await tester.tap(trigger);
+      await tester.pumpAndSettle();
+
+      final end = find.bySemanticsIdentifier(numberedId(conferenceParticipantHangupId, 1));
+      expect(tester.getRect(end).top, greaterThanOrEqualTo(tester.getRect(trigger).bottom));
+      await tester.pumpWidget(const SizedBox());
+    });
+
+    testWidgets("a participant's menu closes when their row goes", (tester) async {
+      // Boris leaves the room with his menu open: End would act on a call that
+      // is gone.
+      await tester.pumpWidget(subject());
+      await tester.tap(find.bySemanticsIdentifier(numberedId(conferenceParticipantMenuId, 1)));
+      await tester.pumpAndSettle();
+      expect(find.bySemanticsIdentifier(numberedId(conferenceParticipantHangupId, 1)), findsOneWidget);
+
+      await tester.pumpWidget(
+        subject(
+          conference: ConferenceState(
+            room: 7,
+            phase: ConferencePhase.active,
+            legs: const {'a': 0},
+            participants: const [ConferenceParticipant(line: 0, callId: 'a')],
+          ),
+          calls: [_call('a', displayName: 'Anna Marchenko')],
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.bySemanticsIdentifier(numberedId(conferenceParticipantHangupId, 1)), findsNothing);
+      expect(hangups, isEmpty);
+      await tester.pumpWidget(const SizedBox());
+    });
+
     testWidgets('a leg falls back to its number, and to its id before the call is known', (tester) async {
       await tester.pumpWidget(subject(calls: [_call('a')]));
 
@@ -203,7 +240,10 @@ void main() {
     testWidgets('a participant is dropped by ending their call', (tester) async {
       await tester.pumpWidget(subject());
 
+      await tester.tap(find.bySemanticsIdentifier(numberedId(conferenceParticipantMenuId, 1)));
+      await tester.pumpAndSettle();
       await tester.tap(find.bySemanticsIdentifier(numberedId(conferenceParticipantHangupId, 1)));
+      await tester.pumpAndSettle();
       expect(hangups, ['b']);
       await tester.pumpWidget(const SizedBox());
     });
