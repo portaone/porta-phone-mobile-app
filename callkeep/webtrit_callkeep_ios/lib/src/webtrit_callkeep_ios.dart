@@ -93,6 +93,11 @@ class WebtritCallkeep extends WebtritCallkeepPlatform {
     try {
       if (callkeepError != null && callkeepError != CallkeepIncomingCallError.callIdAlreadyExists) return callkeepError;
 
+      // With Core's offered_at the plugin already told this offer from a late copy of an ended
+      // attempt (that one it refused above): one it took as new is a new attempt of the call id,
+      // which the actions of an earlier attempt of the id (an answer, a decline) do not concern.
+      if (coreOfferedAtMs != null && callkeepError == null) return null;
+
       // When an incoming call is in the background, the user may press the notifications action button faster than the app's state initializes.
       // For this case, we store the history and during the initialization of the incoming call, we return the appropriate status for correct handling.
 

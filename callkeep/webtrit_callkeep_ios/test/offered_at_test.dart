@@ -91,4 +91,47 @@ void main() {
 
     expect(result, CallkeepIncomingCallError.filteredByDoNotDisturb);
   });
+
+  group('an earlier attempt\'s action and a new attempt of the call id (call-id-reuse I3)', () {
+    Future<void> endFromCallKit(String uuid) async {
+      await messenger.handlePlatformMessage(
+        '$_prefix.PDelegateFlutterApi.performEndCall',
+        PDelegateFlutterApi.pigeonChannelCodec.encodeMessage([uuid, PEndedByEnum.user]),
+        (_) {},
+      );
+    }
+
+    setUp(() => platform.setDelegate(_NoopDelegate()));
+    tearDown(() => platform.setDelegate(null));
+
+    test('a report the plugin took as new with Core\'s offered_at is not ended by it', () async {
+      await platform.reportNewIncomingCall('call-9', _handle, null, false);
+      await endFromCallKit(sent.single[0]! as String);
+
+      final result = await platform.reportNewIncomingCall(
+        'call-9',
+        _handle,
+        null,
+        false,
+        offeredAt: DateTime.utc(2026, 11, 18, 12),
+        offeredAtSource: CallkeepOfferTimeSource.core,
+      );
+
+      expect(result, isNull);
+    });
+
+    test('without Core\'s time the end of the moment before still answers as terminated', () async {
+      await platform.reportNewIncomingCall('call-9', _handle, null, false);
+      await endFromCallKit(sent.single[0]! as String);
+
+      final result = await platform.reportNewIncomingCall('call-9', _handle, null, false);
+
+      expect(result, CallkeepIncomingCallError.callIdAlreadyTerminated);
+    });
+  });
+}
+
+class _NoopDelegate implements CallkeepDelegate {
+  @override
+  dynamic noSuchMethod(Invocation invocation) => invocation.memberName == #performEndCall ? Future.value(true) : null;
 }
