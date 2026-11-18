@@ -156,7 +156,7 @@ class RoomVideo implements RoomVideoControls {
       ConferenceVideoOfferEvent(:final jsep) => _session.handleOffer(jsep),
       ConferenceVideoPublisherAnswerEvent(:final jsep) => _session.handlePublisherAnswer(jsep),
       ConferenceVideoIceTrickleEvent(:final pc?, :final candidate) => _session.handleRemoteCandidate(pc, candidate),
-      final ConferenceVideoUpdatedEvent updated => Future.sync(() => _session.handleUpdated(updated)),
+      final ConferenceVideoUpdatedEvent updated => _session.handleUpdated(updated),
       ConferenceVideoFailedEvent(:final pc?, :final code) => _session.handleFailed(pc, code: code),
       ConferenceVideoFailedEvent(:final request?, :final reason) => _session.handleRefused(request, reason: reason),
       _ => Future<void>.value(),

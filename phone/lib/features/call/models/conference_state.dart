@@ -3,6 +3,8 @@ import 'package:flutter_webrtc/flutter_webrtc.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:signaling/signaling.dart';
 
+import 'participant_camera.dart';
+
 part 'conference_state.freezed.dart';
 
 /// Where the conference room stands, from this client's side.
@@ -60,7 +62,7 @@ class ConferenceState with _$ConferenceState {
 
   /// The cameras this client receives from the video room, by feed
   /// (`ConferenceVideoSession`); empty without a video room.
-  final Map<int, MediaStream> videoFeeds;
+  final Map<int, ParticipantCamera> videoFeeds;
 
   /// The host's own camera as it is published to the video room; `null`
   /// while it is not.
@@ -76,7 +78,7 @@ class ConferenceState with _$ConferenceState {
 
   /// The camera of the far end of [line], when the room sends one: the far
   /// end of the host's line N is feed N + 2.
-  MediaStream? videoOfLine(int line) => videoFeeds[line + 2];
+  ParticipantCamera? videoOfLine(int line) => videoFeeds[line + 2];
 
   /// A room exists, whether still assembling or already active.
   bool get isPresent => phase != ConferencePhase.none;

@@ -176,7 +176,7 @@ void main() {
       );
       expect(reported.last, isEmpty, reason: 'the room has not said whose it is yet');
 
-      session.handleUpdated(
+      await session.handleUpdated(
         const ConferenceVideoUpdatedEvent(
           room: 7,
           self: 1,
@@ -192,7 +192,7 @@ void main() {
     test('closing the subscriber takes its streams away', () async {
       await session.subscribe();
       await session.handleOffer(_offer);
-      session.handleUpdated(
+      await session.handleUpdated(
         const ConferenceVideoUpdatedEvent(
           room: 7,
           self: 1,
@@ -819,7 +819,7 @@ void main() {
     test("a new subscription's streams are not named by the old one's list", () async {
       await session.subscribe();
       await session.handleOffer({'type': 'offer', 'sdp': offerOfSession('111')});
-      session.handleUpdated(
+      await session.handleUpdated(
         const ConferenceVideoUpdatedEvent(
           room: 7,
           self: 1,
@@ -833,6 +833,35 @@ void main() {
       track(factory.created.last);
 
       expect(reported.last, isEmpty, reason: 'mid 0 of the new subscription may be somebody else');
+    });
+
+    test("a new subscription's list that arrives while its offer is being taken names its streams", () async {
+      // Core sends the offer of a new subscription and its list 9 ms apart;
+      // the list is taken after the offer, not before it, so the offer does
+      // not drop the names the list has just given.
+      await session.subscribe();
+      await session.handleOffer({'type': 'offer', 'sdp': offerOfSession('111')});
+      await session.handleUpdated(
+        const ConferenceVideoUpdatedEvent(
+          room: 7,
+          self: 1,
+          streams: [ConferenceVideoStream(mid: '1', feed: 3, kind: ConferenceVideoKind.camera)],
+        ),
+      );
+
+      final offer = session.handleOffer({'type': 'offer', 'sdp': offerOfSession('222')});
+      final updated = session.handleUpdated(
+        const ConferenceVideoUpdatedEvent(
+          room: 7,
+          self: 1,
+          streams: [ConferenceVideoStream(mid: '0', feed: 3, kind: ConferenceVideoKind.camera)],
+        ),
+      );
+      await offer;
+      await updated;
+      track(factory.created.last);
+
+      expect(reported.last.single.feed, 3);
     });
 
     test('the camera goes back as the calls want it now, not as the room found it', () async {

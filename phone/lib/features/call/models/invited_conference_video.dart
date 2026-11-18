@@ -1,6 +1,8 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter_webrtc/flutter_webrtc.dart';
 
+import 'participant_camera.dart';
+
 /// The video of a room this client was invited to as the far end of the
 /// host's call (protocol section 19): the cameras it receives, by feed, and
 /// its own camera as it is published there.
@@ -16,7 +18,7 @@ class InvitedConferenceVideo {
 
   /// The cameras this client receives, by feed: the host is 1, the far end
   /// of the host's line N is N + 2.
-  final Map<int, MediaStream> feeds;
+  final Map<int, ParticipantCamera> feeds;
 
   /// This client's camera in the room; `null` while it is not published.
   final MediaStream? selfVideo;

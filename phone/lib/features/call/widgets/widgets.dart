@@ -16,6 +16,7 @@ export 'call_duration.dart';
 export 'call_row_frame.dart';
 export 'call_list_action.dart';
 export 'conference_panel.dart';
+export 'conference_participant_camera.dart';
 export 'linked_call_picking.dart';
 export 'focused_action_hint.dart';
 export 'call_network_quality_meter.dart';

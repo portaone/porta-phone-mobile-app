@@ -48,6 +48,7 @@ import '../models/conference_request_result.dart';
 import '../models/conference_state.dart';
 import '../models/invited_conference_video.dart';
 import '../models/jsep_value.dart';
+import '../models/participant_camera.dart';
 import '../models/processing_status.dart';
 import '../services/call_signaling.dart';
 import '../utils/peer_connection_factory.dart';
@@ -1041,7 +1042,8 @@ class ConferenceRoom {
   Future<void> _videoFeedsChanged(List<ConferenceVideoFeed> feeds, ConferenceWrite write) async {
     final cameras = {
       for (final feed in feeds)
-        if (feed.kind == ConferenceVideoKind.camera) feed.feed: feed.stream,
+        if (feed.kind == ConferenceVideoKind.camera)
+          feed.feed: ParticipantCamera(stream: feed.stream, trackId: feed.trackId),
     };
     if (_calls.conference.isPresent) {
       // A room of this client's own: an invitation that stood before it is
