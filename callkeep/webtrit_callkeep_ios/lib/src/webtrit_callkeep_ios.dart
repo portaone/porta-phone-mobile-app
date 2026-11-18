@@ -78,14 +78,16 @@ class WebtritCallkeep extends WebtritCallkeepPlatform {
     CallkeepHandle handle,
     String? displayName,
     bool hasVideo, {
-    // CallKit keeps no end of a call the app never presented, so there is nothing to compare.
     DateTime? offeredAt,
     CallkeepOfferTimeSource? offeredAtSource,
     CallkeepOfferVia? offeredVia,
   }) async {
     final uuid = _uuidToCallIdMapping.put(callId: callId);
     _callGroups.callReported(callId);
-    final error = await _api.reportNewIncomingCall(uuid, handle.toPigeon(), displayName, hasVideo);
+    // Only Core's offered_at tells the plugin a new attempt of an ended call id from a late copy of
+    // it: a time of this phone or of FCM does not (TEMPORARY(old Core without offered_at)).
+    final coreOfferedAtMs = offeredAtSource == CallkeepOfferTimeSource.core ? offeredAt?.millisecondsSinceEpoch : null;
+    final error = await _api.reportNewIncomingCall(uuid, handle.toPigeon(), displayName, hasVideo, coreOfferedAtMs);
     final callkeepError = error?.value.toCallkeep();
 
     try {

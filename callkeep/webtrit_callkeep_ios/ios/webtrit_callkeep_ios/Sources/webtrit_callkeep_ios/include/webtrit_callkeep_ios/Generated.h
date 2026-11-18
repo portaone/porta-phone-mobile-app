@@ -58,6 +58,7 @@ typedef NS_ENUM(NSUInteger, WTPIncomingCallErrorEnum) {
   WTPIncomingCallErrorEnumFilteredByDoNotDisturb = 3,
   WTPIncomingCallErrorEnumFilteredByBlockList = 4,
   WTPIncomingCallErrorEnumInternal = 5,
+  WTPIncomingCallErrorEnumCallIdAlreadyTerminated = 6,
 };
 
 /// Wrapper for WTPIncomingCallErrorEnum to allow for nullability.
@@ -217,7 +218,10 @@ extern void SetUpWTPHostAndroidServiceApiWithSuffix(id<FlutterBinaryMessenger> b
 - (nullable NSNumber *)isSetUp:(FlutterError *_Nullable *_Nonnull)error;
 - (void)setUp:(WTPOptions *)options completion:(void (^)(FlutterError *_Nullable))completion;
 - (void)tearDown:(void (^)(FlutterError *_Nullable))completion;
-- (void)reportNewIncomingCall:(NSString *)uuidString handle:(WTPHandle *)handle displayName:(nullable NSString *)displayName hasVideo:(BOOL)hasVideo completion:(void (^)(WTPIncomingCallError *_Nullable, FlutterError *_Nullable))completion;
+/// [coreOfferedAtMs] is Core's `offered_at` of the offer (epoch milliseconds), null when the
+/// offer has none: with it a new attempt of a call id that ended is shown under a fresh CallKit
+/// UUID, and a late copy of the ended attempt is refused.
+- (void)reportNewIncomingCall:(NSString *)uuidString handle:(WTPHandle *)handle displayName:(nullable NSString *)displayName hasVideo:(BOOL)hasVideo coreOfferedAtMs:(nullable NSNumber *)coreOfferedAtMs completion:(void (^)(WTPIncomingCallError *_Nullable, FlutterError *_Nullable))completion;
 - (void)reportConnectingOutgoingCall:(NSString *)uuidString completion:(void (^)(FlutterError *_Nullable))completion;
 - (void)reportConnectedOutgoingCall:(NSString *)uuidString completion:(void (^)(FlutterError *_Nullable))completion;
 - (void)reportUpdateCall:(NSString *)uuidString handle:(nullable WTPHandle *)handle displayName:(nullable NSString *)displayName hasVideo:(nullable NSNumber *)hasVideo proximityEnabled:(nullable NSNumber *)proximityEnabled completion:(void (^)(FlutterError *_Nullable))completion;

@@ -9,9 +9,9 @@ const _handle = CallkeepHandle.number('555');
 
 WebtritCallkeepPlatform get platform => WebtritCallkeepPlatform.instance;
 
-/// CallKit keeps no end of a call the app never presented, so the iOS implementation takes the
-/// time the server offered a call and leaves it out: a timed report reaches the native side
-/// exactly as an untimed one did.
+/// The iOS implementation passes the native side Core's offered_at only: with it the plugin tells
+/// a new attempt of a call id that ended from a late copy of it. A time of this phone or of FCM is
+/// left out (TEMPORARY(old Core without offered_at)).
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
@@ -34,17 +34,48 @@ void main() {
     return [args[0], handle.type, handle.value, args[2], args[3]];
   }
 
-  test('a report with offeredAt sends the same four arguments as one without', () async {
+  test('a report with a time not from Core sends no offer time', () async {
     expect(await platform.reportNewIncomingCall('call-1', _handle, 'Alice', true), isNull);
     expect(
-      await platform.reportNewIncomingCall('call-1', _handle, 'Alice', true, offeredAt: DateTime.utc(2026, 10, 29)),
+      await platform.reportNewIncomingCall(
+        'call-1',
+        _handle,
+        'Alice',
+        true,
+        offeredAt: DateTime.utc(2026, 10, 29),
+        offeredAtSource: CallkeepOfferTimeSource.device,
+      ),
       isNull,
     );
 
     expect(sent, hasLength(2));
-    expect(sent[0], hasLength(4));
-    expect(sent[1], hasLength(4));
+    expect(sent[0], hasLength(5));
+    expect(sent[0][4], isNull);
+    expect(sent[1][4], isNull);
     expect(comparable(sent[1]), comparable(sent[0]));
+  });
+
+  test('a report with Core\'s offered_at sends it as epoch milliseconds', () async {
+    final offeredAt = DateTime.utc(2026, 10, 29, 12, 30, 15, 123);
+
+    await platform.reportNewIncomingCall(
+      'call-1',
+      _handle,
+      null,
+      false,
+      offeredAt: offeredAt,
+      offeredAtSource: CallkeepOfferTimeSource.core,
+    );
+
+    expect(sent.single[4], offeredAt.millisecondsSinceEpoch);
+  });
+
+  test('a late copy the native side refuses is reported as terminated', () async {
+    reply = PIncomingCallError(value: PIncomingCallErrorEnum.callIdAlreadyTerminated);
+
+    final result = await platform.reportNewIncomingCall('call-3', _handle, null, false);
+
+    expect(result, CallkeepIncomingCallError.callIdAlreadyTerminated);
   });
 
   test('a report with offeredAt returns the error the native side answers', () async {

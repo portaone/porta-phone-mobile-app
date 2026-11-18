@@ -30,6 +30,22 @@ static const CFAbsoluteTime kAudioSessionMuteResyncWindow = 1.0;
 @interface WebtritCallkeepPlugin ()<PKPushRegistryDelegate, CXProviderDelegate, CXCallObserverDelegate, WTPPushRegistryHostApi, WTPHostApi, WTPHostSoundApi>
 @end
 
+/// Core's `offered_at` from a VoIP push payload (`offeredAt`, a string or a number of epoch
+/// milliseconds); nil when the payload has none (an older Core) or it is not a number.
+static NSNumber *_Nullable WTPOfferedAtMsFromPayload(id value) {
+  if ([value isKindOfClass:[NSNumber class]]) {
+    return value;
+  }
+  if ([value isKindOfClass:[NSString class]]) {
+    NSScanner *scanner = [NSScanner scannerWithString:value];
+    long long ms = 0;
+    if ([scanner scanLongLong:&ms] && scanner.isAtEnd) {
+      return @(ms);
+    }
+  }
+  return nil;
+}
+
 @implementation WebtritCallkeepPlugin {
   NSObject<FlutterPluginRegistrar> *_registrar;
   WTPPushRegistryDelegateFlutterApi *_pushRegistryDelegateFlutterApi;
@@ -328,10 +344,19 @@ static const CFAbsoluteTime kAudioSessionMuteResyncWindow = 1.0;
                        handle:(WTPHandle *)handle
                   displayName:(NSString *)displayName
                      hasVideo:(BOOL)hasVideo
+              coreOfferedAtMs:(nullable NSNumber *)coreOfferedAtMs
                    completion:(void (^)(WTPIncomingCallError *, FlutterError *))completion {
 #ifdef DEBUG
-  NSLog(@"[Callkeep][reportNewIncomingCall] uuidString = %@", uuidString);
+  NSLog(@"[Callkeep][reportNewIncomingCall] uuidString = %@ offeredAt = %@", uuidString, coreOfferedAtMs);
 #endif
+  // A late copy of an attempt of this call that ended (Core's offered_at says so) is not shown
+  // again: the server reuses the call id, so only the offer time tells it from a new attempt.
+  NSUUID *reportedUuid = [[NSUUID alloc] initWithUUIDString:uuidString];
+  if (reportedUuid != nil && [_presentations ghostCallKitUUIDForLogicalUUID:reportedUuid offeredAtMs:coreOfferedAtMs] != nil) {
+    WTPLog(@"[Callkeep][reportNewIncomingCall] %@ offered at %@ is a late copy of its ended attempt", uuidString, coreOfferedAtMs);
+    completion([WTPIncomingCallError makeWithValue:WTPIncomingCallErrorEnumCallIdAlreadyTerminated], nil);
+    return;
+  }
   CXCallUpdate *callUpdate = [[CXCallUpdate alloc] init];
   callUpdate.remoteHandle = [handle toCallKit];
   callUpdate.localizedCallerName = displayName;
@@ -350,7 +375,7 @@ static const CFAbsoluteTime kAudioSessionMuteResyncWindow = 1.0;
   }
   // The call's live presentation, so that CallKit sees a duplicate of it, or a new one.
   NSUUID *logicalUuid = callUuid;
-  callUuid = callUuid != nil ? [_presentations presentationToReportForLogicalUUID:callUuid].callKitUUID : nil;
+  callUuid = callUuid != nil ? [_presentations presentationToReportForLogicalUUID:callUuid offeredAtMs:coreOfferedAtMs].callKitUUID : nil;
   if (callUuid != nil) {
     [_ownCallUuids addObject:callUuid];
     [self admitIncomingCallUUID:callUuid];
@@ -1972,6 +1997,29 @@ continueUserActivity:(nonnull NSUserActivity *)userActivity
   callUpdate.supportsHolding = YES;
   callUpdate.supportsDTMF = YES;
 
+  // Core's offered_at of the offer, when the push carries one (an older Core does not): the moment
+  // Core learned of this offer from Janus, the same value as its incoming_call event; a new offer of
+  // the call id gets another. Compared for equality only, never with a clock.
+  NSNumber *coreOfferedAtMs = WTPOfferedAtMsFromPayload(dictionaryPayload[@"offeredAt"]);
+  NSUUID *ghostUuid = [_presentations ghostCallKitUUIDForLogicalUUID:uuid offeredAtMs:coreOfferedAtMs];
+  if (ghostUuid != nil) {
+    // A late push of an attempt of this call that ended. PushKit wants every VoIP push reported
+    // to CallKit: it is reported under the UUID that attempt was shown under, which CallKit
+    // refuses, and ended at once if CallKit takes it after all. The application is not told.
+    WTPLog(@"[Callkeep][didReceiveIncomingPushWithPayloadForPushTypeVoIP] %@ offered at %@ is a late copy of its ended attempt", callId, coreOfferedAtMs);
+    [_provider reportNewIncomingCallWithUUID:ghostUuid
+                                      update:callUpdate
+                                  completion:^(NSError *error) {
+                                    if (error == nil) {
+                                      [self->_provider reportCallWithUUID:ghostUuid
+                                                              endedAtDate:nil
+                                                                   reason:CXCallEndedReasonRemoteEnded];
+                                    }
+                                    completion();
+                                  }];
+    return;
+  }
+
   if ([self shouldQueueIncomingCallUUID:uuid]) {
     NSUUID *shield = [self liveOwnCallUUIDExcluding:uuid];
     if (shield != nil) {
@@ -1986,7 +2034,7 @@ continueUserActivity:(nonnull NSUserActivity *)userActivity
 
   [self configureAudioSession];
   // The call's live presentation, so that CallKit sees a duplicate of it, or a new one.
-  NSUUID *pushPresentedUuid = [_presentations presentationToReportForLogicalUUID:uuid].callKitUUID;
+  NSUUID *pushPresentedUuid = [_presentations presentationToReportForLogicalUUID:uuid offeredAtMs:coreOfferedAtMs].callKitUUID;
   _incomingUpdates[uuid] = callUpdate;
   [_ownCallUuids addObject:pushPresentedUuid];
   [self admitIncomingCallUUID:pushPresentedUuid];

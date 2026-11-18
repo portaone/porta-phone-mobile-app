@@ -830,6 +830,9 @@ void SetUpWTPHostApiWithSuffix(id<FlutterBinaryMessenger> binaryMessenger, NSObj
       [channel setMessageHandler:nil];
     }
   }
+  /// [coreOfferedAtMs] is Core's `offered_at` of the offer (epoch milliseconds), null when the
+  /// offer has none: with it a new attempt of a call id that ended is shown under a fresh CallKit
+  /// UUID, and a late copy of the ended attempt is refused.
   {
     FlutterBasicMessageChannel *channel =
       [[FlutterBasicMessageChannel alloc]
@@ -837,14 +840,15 @@ void SetUpWTPHostApiWithSuffix(id<FlutterBinaryMessenger> binaryMessenger, NSObj
         binaryMessenger:binaryMessenger
         codec:WTGetGeneratedCodec()];
     if (api) {
-      NSCAssert([api respondsToSelector:@selector(reportNewIncomingCall:handle:displayName:hasVideo:completion:)], @"WTPHostApi api (%@) doesn't respond to @selector(reportNewIncomingCall:handle:displayName:hasVideo:completion:)", api);
+      NSCAssert([api respondsToSelector:@selector(reportNewIncomingCall:handle:displayName:hasVideo:coreOfferedAtMs:completion:)], @"WTPHostApi api (%@) doesn't respond to @selector(reportNewIncomingCall:handle:displayName:hasVideo:coreOfferedAtMs:completion:)", api);
       [channel setMessageHandler:^(id _Nullable message, FlutterReply callback) {
         NSArray<id> *args = message;
         NSString *arg_uuidString = GetNullableObjectAtIndex(args, 0);
         WTPHandle *arg_handle = GetNullableObjectAtIndex(args, 1);
         NSString *arg_displayName = GetNullableObjectAtIndex(args, 2);
         BOOL arg_hasVideo = [GetNullableObjectAtIndex(args, 3) boolValue];
-        [api reportNewIncomingCall:arg_uuidString handle:arg_handle displayName:arg_displayName hasVideo:arg_hasVideo completion:^(WTPIncomingCallError *_Nullable output, FlutterError *_Nullable error) {
+        NSNumber *arg_coreOfferedAtMs = GetNullableObjectAtIndex(args, 4);
+        [api reportNewIncomingCall:arg_uuidString handle:arg_handle displayName:arg_displayName hasVideo:arg_hasVideo coreOfferedAtMs:arg_coreOfferedAtMs completion:^(WTPIncomingCallError *_Nullable output, FlutterError *_Nullable error) {
           callback(wrapResult(output, error));
         }];
       }];

@@ -19,6 +19,10 @@ NS_ASSUME_NONNULL_BEGIN
 /// 1 for the first showing of the call, 2 for its second, and so on.
 @property(nonatomic, readonly) NSUInteger generation;
 
+/// Core's `offered_at` of the offer shown (epoch milliseconds), nil when the offer had none.
+@property(nonatomic, readonly, nullable) NSNumber *offeredAtMs;
+
+
 @end
 
 /// What is known about a UUID that CallKit hands back in an action.
@@ -51,6 +55,20 @@ typedef NS_ENUM(NSInteger, CallPresentationStanding) {
 /// one is over). A new one is shown under the logical UUID itself, unless a presentation of this
 /// call was ever withdrawn - then under a fresh UUID.
 - (CallPresentation *)presentationToReportForLogicalUUID:(NSUUID *)logicalUUID;
+
+/// As above, for an offer with Core's `offered_at` [offeredAtMs] (nil when it has none). The server
+/// offers a call id again (a transfer back, a retried transfer): when the call's last attempt
+/// ended, an offer with another offered_at than the ended attempt's is a new attempt and is shown
+/// under a fresh UUID - the one CallKit saw end cannot be relied on a second time. A late copy of
+/// the ended attempt is asked for first ([ghostCallKitUUIDForLogicalUUID:offeredAtMs:]). Without
+/// offered_at on either offer the call is presented as before.
+- (CallPresentation *)presentationToReportForLogicalUUID:(NSUUID *)logicalUUID
+                                             offeredAtMs:(nullable NSNumber *)offeredAtMs;
+
+/// The UUID the ended attempt of [logicalUUID] was shown under, when an offer with Core's
+/// `offered_at` [offeredAtMs] is a late copy of it (the call has no live presentation and its
+/// last attempt ended with that offered_at); nil otherwise. Changes nothing.
+- (nullable NSUUID *)ghostCallKitUUIDForLogicalUUID:(NSUUID *)logicalUUID offeredAtMs:(nullable NSNumber *)offeredAtMs;
 
 /// The presentation of [logicalUUID] that is not over, if any.
 - (nullable CallPresentation *)livePresentationOfLogicalUUID:(NSUUID *)logicalUUID;

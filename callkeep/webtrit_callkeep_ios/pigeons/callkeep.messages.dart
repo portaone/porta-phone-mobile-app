@@ -60,6 +60,9 @@ enum PIncomingCallErrorEnum {
   filteredByDoNotDisturb,
   filteredByBlockList,
   internal,
+  // The offer is a late copy of an attempt of the call that ended (Core's offered_at says so):
+  // it is not reported to CallKit.
+  callIdAlreadyTerminated,
 }
 
 // TODO: See https://github.com/flutter/flutter/issues/87307
@@ -123,9 +126,18 @@ abstract class PHostApi {
   @async
   void tearDown();
 
-  @ObjCSelector('reportNewIncomingCall:handle:displayName:hasVideo:')
+  /// [coreOfferedAtMs] is Core's `offered_at` of the offer (epoch milliseconds), null when the
+  /// offer has none: with it a new attempt of a call id that ended is shown under a fresh CallKit
+  /// UUID, and a late copy of the ended attempt is refused.
+  @ObjCSelector('reportNewIncomingCall:handle:displayName:hasVideo:coreOfferedAtMs:')
   @async
-  PIncomingCallError? reportNewIncomingCall(String uuidString, PHandle handle, String? displayName, bool hasVideo);
+  PIncomingCallError? reportNewIncomingCall(
+    String uuidString,
+    PHandle handle,
+    String? displayName,
+    bool hasVideo,
+    int? coreOfferedAtMs,
+  );
 
   @ObjCSelector('reportConnectingOutgoingCall:')
   @async

@@ -109,6 +109,7 @@ enum PIncomingCallErrorEnum {
   filteredByDoNotDisturb,
   filteredByBlockList,
   internal,
+  callIdAlreadyTerminated,
 }
 
 enum PCallRequestErrorEnum {
@@ -727,11 +728,15 @@ class PHostApi {
     _extractReplyValueOrThrow(pigeonVar_replyList, pigeonVar_channelName, isNullValid: true);
   }
 
+  /// [coreOfferedAtMs] is Core's `offered_at` of the offer (epoch milliseconds), null when the
+  /// offer has none: with it a new attempt of a call id that ended is shown under a fresh CallKit
+  /// UUID, and a late copy of the ended attempt is refused.
   Future<PIncomingCallError?> reportNewIncomingCall(
     String uuidString,
     PHandle handle,
     String? displayName,
     bool hasVideo,
+    int? coreOfferedAtMs,
   ) async {
     final pigeonVar_channelName =
         'dev.flutter.pigeon.webtrit_callkeep_ios.PHostApi.reportNewIncomingCall$pigeonVar_messageChannelSuffix';
@@ -745,6 +750,7 @@ class PHostApi {
       handle,
       displayName,
       hasVideo,
+      coreOfferedAtMs,
     ]);
     final pigeonVar_replyList = await pigeonVar_sendFuture as List<Object?>?;
 
