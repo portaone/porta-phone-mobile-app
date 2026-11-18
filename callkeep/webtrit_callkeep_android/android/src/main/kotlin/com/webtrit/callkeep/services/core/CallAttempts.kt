@@ -155,6 +155,10 @@ internal class CallAttempts(
     @Synchronized
     fun liveFor(callId: String): Attempt? = live[callId]
 
+    /** The live attempt of [callId], else its last ended one still kept. */
+    @Synchronized
+    fun latest(callId: String): Attempt? = live[callId] ?: lastEnded[callId]
+
     /** The session ends (tearDown): every attempt is forgotten. */
     @Synchronized
     fun clear() {

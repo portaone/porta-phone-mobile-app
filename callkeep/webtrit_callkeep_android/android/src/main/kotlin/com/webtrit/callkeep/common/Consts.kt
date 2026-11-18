@@ -3,6 +3,9 @@ package com.webtrit.callkeep.common
 object CallDataConst {
     const val DISPLAY_NAME = "displayName"
     const val CALL_ID = "callId"
+
+    // The attempt of the call (CallAttempts): a reused call id is told apart by it.
+    const val ATTEMPT_ID = "attemptId"
     const val HANDLE_VALUE = "handleValue"
     const val NUMBER = "number"
     const val HAS_VIDEO = "hasVideo"

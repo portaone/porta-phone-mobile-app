@@ -134,7 +134,7 @@ class PhoneConnectionService : ConnectionService() {
                 }
 
                 is PhoneServiceCommand.CancelIncoming -> {
-                    handleCancelIncomingCall(command.callId)
+                    handleCancelIncomingCall(command.callId, command.attemptId)
                 }
 
                 is PhoneServiceCommand.Clean -> {
@@ -322,7 +322,7 @@ class PhoneConnectionService : ConnectionService() {
         //
         // Session cleanup or a final registration cancellation can precede Telecom creation.
         // Neither may be undone by a late callback.
-        if (!connectionManager.addPendingForIncomingCall(metadata.callId)) {
+        if (!connectionManager.addPendingForIncomingCall(metadata.callId, metadata.attemptId)) {
             val reason = "Incoming registration already cancelled: callId=${metadata.callId}"
             Log.w(TAG, reason)
             // Returning a failed connection does not invoke onCreateIncomingConnectionFailed.
@@ -480,9 +480,12 @@ class PhoneConnectionService : ConnectionService() {
         dispatcher.dispatch(baseContext, CallCommandEvent.TearDownComplete)
     }
 
-    private fun handleCancelIncomingCall(callId: String) {
-        Log.i(TAG, "Cancelling incoming registration: callId=$callId")
-        connectionManager.cancelIncomingCall(callId)?.hungUp(CallEndedBy.APP)
+    private fun handleCancelIncomingCall(
+        callId: String,
+        attemptId: String?,
+    ) {
+        Log.i(TAG, "Cancelling incoming registration: callId=$callId attempt=$attemptId")
+        connectionManager.cancelIncomingCall(callId, attemptId)?.hungUp(CallEndedBy.APP)
         phoneConnectionServiceDispatcher.dispatchLifecycle(ConnectionLifecycleAction.ConnectionChanged)
     }
 
@@ -615,10 +618,16 @@ class PhoneConnectionService : ConnectionService() {
         fun cancelIncomingCall(
             context: Context,
             callId: String,
+            attemptId: String? = null,
         ) {
             // Cancellation must reach the backend even if it has no connection yet. A refused
             // start is logged as a lost command, not reported as a successful native hangup.
-            command(context, ServiceAction.CancelIncomingCall, Bundle().apply { putString(CallDataConst.CALL_ID, callId) }, "callId=$callId")
+            val extras =
+                Bundle().apply {
+                    putString(CallDataConst.CALL_ID, callId)
+                    attemptId?.let { putString(CallDataConst.ATTEMPT_ID, it) }
+                }
+            command(context, ServiceAction.CancelIncomingCall, extras, "callId=$callId attempt=$attemptId")
         }
 
         fun startHungUpCall(

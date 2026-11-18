@@ -162,7 +162,7 @@ class IncomingCallSmsTriggerReceiverTest {
         shadowOf(Looper.getMainLooper()).idleFor(6, TimeUnit.SECONDS)
 
         assertTrue(sms.isCompleted)
-        verify(router).cancelIncomingCall("s6")
+        verify(router).cancelIncomingCall(eqArgument("s6"), anyArgument())
         assertTrue(core.wasEndedWithoutFlutterState("s6"))
     }
 
@@ -275,6 +275,8 @@ class IncomingCallSmsTriggerReceiverTest {
 
     // A generic return avoids Kotlin inserting a null check for Mockito's matcher placeholder.
     private fun <T> anyArgument(): T = ArgumentMatchers.any()
+
+    private fun <T> eqArgument(value: T): T = ArgumentMatchers.eq(value)
 
     private companion object {
         const val SMS_PREFIX = "CALL:"

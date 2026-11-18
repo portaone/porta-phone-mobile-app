@@ -148,13 +148,15 @@ class InProcessCallkeepCore internal constructor(
                 CallLifecycleEvent.AnswerCall,
                 CallLifecycleEvent.ReplayIncomingCall,
                 -> {
-                    cancelRejectedIncomingCall(callId)
+                    cancelRejectedIncomingCall(callId, CallMetadata.fromBundleOrNull(data)?.attemptId)
                     return true
                 }
 
                 CallLifecycleEvent.ConnectionStateChanged -> {
                     val metadata = CallMetadata.fromBundle(data)
-                    if (metadata.connectionState != CallConnectionState.DISCONNECTED) cancelRejectedIncomingCall(callId)
+                    if (metadata.connectionState != CallConnectionState.DISCONNECTED) {
+                        cancelRejectedIncomingCall(callId, metadata.attemptId)
+                    }
                     return true
                 }
 
@@ -662,7 +664,7 @@ class InProcessCallkeepCore internal constructor(
                 // This UUID was never presented, so a later report must not start it again,
                 // unless the server offered it after this end (a new attempt).
                 markEndedWithoutFlutterState(registration.callId)
-                cancelRejectedIncomingCall(registration.callId)
+                cancelRejectedIncomingCall(registration.callId, registration.metadata.attemptId)
             }
         }
     }
@@ -730,26 +732,29 @@ class InProcessCallkeepCore internal constructor(
             // back): what that end left for the incoming-call service is not this attempt's.
             dropReleaseOfEndedAttempt(callId, decision.replaces)
         }
+        // The attempt goes with the call to the backend: a late Telecom callback or a cancellation
+        // of an earlier attempt of this id is told apart from this one by it.
+        val call = metadata.copy(attemptId = decision.attempt.instanceId)
         // The foreground bridge is the app itself: a call it reports is the app's already.
         if (client is CallEndListener) tracker.markReportedByApp(callId)
         // A second report of a waiting call (the push after the signaling, say) joins it.
         if (queue.contains(callId)) {
-            queue.add(metadata)
+            queue.add(call)
             return null
         }
-        checkIncomingDuplicate(callId)?.let { return adoptIncomingCall(metadata, it) }
+        checkIncomingDuplicate(callId)?.let { return adoptIncomingCall(call, it) }
         if (holdsBack(callId)) {
-            queue.add(metadata)
-            queueNotifier.show(metadata)
+            queue.add(call)
+            queueNotifier.show(call)
             Log.i(TAG, "Incoming call $callId waits: another incoming call rings")
             // The reporter holds it as an ordinary incoming call; that it waits is the core's.
             return null
         }
 
-        return incomingRegistrations.await(metadata, client) { registration ->
+        return incomingRegistrations.await(call, client) { registration ->
             try {
                 dispatchIncomingCall(
-                    metadata,
+                    call,
                     onSuccess = { Log.d(TAG, "Incoming call dispatched: $callId; waiting for confirmation") },
                     onError = { error ->
                         val duplicate =
@@ -758,7 +763,7 @@ class InProcessCallkeepCore internal constructor(
                         if (duplicate) {
                             // A prior dispatch-only report (SMS) or a cold-start connection can
                             // already exist in the backend. Adoption belongs to the core too.
-                            val result = adoptIncomingCall(metadata, error)
+                            val result = adoptIncomingCall(call, error)
                             incomingRegistrations.complete(registration, Result.success(result))
                         } else {
                             incomingRegistrations.complete(
@@ -846,10 +851,14 @@ class InProcessCallkeepCore internal constructor(
                 beforeAnswer()
             }.also { raiseQueuedIfFree() }
 
-    private fun cancelRejectedIncomingCall(callId: String) {
+    /** Cancels the rejected attempt [attemptId] of [callId] (the event's or the registration's own; the latest known when neither says). */
+    private fun cancelRejectedIncomingCall(
+        callId: String,
+        attemptId: String? = null,
+    ) {
         // A failed service start must not strand the host continuation. A late lifecycle
         // event proves the backend is reachable again and retries this idempotent command.
-        runCatching { router.cancelIncomingCall(callId) }
+        runCatching { router.cancelIncomingCall(callId, attemptId ?: attempts.latest(callId)?.instanceId) }
             .onFailure { Log.w(TAG, "Could not cancel rejected incoming call $callId", it) }
     }
 

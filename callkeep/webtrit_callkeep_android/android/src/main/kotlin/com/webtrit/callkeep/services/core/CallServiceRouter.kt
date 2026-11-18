@@ -69,11 +69,19 @@ class CallServiceRouter(
         )
 
     /** Permanently withdraws an incoming UUID that was rejected before app presentation. */
-    fun cancelIncomingCall(callId: String) =
-        route(
-            telecom = { PhoneConnectionService.cancelIncomingCall(ctx, callId) },
-            standalone = { StandaloneCallService.communicate(ctx, StandaloneServiceAction.CancelIncomingCall, CallMetadata(callId = callId)) },
-        )
+    fun cancelIncomingCall(
+        callId: String,
+        attemptId: String? = null,
+    ) = route(
+        telecom = { PhoneConnectionService.cancelIncomingCall(ctx, callId, attemptId) },
+        standalone = {
+            StandaloneCallService.communicate(
+                ctx,
+                StandaloneServiceAction.CancelIncomingCall,
+                CallMetadata(callId = callId, attemptId = attemptId),
+            )
+        },
+    )
 
     fun startHungUpCall(metadata: CallMetadata) =
         route(

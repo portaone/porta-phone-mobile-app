@@ -33,6 +33,7 @@ sealed class StandaloneServiceCommand {
 
     data class CancelIncoming(
         val callId: String,
+        val attemptId: String? = null,
     ) : StandaloneServiceCommand()
 
     data class Call(
@@ -75,7 +76,7 @@ sealed class StandaloneServiceCommand {
                 }
 
                 StandaloneServiceAction.CancelIncomingCall -> {
-                    intent.extras?.getString(CallDataConst.CALL_ID)?.let { CancelIncoming(it) }
+                    intent.extras?.getString(CallDataConst.CALL_ID)?.let { CancelIncoming(it, intent.extras?.getString(CallDataConst.ATTEMPT_ID)) }
                 }
 
                 StandaloneServiceAction.SetCallGroup,

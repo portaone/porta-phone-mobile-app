@@ -235,7 +235,7 @@ class StandaloneCallService : Service() {
                 is StandaloneServiceCommand.ReplayAudio -> handleReplayAudioState()
                 is StandaloneServiceCommand.ReplayConnections -> handleReplayConnectionStates()
                 is StandaloneServiceCommand.Reserve -> handleReserveAnswer(command.callId)
-                is StandaloneServiceCommand.CancelIncoming -> handleCancelIncomingCall(command.callId)
+                is StandaloneServiceCommand.CancelIncoming -> handleCancelIncomingCall(command.callId, command.attemptId)
                 is StandaloneServiceCommand.Call -> dispatchCall(command.action, command.metadata)
                 is StandaloneServiceCommand.Group -> dispatchGroup(command.action, command.callIds)
             }
@@ -291,7 +291,7 @@ class StandaloneCallService : Service() {
         action: StandaloneServiceAction,
         metadata: CallMetadata,
     ) {
-        if (metadata.callId in cancelledIncomingCallIds) {
+        if (cancellationKey(metadata.callId, metadata.attemptId) in cancelledIncomingCallIds) {
             if (action == StandaloneServiceAction.IncomingCall) {
                 core.notifyConnectionEvent(
                     CallLifecycleEvent.IncomingFailure,
@@ -584,10 +584,20 @@ class StandaloneCallService : Service() {
         core.notifyConnectionEvent(CallLifecycleEvent.HungUp, metadata.withRequestedEnd().toBundle())
     }
 
-    private fun handleCancelIncomingCall(callId: String) {
-        Log.i(TAG, "Cancelling incoming registration: callId=$callId")
-        cancelledIncomingCallIds.add(callId)
-        val metadata = connections[callId]?.metadata ?: CallMetadata(callId = callId)
+    private fun handleCancelIncomingCall(
+        callId: String,
+        attemptId: String?,
+    ) {
+        Log.i(TAG, "Cancelling incoming registration: callId=$callId attempt=$attemptId")
+        val held = connections[callId]?.metadata?.attemptId
+        cancelledIncomingCallIds.add(cancellationKey(callId, attemptId ?: held))
+        // A late cancel of an earlier attempt: the later attempt of the id this service holds is not
+        // touched.
+        if (attemptId != null && held != null && held != attemptId) return
+        // Before the call reaches this service nothing names its attempt here: a check by call id (a
+        // deferred answer) has to find this cancel.
+        if (attemptId != null && held == null) cancelledAttemptOfCallId[callId] = attemptId
+        val metadata = connections[callId]?.metadata ?: CallMetadata(callId = callId, attemptId = attemptId)
         handleHungUpCall(metadata)
     }
 
@@ -789,7 +799,8 @@ class StandaloneCallService : Service() {
      * record the reservation so [handleIncomingCall] can apply it when it fires.
      */
     private fun handleReserveAnswer(callId: String) {
-        if (callId in cancelledIncomingCallIds) return
+        val attemptId = connections[callId]?.metadata?.attemptId ?: cancelledAttemptOfCallId[callId]
+        if (cancellationKey(callId, attemptId) in cancelledIncomingCallIds) return
         Log.i(TAG, "handleReserveAnswer: callId=$callId")
         val meta = connections[callId]?.metadata
         if (meta != null) {
@@ -960,8 +971,20 @@ class StandaloneCallService : Service() {
         // consults this set, not the full map, to decide whether another call is still ringing.
         internal val ringingIncomingCallIds: MutableSet<String> = ConcurrentHashMap.newKeySet()
 
-        // Process-lifetime outcomes: session cleanup cannot make an already declined UUID ring.
+        // Process-lifetime outcomes: session cleanup cannot make an already declined attempt ring.
+        // Keyed by the attempt (cancellationKey), not the call id: the server offers a call id
+        // again (a retried transfer), and that new attempt is not the one declined.
         internal val cancelledIncomingCallIds: MutableSet<String> = ConcurrentHashMap.newKeySet()
+
+        // The attempt of a cancel that came before its call reached this service, by call id: what a
+        // check by call id (a deferred answer) finds until the call arrives.
+        internal val cancelledAttemptOfCallId: MutableMap<String, String> = ConcurrentHashMap()
+
+        /** The key of a cancellation: the attempt, or the call id for a report with none. */
+        internal fun cancellationKey(
+            callId: String,
+            attemptId: String?,
+        ): String = attemptId ?: callId
 
         internal val answeredCallIds: Set<String>
             get() =

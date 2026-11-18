@@ -55,6 +55,10 @@ data class CallMetadata(
     // PhoneConnection dispatches, so the main process can hand it to performEndCall. Null means
     // nobody said; the reader then treats the end as the system's.
     val endedBy: CallEndedBy? = null,
+    // The attempt of this call on this phone (CallAttempts), set by the core when it registers an
+    // incoming call; null for outgoing calls and for a report that has not been through the core.
+    // The server reuses a call id, so what must not leak into a later attempt is keyed by this.
+    val attemptId: String? = null,
 ) {
     val number: String? get() = handle?.number
 
@@ -91,6 +95,7 @@ data class CallMetadata(
             acceptedTime?.let { putLong(CALL_METADATA_ACCEPTED_TIME, it) }
             connectionState?.let { putString(CALL_METADATA_CONNECTION_STATE, it.name) }
             endedBy?.let { putString(CALL_METADATA_ENDED_BY, it.name) }
+            attemptId?.let { putString(CallDataConst.ATTEMPT_ID, it) }
         }
 
     /**
@@ -128,6 +133,7 @@ data class CallMetadata(
             acceptedTime = other.acceptedTime ?: acceptedTime,
             connectionState = other.connectionState ?: connectionState,
             endedBy = other.endedBy ?: endedBy,
+            attemptId = other.attemptId ?: attemptId,
         )
     }
 
@@ -174,6 +180,7 @@ data class CallMetadata(
                         .getStringOrNull(CALL_METADATA_CONNECTION_STATE)
                         ?.let { name -> runCatching { CallConnectionState.valueOf(name) }.getOrNull() },
                 endedBy = CallEndedBy.fromNameOrNull(bundle.getStringOrNull(CALL_METADATA_ENDED_BY)),
+                attemptId = bundle.getStringOrNull(CallDataConst.ATTEMPT_ID),
             )
         }
 

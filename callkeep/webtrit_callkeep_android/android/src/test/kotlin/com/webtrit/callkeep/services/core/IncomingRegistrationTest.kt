@@ -326,7 +326,7 @@ class IncomingRegistrationTest {
         assertNull(core.get("c1"))
         assertFalse(core.isAnswered("c1"))
         assertTrue(core.isTerminated("c1"))
-        verify(router, times(2)).cancelIncomingCall(anyArgument())
+        verify(router, times(2)).cancelIncomingCall(anyArgument(), anyArgument())
     }
 
     @Test
@@ -609,7 +609,7 @@ class IncomingRegistrationTest {
             assertTrue(core.isTerminated("c1"))
             cancellations++
             null
-        }.`when`(router).cancelIncomingCall(metadata.callId)
+        }.`when`(router).cancelIncomingCall(eqArgument(metadata.callId), anyArgument())
 
         fun waiting(client: String) =
             scope.async(start = CoroutineStart.UNDISPATCHED) {
@@ -627,17 +627,17 @@ class IncomingRegistrationTest {
         assertEquals(rejected(), app.result())
         assertEquals(listOf("app", "push"), completions.sorted())
         verifyDispatches(1)
-        verify(router).cancelIncomingCall(metadata.callId)
+        verify(router).cancelIncomingCall(eqArgument(metadata.callId), anyArgument())
         advanceSeconds(6)
         assertEquals("each joined host call completes only once", listOf("app", "push"), completions.sorted())
-        verify(router).cancelIncomingCall(metadata.callId)
+        verify(router).cancelIncomingCall(eqArgument(metadata.callId), anyArgument())
     }
 
     @Test
     fun `a failed native cancellation is logged and does not strand the rejected callers`() {
         Log.clearLogFilePath()
         val failure = IllegalStateException("Cannot dispatch native cancellation")
-        doAnswer { throw failure }.`when`(router).cancelIncomingCall(anyArgument())
+        doAnswer { throw failure }.`when`(router).cancelIncomingCall(anyArgument(), anyArgument())
         val push = report("push", "c1")
         val app = report("app", "c1")
 
@@ -649,13 +649,13 @@ class IncomingRegistrationTest {
         assertFalse(core.isPending("c1"))
         assertTrue(core.isTerminated("c1"))
         assertTrue(ShadowLog.getLogs().any { it.throwable === failure && it.msg.contains("c1") })
-        verify(router).cancelIncomingCall(anyArgument())
+        verify(router).cancelIncomingCall(anyArgument(), anyArgument())
 
         event(CallLifecycleEvent.AnswerCall, "c1")
 
         assertFalse(core.isAnswered("c1"))
         assertFalse(core.exists("c1"))
-        verify(router, times(2)).cancelIncomingCall(anyArgument())
+        verify(router, times(2)).cancelIncomingCall(anyArgument(), anyArgument())
     }
 
     @Test
@@ -748,11 +748,11 @@ class IncomingRegistrationTest {
         doAnswer {
             cancelledCallIds += it.getArgument<String>(0)
             null
-        }.`when`(router).cancelIncomingCall(anyArgument())
+        }.`when`(router).cancelIncomingCall(anyArgument(), anyArgument())
         val waiting = report("push", metadata)
         advanceSeconds(5)
         assertEquals(rejected(), waiting.result())
-        verify(router).cancelIncomingCall(metadata.callId)
+        verify(router).cancelIncomingCall(eqArgument(metadata.callId), anyArgument())
         val listener = mock(CallEndListener::class.java)
         core.addConnectionEventListener(listener)
 
@@ -766,7 +766,7 @@ class IncomingRegistrationTest {
         assertFalse(core.exists("c1"))
         assertFalse(core.isAnswered("c1"))
         verifyNoInteractions(listener)
-        verify(router, times(2)).cancelIncomingCall(anyArgument())
+        verify(router, times(2)).cancelIncomingCall(anyArgument(), anyArgument())
         assertEquals(listOf("c1", "c1"), cancelledCallIds)
         assertEquals(rejected(), waiting.result())
     }
@@ -898,4 +898,6 @@ class IncomingRegistrationTest {
 
     // A generic return avoids Kotlin inserting a null check for Mockito's matcher placeholder.
     private fun <T> anyArgument(): T = ArgumentMatchers.any()
+
+    private fun <T> eqArgument(value: T): T = ArgumentMatchers.eq(value)
 }

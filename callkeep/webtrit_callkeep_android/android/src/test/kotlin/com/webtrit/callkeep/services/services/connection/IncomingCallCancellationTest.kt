@@ -60,21 +60,25 @@ class IncomingCallCancellationTest {
         StandaloneCallService.pendingAnswers.clear()
         StandaloneCallService.ringingIncomingCallIds.clear()
         StandaloneCallService.cancelledIncomingCallIds.clear()
+        StandaloneCallService.cancelledAttemptOfCallId.clear()
         StandaloneCallService.callGroup = CallGroup.empty
     }
 
-    private fun send(action: ServiceAction) {
+    private fun send(
+        action: ServiceAction,
+        call: CallMetadata = metadata,
+    ) {
         service.onStartCommand(
             Intent(service, PhoneConnectionService::class.java).apply {
                 this.action = action.action
-                putExtras(metadata.toBundle())
+                putExtras(call.toBundle())
             },
             0,
             1,
         )
     }
 
-    private fun createIncoming(): Connection = service.onCreateIncomingConnection(account, ConnectionRequest(account, Uri.EMPTY, metadata.toBundle()))
+    private fun createIncoming(call: CallMetadata = metadata): Connection = service.onCreateIncomingConnection(account, ConnectionRequest(account, Uri.EMPTY, call.toBundle()))
 
     @Test
     fun `cancellation before Telecom creation rejects the late callback without a pending slot`() {
@@ -168,11 +172,12 @@ class IncomingCallCancellationTest {
     private fun sendStandalone(
         service: StandaloneCallService,
         action: StandaloneServiceAction,
+        call: CallMetadata = metadata,
     ) {
         service.onStartCommand(
             Intent(service, StandaloneCallService::class.java).apply {
                 this.action = action.action
-                putExtras(metadata.toBundle())
+                putExtras(call.toBundle())
             },
             0,
             1,
@@ -214,5 +219,74 @@ class IncomingCallCancellationTest {
 
         assertFalse(StandaloneCallService.connections.containsKey(metadata.callId))
         assertFalse(metadata.callId in StandaloneCallService.ringingIncomingCallIds)
+    }
+
+    // The server offers a call id again (a transfer back, a retried transfer): a cancellation and
+    // a tearDown are of one attempt, and the next attempt of the id carries another (call-id-reuse).
+
+    private val first = metadata.copy(attemptId = "attempt-1")
+    private val second = metadata.copy(attemptId = "attempt-2")
+
+    @Test
+    fun `a cancelled attempt does not refuse a later attempt of the same call id`() {
+        send(ServiceAction.CancelIncomingCall, first)
+
+        assertEquals("the late callback of the cancelled attempt", Connection.STATE_DISCONNECTED, createIncoming(first).state)
+        assertTrue("the new attempt is created", createIncoming(second).state != Connection.STATE_DISCONNECTED)
+        assertFalse(ConnectionManager.instance.isIncomingCallCancelled(metadata.callId))
+    }
+
+    @Test
+    fun `a tearDown refuses a late callback of the attempt it left pending, not a new attempt`() {
+        val manager = ConnectionManager.instance
+        assertTrue(manager.addPendingForIncomingCall(metadata.callId, first.attemptId))
+
+        manager.cleanConnections()
+
+        assertFalse("a late creation of the attempt torn down", manager.addPendingForIncomingCall(metadata.callId, first.attemptId))
+        assertTrue("a new attempt of the id", manager.addPendingForIncomingCall(metadata.callId, second.attemptId))
+    }
+
+    @Test
+    fun `a standalone cancelled attempt does not refuse a later attempt of the same call id`() {
+        val standalone = standalone()
+        sendStandalone(standalone, StandaloneServiceAction.CancelIncomingCall, first)
+
+        sendStandalone(standalone, StandaloneServiceAction.IncomingCall, first)
+        assertFalse("the cancelled attempt does not ring", StandaloneCallService.connections.containsKey(metadata.callId))
+
+        sendStandalone(standalone, StandaloneServiceAction.IncomingCall, second)
+        assertTrue("the new attempt rings", StandaloneCallService.connections.containsKey(metadata.callId))
+    }
+
+    @Test
+    fun `a late cancel of an earlier attempt leaves the later attempt of the id pending`() {
+        val manager = ConnectionManager.instance
+        assertTrue(manager.addPendingForIncomingCall(metadata.callId, second.attemptId))
+
+        assertNull(manager.cancelIncomingCall(metadata.callId, first.attemptId))
+
+        assertTrue("the later attempt keeps its pending slot", manager.isPending(metadata.callId))
+        assertFalse(manager.isIncomingCallCancelled(metadata.callId))
+    }
+
+    @Test
+    fun `a cancel before Telecom's creation refuses a deferred answer of that attempt`() {
+        val manager = ConnectionManager.instance
+
+        manager.cancelIncomingCall(metadata.callId, first.attemptId)
+
+        assertTrue(manager.isIncomingCallCancelled(metadata.callId))
+        assertFalse("the cancelled attempt is still refused at creation", manager.addPendingForIncomingCall(metadata.callId, first.attemptId))
+    }
+
+    @Test
+    fun `a standalone late cancel of an earlier attempt leaves the later attempt ringing`() {
+        val standalone = standalone()
+        sendStandalone(standalone, StandaloneServiceAction.IncomingCall, second)
+
+        sendStandalone(standalone, StandaloneServiceAction.CancelIncomingCall, first)
+
+        assertTrue(StandaloneCallService.connections.containsKey(metadata.callId))
     }
 }

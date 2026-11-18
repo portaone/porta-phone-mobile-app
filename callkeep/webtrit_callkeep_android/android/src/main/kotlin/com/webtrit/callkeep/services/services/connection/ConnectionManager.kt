@@ -34,24 +34,48 @@ class ConnectionManager {
     // and the binder-thread onCreateIncomingConnection callback.
     private val pendingAnswers: MutableSet<String> = ConcurrentHashMap.newKeySet()
 
-    // Call IDs that were in pendingCallIds when cleanConnections() was last called.
-    // Any subsequent onCreateIncomingConnection for these IDs is a stale Telecom callback
-    // arriving after a tearDown and should be rejected to prevent zombie connections.
-    // Populated by cleanConnections() and drained by addPendingForIncomingCall() (when
-    // the same callId is legitimately re-reported in a new session, which is impossible
-    // for UUID call IDs but handled for correctness).
+    // The attempts (keys of attemptKey) that were pending when cleanConnections() was last called.
+    // Any subsequent onCreateIncomingConnection of such an attempt is a stale Telecom callback
+    // arriving after a tearDown and is rejected to prevent zombie connections. Keyed by the
+    // attempt, not the call id: the server offers a call id again (a transfer back, a retried
+    // transfer), and that new attempt carries an attempt id of its own.
     private val forcedTerminatedCallIds: MutableSet<String> = ConcurrentHashMap.newKeySet()
 
     // Final incoming registration failures outlive session cleanup. The app has already declined
-    // these UUIDs, so neither a late Telecom callback nor a deferred answer may revive them.
+    // these attempts, so neither a late Telecom callback nor a deferred answer may revive them.
+    // Keyed by the attempt like forcedTerminatedCallIds: a later attempt of the id is not refused.
     private val cancelledIncomingCallIds: MutableSet<String> = ConcurrentHashMap.newKeySet()
 
-    fun isIncomingCallCancelled(callId: String): Boolean = cancelledIncomingCallIds.contains(callId)
+    // The attempt of each call id this process registered (from the extras of Telecom's creation
+    // callback), so a check by call id finds the attempt it is about.
+    private val attemptOfCallId: MutableMap<String, String> = ConcurrentHashMap()
+
+    /** The key of [callId]'s attempt in the sets above: the attempt id, or the call id with none. */
+    private fun attemptKey(
+        callId: String,
+        attemptId: String? = attemptOfCallId[callId],
+    ): String = attemptId ?: callId
+
+    fun isIncomingCallCancelled(callId: String): Boolean = cancelledIncomingCallIds.contains(attemptKey(callId))
 
     /** Records cancellation even when Telecom has not delivered its creation callback yet. */
-    fun cancelIncomingCall(callId: String): PhoneConnection? =
+    fun cancelIncomingCall(
+        callId: String,
+        attemptId: String? = null,
+    ): PhoneConnection? =
         synchronized(connectionResourceLock) {
-            cancelledIncomingCallIds.add(callId)
+            val held = attemptOfCallId[callId]
+            cancelledIncomingCallIds.add(attemptKey(callId, attemptId ?: held))
+            // A late cancel of an earlier attempt while a later attempt of the id is pending or up in
+            // this process: the later one is not touched.
+            val heldIsLive = pendingCallIds.contains(callId) || connections[callId]?.let { it.state != Connection.STATE_DISCONNECTED } == true
+            if (attemptId != null && held != null && held != attemptId && heldIsLive) {
+                logger.i("cancelIncomingCall: $callId attempt $attemptId cancelled; attempt $held of the id is left alone")
+                return@synchronized null
+            }
+            // Before Telecom's creation callback nothing names the attempt of the id here yet: a check
+            // by call id (a deferred answer) has to find this cancel.
+            if (attemptId != null) attemptOfCallId[callId] = attemptId
             pendingCallIds.remove(callId)
             pendingAnswers.remove(callId)
             terminatedCallIds.add(callId)
@@ -131,27 +155,24 @@ class ConnectionManager {
      * callId, so this is a stale post-tearDown callback. The caller (onCreateIncomingConnection)
      * rejects the connection instead of creating a [PhoneConnection] for a closed session.
      */
-    fun addPendingForIncomingCall(callId: String): Boolean =
+    fun addPendingForIncomingCall(
+        callId: String,
+        attemptId: String? = null,
+    ): Boolean =
         synchronized(connectionResourceLock) {
             // Both a closed session and a final registration cancellation reject delayed
             // Telecom creation. Cancellation also covers IDs never pending in this process.
-            if (forcedTerminatedCallIds.contains(callId) || isIncomingCallCancelled(callId)) {
-                logger.w("addPendingForIncomingCall: callId=$callId already ended, rejecting stale Telecom callback")
+            // The check is of this callback's own attempt: an earlier attempt of the id that
+            // ended does not refuse a new one.
+            val key = attemptKey(callId, attemptId)
+            if (forcedTerminatedCallIds.contains(key) || cancelledIncomingCallIds.contains(key)) {
+                logger.w("addPendingForIncomingCall: callId=$callId attempt=$attemptId already ended, rejecting stale Telecom callback")
                 return@synchronized false
             }
+            if (attemptId != null) attemptOfCallId[callId] = attemptId else attemptOfCallId.remove(callId)
             pendingCallIds.add(callId)
             true
         }
-
-    /**
-     * Returns true if [callId] was in [pendingCallIds] when [cleanConnections] was last called.
-     *
-     * Used by [onCreateIncomingConnection] to reject stale Telecom callbacks that arrive after
-     * a tearDown cleared the pending set. Without this guard, a call that was sent to Telecom
-     * via [addNewIncomingCall] but not yet delivered via [onCreateIncomingConnection] before
-     * tearDown would create a zombie [PhoneConnection] in the next session.
-     */
-    fun isForcedTerminated(callId: String): Boolean = forcedTerminatedCallIds.contains(callId)
 
     /**
      * Returns true if the call ID has been reserved as pending
@@ -367,10 +388,12 @@ class ConnectionManager {
             connections.clear()
             // Snapshot current pendingCallIds into forcedTerminated before clearing.
             // Telecom may still fire onCreateIncomingConnection for these IDs after this
-            // tearDown; isForcedTerminated() lets that guard reject them as zombie calls.
+            // tearDown; addPendingForIncomingCall rejects them as zombie calls.
             forcedTerminatedCallIds.clear()
-            forcedTerminatedCallIds.addAll(pendingCallIds)
+            forcedTerminatedCallIds.addAll(pendingCallIds.map { attemptKey(it) })
             pendingCallIds.clear()
+            // attemptOfCallId stays: a cancelled attempt is still found by its call id after
+            // cleanup, and the next attempt's creation callback replaces its entry.
             terminatedCallIds.clear()
             pendingAnswers.clear()
         }

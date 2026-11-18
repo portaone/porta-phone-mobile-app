@@ -93,7 +93,7 @@ class ReportCallEndedTest {
         assertTrue(core.wasEndedWithoutFlutterState("c1"))
         event(CallLifecycleEvent.ReplayIncomingCall, "c1")
         assertFalse("the replay must not reach the bridge", CallLifecycleEvent.ReplayIncomingCall in delivered)
-        verify(router).cancelIncomingCall("c1")
+        verify(router).cancelIncomingCall(eqArgument("c1"), anyArgument())
     }
 
     @Test
@@ -307,4 +307,6 @@ class ReportCallEndedTest {
 
     // A generic return avoids Kotlin inserting a null check for Mockito's matcher placeholder.
     private fun <T> anyArgument(): T = ArgumentMatchers.any()
+
+    private fun <T> eqArgument(value: T): T = ArgumentMatchers.eq(value)
 }

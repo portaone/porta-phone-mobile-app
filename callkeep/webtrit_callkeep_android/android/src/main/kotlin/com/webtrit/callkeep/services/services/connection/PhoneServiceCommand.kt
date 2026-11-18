@@ -35,6 +35,7 @@ sealed class PhoneServiceCommand {
 
     data class CancelIncoming(
         val callId: String,
+        val attemptId: String? = null,
     ) : PhoneServiceCommand()
 
     data class CallOp(
@@ -77,7 +78,7 @@ sealed class PhoneServiceCommand {
                 }
 
                 ServiceAction.CancelIncomingCall -> {
-                    intent.extras?.getString(CallDataConst.CALL_ID)?.let { CancelIncoming(it) }
+                    intent.extras?.getString(CallDataConst.CALL_ID)?.let { CancelIncoming(it, intent.extras?.getString(CallDataConst.ATTEMPT_ID)) }
                 }
 
                 ServiceAction.SetCallGroup,
