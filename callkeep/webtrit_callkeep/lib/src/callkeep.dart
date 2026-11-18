@@ -69,6 +69,12 @@ class Callkeep {
   /// bounded; the oldest report is forgotten first.
   final Map<String, int> _endsReportedUnseen = <String, int>{};
   int _endReportVersion = 0;
+
+  /// Core's `offered_at` of the last offer of each call id the app reported, and of the attempt
+  /// whose end was kept in [_endsReportedUnseen]: a report of the id with another Core time is a new
+  /// attempt of it (a transfer back, a retried transfer), which that end must not keep from the app.
+  final Map<String, int> _coreOfferedAt = <String, int>{};
+  final Map<String, int?> _endedCoreOfferedAt = <String, int?>{};
   static const _kEndsReportedUnseenLimit = 32;
 
   /// Whether the app reported the end of [callId] before it ever held that call, and nothing
@@ -88,9 +94,36 @@ class Callkeep {
   void _recordEndReportedUnseen(String callId) {
     _endsReportedUnseen.remove(callId);
     _endsReportedUnseen[callId] = ++_endReportVersion;
+    // The time belongs to the attempt that ended: a later attempt of the id has its own.
+    _endedCoreOfferedAt[callId] = _coreOfferedAt.remove(callId);
     while (_endsReportedUnseen.length > _kEndsReportedUnseenLimit) {
-      _endsReportedUnseen.remove(_endsReportedUnseen.keys.first);
+      final oldest = _endsReportedUnseen.keys.first;
+      _endsReportedUnseen.remove(oldest);
+      _endedCoreOfferedAt.remove(oldest);
     }
+  }
+
+  /// Keeps Core's [offeredAt] of the last offer of [callId], newest last, at most twice as many
+  /// call ids as ends are kept: a call presented and ended normally leaves no end to tell against.
+  void _rememberCoreOfferedAt(String callId, int offeredAt) {
+    _coreOfferedAt.remove(callId);
+    _coreOfferedAt[callId] = offeredAt;
+    while (_coreOfferedAt.length > _kEndsReportedUnseenLimit * 2) {
+      _coreOfferedAt.remove(_coreOfferedAt.keys.first);
+    }
+  }
+
+  /// Whether [result] of a report with Core's [coreOfferedAt] reopens [callId] after the end kept
+  /// for it: a registration the platform took as new (null), or - with Core's time of both offers -
+  /// another offer of the id than the one that ended, which the platform already holds from its push
+  /// ([CallkeepIncomingCallError.callIdAlreadyExists]).
+  bool _reopens(String callId, CallkeepIncomingCallError? result, int? coreOfferedAt) {
+    if (result == null) return true;
+    final ended = _endedCoreOfferedAt[callId];
+    return result == CallkeepIncomingCallError.callIdAlreadyExists &&
+        coreOfferedAt != null &&
+        ended != null &&
+        coreOfferedAt != ended;
   }
 
   /// Sets the delegate for receiving calkeep events from the native side.
@@ -132,6 +165,8 @@ class Callkeep {
   Future<void> tearDown() {
     _updateStatus(CallkeepStatus.terminating);
     _endsReportedUnseen.clear();
+    _endedCoreOfferedAt.clear();
+    _coreOfferedAt.clear();
     return platform.tearDown().then((_) => _updateStatus(CallkeepStatus.uninitialized));
   }
 
@@ -158,6 +193,8 @@ class Callkeep {
     CallkeepOfferVia? offeredVia,
   }) async {
     final reportedAs = _endsReportedUnseen[callId];
+    final coreOfferedAt = offeredAtSource == CallkeepOfferTimeSource.core ? offeredAt?.millisecondsSinceEpoch : null;
+    if (coreOfferedAt != null && reportedAs == null) _rememberCoreOfferedAt(callId, coreOfferedAt);
     final result = await platform.reportNewIncomingCall(
       callId,
       handle,
@@ -167,8 +204,10 @@ class Callkeep {
       offeredAtSource: offeredAtSource,
       offeredVia: offeredVia,
     );
-    if (reportedAs != null && result == null && _endsReportedUnseen[callId] == reportedAs) {
+    if (reportedAs != null && _endsReportedUnseen[callId] == reportedAs && _reopens(callId, result, coreOfferedAt)) {
       _endsReportedUnseen.remove(callId);
+      _endedCoreOfferedAt.remove(callId);
+      if (coreOfferedAt != null) _rememberCoreOfferedAt(callId, coreOfferedAt);
     }
     return result;
   }

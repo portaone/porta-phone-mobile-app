@@ -309,4 +309,53 @@ void main() {
       expect(callkeep.wasEndedBeforePresented('b0'), isFalse, reason: 'b0 is now the oldest');
     });
   });
+
+  group('a new attempt of the call id after an end kept for it (call-id-reuse I7)', () {
+    late _FakePlatform platform;
+    late Callkeep callkeep;
+
+    setUp(() {
+      platform = _FakePlatform();
+      WebtritCallkeepPlatform.instance = platform;
+      callkeep = Callkeep();
+    });
+
+    Future<CallkeepIncomingCallError?> report(int? coreMs) => callkeep.reportNewIncomingCall(
+      'c1',
+      const CallkeepHandle.number('100'),
+      offeredAt: coreMs == null ? DateTime.now() : DateTime.fromMillisecondsSinceEpoch(coreMs),
+      offeredAtSource: coreMs == null ? CallkeepOfferTimeSource.device : CallkeepOfferTimeSource.core,
+    );
+
+    test('another Core offered_at reopens the id even when the platform holds it from its push', () async {
+      await report(1000);
+      await callkeep.reportEndCall('c1', 'Caller', CallkeepEndCallReason.declinedByUser);
+      expect(callkeep.wasEndedBeforePresented('c1'), isTrue);
+
+      platform.registrationResult = CallkeepIncomingCallError.callIdAlreadyExists;
+      await report(2000);
+
+      expect(callkeep.wasEndedBeforePresented('c1'), isFalse);
+    });
+
+    test('the ended attempt\'s own offered_at keeps the id closed', () async {
+      await report(1000);
+      await callkeep.reportEndCall('c1', 'Caller', CallkeepEndCallReason.declinedByUser);
+
+      platform.registrationResult = CallkeepIncomingCallError.callIdAlreadyExists;
+      await report(1000);
+
+      expect(callkeep.wasEndedBeforePresented('c1'), isTrue);
+    });
+
+    test('without Core\'s time an adoption keeps the id closed, as before', () async {
+      await report(null);
+      await callkeep.reportEndCall('c1', 'Caller', CallkeepEndCallReason.declinedByUser);
+
+      platform.registrationResult = CallkeepIncomingCallError.callIdAlreadyExists;
+      await report(null);
+
+      expect(callkeep.wasEndedBeforePresented('c1'), isTrue);
+    });
+  });
 }
