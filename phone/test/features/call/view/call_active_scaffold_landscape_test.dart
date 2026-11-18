@@ -41,7 +41,8 @@ void main() {
       final legB = makeCall(callId: 'b', acceptedTime: DateTime(2024), displayName: 'Boris Klein');
       final outside = makeCall(callId: 'outside', acceptedTime: DateTime(2024), displayName: 'Dana Ruiz');
 
-      await tester.pumpWidget(
+      await pumpCallScaffold(
+        tester,
         buildCallScaffold(
           callBloc,
           activeCalls: [legA, legB, outside],
@@ -62,7 +63,8 @@ void main() {
       final legA = makeCall(callId: 'a', acceptedTime: DateTime(2024), displayName: 'Anna Marchenko');
       final legB = makeCall(callId: 'b', acceptedTime: DateTime(2024), displayName: 'Boris Klein');
 
-      await tester.pumpWidget(
+      await pumpCallScaffold(
+        tester,
         buildCallScaffold(
           callBloc,
           activeCalls: [legA, legB],
@@ -82,7 +84,8 @@ void main() {
       setLandscapePhoneSurface(tester);
       final legA = makeCall(callId: 'a', acceptedTime: DateTime(2024), displayName: 'Anna Marchenko');
 
-      await tester.pumpWidget(
+      await pumpCallScaffold(
+        tester,
         buildCallScaffold(
           callBloc,
           activeCalls: [legA],
@@ -103,7 +106,7 @@ void main() {
   group('CallActiveScaffold - landscape, single live call', () {
     testWidgets('info, grid and hangup stand in one row, in that order', (tester) async {
       setLandscapePhoneSurface(tester);
-      await tester.pumpWidget(buildCallScaffold(callBloc, activeCalls: [active], focusedCall: active));
+      await pumpCallScaffold(tester, buildCallScaffold(callBloc, activeCalls: [active], focusedCall: active));
 
       final infoDx = tester.getCenter(find.byType(CallInfo)).dx;
       final gridDx = tester.getCenter(find.byType(ActiveCallActions)).dx;
@@ -121,7 +124,7 @@ void main() {
 
     testWidgets('the hangup leaves the grid for a zone of its own', (tester) async {
       setLandscapePhoneSurface(tester);
-      await tester.pumpWidget(buildCallScaffold(callBloc, activeCalls: [active], focusedCall: active));
+      await pumpCallScaffold(tester, buildCallScaffold(callBloc, activeCalls: [active], focusedCall: active));
 
       // Exactly one hangup on screen, and the grid is not its home.
       expect(find.byKey(callActionsHangupKey), findsOneWidget);
@@ -139,7 +142,7 @@ void main() {
 
     testWidgets('the avatar stands beside the info instead of above it', (tester) async {
       setLandscapePhoneSurface(tester);
-      await tester.pumpWidget(buildCallScaffold(callBloc, activeCalls: [active], focusedCall: active));
+      await pumpCallScaffold(tester, buildCallScaffold(callBloc, activeCalls: [active], focusedCall: active));
       await tester.pump();
 
       final avatarCenter = tester.getCenter(find.byType(CallRemoteAvatar));
@@ -159,7 +162,7 @@ void main() {
     testWidgets('the roster takes the info zone, left of the grid, its rows the only pictures', (tester) async {
       setLandscapePhoneSurface(tester);
       final held = makeCall(callId: 'held', acceptedTime: DateTime(2024), held: true, displayName: 'Clara Diaz');
-      await tester.pumpWidget(buildCallScaffold(callBloc, activeCalls: [held, active], focusedCall: active));
+      await pumpCallScaffold(tester, buildCallScaffold(callBloc, activeCalls: [held, active], focusedCall: active));
 
       expect(find.byType(CallList), findsOneWidget);
       expect(find.byType(CallRow), findsNWidgets(2));
@@ -179,7 +182,7 @@ void main() {
   group('CallActiveScaffold - landscape, ringing focus', () {
     testWidgets('Decline/Answer take the action zones; no separate hangup stands apart', (tester) async {
       setLandscapePhoneSurface(tester);
-      await tester.pumpWidget(buildCallScaffold(callBloc, activeCalls: [ringing], focusedCall: ringing));
+      await pumpCallScaffold(tester, buildCallScaffold(callBloc, activeCalls: [ringing], focusedCall: ringing));
 
       expect(find.byType(IncomingCallActions), findsOneWidget);
       expect(find.byType(ActiveCallActions), findsNothing);
@@ -199,7 +202,7 @@ void main() {
 
     testWidgets('with another call around the hint still spells the side effect', (tester) async {
       setLandscapePhoneSurface(tester);
-      await tester.pumpWidget(buildCallScaffold(callBloc, activeCalls: [active, ringing], focusedCall: ringing));
+      await pumpCallScaffold(tester, buildCallScaffold(callBloc, activeCalls: [active, ringing], focusedCall: ringing));
 
       expect(find.byType(FocusedActionHint), findsOneWidget);
       expect(find.byType(CallList), findsOneWidget);
@@ -211,7 +214,7 @@ void main() {
   group('CallActiveScaffold - landscape keypad', () {
     testWidgets('the keypad opens in landscape beside the avatar, and hiding it brings the grid back', (tester) async {
       setLandscapePhoneSurface(tester);
-      await tester.pumpWidget(buildCallScaffold(callBloc, activeCalls: [active], focusedCall: active));
+      await pumpCallScaffold(tester, buildCallScaffold(callBloc, activeCalls: [active], focusedCall: active));
       expect(find.byType(CallRemoteAvatar), findsOneWidget);
 
       await tester.tap(find.byKey(callActionsKeypadKey));
@@ -244,7 +247,7 @@ void main() {
     testWidgets('typed digits show up beside the caller, and switching lines closes the keypad', (tester) async {
       setLandscapePhoneSurface(tester);
       final held = makeCall(callId: 'held', acceptedTime: DateTime(2024), held: true, displayName: 'Clara Diaz');
-      await tester.pumpWidget(buildCallScaffold(callBloc, activeCalls: [active, held], focusedCall: active));
+      await pumpCallScaffold(tester, buildCallScaffold(callBloc, activeCalls: [active, held], focusedCall: active));
 
       await tester.tap(find.byKey(callActionsKeypadKey));
       await tester.pumpAndSettle();
@@ -262,7 +265,7 @@ void main() {
 
       // Focusing another line closes the keypad: a DTMF session belongs to
       // the call it was opened for.
-      await tester.pumpWidget(buildCallScaffold(callBloc, activeCalls: [active, held], focusedCall: held));
+      await pumpCallScaffold(tester, buildCallScaffold(callBloc, activeCalls: [active, held], focusedCall: held));
       await tester.pumpAndSettle();
       expect(find.byType(KeypadKeyButton), findsNothing);
       expect(find.text('52'), findsNothing);
@@ -272,7 +275,7 @@ void main() {
 
     testWidgets('a long dial shows its tail, not its head', (tester) async {
       setLandscapePhoneSurface(tester);
-      await tester.pumpWidget(buildCallScaffold(callBloc, activeCalls: [active], focusedCall: active));
+      await pumpCallScaffold(tester, buildCallScaffold(callBloc, activeCalls: [active], focusedCall: active));
       await tester.tap(find.byKey(callActionsKeypadKey));
       await tester.pumpAndSettle();
 
@@ -293,7 +296,7 @@ void main() {
       tester.view.devicePixelRatio = 3;
       addTearDown(tester.view.reset);
 
-      await tester.pumpWidget(buildCallScaffold(callBloc, activeCalls: [active], focusedCall: active));
+      await pumpCallScaffold(tester, buildCallScaffold(callBloc, activeCalls: [active], focusedCall: active));
       await tester.tap(find.byKey(callActionsKeypadKey));
       await tester.pumpAndSettle();
       await tester.tap(find.text('5'));
@@ -319,7 +322,7 @@ void main() {
       tester.view.devicePixelRatio = 3;
       addTearDown(tester.view.reset);
 
-      await tester.pumpWidget(buildCallScaffold(callBloc, activeCalls: [active], focusedCall: active));
+      await pumpCallScaffold(tester, buildCallScaffold(callBloc, activeCalls: [active], focusedCall: active));
       await tester.tap(find.byKey(callActionsKeypadKey));
       await tester.pumpAndSettle();
       expect(find.byType(KeypadKeyButton), findsNWidgets(12));
@@ -342,7 +345,7 @@ void main() {
       tester.view.devicePixelRatio = 3;
       addTearDown(tester.view.reset);
 
-      await tester.pumpWidget(buildCallScaffold(callBloc, activeCalls: [active], focusedCall: active));
+      await pumpCallScaffold(tester, buildCallScaffold(callBloc, activeCalls: [active], focusedCall: active));
       await tester.pump();
       expect(tester.takeException(), isNull);
 
@@ -367,7 +370,8 @@ void main() {
       tester.view.devicePixelRatio = 3;
       addTearDown(tester.view.reset);
 
-      await tester.pumpWidget(
+      await pumpCallScaffold(
+        tester,
         Align(
           alignment: Alignment.topLeft,
           child: SizedBox(
@@ -407,7 +411,8 @@ void main() {
         processingStatus: CallProcessingStatus.incomingFromOffer,
         displayName: 'Anna Marchenko-Zvenyhorodska of Support',
       );
-      await tester.pumpWidget(
+      await pumpCallScaffold(
+        tester,
         buildCallScaffold(callBloc, activeCalls: [chattyActive, chattyRinging], focusedCall: chattyRinging),
       );
       await tester.pump();
@@ -427,7 +432,7 @@ void main() {
       tester.platformDispatcher.textScaleFactorTestValue = 2.0;
       addTearDown(tester.platformDispatcher.clearTextScaleFactorTestValue);
 
-      await tester.pumpWidget(buildCallScaffold(callBloc, activeCalls: [active], focusedCall: active));
+      await pumpCallScaffold(tester, buildCallScaffold(callBloc, activeCalls: [active], focusedCall: active));
       await tester.pump();
       expect(tester.takeException(), isNull);
       await teardownCallScaffold(tester);
@@ -499,7 +504,7 @@ void main() {
       tester.view.devicePixelRatio = 3;
       addTearDown(tester.view.reset);
 
-      await tester.pumpWidget(buildCallScaffold(callBloc, activeCalls: [active], focusedCall: active));
+      await pumpCallScaffold(tester, buildCallScaffold(callBloc, activeCalls: [active], focusedCall: active));
       expect(
         find.descendant(of: find.byType(ActiveCallActions), matching: find.byKey(callActionsHangupKey)),
         findsOneWidget,

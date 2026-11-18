@@ -225,7 +225,7 @@ void main() {
   const room = ConferenceState(phase: ConferencePhase.active, legs: {'a': 0, 'b': 1});
   const conferences = CallCapabilitiesConfig(isConferenceEnabled: true);
 
-  Widget call(Widget face) => withShippedTheme(CallWatchBackground(child: CallWatchRouter(child: face)));
+  Widget call(Widget face) => withShippedTheme(CallWatchBackground(child: CallScreenRouter(child: face)));
   Future<void> tapIcon(WidgetTester tester, IconData icon) async {
     await tester.ensureVisible(find.byIcon(icon));
     await tester.tap(find.byIcon(icon));

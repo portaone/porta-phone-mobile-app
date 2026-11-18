@@ -30,7 +30,7 @@ void main() {
     testWidgets('hiding them takes away the way to end the call', (tester) async {
       final semantics = tester.ensureSemantics();
       final call = VideoCall();
-      await tester.pumpWidget(buildCallScaffold(callBloc, activeCalls: [call], focusedCall: call));
+      await pumpCallScaffold(tester, buildCallScaffold(callBloc, activeCalls: [call], focusedCall: call));
 
       expect(reachableControls(tester), contains(callActionsHangupId));
 
@@ -45,7 +45,8 @@ void main() {
     testWidgets('the demand keeps them there, named and working', (tester) async {
       final semantics = tester.ensureSemantics();
       final call = VideoCall();
-      await tester.pumpWidget(
+      await pumpCallScaffold(
+        tester,
         buildCallScaffold(callBloc, activeCalls: [call], focusedCall: call, keepControlsVisible: true),
       );
 
@@ -64,7 +65,8 @@ void main() {
     testWidgets('a tap on the picture cannot take them away either', (tester) async {
       final semantics = tester.ensureSemantics();
       final call = VideoCall();
-      await tester.pumpWidget(
+      await pumpCallScaffold(
+        tester,
         buildCallScaffold(callBloc, activeCalls: [call], focusedCall: call, keepControlsVisible: true),
       );
 
@@ -78,7 +80,7 @@ void main() {
     testWidgets('the gesture that puts them away is a named node of its own', (tester) async {
       final semantics = tester.ensureSemantics();
       final call = VideoCall();
-      await tester.pumpWidget(buildCallScaffold(callBloc, activeCalls: [call], focusedCall: call));
+      await pumpCallScaffold(tester, buildCallScaffold(callBloc, activeCalls: [call], focusedCall: call));
       // The node appears once the screen has probed the picture, which takes
       // a moment of clock, not just a frame.
       await tester.pump(const Duration(milliseconds: 1));
@@ -114,7 +116,8 @@ void main() {
     testWidgets('with the controls pinned there is no such node at all', (tester) async {
       final semantics = tester.ensureSemantics();
       final call = VideoCall();
-      await tester.pumpWidget(
+      await pumpCallScaffold(
+        tester,
         buildCallScaffold(callBloc, activeCalls: [call], focusedCall: call, keepControlsVisible: true),
       );
 
@@ -128,7 +131,7 @@ void main() {
     testWidgets('nor in an audio call, where the controls never hide', (tester) async {
       final semantics = tester.ensureSemantics();
       final call = makeCall(acceptedTime: DateTime(2024), displayName: 'Boris Klein');
-      await tester.pumpWidget(buildCallScaffold(callBloc, activeCalls: [call], focusedCall: call));
+      await pumpCallScaffold(tester, buildCallScaffold(callBloc, activeCalls: [call], focusedCall: call));
 
       // A named action that does nothing is worse than none.
       expect(find.bySemanticsIdentifier(callControlsToggleId), findsNothing);
@@ -140,7 +143,7 @@ void main() {
     testWidgets('nothing on the screen offers a press without saying what it does', (tester) async {
       final semantics = tester.ensureSemantics();
       final call = VideoCall();
-      await tester.pumpWidget(buildCallScaffold(callBloc, activeCalls: [call], focusedCall: call));
+      await pumpCallScaffold(tester, buildCallScaffold(callBloc, activeCalls: [call], focusedCall: call));
 
       // The whole screen at once, controls and all: every target that can be
       // pressed has to carry a name.

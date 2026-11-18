@@ -4,7 +4,6 @@ import 'package:material_ui/material_ui.dart';
 
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_webrtc/flutter_webrtc.dart';
-import 'package:logging/logging.dart';
 import 'package:webtrit_callkeep/webtrit_callkeep.dart';
 
 import 'package:webtrit_phone/app/keys.dart';
@@ -15,8 +14,6 @@ import 'package:webtrit_phone/models/models.dart';
 import 'package:webtrit_phone/widgets/widgets.dart';
 
 import '../call.dart';
-
-final _logger = Logger('CallActiveScaffold');
 
 class CallActiveScaffold extends StatefulWidget {
   const CallActiveScaffold({
@@ -167,8 +164,6 @@ class CallActiveScaffoldState extends State<CallActiveScaffold> {
         dispatchInteractionDebounce();
       }
     });
-
-    _compactController.addListener(_onCompactChanged);
   }
 
   @override
@@ -255,7 +250,6 @@ class CallActiveScaffoldState extends State<CallActiveScaffold> {
   void dispose() {
     _remoteFrameProbe.removeListener(_onRemoteFrameChanged);
     _remoteFrameProbe.dispose();
-    _compactController.removeListener(_onCompactChanged);
     _compactController.dispose();
     _debounceByStateSubscription?.cancel();
     _dtmfInput.dispose();
@@ -269,13 +263,6 @@ class CallActiveScaffoldState extends State<CallActiveScaffold> {
   void _onRemoteFrameChanged() {
     _syncAutoHide(reason: 'remote frame');
     if (mounted) setState(() {});
-  }
-
-  void _onCompactChanged() {
-    if (_compactController.compact && mounted) {
-      _logger.finer('_onCompactChanged - closing all popups');
-      Navigator.of(context).popUntil((route) => route is! PopupRoute);
-    }
   }
 
   // --- Focused-call intent helpers -----------------------------------------
@@ -447,7 +434,13 @@ class CallActiveScaffoldState extends State<CallActiveScaffold> {
         activeCall: activeCall,
         mediaQueryData: mediaQueryData,
         style: style,
-        controls: CallControls(
+        // The phone's routes take the whole screen, so that a menu's barrier
+        // covers it and the menu is placed against it; the controls inside
+        // keep off the system's areas themselves.
+        insetControls: false,
+        controls: CallScreenHandset(
+          compact: _compactController,
+          padding: mediaQueryData.padding,
           callStatus: widget.callStatus,
           popupMenuItems: _buildPopupMenuItems,
           params: controlsParams,
@@ -474,6 +467,7 @@ class CallActiveScaffoldState extends State<CallActiveScaffold> {
     required MediaQueryData mediaQueryData,
     required CallScreenStyle? style,
     required Widget controls,
+    bool insetControls = true,
   }) {
     // One gesture owns showing and hiding the controls, and it wraps the whole
     // screen rather than sitting inside it: a layer under the controls would
@@ -541,10 +535,18 @@ class CallActiveScaffoldState extends State<CallActiveScaffold> {
                 // inside it: showing and hiding them is a property of the layer
                 // around them, and there is no reason to rebuild the controls
                 // themselves every time it flips.
+                // Keyed: the toggle above comes and goes with whether the
+                // controls may hide, and without a key this layer would be
+                // matched to its place instead - and the controls, their
+                // routes and an open menu built anew.
                 AnimatedBuilder(
+                  key: const ValueKey('callControlsLayer'),
                   animation: _compactController,
-                  builder: (context, child) =>
-                      HideableLayer(hidden: _compactController.compact, padding: mediaQueryData.padding, child: child!),
+                  builder: (context, child) => HideableLayer(
+                    hidden: _compactController.compact,
+                    padding: insetControls ? mediaQueryData.padding : EdgeInsets.zero,
+                    child: child!,
+                  ),
                   child: controls,
                 ),
               ],

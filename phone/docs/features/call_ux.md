@@ -4,7 +4,7 @@ The product-level view of the calling experience: what the user can do, the
 screen states and the widgets that back them. The
 implementation deep-dive lives in [`call_arch.md`](call_arch.md).
 
-Last reviewed: 2026-10-30
+Last reviewed: 2026-11-18
 
 ## What the user can do
 
@@ -135,6 +135,7 @@ what it does.
 | Widget                   | File                                   | Role                                                                        |
 |--------------------------|----------------------------------------|-----------------------------------------------------------------------------|
 | `CallActiveScaffold`     | `view/call_active_scaffold.dart`       | Active call screen; owns keypad/DTMF state and the control intents          |
+| `CallScreenHandset`      | `view/call_screen_handset.dart`     | The phone's routes under the call screen (`callScreenRoutes`), the whole screen: its first page, `CallHomeScreenPage` (`view/call_phone_screen_pages.dart`), shows `CallControls` off the system's areas, read from `CallPhoneScope`; the menus the controls open sit in these routes, so they close with the call screen, and the page closes them when the controls hide |
 | `CallControls`           | `widgets/call_controls.dart`           | Toolbar + orientation selector; also defines `CallControlsParams`, the one object all wiring travels in |
 | `CallControlsPortrait`   | `widgets/call_controls_portrait.dart`  | Portrait arrangement: info on top, avatar flexing, actions at the bottom    |
 | `CallControlsLandscape`  | `widgets/call_controls_landscape.dart` | Landscape arrangement: info zone, action grid, hangup apart behind a rule |

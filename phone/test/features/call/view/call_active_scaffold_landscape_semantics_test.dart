@@ -30,7 +30,7 @@ void main() {
 
   testWidgets('the isolated hangup announces itself and ends the call through semantics', (tester) async {
     final handle = tester.ensureSemantics();
-    await tester.pumpWidget(buildCallScaffold(callBloc, activeCalls: [active], focusedCall: active));
+    await pumpCallScaffold(tester, buildCallScaffold(callBloc, activeCalls: [active], focusedCall: active));
 
     expectTapTargetSemantics(tester, find.bySemanticsIdentifier(callActionsHangupId), identifier: callActionsHangupId);
     await expectLater(tester, meetsGuideline(labeledTapTargetGuideline));
@@ -46,7 +46,7 @@ void main() {
     tester,
   ) async {
     final handle = tester.ensureSemantics();
-    await tester.pumpWidget(buildCallScaffold(callBloc, activeCalls: [active], focusedCall: active));
+    await pumpCallScaffold(tester, buildCallScaffold(callBloc, activeCalls: [active], focusedCall: active));
 
     await tapViaSemantics(tester, find.bySemanticsIdentifier(callActionsKeypadId));
     await tester.pumpAndSettle();

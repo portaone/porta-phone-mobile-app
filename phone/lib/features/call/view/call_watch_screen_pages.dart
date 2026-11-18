@@ -7,16 +7,6 @@ import 'package:webtrit_phone/app/router/app_router.dart';
 import '../widgets/watch/call_controls_watch.dart';
 import '../widgets/watch/call_watch_menus.dart';
 
-/// The call's face on a watch: the first page of the call screen's routes.
-@RoutePage()
-class CallWatchFaceScreenPage extends StatelessWidget {
-  // ignore: use_key_in_widget_constructors
-  const CallWatchFaceScreenPage();
-
-  @override
-  Widget build(BuildContext context) => const CallWatchFace();
-}
-
 /// The call's other actions.
 @RoutePage()
 class CallWatchMoreScreenPage extends StatelessWidget {

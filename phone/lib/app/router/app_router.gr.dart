@@ -169,6 +169,22 @@ class CallCenterTabPageRoute extends PageRouteInfo<void> {
 }
 
 /// generated route for
+/// [CallHomeScreenPage]
+class CallHomeScreenPageRoute extends PageRouteInfo<void> {
+  const CallHomeScreenPageRoute({List<PageRouteInfo>? children})
+    : super(CallHomeScreenPageRoute.name, initialChildren: children);
+
+  static const String name = 'CallHomeScreenPageRoute';
+
+  static PageInfo page = PageInfo(
+    name,
+    builder: (data) {
+      return CallHomeScreenPage();
+    },
+  );
+}
+
+/// generated route for
 /// [CallLogScreenPage]
 class CallLogScreenPageRoute extends PageRouteInfo<CallLogScreenPageRouteArgs> {
   CallLogScreenPageRoute({
@@ -322,22 +338,6 @@ class CallWatchConferenceScreenPageRoute extends PageRouteInfo<void> {
     name,
     builder: (data) {
       return CallWatchConferenceScreenPage();
-    },
-  );
-}
-
-/// generated route for
-/// [CallWatchFaceScreenPage]
-class CallWatchFaceScreenPageRoute extends PageRouteInfo<void> {
-  const CallWatchFaceScreenPageRoute({List<PageRouteInfo>? children})
-    : super(CallWatchFaceScreenPageRoute.name, initialChildren: children);
-
-  static const String name = 'CallWatchFaceScreenPageRoute';
-
-  static PageInfo page = PageInfo(
-    name,
-    builder: (data) {
-      return CallWatchFaceScreenPage();
     },
   );
 }

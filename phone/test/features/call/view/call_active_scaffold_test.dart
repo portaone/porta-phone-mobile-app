@@ -19,6 +19,7 @@ import 'package:webtrit_phone/models/models.dart';
 import 'package:webtrit_phone/widgets/keypad_key_button.dart';
 
 import '../../../helpers/semantics.dart';
+import '../call_screen_router.dart';
 import 'call_active_scaffold_harness.dart';
 
 /// [find.byTooltip] matches only flutter/material's Tooltip, and the app's
@@ -45,7 +46,7 @@ void main() {
 
   group('CallActiveScaffold - single call (list of 1)', () {
     testWidgets('1 incoming: Decline/Answer only, no list, no hint', (tester) async {
-      await tester.pumpWidget(buildCallScaffold(callBloc, activeCalls: [ringing], focusedCall: ringing));
+      await pumpCallScaffold(tester, buildCallScaffold(callBloc, activeCalls: [ringing], focusedCall: ringing));
 
       expect(find.byType(IncomingCallActions), findsOneWidget);
       expect(find.byType(ActiveCallActions), findsNothing);
@@ -56,7 +57,7 @@ void main() {
     });
 
     testWidgets('1 active: control grid, no incoming actions, no list', (tester) async {
-      await tester.pumpWidget(buildCallScaffold(callBloc, activeCalls: [active], focusedCall: active));
+      await pumpCallScaffold(tester, buildCallScaffold(callBloc, activeCalls: [active], focusedCall: active));
 
       expect(find.byType(ActiveCallActions), findsOneWidget);
       expect(find.byType(IncomingCallActions), findsNothing);
@@ -66,7 +67,7 @@ void main() {
 
     testWidgets('1 on hold: control grid as well', (tester) async {
       final held = makeCall(callId: 'held', acceptedTime: DateTime(2024), held: true);
-      await tester.pumpWidget(buildCallScaffold(callBloc, activeCalls: [held], focusedCall: held));
+      await pumpCallScaffold(tester, buildCallScaffold(callBloc, activeCalls: [held], focusedCall: held));
 
       expect(find.byType(ActiveCallActions), findsOneWidget);
       expect(find.byType(IncomingCallActions), findsNothing);
@@ -76,7 +77,7 @@ void main() {
 
   group('CallActiveScaffold - active + incoming', () {
     testWidgets('ringing focus: list + hint with hold side effect + two buttons', (tester) async {
-      await tester.pumpWidget(buildCallScaffold(callBloc, activeCalls: [active, ringing], focusedCall: ringing));
+      await pumpCallScaffold(tester, buildCallScaffold(callBloc, activeCalls: [active, ringing], focusedCall: ringing));
       final context = tester.element(find.byType(CallActiveScaffold));
 
       expect(find.byType(CallList), findsOneWidget);
@@ -99,7 +100,7 @@ void main() {
     });
 
     testWidgets('answer dispatches the holding intent for the focused call', (tester) async {
-      await tester.pumpWidget(buildCallScaffold(callBloc, activeCalls: [active, ringing], focusedCall: ringing));
+      await pumpCallScaffold(tester, buildCallScaffold(callBloc, activeCalls: [active, ringing], focusedCall: ringing));
 
       await tester.tap(find.byIcon(Icons.call));
       verify(() => callBloc.add(const CallControlEvent.answeredHoldingOthers('ringing'))).called(1);
@@ -107,7 +108,7 @@ void main() {
     });
 
     testWidgets('tapping the active row focuses it', (tester) async {
-      await tester.pumpWidget(buildCallScaffold(callBloc, activeCalls: [active, ringing], focusedCall: ringing));
+      await pumpCallScaffold(tester, buildCallScaffold(callBloc, activeCalls: [active, ringing], focusedCall: ringing));
 
       await tester.tap(find.byKey(const ValueKey('CallRow-active')));
       verify(() => callBloc.add(const CallControlEvent.callSelected('active'))).called(1);
@@ -115,7 +116,7 @@ void main() {
     });
 
     testWidgets('active focus: control grid instead of incoming actions', (tester) async {
-      await tester.pumpWidget(buildCallScaffold(callBloc, activeCalls: [active, ringing], focusedCall: active));
+      await pumpCallScaffold(tester, buildCallScaffold(callBloc, activeCalls: [active, ringing], focusedCall: active));
 
       expect(find.byType(ActiveCallActions), findsOneWidget);
       expect(find.byType(IncomingCallActions), findsNothing);
@@ -127,7 +128,7 @@ void main() {
   group('CallActiveScaffold - hold and resume on the focused call', () {
     testWidgets('Hold on an active focus holds just that call', (tester) async {
       final held = makeCall(callId: 'held', acceptedTime: DateTime(2024), held: true, displayName: 'Clara Diaz');
-      await tester.pumpWidget(buildCallScaffold(callBloc, activeCalls: [held, active], focusedCall: active));
+      await pumpCallScaffold(tester, buildCallScaffold(callBloc, activeCalls: [held, active], focusedCall: active));
 
       await tester.tap(find.byIcon(Icons.pause));
       verify(() => callBloc.add(const CallControlEvent.setHeld('active', true))).called(1);
@@ -136,7 +137,7 @@ void main() {
 
     testWidgets('Resume on a held focus holds the live call and resumes the focused one', (tester) async {
       final held = makeCall(callId: 'held', acceptedTime: DateTime(2024), held: true, displayName: 'Clara Diaz');
-      await tester.pumpWidget(buildCallScaffold(callBloc, activeCalls: [held, active], focusedCall: held));
+      await pumpCallScaffold(tester, buildCallScaffold(callBloc, activeCalls: [held, active], focusedCall: held));
 
       // The slot is a Resume affordance for a held focus - no swap button.
       expect(find.byIcon(Icons.swap_calls), findsNothing);
@@ -161,7 +162,8 @@ void main() {
 
     testWidgets('Add participant sends the person to the lists for the focused call', (tester) async {
       when(() => callBloc.state).thenReturn(CallState(activeCalls: [active]));
-      await tester.pumpWidget(
+      await pumpCallScaffold(
+        tester,
         buildCallScaffold(
           callBloc,
           activeCalls: [active],
@@ -184,7 +186,8 @@ void main() {
       final other = makeCall(callId: 'other', acceptedTime: DateTime(2024), displayName: 'Clara Diaz');
       const room = ConferenceState(phase: ConferencePhase.active, legs: {'active': 0, 'other': 1});
       when(() => callBloc.state).thenReturn(CallState(activeCalls: [active, other], conference: room));
-      await tester.pumpWidget(
+      await pumpCallScaffold(
+        tester,
         buildCallScaffold(
           callBloc,
           activeCalls: [active, other],
@@ -214,7 +217,8 @@ void main() {
           controller: CallController(callBloc: callBloc),
         ),
       );
-      await tester.pumpWidget(
+      await pumpCallScaffold(
+        tester,
         buildCallScaffold(
           callBloc,
           activeCalls: [active],
@@ -233,7 +237,8 @@ void main() {
 
     testWidgets('while the call rings, Cancel invite ends it', (tester) async {
       final ringing = makeCall(callId: 'c', processingStatus: CallProcessingStatus.outgoingRinging);
-      await tester.pumpWidget(
+      await pumpCallScaffold(
+        tester,
         buildCallScaffold(
           callBloc,
           activeCalls: [active, ringing],
@@ -252,7 +257,8 @@ void main() {
       // Answered while the room was on its way back, it waits to be added;
       // the person is talking, and only the hangup ends that call.
       final answered = makeCall(callId: 'c', acceptedTime: DateTime(2024), displayName: 'Clara Diaz');
-      await tester.pumpWidget(
+      await pumpCallScaffold(
+        tester,
         buildCallScaffold(
           callBloc,
           activeCalls: [active, answered],
@@ -276,7 +282,7 @@ void main() {
     });
 
     testWidgets('the control is absent where the deployment offers no conferences', (tester) async {
-      await tester.pumpWidget(buildCallScaffold(callBloc, activeCalls: [active], focusedCall: active));
+      await pumpCallScaffold(tester, buildCallScaffold(callBloc, activeCalls: [active], focusedCall: active));
       await tester.tap(find.bySemanticsIdentifier(callActionsTransferMenuId));
       await tester.pumpAndSettle();
 
@@ -296,7 +302,8 @@ void main() {
       // that can join a room, not every call on the screen.
       final ringing = makeCall(callId: 'ringing', processingStatus: CallProcessingStatus.incomingFromOffer);
       when(() => callBloc.state).thenReturn(CallState(activeCalls: [held, active, ringing]));
-      await tester.pumpWidget(
+      await pumpCallScaffold(
+        tester,
         buildCallScaffold(
           callBloc,
           activeCalls: [held, active, ringing],
@@ -312,7 +319,8 @@ void main() {
     });
 
     testWidgets('the control is absent where the deployment offers no conferences', (tester) async {
-      await tester.pumpWidget(
+      await pumpCallScaffold(
+        tester,
         buildCallScaffold(callBloc, activeCalls: [held, active], focusedCall: active, canMerge: true),
       );
 
@@ -321,7 +329,8 @@ void main() {
     });
 
     testWidgets('a single call offers nothing to merge', (tester) async {
-      await tester.pumpWidget(
+      await pumpCallScaffold(
+        tester,
         buildCallScaffold(callBloc, activeCalls: [active], focusedCall: active, callConfig: conferencing),
       );
 
@@ -346,7 +355,8 @@ void main() {
     testWidgets('the microphone mutes the room, not the leg', (tester) async {
       // The microphone track is one for every call, the room's included, so
       // muting it as a leg's would silence the whole conference.
-      await tester.pumpWidget(
+      await pumpCallScaffold(
+        tester,
         buildCallScaffold(callBloc, activeCalls: [legA, legB], focusedCall: legA, conference: room),
       );
 
@@ -360,7 +370,8 @@ void main() {
     });
 
     testWidgets('a leg is not held or transferred on its own', (tester) async {
-      await tester.pumpWidget(
+      await pumpCallScaffold(
+        tester,
         buildCallScaffold(callBloc, activeCalls: [legA, legB], focusedCall: legA, conference: room),
       );
 
@@ -373,7 +384,8 @@ void main() {
     testWidgets('the main hangup ends the room, not one of its participants', (tester) async {
       // The grid acts on the room whenever the focused call is a leg; a room
       // is not ended by silently picking one participant.
-      await tester.pumpWidget(
+      await pumpCallScaffold(
+        tester,
         buildCallScaffold(callBloc, activeCalls: [legA, legB], focusedCall: legA, conference: room),
       );
 
@@ -385,7 +397,8 @@ void main() {
 
     testWidgets('the main hangup still ends a call standing outside the room', (tester) async {
       final outside = makeCall(callId: 'outside', acceptedTime: DateTime(2024), displayName: 'Dana Ruiz');
-      await tester.pumpWidget(
+      await pumpCallScaffold(
+        tester,
         buildCallScaffold(callBloc, activeCalls: [legA, legB, outside], focusedCall: outside, conference: room),
       );
 
@@ -398,7 +411,8 @@ void main() {
       // It is the only control that ends the room - the panel carries none of
       // its own - so a screen reader must not hear it as an ordinary hangup.
       final semantics = tester.ensureSemantics();
-      await tester.pumpWidget(
+      await pumpCallScaffold(
+        tester,
         buildCallScaffold(callBloc, activeCalls: [legA, legB], focusedCall: legA, conference: room),
       );
 
@@ -416,7 +430,8 @@ void main() {
     });
 
     testWidgets('a participant is dropped by ending their call', (tester) async {
-      await tester.pumpWidget(
+      await pumpCallScaffold(
+        tester,
         buildCallScaffold(callBloc, activeCalls: [legA, legB], focusedCall: legA, conference: room),
       );
 
@@ -428,7 +443,8 @@ void main() {
     testWidgets('a call outside the room is brought into it, one request per call', (tester) async {
       final outside = makeCall(callId: 'outside', acceptedTime: DateTime(2024), displayName: 'Dana Ruiz');
       when(() => callBloc.state).thenReturn(CallState(activeCalls: [legA, legB, outside], conference: room));
-      await tester.pumpWidget(
+      await pumpCallScaffold(
+        tester,
         buildCallScaffold(
           callBloc,
           activeCalls: [legA, legB, outside],
@@ -445,7 +461,8 @@ void main() {
     });
 
     testWidgets('a participant is muted for everyone', (tester) async {
-      await tester.pumpWidget(
+      await pumpCallScaffold(
+        tester,
         buildCallScaffold(callBloc, activeCalls: [legA, legB], focusedCall: legA, conference: room),
       );
 
@@ -458,7 +475,7 @@ void main() {
   group('CallActiveScaffold - camera permission denied', () {
     testWidgets('camera button shows the permission-denied tooltip', (tester) async {
       final call = makeCall(callId: 'active', acceptedTime: DateTime(2024), videoPermissionDenied: true);
-      await tester.pumpWidget(buildCallScaffold(callBloc, activeCalls: [call], focusedCall: call));
+      await pumpCallScaffold(tester, buildCallScaffold(callBloc, activeCalls: [call], focusedCall: call));
       final context = tester.element(find.byType(CallActiveScaffold));
 
       expect(_findTooltip(context.l10n.call_CallActionsTooltip_cameraPermissionDenied), findsOneWidget);
@@ -470,7 +487,8 @@ void main() {
       final appPermissions = MockAppPermissions();
       when(() => appPermissions.isPermissionGranted(Permission.camera)).thenAnswer((_) async => true);
       final call = makeCall(callId: 'active', acceptedTime: DateTime(2024), videoPermissionDenied: true);
-      await tester.pumpWidget(
+      await pumpCallScaffold(
+        tester,
         buildCallScaffold(callBloc, activeCalls: [call], focusedCall: call, appPermissions: appPermissions),
       );
 
@@ -487,7 +505,8 @@ void main() {
       when(() => appPermissions.isPermissionGranted(Permission.camera)).thenAnswer((_) async => false);
       when(() => appPermissions.toAppSettings()).thenAnswer((_) async {});
       final call = makeCall(callId: 'active', acceptedTime: DateTime(2024), videoPermissionDenied: true);
-      await tester.pumpWidget(
+      await pumpCallScaffold(
+        tester,
         buildCallScaffold(callBloc, activeCalls: [call], focusedCall: call, appPermissions: appPermissions),
       );
 
@@ -523,7 +542,8 @@ void main() {
       final picking = DestinationPickingCubit();
       addTearDown(picking.close);
       when(() => callBloc.state).thenReturn(CallState(activeCalls: [active]));
-      await tester.pumpWidget(
+      await pumpCallScaffold(
+        tester,
         buildCallScaffold(callBloc, activeCalls: [active], focusedCall: active, picking: picking),
       );
 
@@ -548,7 +568,8 @@ void main() {
           controller: CallController(callBloc: callBloc),
         ),
       );
-      await tester.pumpWidget(
+      await pumpCallScaffold(
+        tester,
         buildCallScaffold(callBloc, activeCalls: [active], focusedCall: active, picking: picking),
       );
 
@@ -567,7 +588,8 @@ void main() {
     // the whole transfer.
     for (final focused in [consultation, original]) {
       testWidgets('submit hands the original to the linked call when ${focused.callId} is focused', (tester) async {
-        await tester.pumpWidget(
+        await pumpCallScaffold(
+          tester,
           buildCallScaffold(callBloc, activeCalls: [original, consultation], focusedCall: focused, linkedCall: link),
         );
 
@@ -593,7 +615,8 @@ void main() {
         held: true,
         displayName: 'Dana Weber',
       );
-      await tester.pumpWidget(
+      await pumpCallScaffold(
+        tester,
         buildCallScaffold(
           callBloc,
           activeCalls: [original, stranger, consultation],
@@ -613,7 +636,8 @@ void main() {
 
     testWidgets('the hand-over is absent while the linked call is not yet answered', (tester) async {
       final ringing = makeCall(callId: 'consultation', direction: CallDirection.outgoing, displayName: 'Boris Klein');
-      await tester.pumpWidget(
+      await pumpCallScaffold(
+        tester,
         buildCallScaffold(callBloc, activeCalls: [original, ringing], focusedCall: original, linkedCall: link),
       );
 
@@ -644,16 +668,15 @@ void main() {
     Finder inMenu(String name) => find.descendant(of: find.byType(PopupMenuItem<dynamic>), matching: find.text(name));
 
     testWidgets('the held call is offered and handed over to the call on screen', (tester) async {
-      await tester.pumpWidget(buildCallScaffold(callBloc, activeCalls: [held, live], focusedCall: live));
+      await pumpCallScaffold(tester, buildCallScaffold(callBloc, activeCalls: [held, live], focusedCall: live));
 
       await openTransferMenu(tester);
       expect(inMenu('Clara Diaz'), findsOneWidget);
       await tester.tap(inMenu('Clara Diaz'));
       await tester.pumpAndSettle();
 
-      verify(
-        () => callBloc.add(CallControlEvent.attendedTransferSubmitted(referorCall: held, replaceCall: live)),
-      ).called(1);
+      verify(() => callBloc.add(CallControlEvent.attendedTransferSubmitted(referorCall: held, replaceCall: live)))
+          .called(1);
       await teardownCallScaffold(tester);
     });
 
@@ -661,23 +684,22 @@ void main() {
       // The person picks which held call joins the one on screen, so nothing
       // is guessed from which call happens to be live.
       final other = makeCall(callId: 'other', acceptedTime: DateTime(2024), held: true, displayName: 'Dana Weber');
-      await tester.pumpWidget(buildCallScaffold(callBloc, activeCalls: [held, other, live], focusedCall: live));
+      await pumpCallScaffold(tester, buildCallScaffold(callBloc, activeCalls: [held, other, live], focusedCall: live));
 
       await openTransferMenu(tester);
       expect(inMenu('Clara Diaz'), findsOneWidget);
       await tester.tap(inMenu('Dana Weber'));
       await tester.pumpAndSettle();
 
-      verify(
-        () => callBloc.add(CallControlEvent.attendedTransferSubmitted(referorCall: other, replaceCall: live)),
-      ).called(1);
+      verify(() => callBloc.add(CallControlEvent.attendedTransferSubmitted(referorCall: other, replaceCall: live)))
+          .called(1);
       await teardownCallScaffold(tester);
     });
 
     testWidgets('a held call on screen is offered the live call and handed over to it', (tester) async {
       // The entry names the other call of the pair; the held call on screen is
       // the one handed over, as in an attended transfer.
-      await tester.pumpWidget(buildCallScaffold(callBloc, activeCalls: [held, live], focusedCall: held));
+      await pumpCallScaffold(tester, buildCallScaffold(callBloc, activeCalls: [held, live], focusedCall: held));
 
       await openTransferMenu(tester);
       expect(inMenu('Boris Klein'), findsOneWidget);
@@ -685,9 +707,8 @@ void main() {
       await tester.tap(inMenu('Boris Klein'));
       await tester.pumpAndSettle();
 
-      verify(
-        () => callBloc.add(CallControlEvent.attendedTransferSubmitted(referorCall: held, replaceCall: live)),
-      ).called(1);
+      verify(() => callBloc.add(CallControlEvent.attendedTransferSubmitted(referorCall: held, replaceCall: live)))
+          .called(1);
       await teardownCallScaffold(tester);
     });
 
@@ -698,7 +719,7 @@ void main() {
         held: true,
         displayName: 'Dana Weber',
       );
-      await tester.pumpWidget(buildCallScaffold(callBloc, activeCalls: [dialling, live], focusedCall: live));
+      await pumpCallScaffold(tester, buildCallScaffold(callBloc, activeCalls: [dialling, live], focusedCall: live));
 
       await openTransferMenu(tester);
 
@@ -710,7 +731,8 @@ void main() {
       // Calling somebody into a call links the new call to it; until it is
       // answered and has joined, the call it is for is not to be handed away.
       const join = LinkedCall(callId: 'live', anchorCallId: 'held', purpose: LinkedCallPurpose.join);
-      await tester.pumpWidget(
+      await pumpCallScaffold(
+        tester,
         buildCallScaffold(callBloc, activeCalls: [held, live], focusedCall: live, linkedCall: join),
       );
 
@@ -723,7 +745,7 @@ void main() {
 
   group('CallActiveScaffold - avatar in the video area', () {
     testWidgets('audio-only call shows the remote avatar instead of the video overlay', (tester) async {
-      await tester.pumpWidget(buildCallScaffold(callBloc, activeCalls: [active], focusedCall: active));
+      await pumpCallScaffold(tester, buildCallScaffold(callBloc, activeCalls: [active], focusedCall: active));
 
       expect(find.byType(CallRemoteAvatar), findsOneWidget);
       expect(find.byType(RemoteVideoViewOverlay), findsNothing);
@@ -731,7 +753,7 @@ void main() {
     });
 
     testWidgets('falls back to the initials of the remote display name', (tester) async {
-      await tester.pumpWidget(buildCallScaffold(callBloc, activeCalls: [active], focusedCall: active));
+      await pumpCallScaffold(tester, buildCallScaffold(callBloc, activeCalls: [active], focusedCall: active));
       await tester.pump();
 
       expect(find.descendant(of: find.byType(CallRemoteAvatar), matching: find.text('BK')), findsOneWidget);
@@ -744,7 +766,7 @@ void main() {
       // happens to be focused would say less while taking the room they need.
       final live = VideoCall();
       final held = makeCall(callId: 'held', acceptedTime: DateTime(2024), held: true, displayName: 'Clara Diaz');
-      await tester.pumpWidget(buildCallScaffold(callBloc, activeCalls: [held, live], focusedCall: held));
+      await pumpCallScaffold(tester, buildCallScaffold(callBloc, activeCalls: [held, live], focusedCall: held));
       await tester.pump(const Duration(milliseconds: 1));
 
       expect(find.descendant(of: find.byType(CallRow), matching: find.byType(CallRemoteAvatar)), findsNWidgets(2));
@@ -753,7 +775,7 @@ void main() {
 
       // Focusing the other call changes nothing about that: the rows are the
       // pictures either way.
-      await tester.pumpWidget(buildCallScaffold(callBloc, activeCalls: [held, live], focusedCall: live));
+      await pumpCallScaffold(tester, buildCallScaffold(callBloc, activeCalls: [held, live], focusedCall: live));
       await tester.pump();
       expect(find.byType(CallRemoteAvatar), findsNWidgets(2));
       await teardownCallScaffold(tester);
@@ -764,7 +786,7 @@ void main() {
       // screen rather than freeze on its last frame, and a blank background
       // must not be left standing in for the person.
       final held = VideoCall(held: true);
-      await tester.pumpWidget(buildCallScaffold(callBloc, activeCalls: [held], focusedCall: held));
+      await pumpCallScaffold(tester, buildCallScaffold(callBloc, activeCalls: [held], focusedCall: held));
       await tester.pump(const Duration(milliseconds: 1));
 
       expect(find.byType(CallRemoteAvatar), findsOneWidget);
@@ -777,7 +799,7 @@ void main() {
       addTearDown(tester.view.reset);
 
       final held = makeCall(callId: 'held', acceptedTime: DateTime(2024), held: true, displayName: 'Clara Diaz');
-      await tester.pumpWidget(buildCallScaffold(callBloc, activeCalls: [held, active], focusedCall: held));
+      await pumpCallScaffold(tester, buildCallScaffold(callBloc, activeCalls: [held, active], focusedCall: held));
       await tester.pump();
 
       // The roster highlights Clara and the actions act on her; her own row
@@ -793,7 +815,7 @@ void main() {
       tester.view.devicePixelRatio = 3;
       addTearDown(tester.view.reset);
 
-      await tester.pumpWidget(buildCallScaffold(callBloc, activeCalls: [active], focusedCall: active));
+      await pumpCallScaffold(tester, buildCallScaffold(callBloc, activeCalls: [active], focusedCall: active));
       expect(find.byType(CallRemoteAvatar), findsOneWidget);
 
       await tester.tap(find.byKey(callActionsKeypadKey));
@@ -814,7 +836,7 @@ void main() {
     });
 
     testWidgets('typed digits are sent as DTMF, shown, and dropped when the keypad closes', (tester) async {
-      await tester.pumpWidget(buildCallScaffold(callBloc, activeCalls: [active], focusedCall: active));
+      await pumpCallScaffold(tester, buildCallScaffold(callBloc, activeCalls: [active], focusedCall: active));
       await tester.tap(find.byKey(callActionsKeypadKey));
       await tester.pumpAndSettle();
 
@@ -845,7 +867,7 @@ void main() {
       tester.view.devicePixelRatio = 3;
       addTearDown(tester.view.reset);
 
-      await tester.pumpWidget(buildCallScaffold(callBloc, activeCalls: [active], focusedCall: active));
+      await pumpCallScaffold(tester, buildCallScaffold(callBloc, activeCalls: [active], focusedCall: active));
       await tester.pump();
 
       expect(tester.takeException(), isNull);
@@ -859,7 +881,10 @@ void main() {
   group('CallActiveScaffold - 3 calls (held + active + incoming)', () {
     testWidgets('three rows, ringing focus keeps two buttons and the hint', (tester) async {
       final held = makeCall(callId: 'held', acceptedTime: DateTime(2024), held: true, displayName: 'Clara Diaz');
-      await tester.pumpWidget(buildCallScaffold(callBloc, activeCalls: [held, active, ringing], focusedCall: ringing));
+      await pumpCallScaffold(
+        tester,
+        buildCallScaffold(callBloc, activeCalls: [held, active, ringing], focusedCall: ringing),
+      );
       final context = tester.element(find.byType(CallActiveScaffold));
 
       expect(find.byType(CallRow), findsNWidgets(3));
@@ -886,7 +911,7 @@ void main() {
 
     testWidgets('on their own they hide once the call is left alone', (tester) async {
       final call = VideoCall();
-      await tester.pumpWidget(buildCallScaffold(callBloc, activeCalls: [call], focusedCall: call));
+      await pumpCallScaffold(tester, buildCallScaffold(callBloc, activeCalls: [call], focusedCall: call));
 
       expect(controlsOpacity(tester), 1);
       await tester.pump(idleDelay);
@@ -894,9 +919,84 @@ void main() {
       await teardownCallScaffold(tester);
     });
 
+    testWidgets('a menu left open goes with them', (tester) async {
+      final call = VideoCall();
+      await pumpCallScaffold(tester, buildCallScaffold(callBloc, activeCalls: [call], focusedCall: call));
+      await pumpUntilPictureProbed(tester);
+
+      await tester.tap(find.byIcon(Icons.more_vert));
+      await tester.pumpAndSettle();
+      expect(find.byType(CallPopupMenuItem<void>), findsWidgets);
+
+      await tester.pump(idleDelay);
+      await tester.pumpAndSettle();
+      expect(controlsOpacity(tester), 0);
+      expect(find.byType(CallPopupMenuItem<void>), findsNothing, reason: 'an open menu would come back with them');
+      await teardownCallScaffold(tester);
+    });
+
+    testWidgets('a menu left open goes with the call screen', (tester) async {
+      // The call ends with a menu open: the call screen's route is replaced
+      // by the main screen, and the menu, whose items act on this screen,
+      // must not outlive it.
+      final call = VideoCall();
+      await pumpCallScaffold(tester, buildCallScaffold(callBloc, activeCalls: [call], focusedCall: call));
+      await tester.tap(find.byIcon(Icons.more_vert));
+      await tester.pumpAndSettle();
+      expect(find.byType(CallPopupMenuItem<void>), findsWidgets);
+
+      final callScreen = tester.element(find.byType(CallActiveScaffold));
+      final screenRoute = ModalRoute.of(tester.element(find.byType(CallScreenRouter)))!;
+      Navigator.of(callScreen, rootNavigator: true).replace(
+        oldRoute: screenRoute,
+        newRoute: MaterialPageRoute<void>(builder: (_) => const SizedBox()),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.byType(CallActiveScaffold), findsNothing);
+      expect(find.byType(CallPopupMenuItem<void>), findsNothing);
+    });
+
+    testWidgets('a menu stays open when the controls stop hiding on their own', (tester) async {
+      // Pinning the controls - a second call ringing, the focus on a held
+      // call, or keepControlsVisible - takes the toggle off the screen; the
+      // controls, their routes and the menu open in them stay as they are.
+      final call = VideoCall();
+      await pumpCallScaffold(tester, buildCallScaffold(callBloc, activeCalls: [call], focusedCall: call));
+      await tester.tap(find.byIcon(Icons.more_vert));
+      await tester.pumpAndSettle();
+      final routes = tester.state(find.byType(Navigator).last);
+
+      await tester.pumpWidget(
+        buildCallScaffold(callBloc, activeCalls: [call], focusedCall: call, keepControlsVisible: true),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.byType(CallPopupMenuItem<void>), findsWidgets);
+      expect(tester.state(find.byType(Navigator).last), same(routes));
+      await tester.tap(find.byType(CallPopupMenuItem<void>).first);
+      await tester.pumpAndSettle();
+      await teardownCallScaffold(tester);
+    });
+
+    testWidgets('the system back closes an open menu and nothing else', (tester) async {
+      final call = VideoCall();
+      await pumpCallScaffold(tester, buildCallScaffold(callBloc, activeCalls: [call], focusedCall: call));
+      await tester.tap(find.byIcon(Icons.more_vert));
+      await tester.pumpAndSettle();
+      expect(find.byType(CallPopupMenuItem<void>), findsWidgets);
+
+      await tester.binding.handlePopRoute();
+      await tester.pumpAndSettle();
+
+      expect(find.byType(CallPopupMenuItem<void>), findsNothing);
+      expect(find.byType(CallActiveScaffold), findsOneWidget, reason: 'the call screen stays');
+      await teardownCallScaffold(tester);
+    });
+
     testWidgets('a tap anywhere shows and hides them again', (tester) async {
       final call = VideoCall();
-      await tester.pumpWidget(buildCallScaffold(callBloc, activeCalls: [call], focusedCall: call));
+      await pumpCallScaffold(tester, buildCallScaffold(callBloc, activeCalls: [call], focusedCall: call));
       await pumpUntilPictureProbed(tester);
 
       await tester.tapAt(const Offset(20, 400));
@@ -913,7 +1013,7 @@ void main() {
       // The toolbar carries the status line and nothing else to press, so a tap
       // on it belongs to the same gesture as a tap on the picture.
       final call = VideoCall();
-      await tester.pumpWidget(buildCallScaffold(callBloc, activeCalls: [call], focusedCall: call));
+      await pumpCallScaffold(tester, buildCallScaffold(callBloc, activeCalls: [call], focusedCall: call));
       await pumpUntilPictureProbed(tester);
 
       await tester.tapAt(tester.getCenter(find.byType(AppBar)));
@@ -924,7 +1024,7 @@ void main() {
 
     testWidgets('the own camera being off changes nothing - the picture is the other person', (tester) async {
       final call = VideoCall(cameraOn: false);
-      await tester.pumpWidget(buildCallScaffold(callBloc, activeCalls: [call], focusedCall: call));
+      await pumpCallScaffold(tester, buildCallScaffold(callBloc, activeCalls: [call], focusedCall: call));
 
       await tester.pump(idleDelay);
       expect(controlsOpacity(tester), 0);
@@ -940,7 +1040,7 @@ void main() {
       // the name and every button, leaving a bare screen and no hint that a
       // second tap brings them back. There is no picture to uncover in an
       // audio call, so there is nothing for the tap to do.
-      await tester.pumpWidget(buildCallScaffold(callBloc, activeCalls: [active], focusedCall: active));
+      await pumpCallScaffold(tester, buildCallScaffold(callBloc, activeCalls: [active], focusedCall: active));
 
       await tester.pump(idleDelay);
       expect(controlsOpacity(tester), 1);
@@ -954,7 +1054,7 @@ void main() {
     testWidgets('a ringing call keeps its answer buttons through a tap', (tester) async {
       // The same screen takes the incoming call, and a tap there used to hide
       // the way to answer or decline it.
-      await tester.pumpWidget(buildCallScaffold(callBloc, activeCalls: [ringing], focusedCall: ringing));
+      await pumpCallScaffold(tester, buildCallScaffold(callBloc, activeCalls: [ringing], focusedCall: ringing));
 
       await tester.tapAt(const Offset(20, 400));
       await tester.pump(kThemeAnimationDuration);
@@ -967,7 +1067,7 @@ void main() {
       // place of the picture, and hiding the controls would take the avatar
       // with them.
       final call = VideoCall(framesArrive: false);
-      await tester.pumpWidget(buildCallScaffold(callBloc, activeCalls: [call], focusedCall: call));
+      await pumpCallScaffold(tester, buildCallScaffold(callBloc, activeCalls: [call], focusedCall: call));
 
       await tester.pump(idleDelay);
       expect(controlsOpacity(tester), 1);
@@ -984,7 +1084,7 @@ void main() {
       // is nothing to uncover.
       final live = VideoCall();
       final held = makeCall(callId: 'held', acceptedTime: DateTime(2024), held: true, displayName: 'Clara Diaz');
-      await tester.pumpWidget(buildCallScaffold(callBloc, activeCalls: [held, live], focusedCall: held));
+      await pumpCallScaffold(tester, buildCallScaffold(callBloc, activeCalls: [held, live], focusedCall: held));
 
       await tester.pump(idleDelay);
       expect(controlsOpacity(tester), 1);
@@ -997,11 +1097,12 @@ void main() {
 
     testWidgets('the demand arriving over hidden controls brings them back', (tester) async {
       final call = VideoCall();
-      await tester.pumpWidget(buildCallScaffold(callBloc, activeCalls: [call], focusedCall: call));
+      await pumpCallScaffold(tester, buildCallScaffold(callBloc, activeCalls: [call], focusedCall: call));
       await tester.pump(idleDelay);
       expect(controlsOpacity(tester), 0);
 
-      await tester.pumpWidget(
+      await pumpCallScaffold(
+        tester,
         buildCallScaffold(callBloc, activeCalls: [call], focusedCall: call, keepControlsVisible: true),
       );
       await tester.pump(kThemeAnimationDuration);
@@ -1020,7 +1121,7 @@ void main() {
     for (final kind in ['audio', 'held', 'ringing']) {
       testWidgets('controls hidden over the video come back when the call becomes $kind', (tester) async {
         final video = VideoCall();
-        await tester.pumpWidget(buildCallScaffold(callBloc, activeCalls: [video], focusedCall: video));
+        await pumpCallScaffold(tester, buildCallScaffold(callBloc, activeCalls: [video], focusedCall: video));
         await tester.pump(idleDelay);
         expect(controlsOpacity(tester), 0);
         final before = tester.state(find.byType(CallActiveScaffold));
@@ -1031,7 +1132,7 @@ void main() {
           processingStatus: kind == 'ringing' ? CallProcessingStatus.incomingFromOffer : CallProcessingStatus.connected,
           acceptedTime: kind == 'ringing' ? null : DateTime(2024),
         );
-        await tester.pumpWidget(buildCallScaffold(callBloc, activeCalls: [next], focusedCall: next));
+        await pumpCallScaffold(tester, buildCallScaffold(callBloc, activeCalls: [next], focusedCall: next));
         expect(tester.state(find.byType(CallActiveScaffold)), same(before), reason: 'the same screen, another call');
         await tester.pump(kThemeAnimationDuration);
         expect(controlsOpacity(tester, of: kind == 'ringing' ? find.byType(IncomingCallActions) : null), 1);
@@ -1044,13 +1145,13 @@ void main() {
       // call has a track but its first frame is still on its way. The
       // controls have nothing to hide behind yet.
       final previous = VideoCall(cameraOn: false);
-      await tester.pumpWidget(buildCallScaffold(callBloc, activeCalls: [previous], focusedCall: previous));
+      await pumpCallScaffold(tester, buildCallScaffold(callBloc, activeCalls: [previous], focusedCall: previous));
       await tester.pump(const Duration(milliseconds: 1));
       final before = tester.state(find.byType(CallActiveScaffold));
 
       final track = _PendingFrameTrack();
       final next = _oneWayVideoCall('next', track);
-      await tester.pumpWidget(buildCallScaffold(callBloc, activeCalls: [next], focusedCall: next));
+      await pumpCallScaffold(tester, buildCallScaffold(callBloc, activeCalls: [next], focusedCall: next));
       expect(tester.state(find.byType(CallActiveScaffold)), same(before));
       await tester.pump(const Duration(seconds: 6));
       expect(track.captures, greaterThan(0), reason: 'the new track is being probed');
@@ -1068,7 +1169,7 @@ void main() {
       // old track showed says nothing about the new one.
       final oldTrack = _PendingFrameTrack();
       final call = _oneWayVideoCall('same', oldTrack);
-      await tester.pumpWidget(buildCallScaffold(callBloc, activeCalls: [call], focusedCall: call));
+      await pumpCallScaffold(tester, buildCallScaffold(callBloc, activeCalls: [call], focusedCall: call));
       await tester.pump(const Duration(milliseconds: 1));
       oldTrack.frame.completeError(StateError('capture failed, counts as a picture'));
       await tester.pump();
@@ -1076,7 +1177,10 @@ void main() {
 
       final newTrack = _PendingFrameTrack();
       final renegotiated = _oneWayVideoCall('same', newTrack);
-      await tester.pumpWidget(buildCallScaffold(callBloc, activeCalls: [renegotiated], focusedCall: renegotiated));
+      await pumpCallScaffold(
+        tester,
+        buildCallScaffold(callBloc, activeCalls: [renegotiated], focusedCall: renegotiated),
+      );
       expect(tester.state(find.byType(CallActiveScaffold)), same(before));
       await tester.pump(const Duration(seconds: 6));
       expect(newTrack.captures, greaterThan(0));
@@ -1097,7 +1201,7 @@ void main() {
       final oldTrack = _PendingFrameTrack();
       final stream = _RemoteStream(oldTrack);
       final call = _oneWayVideoCall('same', oldTrack, stream: stream);
-      await tester.pumpWidget(buildCallScaffold(callBloc, activeCalls: [call], focusedCall: call));
+      await pumpCallScaffold(tester, buildCallScaffold(callBloc, activeCalls: [call], focusedCall: call));
       await tester.pump(const Duration(milliseconds: 1));
       oldTrack.frame.completeError(StateError('capture failed, counts as a picture'));
       await tester.pump();
@@ -1121,14 +1225,14 @@ void main() {
       // taken on, which is no longer the one on screen.
       final oldTrack = _PendingFrameTrack();
       final previous = _oneWayVideoCall('previous', oldTrack);
-      await tester.pumpWidget(buildCallScaffold(callBloc, activeCalls: [previous], focusedCall: previous));
+      await pumpCallScaffold(tester, buildCallScaffold(callBloc, activeCalls: [previous], focusedCall: previous));
       await tester.pump(const Duration(milliseconds: 1));
       expect(oldTrack.captures, 1);
 
       final nextTrack = _PendingFrameTrack();
       final next = _oneWayVideoCall('next', nextTrack);
       final before = tester.state(find.byType(CallActiveScaffold));
-      await tester.pumpWidget(buildCallScaffold(callBloc, activeCalls: [next], focusedCall: next));
+      await pumpCallScaffold(tester, buildCallScaffold(callBloc, activeCalls: [next], focusedCall: next));
       expect(tester.state(find.byType(CallActiveScaffold)), same(before));
       oldTrack.frame.completeError(StateError('previous stream is closed'));
       await tester.pump();
