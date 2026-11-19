@@ -3,7 +3,7 @@
 Merging the calls a person already holds into one room where everybody hears
 everybody. The room is the server's - a Janus AudioBridge the backend builds
 and owns - and this client asks for it, joins it, and follows what it says.
-Last reviewed: 2026-10-21.
+Last reviewed: 2026-11-19.
 
 The wire format, every refusal reason and the obligations this client is held
 to are in
@@ -16,17 +16,85 @@ that joins it, and how it is taken down.
 ```
 lib/features/call/
   conference/
+    conference_room.dart              the room as one object: every step of its life, its ports and commands
     conference_peer_connection.dart   the client's own connection to the mixer
     conference_video_session.dart     the room's video: subscriber and publisher connections (not wired yet)
     leg_mute_sync.dart                keeps the platform's mute for each leg in step with the room's
   models/conference_state.dart        ConferenceState, ConferencePhase
   models/linked_call.dart             LinkedCall: a call placed to join a call or the room (purpose join)
-  bloc/call_bloc.dart                 the handlers, in the "conference" section
+  bloc/call_bloc.dart                 composes the room: hands it the room's events and the user's requests
+  bloc/call_conference_event_mapping.dart  which step of the room takes each conference event of the queue
   bloc/call_state.dart                the derivations: mergeableCallIds, mergeableLegs, canMerge, canAdd
   widgets/conference_panel.dart       the room on screen: its participants
   widgets/call_row_frame.dart         the row every list on the call screen is made of
   widgets/call_list_action.dart       the Merge and Add controls in a roster header
 ```
+
+## The room in CallBloc
+
+`CallBloc` holds the room as one object it composes, `ConferenceRoom`
+(`conference/conference_room.dart`), in its field `_room`. The room owns the connection
+to the mixer (`ConferencePeerConnection`), the wait for the room's offer
+(`RoomOfferWait`), the codecs of the legs (`RoomCodecs`) and their mute
+(`LegMuteSync`), and takes every step of the room's life.
+
+The API is named by what each part is. A request of the user is an imperative
+(`merge`, `addCall`, `muteParticipant`, `setSelfMuted`, `end`, `rejoin`); what the
+server says is `on<What>` (`onOffer`, `onParticipants`, `onFailed`, `onTerminated`,
+`onRemoteCandidate`, `onSessionLost`); the room's own continuations are private and
+reached through `takeStep`. The sealed families carry their kind in the name:
+`...Command`, `...Step`, `...Notice`.
+
+The room knows nothing of the bloc, its state or its events
+(`test/architecture/conference_boundary_test.dart` keeps it so). What it needs is
+handed to it at construction:
+
+- the signalling, callkeep and the server's capabilities;
+- `ConferenceCalls` - what it reads of the calls around the room (the room itself, a
+  call, which calls can join, what the server's list changes) and asks of one call
+  (its audio, its codec). The bloc implements it over its own state
+  (`_BlocConferenceCalls`);
+- `onCommand` - a `ConferenceCommand` for something only the owner can do to a leg:
+  renegotiate it, hold or resume it, end it, retry a merge or an add;
+- `onStep` - a `ConferenceStep`, a continuation of the room's own (the answer to its
+  offer was taken, the mixer's connection failed, a candidate was gathered) that has
+  to take its turn in the bloc's queue. The bloc queues it as one event and hands it
+  back to `ConferenceRoom.takeStep`;
+- `onNotice` - a `ConferenceNotice` for something the user is to be told (the room was
+  refused, failed, ended); the bloc words it as a notification of the app;
+- `onError` - a sink for errors (the bloc's `CallErrorReporter`).
+
+Once the bloc is closing, what the room raises goes nowhere: a command, a step and a
+notice are dropped (`_onConferenceCommand`, `_onConferenceStep`,
+`_onConferenceNotice`), and the offer deadline of a room the bloc no longer cancels is
+nobody's. A handler still in flight at close() runs on, and its request may be
+answered after it; before the room was a module of its own, the first event it
+queued then threw.
+
+The room's state stays the bloc's, `CallState.conference`. A step that changes it is
+called with a `ConferenceWrite` and describes each change as one `ConferenceUpdate` -
+the room, the calls taken off hold, the transitions of calls, the placed call's focus -
+which the bloc applies as one change of its state, where it changed before.
+
+A call's own negotiation tells the room what it has to know for the move onto the
+conference codecs through `ConferenceRoom.legNegotiation`, a `LegNegotiation`: the
+offers and answers of a call being moved, and its end. It is the part of `RoomCodecs`
+the calls see; checking, restricting and the move itself stay the room's.
+
+The boundary is kept by imports as well as by names: a file of the module imports the
+files it uses, not a barrel of the feature, since a barrel that exports one file
+importing the bloc brings the bloc along. The architecture test
+(`test/architecture/conference_boundary_test.dart`) follows the imports through the
+call feature, names the chain it finds and refuses a direct import of the barrels
+above the feature. It does not follow a chain out of the feature: the app's own
+barrels (lib/models, lib/extensions, lib/repositories) import the router and with it
+every feature, so from nearly any file a walk reaches the bloc - a cycle of the app,
+not of this module.
+
+The room has tests of its own with the owner stood in for
+(`test/features/call/conference/conference_room_test.dart`: a `ConferenceCalls` of
+plain values, the commands, steps and writes recorded); how it behaves inside the
+bloc, with real calls around it, is in the bloc's conference tests next to it.
 
 ## The model
 
@@ -331,7 +399,7 @@ attended transfer and described in [`call_arch.md`](call_arch.md) under
   alone, and the request is asked again once every one has its answer -
   checking the codecs again, so a far end that answered on G.722 anyway is not
   merged nor moved a second time. The policy and what is kept about a move
-  are `RoomCodecs`' (`conference/room_codecs.dart`), which hands `CallBloc`
+  are `RoomCodecs`' (`conference/room_codecs.dart`), which hands the conference
   commands - renegotiate, hold again, ask again - and is tested on its own:
   - only an applied answer counts: `updated` carries none, and stands for one
     only when the connection is back in stable;
@@ -502,7 +570,7 @@ answer on a fresh connection
 ```
 
 Three conditions, all read where the failure arrives
-(`__onMutationConferenceConnectionFailed`), or the room is given up as before:
+(`MixerFailedStep`), or the room is given up as before:
 
 - **the core has the request** (`CallCapabilitiesConfig.isConferenceRejoinEnabled`,
   from the core version). An older core does not refuse an unknown request, it

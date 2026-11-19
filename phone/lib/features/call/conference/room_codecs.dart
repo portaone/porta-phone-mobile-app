@@ -102,7 +102,45 @@ enum RoomOfferError {
 ///
 /// It knows nothing of signaling or of connections: the owner tells it what
 /// happened and carries out the [RoomCodecsCommand]s it is handed.
-class RoomCodecs {
+/// What a call's own negotiation tells the move onto the conference codecs
+/// and back: each offer and answer of a call being moved, and its end. The
+/// part of [RoomCodecs] the owner's calls see; the rest is the room's.
+abstract interface class LegNegotiation {
+  /// Whether [callId] is being moved onto the conference codecs.
+  bool moves(String callId);
+
+  /// Whether an offer kept for [callId] is withdrawn for the move's own.
+  bool withdrawsKeptOffer(String callId);
+
+  /// The move's offer for [callId] went out.
+  void offerSent(String callId);
+
+  /// The move's offer for [callId] failed with [code]; what to do about it.
+  RoomOfferError offerFailed(String callId, int code);
+
+  /// The far end acknowledged the offer of [callId].
+  void acknowledged(String callId);
+
+  /// An answer was applied to [callId].
+  void answerApplied(String callId);
+
+  /// The far end updated [callId]; [stable] when its connection is back in stable.
+  void updated(String callId, {required bool stable});
+
+  /// Whether this renegotiation of [callId] takes it back off the codecs.
+  bool takesBack(String callId);
+
+  /// Whether taking [callId] back was skipped, and is done now.
+  bool takeBackSkipped(String callId);
+
+  /// [callId] is to be held again once its resync is over.
+  void holdAfterResync(String callId);
+
+  /// [callId] is gone.
+  void callRemoved(String callId);
+}
+
+class RoomCodecs implements LegNegotiation {
   RoomCodecs({
     required void Function(RoomCodecsCommand command) onCommand,
     this.codecs = EncodingConfig.defaultConferenceAudioCodecs,
@@ -216,6 +254,7 @@ class RoomCodecs {
   bool get isMoving => _awaited.isNotEmpty;
 
   /// Whether [callId] is being moved.
+  @override
   bool moves(String callId) => _awaited.containsKey(callId);
 
   /// Whether calls with these codecs can go into a room now, each with the
@@ -263,15 +302,18 @@ class RoomCodecs {
   /// again: the move needs one of the conference codecs alone, and one kept
   /// from before carries every codec - its answer would be taken for the
   /// move's.
+  @override
   bool withdrawsKeptOffer(String callId) => moves(callId) && !_offered.contains(callId);
 
   /// An offer of [callId] is out.
+  @override
   void offerSent(String callId) {
     if (moves(callId)) _offered.add(callId);
   }
 
   /// The server acknowledged an offer of [callId] with `updating`: its answer
   /// comes later. One of a move already given up is taken back at once.
+  @override
   void acknowledged(String callId) {
     if (!_offered.contains(callId)) return;
     if (moves(callId)) {
@@ -284,21 +326,25 @@ class RoomCodecs {
   /// Whether the offer of [callId] is to be taken back now - once: rolled
   /// back, the call no longer updating, and both ends brought back to one
   /// description, since the server may have applied the answer that was lost.
+  @override
   bool takesBack(String callId) => _takenBack.remove(callId);
 
   /// Whether a take-back of [callId] asked for was made needless by an answer
   /// applied before it ran - once.
+  @override
   bool takeBackSkipped(String callId) => _takeBackSkipped.remove(callId);
 
   /// [callId], taken back while held, is to be held again once the offer that
   /// resyncs it is answered: that offer is sendrecv and lifts the hold on the
   /// far end, as the move did.
+  @override
   void holdAfterResync(String callId) => _holdAfterResync.add(callId);
 
   /// The reason a request fails with for [callIds] still off the codecs.
   String offReason(Iterable<String> callIds) => callIds.any(_unanswered.contains) ? notAnswered : notMixable;
 
   /// An answer to an offer of [callId] is applied.
+  @override
   void answerApplied(String callId) {
     _acknowledged.remove(callId);
     if (_takenBack.remove(callId)) _takeBackSkipped.add(callId);
@@ -312,11 +358,13 @@ class RoomCodecs {
 
   /// The server answered an offer of [callId] with `updated`, which carries
   /// no answer: one is in only when the connection is [stable] again.
+  @override
   void updated(String callId, {required bool stable}) {
     if (stable) answerApplied(callId);
   }
 
   /// The server answered an offer of [callId] with an error [code].
+  @override
   RoomOfferError offerFailed(String callId, int code) {
     if (!_offered.contains(callId)) return RoomOfferError.asUsual;
     if (!refusals.contains(code) && moves(callId)) return RoomOfferError.asUsual;
@@ -329,6 +377,7 @@ class RoomCodecs {
 
   /// [callId] is gone. When it was the last call awaited, the requests are
   /// asked again without it.
+  @override
   void callRemoved(String callId) {
     _offered.remove(callId);
     _acknowledged.remove(callId);

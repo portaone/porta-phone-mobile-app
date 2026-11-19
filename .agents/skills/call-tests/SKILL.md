@@ -16,6 +16,9 @@ app drives callkeep.
      ([call_bloc_harness.dart](../../../phone/test/features/call/bloc/call_bloc_harness.dart));
    - a bookkeeping class (`RoomOfferWait`, `OutgoingRingbackController`): next to its peers in
      `phone/test/features/call/conference/` or `utils/`, without the bloc;
+   - the conference room on its own: `conference_room_test.dart`, a `ConferenceRoom` with its
+     owner stood in for - a `ConferenceCalls` of plain values, the `ConferenceCommand`s,
+     `ConferenceStep`s and `ConferenceUpdate`s it raises recorded and asserted on;
    - a screen or widget: `view/`, `widgets/`, plus a `*_semantics_test.dart` (rules in [phone/AGENTS.md](../../../phone/AGENTS.md));
    - the signaling queue or hub: `phone/packages/signaling_service/*/test/`; the plugin itself:
      `callkeep/webtrit_callkeep*/test/`.

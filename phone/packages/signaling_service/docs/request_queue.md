@@ -37,7 +37,7 @@ the request at all:
 if (!_signalingModule.isConnected) return;
 ```
 
-`CallBloc._askForRejoin` is the example.
+`ConferenceRoom._askForRejoin` is the example.
 
 ## `execute() == null` does not mean "not connected"
 
@@ -54,7 +54,7 @@ returns `null` when `sendable = false`. A test built on that proves a behaviour 
 have. To model "the session is down", set `connected = false` and assert that the request was
 not executed (`requests` stays empty).
 
-Handling `null` is still right where it is cheap: `CallBloc._sendConferenceRequest` treats it as
+Handling `null` is still right where it is cheap: `ConferenceRoom._sendConferenceRequest` treats it as
 `notSent`, because an awaited `null` completes like an acknowledgement.
 
 ## `executeNow` can report "sent" for a request that never went
@@ -68,11 +68,12 @@ What happens: if the session goes away while the request is in flight (`isActive
 Why: the queue drops reconnect-window errors on purpose, so callers are not burdened with them
 (see the doc comment on `executeNow`).
 
-The consequence in `CallBloc`: `_sendConferenceRequest` returns `taken` for such a request. A
+The consequence in `ConferenceRoom`: `_sendConferenceRequest` returns `taken` for such a request. A
 caller that acts on `taken` - quieting the legs for a merge, marking a room active after its
 offer was answered - acts on a request the server never saw.
 
 Instead: where a silent loss would leave the call in a wrong state, do not rely on the future
 alone. Check `isConnected` again when the answer is handled, or tie the answer to the session
 it was sent on and ignore it once that session is gone - the rejoin flow does the latter through
-the attempt counter of `RoomOfferWait` (`_offerWait.isCurrent(attempt)`).
+the attempt counter of `RoomOfferWait`, which `ConferenceRoom` checks for the attempt a
+`ConferenceStep` carries.

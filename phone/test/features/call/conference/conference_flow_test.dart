@@ -1651,6 +1651,52 @@ void main() {
     expect(h.peerFactory.created.single.closes, 1);
     expect(h.media.released, contains(h.media.built.last));
   });
+
+  group('what the room raises after the bloc closed goes nowhere', () {
+    // A handler still in flight at close() runs on: its request is answered
+    // and the room takes the next step. What it would tell the user and the
+    // continuation it would queue have nowhere to go.
+    test('the refusal of a merge sent before close() is not shown', () async {
+      final h = _harness();
+      h.seedEstablishedCall('a', line: 0);
+      h.seedEstablishedCall('b', line: 1);
+      final ack = Completer<void>();
+      h.signaling
+        ..gate = ack
+        ..failure = const SignalingErrorException(1, 0, 'conference_already_active');
+      await _merge(h, ['a', 'b']);
+      final shown = h.notifications.length;
+
+      final closing = h.close();
+      await _settle(h, () => h.bloc.isClosed);
+      expect(h.bloc.isClosed, isTrue);
+      ack.complete();
+      await closing;
+      await pumpEventQueue();
+
+      expect(h.notifications, hasLength(shown));
+    });
+
+    test('the answer to the room taken after close() queues nothing', () async {
+      final h = _harness();
+      h.seedEstablishedCall('a', line: 0);
+      h.seedEstablishedCall('b', line: 1);
+      await _merge(h, ['a', 'b']);
+      final ack = Completer<void>();
+      h.signaling.gate = ack;
+      await _offerRoom(h, 7, [_participant('a', 0), _participant('b', 1)]);
+      await _settle(h, () => h.signaling.requests.whereType<ConferenceAnswerRequest>().isNotEmpty);
+
+      final closing = h.close();
+      await _settle(h, () => h.bloc.isClosed);
+      expect(h.bloc.isClosed, isTrue);
+      ack.complete();
+      await closing;
+      await pumpEventQueue();
+
+      expect(h.bloc.isClosed, isTrue);
+    });
+  });
 }
 
 /// Holds the room's microphone request open, so something can arrive while the
