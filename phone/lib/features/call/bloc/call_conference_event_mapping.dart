@@ -41,6 +41,7 @@ extension _ConferenceMutationMapping on _ConferenceMutationEvent {
       _CallMutationEventConferenceTerminated() => room.onTerminated(room: event.room, write: write),
       _CallMutationEventConferenceRejoin() => room.rejoin(),
       _CallMutationEventConferenceStep(:final step) => room.takeStep(step, write),
+      _CallMutationEventConferenceVideo(:final event) => room.video.onEvent(event),
     };
   }
 }

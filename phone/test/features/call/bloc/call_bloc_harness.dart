@@ -3,6 +3,7 @@ import 'dart:collection';
 
 import 'package:flutter/services.dart';
 import 'package:flutter/foundation.dart';
+import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_webrtc/flutter_webrtc.dart';
 import 'package:signaling/signaling.dart';
@@ -424,6 +425,10 @@ class FakeSignalingModule extends Fake implements SignalingModule {
   /// Thrown by [execute] instead of an ack while set.
   Object? failure;
 
+  /// What [execute] throws for one request, `null` for an ack; asked before
+  /// [failure], to refuse some requests and take the rest.
+  Object? Function(Request request)? failureFor;
+
   /// While set, [execute] records the request and then waits for this to
   /// complete before answering - to interleave something with a request in
   /// flight.
@@ -469,7 +474,7 @@ class FakeSignalingModule extends Fake implements SignalingModule {
     requests.add(request);
     await gate?.future;
     answered.add(request);
-    final error = failure;
+    final error = failureFor?.call(request) ?? failure;
     if (error != null) throw error;
   }
 
@@ -1083,9 +1088,13 @@ class FakeUserMediaBuilder extends Fake implements UserMediaBuilder {
   /// Which camera each build asked for, in order.
   final List<bool?> frontCameras = [];
 
+  /// What a build fails with - no permission, a camera in use; `null` builds.
+  Object? buildError;
+
   @override
   Future<MediaStream> build({required bool video, bool? frontCamera, bool allowAudioFallback = false}) async {
     frontCameras.add(frontCamera);
+    if (buildError case final error?) throw error;
     return buildSync(video: video);
   }
 
@@ -1199,4 +1208,11 @@ class _FakeContactResolver extends Fake implements ContactResolver {
   Future<Contact?> resolve(String? number) async => null;
 }
 
-class _FakeConnectivityService extends Fake implements ConnectivityService {}
+/// The network as the bloc reads it at its start: on Wi-Fi, and never changing.
+class _FakeConnectivityService extends Fake implements ConnectivityService {
+  @override
+  ConnectivityResult get currentConnectivityResult => ConnectivityResult.wifi;
+
+  @override
+  Stream<ConnectivityResult> get connectivityResultStream => const Stream.empty();
+}

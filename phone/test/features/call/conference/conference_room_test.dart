@@ -5,11 +5,13 @@ import 'package:signaling/signaling.dart';
 import 'package:webtrit_callkeep/webtrit_callkeep.dart';
 
 import 'package:webtrit_phone/features/call/conference/conference_room.dart';
+import 'package:webtrit_phone/features/call/conference/conference_room_ports.dart';
 import 'package:webtrit_phone/features/call/models/active_call.dart';
 import 'package:webtrit_phone/features/call/models/call_audio.dart';
 import 'package:webtrit_phone/features/call/models/call_transition.dart';
 import 'package:webtrit_phone/features/call/models/conference_membership_plan.dart';
 import 'package:webtrit_phone/features/call/models/conference_state.dart';
+import 'package:webtrit_phone/features/call/models/invited_conference_video.dart';
 import 'package:webtrit_phone/features/call/models/jsep_value.dart';
 import 'package:webtrit_phone/features/call/models/processing_status.dart';
 import 'package:webtrit_phone/features/call/services/call_signaling.dart';
@@ -38,7 +40,8 @@ ActiveCall _call(String callId, int line) => ActiveCall(
 
 /// The owner's calls and state, as far as the room asks.
 class _Calls implements ConferenceCalls {
-  final Map<String, ActiveCall> calls = {};
+  final Map<String, ActiveCall> byId = {};
+
   final List<({String callId, CallAudio audio})> audio = [];
   final List<String> restored = [];
   String? codec = 'opus';
@@ -54,18 +57,18 @@ class _Calls implements ConferenceCalls {
   ConferenceState conference = const ConferenceState();
 
   @override
-  ActiveCall? call(String callId) => calls[callId];
+  ActiveCall? call(String callId) => byId[callId];
 
   @override
   String? focusedCallId;
 
   @override
-  bool get canMerge => calls.length >= 2;
+  bool get canMerge => byId.length >= 2;
 
   @override
   Map<String, int> mergeableLegs(Iterable<String> callIds) => {
     for (final callId in callIds)
-      if (calls[callId]?.line case final line? when !conference.isLeg(callId)) callId: line,
+      if (byId[callId]?.line case final line? when !conference.isLeg(callId)) callId: line,
   };
 
   @override
@@ -92,17 +95,20 @@ class _Calls implements ConferenceCalls {
   @override
   Future<bool> restoreAudio(String callId) async {
     restored.add(callId);
-    return calls.containsKey(callId);
+    return byId.containsKey(callId);
   }
 
   @override
   Future<bool> applyAudio(String callId, CallAudio wanted) async {
     audio.add((callId: callId, audio: wanted));
-    return calls.containsKey(callId);
+    return byId.containsKey(callId);
   }
 
   @override
   Future<String?> audioCodecInUse(String callId) async => codec;
+
+  @override
+  Iterable<ActiveCall> get all => byId.values;
 }
 
 void main() {
@@ -114,6 +120,7 @@ void main() {
   late List<ConferenceStep> steps;
   late List<ConferenceUpdate> updates;
   late ManualOfferDeadline deadline;
+  InvitedConferenceVideo? invited;
   late ConferenceRoom room;
 
   /// The owner's side of a write: the room's part of it lands in the state
@@ -122,20 +129,43 @@ void main() {
     updates.add(update);
     if (update.conference case final conference?) calls.conference = conference;
     for (final callId in update.unheld) {
-      final call = calls.calls[callId];
-      if (call != null) calls.calls[callId] = call.copyWith(held: false);
+      final call = calls.byId[callId];
+      if (call != null) calls.byId[callId] = call.copyWith(held: false);
     }
+    if (update.invitedVideo case (:final value)) invited = value;
     for (final entry in update.transitions.entries) {
-      final call = calls.calls[entry.key];
-      if (call != null) calls.calls[entry.key] = call.copyWith(transition: entry.value);
+      final call = calls.byId[entry.key];
+      if (call != null) calls.byId[entry.key] = call.copyWith(transition: entry.value);
     }
   }
+
+  /// The room under test; [video] where the server's rooms carry video.
+  ConferenceRoom newRoom({bool video = false}) => ConferenceRoom(
+    calls: calls,
+    signaling: ModuleCallSignaling(signaling, events: const Stream.empty()),
+    callkeep: callkeep,
+    capabilities: CallCapabilitiesConfig(
+      isConferenceEnabled: true,
+      isConferenceRejoinEnabled: true,
+      isPeerMessageEnabled: true,
+      isConferenceVideoEnabled: video,
+    ),
+    onCommand: commands.add,
+    onStep: steps.add,
+    onNotice: notifications.add,
+    onError: RecordingCallErrorReporter().handle,
+    factory: FakePeerConnectionFactory(),
+    userMediaBuilder: FakeUserMediaBuilder(),
+    assemblyTimeout: const Duration(seconds: 30),
+    offerDeadlineTimer: deadline.createTimer,
+    audioCodecs: EncodingConfig.defaultConferenceAudioCodecs,
+  );
 
   setUp(() {
     TestWidgetsFlutterBinding.ensureInitialized();
     calls = _Calls()
-      ..calls['a'] = _call('a', 0)
-      ..calls['b'] = _call('b', 1);
+      ..byId['a'] = _call('a', 0)
+      ..byId['b'] = _call('b', 1);
     signaling = FakeSignalingModule();
     callkeep = FakeCallkeep();
     notifications = [];
@@ -143,25 +173,8 @@ void main() {
     steps = [];
     updates = [];
     deadline = ManualOfferDeadline();
-    room = ConferenceRoom(
-      calls: calls,
-      signaling: ModuleCallSignaling(signaling, events: const Stream.empty()),
-      callkeep: callkeep,
-      capabilities: const CallCapabilitiesConfig(
-        isConferenceEnabled: true,
-        isConferenceRejoinEnabled: true,
-        isPeerMessageEnabled: true,
-      ),
-      onCommand: commands.add,
-      onStep: steps.add,
-      onNotice: notifications.add,
-      onError: RecordingCallErrorReporter().handle,
-      factory: FakePeerConnectionFactory(),
-      userMediaBuilder: FakeUserMediaBuilder(),
-      assemblyTimeout: const Duration(seconds: 30),
-      offerDeadlineTimer: deadline.createTimer,
-      audioCodecs: EncodingConfig.defaultConferenceAudioCodecs,
-    );
+    invited = null;
+    room = newRoom();
   });
 
   tearDown(() async {
@@ -306,7 +319,7 @@ void main() {
 
   test('a call added to the room is asked of the server by its line and quieted', () async {
     await merged();
-    calls.calls['c'] = _call('c', 2);
+    calls.byId['c'] = _call('c', 2);
     calls.audio.clear();
 
     expect(await room.addCall('c', write, source: 'test'), isTrue);
@@ -383,7 +396,7 @@ void main() {
 
   test('a call the server lists as it joins is quieted, and taken off hold with the same change', () async {
     await merged();
-    calls.calls['c'] = _call('c', 2).copyWith(held: true);
+    calls.byId['c'] = _call('c', 2).copyWith(held: true);
     calls
       ..audio.clear()
       ..serverUnheld = {'c'};
@@ -422,5 +435,128 @@ void main() {
     await pumpEventQueue();
 
     expect(signaling.requests.whereType<ConferenceMutePeerMessageRequest>().map((r) => r.callId), ['b']);
+  });
+
+  group('the room\'s video', () {
+    setUp(() async {
+      room.dispose();
+      await room.teardown();
+      room = newRoom(video: true);
+    });
+
+    test('the host asks for the room\'s video once the answer to the room is taken', () async {
+      await merged();
+      expect(signaling.requests.whereType<ConferenceVideoSubscribeRequest>(), isEmpty);
+
+      await room.takeStep(steps.whereType<AnswerTakenStep>().single, write);
+      await pumpEventQueue();
+
+      expect(signaling.requests.whereType<ConferenceVideoSubscribeRequest>(), hasLength(1));
+      expect(signaling.requests.whereType<ConferenceVideoPublishRequest>(), isEmpty, reason: 'audio calls only');
+    });
+
+    test('a room refused its video says so in the state, and asks nothing more of it', () async {
+      await merged();
+      await room.takeStep(steps.whereType<AnswerTakenStep>().single, write);
+      await pumpEventQueue();
+      signaling.requests.clear();
+
+      await room.takeStep(const VideoDisabledStep(), write);
+      await room.video.setCamera(true);
+      await pumpEventQueue();
+
+      expect(calls.conference.videoDisabled, isTrue);
+      expect(signaling.requests, isEmpty);
+    });
+
+    test('an invitation through a call joins the video, and is in the state at once', () async {
+      await room.video.onEvent(const ConferenceVideoInviteEvent(room: 9, line: 1));
+      await pumpEventQueue();
+      for (final step in steps.whereType<VideoFeedsChangedStep>().toList()) {
+        await room.takeStep(step, write);
+      }
+
+      expect(signaling.requests.whereType<ConferenceVideoSubscribeRequest>(), hasLength(1));
+      expect(invited?.line, 1);
+    });
+
+    Future<void> takeVideoSteps() async {
+      for (final step in steps.whereType<VideoFeedsChangedStep>().toList()) {
+        await room.takeStep(step, write);
+      }
+      steps.clear();
+    }
+
+    test('the end of the call an invitation came through ends the invitation', () async {
+      await room.video.onEvent(const ConferenceVideoInviteEvent(room: 9, line: 1));
+      await pumpEventQueue();
+      await takeVideoSteps();
+      expect(invited?.line, 1);
+
+      room.video.onCallsChanged([0], hostsRoom: false);
+      await pumpEventQueue();
+      await takeVideoSteps();
+
+      expect(invited, isNull);
+    });
+
+    test('a call that stays keeps the invitation', () async {
+      await room.video.onEvent(const ConferenceVideoInviteEvent(room: 9, line: 1));
+      await pumpEventQueue();
+      await takeVideoSteps();
+
+      room.video.onCallsChanged([0, 1], hostsRoom: false);
+      await pumpEventQueue();
+
+      expect(steps, isEmpty);
+      expect(invited?.line, 1);
+    });
+
+    test('a merge of its own leaves an invitation first, on the way to the server', () async {
+      await room.video.onEvent(const ConferenceVideoInviteEvent(room: 9, line: 1));
+      await pumpEventQueue();
+
+      await room.merge(['a', 'b'], write, source: 'test');
+
+      final sent = signaling.requests.map((request) => request.runtimeType).toList();
+      expect(sent.indexOf(ConferenceVideoLeaveRequest), lessThan(sent.indexOf(MergeRequest)));
+    });
+
+    test('a merge that waits for the conference codecs keeps the invitation', () async {
+      await room.video.onEvent(const ConferenceVideoInviteEvent(room: 9, line: 1));
+      await pumpEventQueue();
+      await takeVideoSteps();
+      calls.codec = 'PCMA';
+
+      expect(await room.merge(['a', 'b'], write, source: 'test'), isFalse);
+      await pumpEventQueue();
+      await takeVideoSteps();
+
+      expect(signaling.requests.whereType<MergeRequest>(), isEmpty);
+      expect(signaling.requests.whereType<ConferenceVideoLeaveRequest>(), isEmpty);
+      expect(invited?.line, 1);
+    });
+
+    test('a merge of calls that cannot be merged keeps the invitation', () async {
+      await room.video.onEvent(const ConferenceVideoInviteEvent(room: 9, line: 1));
+      await pumpEventQueue();
+      await takeVideoSteps();
+      calls.byId.remove('b');
+
+      await room.merge(['a', 'b'], write, source: 'test');
+      await pumpEventQueue();
+      await takeVideoSteps();
+
+      expect(signaling.requests.whereType<ConferenceVideoLeaveRequest>(), isEmpty);
+      expect(invited?.line, 1);
+    });
+
+    test('an invitation to a call that is not here is ignored', () async {
+      await room.video.onEvent(const ConferenceVideoInviteEvent(room: 9, line: 5));
+      await pumpEventQueue();
+
+      expect(signaling.requests, isEmpty);
+      expect(steps, isEmpty);
+    });
   });
 }

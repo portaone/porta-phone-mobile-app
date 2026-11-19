@@ -69,21 +69,21 @@ class CallWatchMore extends StatelessWidget {
           ),
           if (actions.cameraOffered)
             WatchIconGridItem(
-              icon: Icon(call.isCameraActive ? Icons.videocam : Icons.videocam_off),
+              icon: Icon(actions.cameraValue ? Icons.videocam : Icons.videocam_off),
               caption: l10n.call_Watch_camera,
               semanticLabel: actions.cameraPermissionDenied
                   ? l10n.call_CallActionsTooltip_cameraPermissionDenied
-                  : call.isCameraActive
+                  : actions.cameraValue
                   ? l10n.call_CallActionsTooltip_disableCamera
                   : l10n.call_CallActionsTooltip_enableCamera,
               identifier: callActionsVideoCallId,
               buttonKey: callActionsVideoCallKey,
-              emphasis: call.isCameraActive ? WatchRoundEmphasis.filled : WatchRoundEmphasis.tonal,
+              emphasis: actions.cameraValue ? WatchRoundEmphasis.filled : WatchRoundEmphasis.tonal,
               onPressed: actions.cameraPermissionDenied
                   ? gated(params.onCameraPermissionDeniedPressed)
                   : onCameraChanged == null
                   ? null
-                  : gated(() => onCameraChanged(!call.isCameraActive)),
+                  : gated(() => onCameraChanged(!actions.cameraValue)),
             ),
           if (video.onCameraSwitched case final onCameraSwitched?)
             WatchIconGridItem(

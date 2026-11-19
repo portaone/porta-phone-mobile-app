@@ -17,6 +17,8 @@ class CallState with DiagnosticableTreeMixin, _$CallState {
     this.conference = const ConferenceState(),
     this.linkedCall,
     this.voiceNoiseReductionFailed = false,
+    this.conferenceVideo = false,
+    this.invitedVideo,
   });
 
   final CallServiceState callServiceState;
@@ -65,6 +67,18 @@ class CallState with DiagnosticableTreeMixin, _$CallState {
   /// The conference room this client hosts; an empty one when there is none.
   final ConferenceState conference;
 
+  /// The video of somebody else's room this client was invited to; `null`
+  /// while there is none.
+  final InvitedConferenceVideo? invitedVideo;
+
+  /// Whether the server's rooms carry video ([CallCapabilitiesConfig.isConferenceVideoEnabled]):
+  /// a video call can then be merged like an audio one.
+  final bool conferenceVideo;
+
+  /// Whether a video call may join the room: the server's rooms carry video
+  /// and the room here, if there is one, was not refused its own.
+  bool get roomTakesVideo => conferenceVideo && !conference.videoDisabled;
+
   /// The call being placed on behalf of another one - a consultation before a
   /// transfer - while it is being placed; null when there is none.
   final LinkedCall? linkedCall;
@@ -85,7 +99,11 @@ class CallState with DiagnosticableTreeMixin, _$CallState {
   /// already in the room.
   List<String> get mergeableCallIds => [
     for (final call in activeCalls)
-      if (call.wasAccepted && !call.video && call.line != null && call.transfer == null && !isConferenced(call.callId))
+      if (call.wasAccepted &&
+          (!call.video || roomTakesVideo) &&
+          call.line != null &&
+          call.transfer == null &&
+          !isConferenced(call.callId))
         call.callId,
   ];
 
@@ -157,7 +175,8 @@ class CallState with DiagnosticableTreeMixin, _$CallState {
   ///
   /// A call has to be answered on a numbered line - the server merges and
   /// transfers calls by line - and not in a transfer or on its way out. One
-  /// that is joined has to be audio too, as the room takes no video; a video
+  /// that is joined has to be audio too unless the room takes video
+  /// ([roomTakesVideo]); a video
   /// call can have a consultation placed for it, as the hand-over that follows
   /// joins no room.
   ///
@@ -174,7 +193,7 @@ class CallState with DiagnosticableTreeMixin, _$CallState {
       return purpose == LinkedCallPurpose.join && conference.phase == ConferencePhase.active;
     }
     if (purpose == LinkedCallPurpose.join && conference.isPresent) return false;
-    if (purpose == LinkedCallPurpose.join && anchor.video) return false;
+    if (purpose == LinkedCallPurpose.join && anchor.video && !roomTakesVideo) return false;
     return anchor.wasAccepted &&
         anchor.line != null &&
         anchor.transfer == null &&

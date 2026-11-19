@@ -52,8 +52,31 @@ class CallActionAvailability {
   /// otherwise.
   bool get cameraOffered => _config.isVideoCallEnabled;
 
-  /// Turns the camera on or off; null where video calls are off.
-  ValueChanged<bool>? get onCameraChanged => cameraOffered ? params.onCameraChanged : null;
+  /// The focused call is the one through which this client takes part in the
+  /// video of somebody else's room.
+  bool get focusedIsInvited => params.invitedVideo?.line == _call.line && _call.line != null;
+
+  /// Whether the camera control is the room's: on a leg of the host's room,
+  /// and on the call an invitation to somebody else's came through, where the
+  /// room carries video. That call's own video is not used by the room, so
+  /// its camera would change nothing anyone sees.
+  bool get cameraActsOnRoom => _config.isConferenceVideoEnabled && (focusedIsLeg || focusedIsInvited);
+
+  /// What the camera control shows: this client's camera in the room where
+  /// it acts on the room, the focused call's own otherwise.
+  bool get cameraValue {
+    if (!cameraActsOnRoom) return _call.isCameraActive;
+    return (focusedIsLeg ? params.conference.selfVideo : params.invitedVideo?.selfVideo) != null;
+  }
+
+  /// Turns the camera on or off - the room's where it acts on the room; null
+  /// where video calls are off, and for a room the server gave no video.
+  ValueChanged<bool>? get onCameraChanged {
+    if (!cameraOffered) return null;
+    if (!cameraActsOnRoom) return params.onCameraChanged;
+    if (focusedIsLeg && params.conference.videoDisabled) return null;
+    return params.onConferenceCameraChanged;
+  }
 
   /// The call was answered without video because the camera was refused:
   /// the camera control opens the settings instead.
