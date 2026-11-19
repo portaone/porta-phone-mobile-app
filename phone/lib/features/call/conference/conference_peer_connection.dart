@@ -3,10 +3,11 @@ import 'dart:async';
 import 'package:flutter_webrtc/flutter_webrtc.dart';
 import 'package:logging/logging.dart';
 
-import 'package:webtrit_phone/extensions/extensions.dart';
-import 'package:webtrit_phone/features/call/models/models.dart';
-import 'package:webtrit_phone/features/call/utils/utils.dart';
-import 'package:webtrit_phone/utils/utils.dart';
+import 'package:webtrit_phone/extensions/rtc_peer_connection_extension.dart';
+import 'package:webtrit_phone/features/call/models/call_audio.dart';
+import 'package:webtrit_phone/features/call/utils/peer_connection_factory.dart';
+import 'package:webtrit_phone/features/call/utils/user_media_builder.dart';
+import 'package:webtrit_phone/utils/serial_queue.dart';
 
 final _logger = Logger('ConferencePeerConnection');
 

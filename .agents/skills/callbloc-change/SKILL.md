@@ -20,10 +20,13 @@ For the test itself load the `call-tests` skill.
    `CallBloc`, not in the plugin that carries it out.
 4. Keep a handler to checks and state writes. Whatever touches the peer connection, callkeep or
    signaling goes through `add(_CallMutationEvent.xxx(...))` and its `__onMutationXxx` handler -
-   one sequential queue.
+   one sequential queue. The conference mutations have no handler of their own in the bloc: the
+   queue hands each to the method of `ConferenceRoom` (`conference/conference_room.dart`) that
+   takes that step (`bloc/call_conference_event_mapping.dart`), and a change to the room is made
+   there.
 5. Do not hold that queue on something the next event does not need (a platform report, a slow
    native round trip); a path that must bypass the queue says why in a comment, as
-   `_planConferenceAudio` does.
+   `ConferenceRoom.planAudio` does.
 6. If a reconnect has to redo the step, plan it in `phone/lib/features/call/utils/handshake_processor.dart`
    (a `HandshakeAction`, mapped in `call_handshake_action_mapping.dart`) and cover it in
    `phone/test/features/call/bloc/handshake_processor_test.dart`.
@@ -53,7 +56,8 @@ For the test itself load the `call-tests` skill.
   `if (!_signalingModule.isConnected) return;`. A handshake plan is decided before the callkeep reads
   and run after them: a hangup or a live offer in between wins. An empty `activeCalls` at handshake
   time can still be a push or an answer on its way, not "no call". Tie a late answer to the attempt or
-  session it was sent on (`_offerWait.isCurrent(attempt)`).
+  session it was sent on: the room carries the attempt on its `ConferenceStep` and checks it
+  against its offer wait (`AnswerTakenStep`, `RejoinRepliedStep`).
 - **Every entry path.** The rule holds for UI (`CallControlEvent`), native perform callbacks
   (`_CallPerformEvent`, including ones the OS starts on its own), signaling, handshake and restore.
 - **close() races.** `CallBloc.close()` awaits teardowns before `super.close()`, so `isClosed` is
