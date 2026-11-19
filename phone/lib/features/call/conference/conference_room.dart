@@ -1,6 +1,7 @@
 // The conference room this client hosts: one object that owns the connection
 // to the room's mixer, the wait for its offer, the codecs its legs are moved
-// onto and the mute of its legs, and takes every step of the room's life.
+// onto, the mute of its legs and the room's video, and takes every step of
+// the room's life.
 // Used by CallBloc, which hands it the room's events and the user's requests.
 //
 // It knows nothing of the bloc. What it is given, at construction: the
@@ -13,17 +14,20 @@
 //
 // It imports the files it uses, never a barrel of the call feature: one of
 // those brings the bloc along.
+// The types it and its owner speak in are in conference_room_ports.dart.
 // The room itself is the owner's state: read through ConferenceCalls and
 // changed through the ConferenceWrite a step is called with, one write per
 // change, so the owner applies each as one change of its own.
 //
 // The user's requests are imperatives: merge / addCall build the room and add
 // to it, muteParticipant and setSelfMuted mute, end and forget end it, rejoin
-// brings the host back in. What the server says arrives as on<What>: onOffer,
+// brings the host back in. What happens outside the room - the server's word,
+// the session, the app, the calls - arrives as on<What>: onOffer,
 // onParticipants, onFailed, onTerminated, onRemoteCandidate, onSessionLost.
 // The room's own continuations are private and come back through takeStep.
 // planAudio settles what the room's connection carries; legNegotiation is
-// what a call's own negotiation tells the move onto the conference codecs.
+// what a call's own negotiation tells the move onto the conference codecs;
+// video is what the owner hands the room's video (RoomVideo).
 import 'dart:async';
 
 import 'package:collection/collection.dart';
@@ -38,235 +42,25 @@ import 'package:webtrit_phone/models/enableble.dart';
 import 'package:webtrit_phone/models/feature_access/call_config.dart';
 import 'package:webtrit_phone/models/rtp_codec_profile.dart';
 
-import '../models/active_call.dart';
 import '../models/call_audio.dart';
 import '../models/call_transition.dart';
-import '../models/conference_membership_plan.dart';
 import '../models/conference_request_result.dart';
 import '../models/conference_state.dart';
+import '../models/invited_conference_video.dart';
 import '../models/jsep_value.dart';
 import '../models/processing_status.dart';
 import '../services/call_signaling.dart';
 import '../utils/peer_connection_factory.dart';
 import '../utils/user_media_builder.dart';
 import 'conference_peer_connection.dart';
+import 'conference_room_ports.dart';
+import 'conference_video_session.dart';
 import 'leg_mute_sync.dart';
 import 'room_codecs.dart';
 import 'room_offer_wait.dart';
+import 'room_video.dart';
 
 final _logger = Logger('ConferenceRoom');
-
-/// What the room reads of the calls around it, and what it asks of one call.
-/// Implemented by the room's owner over its own state.
-abstract interface class ConferenceCalls {
-  /// The room as the owner's state has it now.
-  ConferenceState get conference;
-
-  /// The call [callId], while there is one.
-  ActiveCall? call(String callId);
-
-  /// The call the screen is about.
-  String? get focusedCallId;
-
-  /// Whether there are calls to make a room of now.
-  bool get canMerge;
-
-  /// The line of every call of [callIds] that can join a room.
-  Map<String, int> mergeableLegs(Iterable<String> callIds);
-
-  /// What the server's list of [participants] changes about the room's legs.
-  ConferenceMembershipPlan membershipFrom(List<ConferenceParticipant> participants);
-
-  /// Whether the host is on a live call outside the room, for which the room
-  /// stands aside.
-  bool get hostIsOnAnotherCall;
-
-  /// Gives [callId] the audio an ordinary call carries, as the owner's rule
-  /// has it; whether there was a call to give it to - nothing is done for
-  /// one that is gone or going, nor for one the room released and nobody has
-  /// resumed.
-  Future<bool> restoreAudio(String callId);
-
-  /// Gives [callId] the audio [wanted] of it; whether there was a call to
-  /// give it to.
-  Future<bool> applyAudio(String callId, CallAudio wanted);
-
-  /// The audio codec [callId] sends now.
-  Future<String?> audioCodecInUse(String callId);
-}
-
-/// One change of the owner's state the room asks for, applied as a whole.
-class ConferenceUpdate {
-  const ConferenceUpdate({
-    this.conference,
-    this.unheld = const {},
-    this.transitions = const {},
-    this.settleFocus = false,
-  });
-
-  /// The room as it is from now on; `null` leaves it as it was.
-  final ConferenceState? conference;
-
-  /// Calls the server took off hold as they joined.
-  final Set<String> unheld;
-
-  /// The transition each of these calls is in from now on; `null` for none.
-  final Map<String, CallTransition?> transitions;
-
-  /// Whether the focus a placed call was waiting for is settled with this.
-  final bool settleFocus;
-}
-
-/// Applies a [ConferenceUpdate] to the owner's state.
-typedef ConferenceWrite = void Function(ConferenceUpdate update);
-
-/// Something only the owner can do to a call, asked for by the room.
-sealed class ConferenceCommand {
-  const ConferenceCommand();
-}
-
-/// Renegotiate [callId]: onto the conference codecs, or back off them.
-final class RenegotiateLegCommand extends ConferenceCommand {
-  const RenegotiateLegCommand(this.callId);
-
-  /// The call to renegotiate.
-  final String callId;
-}
-
-/// Put [callId] on hold again after its renegotiation.
-final class RestoreLegHoldCommand extends ConferenceCommand {
-  const RestoreLegHoldCommand(this.callId);
-
-  /// The call to hold again.
-  final String callId;
-}
-
-/// Hold [callId] or resume it, as the user's own control would.
-final class SetLegHeldCommand extends ConferenceCommand {
-  const SetLegHeldCommand(this.callId, this.held);
-
-  /// The call to hold or resume.
-  final String callId;
-
-  /// Whether it is to be held.
-  final bool held;
-}
-
-/// End [callId] for the reason the room was ended for.
-final class EndLegCommand extends ConferenceCommand {
-  const EndLegCommand(this.callId, this.endedBy);
-
-  /// The call to end.
-  final String callId;
-
-  /// Who ended the room it was a leg of.
-  final CallkeepEndedBy endedBy;
-}
-
-/// Ask for the merge of [callIds] again: they are on the conference codecs.
-final class RetryMergeCommand extends ConferenceCommand {
-  const RetryMergeCommand(this.callIds);
-
-  /// The calls to merge.
-  final List<String> callIds;
-}
-
-/// Ask to add [callId] to the room again: it is on the conference codecs.
-final class RetryAddCommand extends ConferenceCommand {
-  const RetryAddCommand(this.callId);
-
-  /// The call to add.
-  final String callId;
-}
-
-/// Something for the user to be told about the room; the owner words it.
-sealed class ConferenceNotice {
-  const ConferenceNotice();
-}
-
-/// The server refused to build the room or to add a call to it, for [reason].
-final class RoomRefusedNotice extends ConferenceNotice {
-  const RoomRefusedNotice(this.reason);
-
-  /// The server's reason, as it sent it.
-  final String reason;
-}
-
-/// The room could not be built or joined, for [reason]; the calls are
-/// ordinary calls again.
-final class RoomFailedNotice extends ConferenceNotice {
-  const RoomFailedNotice(this.reason);
-
-  /// The server's reason, or this client's own name for what failed.
-  final String reason;
-}
-
-/// The room ended while calls were still up; they go on as ordinary calls.
-final class RoomEndedNotice extends ConferenceNotice {
-  const RoomEndedNotice();
-}
-
-/// A continuation of the room's own that takes its turn in the owner's
-/// queue: the owner hands it back to [ConferenceRoom.takeStep]. An owner that
-/// is closing drops it, as it drops a [ConferenceCommand].
-sealed class ConferenceStep {
-  const ConferenceStep();
-}
-
-/// A candidate the mixer's connection gathered, to be sent to the server.
-final class CandidateGatheredStep extends ConferenceStep {
-  const CandidateGatheredStep(this.candidate);
-
-  /// The candidate; `null` ends the gathering.
-  final RTCIceCandidate? candidate;
-}
-
-/// The room is given up: it never finished being built, its audio could not
-/// be applied, or there is no way back into it.
-final class RoomGivenUpStep extends ConferenceStep {
-  const RoomGivenUpStep();
-}
-
-/// The mixer's connection failed; the room asks for a way back or gives up.
-final class MixerFailedStep extends ConferenceStep {
-  const MixerFailedStep({required this.hadConnected});
-
-  /// Whether the connection had carried the room before it failed.
-  final bool hadConnected;
-}
-
-/// The answer to the room's offer reached the server: this client is in the room.
-final class AnswerTakenStep extends ConferenceStep {
-  const AnswerTakenStep({required this.room, required this.attempt});
-
-  /// The room the answer was for.
-  final int room;
-
-  /// The attempt at the room's offer the answer belongs to.
-  final int attempt;
-}
-
-/// The answer to the room's offer could not be made, or never got through.
-final class AnswerFailedStep extends ConferenceStep {
-  const AnswerFailedStep({required this.attempt, this.result});
-
-  /// The attempt at the room's offer the answer belongs to.
-  final int attempt;
-
-  /// What became of the request; `null` when the answer could not be made.
-  final ConferenceRequestResult? result;
-}
-
-/// What the session did with the rejoin.
-final class RejoinRepliedStep extends ConferenceStep {
-  const RejoinRepliedStep({required this.attempt, required this.result});
-
-  /// The attempt the rejoin was asked in.
-  final int attempt;
-
-  /// What became of the request.
-  final ConferenceRequestResult result;
-}
 
 /// The conference room this client hosts.
 class ConferenceRoom {
@@ -301,6 +95,18 @@ class ConferenceRoom {
       preferred: audioProfiles,
       createTimer: codecMoveTimer,
     );
+    _video = RoomVideo(
+      enabled: capabilities.isConferenceVideoEnabled,
+      factory: factory,
+      userMediaBuilder: userMediaBuilder,
+      conference: () => _calls.conference,
+      calls: () => _calls.all,
+      send: (request) => _sendConferenceRequest(request, source: 'ConferenceVideoSession'),
+      onStep: onStep,
+      onCommand: onCommand,
+      onNotice: onNotice,
+      onError: onError,
+    );
     _conferencePeerConnection = ConferencePeerConnection(
       factory: factory,
       userMediaBuilder: userMediaBuilder,
@@ -333,6 +139,13 @@ class ConferenceRoom {
   /// The conference codecs and the move of calls onto them; see [RoomCodecs].
   late final RoomCodecs _roomCodecs;
 
+  /// The room's video (protocol sections 18 and 19); see [RoomVideo].
+  late final RoomVideo _video;
+
+  /// What the owner hands the room's video: the camera controls, and what
+  /// happens outside it.
+  RoomVideoControls get video => _video;
+
   /// Whether the owner is closing: a deadline that still fires then is
   /// nobody's.
   bool _disposed = false;
@@ -346,6 +159,9 @@ class ConferenceRoom {
     AnswerTakenStep(:final room, :final attempt) => _answered(room: room, attempt: attempt, write: write),
     AnswerFailedStep(:final attempt, :final result) => _answerFailed(attempt: attempt, result: result, write: write),
     RejoinRepliedStep(:final attempt, :final result) => _rejoinReplied(attempt: attempt, result: result),
+    VideoFeedsChangedStep(:final feeds) => _videoFeedsChanged(feeds, write),
+    VideoDisabledStep() => _videoDisabled(write),
+    CameraSwitchedStep(:final frontCamera, :final trackId) => _cameraSwitched(frontCamera, trackId, write),
   };
 
   /// What a call's own negotiation tells the room, for the calls being moved
@@ -359,22 +175,33 @@ class ConferenceRoom {
   /// command coming home rather than a person pressing mute.
   bool consumeMuteEcho(String callId, bool muted) => _legMutes.consume(callId, muted);
 
-  /// Forgets a room without telling the server, when every call is reset:
-  /// the wait for its offer ends, the mixer's connection is closed and the
-  /// room is gone from the state. The legs are not handed back - they are
-  /// ended by whoever resets them.
+  /// Forgets the room without telling the server, when every call is reset:
+  /// the wait for its offer ends, the mixer's connection and the room's video
+  /// are closed and the room is gone from the state. The legs are not handed
+  /// back - they are ended by whoever resets them. Called on every reset:
+  /// without a room it ends an invitation to somebody else's room's video,
+  /// and without either it does nothing.
   Future<void> forget(ConferenceWrite write) async {
+    if (!_calls.conference.isPresent) {
+      await _video.endInvitation('every call is reset');
+      return;
+    }
     _offerWait.end();
     await _conferencePeerConnection.teardown();
+    await _video.close();
     write(const ConferenceUpdate(conference: ConferenceState()));
   }
 
-  /// Closes the mixer's connection.
-  Future<void> teardown() => _conferencePeerConnection.teardown();
+  /// Closes the mixer's connection and the room's video, telling nobody.
+  Future<void> teardown() async {
+    await _conferencePeerConnection.teardown();
+    await _video.close();
+  }
 
   /// Stops the timers; the mixer's connection is closed by [teardown].
   void dispose() {
     _disposed = true;
+    _video.dispose();
     _offerWait.dispose();
     _roomCodecs.dispose();
   }
@@ -498,6 +325,10 @@ class ConferenceRoom {
         settles = codecs == RoomCodecsCheck.off;
         return settles;
       }
+      // A client that hosts a room of its own takes no part in the video of
+      // somebody else's: left on the way to the server, while the leave still
+      // goes to that room - and not for a merge that goes nowhere.
+      await _video.endInvitation('this client starts a room of its own', leave: true);
       final taken = await _executeConferenceRequest(
         MergeRequest(transaction: WebtritSignalingClient.generateTransactionId(), lines: legs.values.toList()),
         source: source,
@@ -685,8 +516,10 @@ class ConferenceRoom {
       _logger.warning('__onMutationConferenceAnswered: $room is not the room here');
       return;
     }
+    final wasRejoining = _calls.conference.phase == ConferencePhase.rejoining;
     _offerWait.offerAnswered();
     write(ConferenceUpdate(conference: _calls.conference.copyWith(phase: ConferencePhase.active)));
+    _video.start(rejoined: wasRejoining);
   }
 
   /// Without a way into the room the host would hear nothing of it: give it
@@ -1162,6 +995,7 @@ class ConferenceRoom {
     // as the operation this teardown exists to cut short. Giving the legs
     // their audio back touches their own connections, not this one.
     unawaited(_conferencePeerConnection.teardown());
+    unawaited(_video.close());
     if (legIds.isNotEmpty) {
       final error = await _callkeep.unsetCallGroup(legIds);
       if (error != null) _logger.warning('_leaveRoom: unsetCallGroup error: $error');
@@ -1195,5 +1029,56 @@ class ConferenceRoom {
       _onCommand(SetLegHeldCommand(callId, callId != live));
     }
     return restored;
+  }
+
+  // video
+  //
+  // The video is [RoomVideo]'s: it raises the room's own steps, commands and
+  // notices, and its steps write the owner's state here.
+
+  /// The cameras the room sends changed: they go to the room, or to the
+  /// invitation this client takes part in.
+  Future<void> _videoFeedsChanged(List<ConferenceVideoFeed> feeds, ConferenceWrite write) async {
+    final cameras = {
+      for (final feed in feeds)
+        if (feed.kind == ConferenceVideoKind.camera) feed.feed: feed.stream,
+    };
+    if (_calls.conference.isPresent) {
+      // A room of this client's own: an invitation that stood before it is
+      // over, and its video with it.
+      write(
+        ConferenceUpdate(
+          conference: _calls.conference.copyWith(videoFeeds: cameras, selfVideo: _video.camera),
+          invitedVideo: (value: null),
+        ),
+      );
+      return;
+    }
+    final invitedLine = _video.invitedLine;
+    write(
+      ConferenceUpdate(
+        invitedVideo: (
+          value: invitedLine == null
+              ? null
+              : InvitedConferenceVideo(line: invitedLine, feeds: cameras, selfVideo: _video.camera),
+        ),
+      ),
+    );
+  }
+
+  /// The room has no video at all (`video_disabled`): nothing more is asked
+  /// of it, and a video call is not offered to it - the server would end the
+  /// whole conference over one (protocol section 17).
+  Future<void> _videoDisabled(ConferenceWrite write) async {
+    _logger.info('_videoDisabled');
+    _video.dropCamera();
+    if (_calls.conference.isPresent && !_calls.conference.videoDisabled) {
+      write(ConferenceUpdate(conference: _calls.conference.copyWith(videoDisabled: true)));
+    }
+  }
+
+  /// The camera was switched: the calls that share its track show [frontCamera].
+  Future<void> _cameraSwitched(bool frontCamera, String trackId, ConferenceWrite write) async {
+    write(ConferenceUpdate(frontCamera: {for (final callId in _video.callsShowing(trackId)) callId: frontCamera}));
   }
 }

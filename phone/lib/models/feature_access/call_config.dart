@@ -53,6 +53,7 @@ class CallCapabilitiesConfig extends Equatable {
     this.isPeerMessageEnabled = false,
     this.isConferenceEnabled = false,
     this.isConferenceRejoinEnabled = false,
+    this.isConferenceVideoEnabled = false,
   });
 
   /// Whether the UI should show video call functionality.
@@ -105,6 +106,10 @@ class CallCapabilitiesConfig extends Equatable {
   // TODO(WT-2084): remove together with CoreInfo.supportsConferenceRejoin.
   final bool isConferenceRejoinEnabled;
 
+  /// Whether the remote core gives a conference a video room (`conference_video` of the system
+  /// info): video calls can then be merged, and the room carries everyone's camera.
+  final bool isConferenceVideoEnabled;
+
   @override
   List<Object?> get props => [
     isVideoCallEnabled,
@@ -115,5 +120,6 @@ class CallCapabilitiesConfig extends Equatable {
     isPeerMessageEnabled,
     isConferenceEnabled,
     isConferenceRejoinEnabled,
+    isConferenceVideoEnabled,
   ];
 }

@@ -239,7 +239,7 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
   }) : _onMissedCall = onMissedCall,
        _connectivityService = connectivityService,
        _speakerOnMinimize = SpeakerOnMinimize(isEnabled: speakerOnMinimize ?? () => false),
-       super(const CallState()) {
+       super(CallState(conferenceVideo: capabilities.isConferenceVideoEnabled)) {
     _mediaManager = mediaManager ?? CallMediaManager(callkeep: callkeep);
     _room = ConferenceRoom(
       calls: _BlocConferenceCalls(this),
@@ -421,7 +421,9 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
   /// into the bloc's own event and adds it, which queues it for its handler.
   /// An update of the far end is numbered as the next one of its call.
   void _handleSignalingEvent(Event event) {
-    if (event is UpdatingCallEvent) {
+    if (RoomVideo.isEvent(event)) {
+      add(_CallMutationEvent.conferenceVideo(event));
+    } else if (event is UpdatingCallEvent) {
       _queueUpdate(event, _remoteUpdates.heardLive(event));
     } else if (event.toCallEvent(activeCalls: state.activeCalls) case final callEvent?) {
       add(callEvent);
@@ -452,6 +454,12 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
     _dropStaleConversationSwitch(change);
     _followActiveCallList(change);
     _followLinkedCall(change);
+    if (!isClosed) {
+      _room.video.onCallsChanged(
+        change.nextState.activeCalls.map((call) => call.line),
+        hostsRoom: change.nextState.conference.isPresent,
+      );
+    }
     _logStatusTransitions(change);
     _handleRegistrationChange(change);
 
@@ -702,6 +710,9 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
     final lifecycleState = WidgetsFlutterBinding.ensureInitialized().lifecycleState;
     emit(state.copyWith(currentAppLifecycleState: lifecycleState));
     _logger.fine('_onCallStarted initial lifecycle state: $lifecycleState');
+    // The room's video starts from where the app is: a room that begins in
+    // the background publishes its camera only once the app is back.
+    if (lifecycleState != null) _room.video.onAppLifecycleChanged(lifecycleState);
 
     // Initialize connectivity state from the centralized service. The service
     // owns the call subsystem's subscription to `Connectivity().onConnectivityChanged`
@@ -741,6 +752,7 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
     _logger.fine('_onAppLifecycleStateChanged: $appLifecycleState');
 
     emit(state.copyWith(currentAppLifecycleState: appLifecycleState));
+    _room.video.onAppLifecycleChanged(appLifecycleState);
 
     if (appLifecycleState == AppLifecycleState.paused || appLifecycleState == AppLifecycleState.detached) {
       _reconnectController.notifyAppPaused(hasActiveCalls: state.isActive);
@@ -837,11 +849,10 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
     // silence the tone once, here, instead of relying on each of them arriving.
     await _ringback.stopAll();
 
-    if (state.conference.isPresent) {
-      // The wait goes with the room: left running, its deadline and an answer
-      // still in flight would speak for a room this client has forgotten.
-      await _room.forget(_conferenceWrite(emit));
-    }
+    // The wait goes with the room: left running, its deadline and an answer
+    // still in flight would speak for a room this client has forgotten. An
+    // invitation to somebody else's room's video goes too.
+    await _room.forget(_conferenceWrite(emit));
 
     for (var element in state.activeCalls) {
       add(_ResetStateEvent.completeCall(element.callId));
@@ -1143,6 +1154,7 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
 
   Future<void> _onHandshakeSignalingEventState(_HandshakeSignalingEventState event, Emitter<CallState> emit) async {
     emit(state.copyWith(linesCount: event.linesCount));
+    _room.video.onSessionBack();
 
     add(_RegistrationChange(registration: event.registration));
   }
@@ -1807,6 +1819,8 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
       _CallControlEventConferenceAdded() => __onCallControlEventConferenceAdded(event, emit),
       _CallControlEventConferenceParticipantMuted() => __onCallControlEventConferenceParticipantMuted(event, emit),
       _CallControlEventConferenceSelfMuted() => __onCallControlEventConferenceSelfMuted(event, emit),
+      _CallControlEventConferenceCameraEnabled() => _room.video.setCamera(event.enabled),
+      _CallControlEventConferenceCameraSwitched() => _room.video.switchCamera(),
       _CallControlEventConferenceEnded() => __onCallControlEventConferenceEnded(event, emit),
       _CallControlEventAttendedTransferCallPlaced() => __onCallControlEventAttendedTransferCallPlaced(event, emit),
       _CallControlEventLinkedCallPickingStarted() => __onCallControlEventLinkedCallPickingStarted(event, emit),
@@ -2509,10 +2523,11 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
   /// the focus of a placed call.
   CallState _withConferenceUpdate(ConferenceUpdate update) {
     var next = state;
-    if (update.unheld.isNotEmpty || update.transitions.isNotEmpty) {
+    if (update.unheld.isNotEmpty || update.transitions.isNotEmpty || update.frontCamera.isNotEmpty) {
       next = next.copyWithMappedActiveCalls((call) => _withConferenceUpdateOfCall(call, update));
     }
     if (update.conference case final conference?) next = next.copyWith(conference: conference);
+    if (update.invitedVideo case (:final value)) next = next.copyWith(invitedVideo: value);
     if (update.settleFocus) next = next.copyWithPlacedCallFocusSettled();
     return next;
   }
@@ -2526,6 +2541,7 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
       RoomRefusedNotice(:final reason) => ConferenceRefusedNotification(reason),
       RoomFailedNotice(:final reason) => ConferenceFailedNotification(reason: reason),
       RoomEndedNotice() => const ConferenceEndedNotification(),
+      CameraUnavailableNotice() => const CallUserMediaErrorNotification(),
     });
   }
 
@@ -2540,11 +2556,11 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
 
   /// [call] as [update] leaves it.
   static ActiveCall _withConferenceUpdateOfCall(ActiveCall call, ConferenceUpdate update) {
-    if (update.unheld.contains(call.callId)) return call.copyWith(held: false);
-    if (update.transitions.containsKey(call.callId)) {
-      return call.copyWith(transition: update.transitions[call.callId]);
-    }
-    return call;
+    var next = call;
+    if (update.unheld.contains(call.callId)) next = next.copyWith(held: false);
+    if (update.transitions.containsKey(call.callId)) next = next.copyWith(transition: update.transitions[call.callId]);
+    if (update.frontCamera[call.callId] case final frontCamera?) next = next.copyWith(frontCamera: frontCamera);
+    return next;
   }
 
   /// Carries out what the room asks of a call.
@@ -2563,6 +2579,8 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
         add(_CallMutationEvent.controlMerge(callIds));
       case RetryAddCommand(:final callId):
         add(_CallMutationEvent.controlConferenceAdd(callId));
+      case SetLegCameraCommand(:final callId, :final enabled):
+        add(_CallMutationEvent.controlSetCameraEnabled(callId, enabled));
     }
   }
 
@@ -5119,6 +5137,9 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
           // too is that connection's to say - see [RejoinConferenceAction].
           _logger.info('_handleHandshakeReceived: keeping conference room ${action.room}');
           add(_CallMutationEvent.conferenceUpdated(room: action.room, participants: action.participants));
+          // Events of the room's video sent while the socket was down are
+          // lost and it is not in the handshake (protocol section 18.7).
+          _room.video.onRoomKept();
 
         case RejoinConferenceAction():
           _logger.info('_handleHandshakeReceived: still on the way back into conference room ${action.room}');
@@ -5414,12 +5435,20 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
     // hold the link put on is the link's to take off. The room is not held.
     final anchorWasLive = !intoRoom && state.retrieveActiveCall(e.anchorCallId)?.held == false;
 
+    // A participant added to a video conversation is called with video: to a
+    // room that carries video, or for a video call that a room is to be made
+    // of. A SIP participant called without video would never get the room's.
+    final video =
+        e.purpose == LinkedCallPurpose.join &&
+        state.roomTakesVideo &&
+        (intoRoom ? state.conference.hasVideo : state.retrieveActiveCall(e.anchorCallId)?.video == true);
+
     // Always from the main line: a call from another number is placed on the
     // guest line, which has no line number, and a transfer names a call by line.
     await _startOutgoing(
       emit,
       handle: e.handle,
-      video: false,
+      video: video,
       displayName: e.displayName,
       fromNumber: null,
       fromReplaces: null,
@@ -5927,4 +5956,7 @@ class _BlocConferenceCalls implements ConferenceCalls {
 
   @override
   Future<String?> audioCodecInUse(String callId) => _bloc._audioCodecInUse(callId);
+
+  @override
+  Iterable<ActiveCall> get all => _bloc.state.activeCalls;
 }

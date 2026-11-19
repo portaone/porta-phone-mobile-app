@@ -36,6 +36,42 @@ class ConferenceVideoFeed {
   final MediaStream stream;
 }
 
+/// What became of one publication of the camera.
+sealed class CameraPublication {
+  const CameraPublication();
+
+  /// Whether Core took it.
+  bool get published => false;
+}
+
+/// Core took the publication.
+final class CameraPublished extends CameraPublication {
+  const CameraPublished();
+
+  @override
+  bool get published => true;
+}
+
+/// The camera or the connection for it could not be opened: no permission,
+/// or another app holds the camera. The publication is given up.
+final class CameraUnavailable extends CameraPublication {
+  const CameraUnavailable();
+}
+
+/// The room refused the publication for [reason] (protocol section 10).
+final class CameraRefused extends CameraPublication {
+  const CameraRefused(this.reason);
+
+  /// The room's reason, as it sent it.
+  final String? reason;
+}
+
+/// The publication was not made for any other reason: not wanted any more,
+/// unanswered, or not sent while the session was down.
+final class CameraNotPublished extends CameraPublication {
+  const CameraNotPublished();
+}
+
 /// One participant's video in a conference: the two video-only peer
 /// connections next to the mixer's audio one (protocol section 18).
 ///
@@ -282,19 +318,20 @@ class ConferenceVideoSession {
     _inBackground(() => _closeSide(_subscriber));
   }
 
-  /// Publishes the camera ([frontCamera] picks which one). Returns whether
-  /// Core took the publication; the answer comes later as
-  /// [handlePublisherAnswer]. Asked while already publishing, it renegotiates
-  /// the same publication (protocol section 18.3).
-  Future<bool> publish({bool? frontCamera}) {
+  /// Publishes the camera ([frontCamera] picks which one). Says what became
+  /// of the publication - each call its own, whatever else is asked
+  /// meanwhile; the answer comes later as [handlePublisherAnswer]. Asked
+  /// while already publishing, it renegotiates the same publication
+  /// (protocol section 18.3).
+  Future<CameraPublication> publish({bool? frontCamera}) {
     _publishing = true;
     _publisherFailures = 0;
     if (frontCamera != null) _frontCamera = frontCamera;
     return _operations.run(_publish);
   }
 
-  Future<bool> _publish() async {
-    if (!_publishing) return false;
+  Future<CameraPublication> _publish() async {
+    if (!_publishing) return const CameraNotPublished();
     final existing = _publisher.peerConnection;
     if (existing != null && existing.isUsable) return _offer(existing, iceRestart: false, firstOffer: false);
     if (existing != null) {
@@ -309,24 +346,26 @@ class ConferenceVideoSession {
     } catch (e) {
       _logger.warning('publish: the camera or the connection could not be opened', e);
       _publishing = false;
-      return false;
+      return const CameraUnavailable();
     }
     return _offer(peerConnection, iceRestart: false, firstOffer: true);
   }
 
   /// Restarts ICE on the publisher connection: a new offer through a new
   /// `conference_video_publish`, the same publication.
-  Future<bool> restartPublisher() {
-    return _operations.run(_restartPublisher);
-  }
+  Future<CameraPublication> restartPublisher() => _operations.run(_restartPublisher);
 
-  Future<bool> _restartPublisher() async {
+  Future<CameraPublication> _restartPublisher() async {
     final peerConnection = _publisher.peerConnection;
-    if (!_publishing || peerConnection == null) return false;
+    if (!_publishing || peerConnection == null) return const CameraNotPublished();
     return _offer(peerConnection, iceRestart: true, firstOffer: false);
   }
 
-  Future<bool> _offer(RTCPeerConnection peerConnection, {required bool iceRestart, required bool firstOffer}) async {
+  Future<CameraPublication> _offer(
+    RTCPeerConnection peerConnection, {
+    required bool iceRestart,
+    required bool firstOffer,
+  }) async {
     // The candidates of a new ICE generation wait: Core's for its answer,
     // this client's for the publish that carries the new credentials.
     if (iceRestart) _publisher.newIceGeneration();
@@ -343,7 +382,7 @@ class ConferenceVideoSession {
         _publishing = false;
         await _closeSide(_publisher);
       }
-      return false;
+      return const CameraNotPublished();
     }
     ConferenceVideoPublishRequest request() =>
         ConferenceVideoPublishRequest(transaction: _transaction(), jsep: offer.toMap(), descriptions: descriptions);
@@ -356,7 +395,7 @@ class ConferenceVideoSession {
     switch (result.outcome) {
       case ConferenceRequestOutcome.taken:
         _acknowledge(_publisher);
-        return true;
+        return const CameraPublished();
       case ConferenceRequestOutcome.unanswered:
         _logger.warning('publish: unanswered twice');
         if (firstOffer) {
@@ -366,19 +405,19 @@ class ConferenceVideoSession {
           _publishing = false;
           await _closeSide(_publisher);
         }
-        return false;
+        return const CameraNotPublished();
       case ConferenceRequestOutcome.notSent:
         // The session went: still wanted, made again on reconnect.
         _logger.warning('publish: not sent, kept for the reconnect');
         if (firstOffer) await _closeSide(_publisher);
-        return false;
+        return const CameraNotPublished();
       case ConferenceRequestOutcome.refused:
         // The reason decides, for a first publication and for one being
         // renegotiated alike: the room has no place for the connection.
         _logger.warning('publish: refused (${result.reason})');
         await _closeSide(_publisher);
         _onPublisherRefused(result.reason);
-        return false;
+        return CameraRefused(result.reason);
     }
   }
 

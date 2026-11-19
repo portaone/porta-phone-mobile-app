@@ -832,6 +832,12 @@ sealed class CallControlEvent extends CallEvent {
   /// Mutes or unmutes the host's own microphone towards the room.
   const factory CallControlEvent.conferenceSelfMuted(bool muted) = _CallControlEventConferenceSelfMuted;
 
+  /// Publishes this client's camera to the room's video, or takes it off.
+  const factory CallControlEvent.conferenceCameraEnabled(bool enabled) = _CallControlEventConferenceCameraEnabled;
+
+  /// Switches the camera published to the room between the front and the rear.
+  const factory CallControlEvent.conferenceCameraSwitched() = _CallControlEventConferenceCameraSwitched;
+
   /// Ends the conference and hangs up every leg.
   /// [endedBy]: who ends the room - the user's hang-up on the call screen passes
   /// [CallkeepEndedBy.user]; each leg's end carries it.
@@ -1097,6 +1103,22 @@ class _CallControlEventConferenceParticipantMuted extends CallControlEvent {
 
   @override
   List<Object?> get props => [callId, muted];
+}
+
+class _CallControlEventConferenceCameraEnabled extends CallControlEvent {
+  const _CallControlEventConferenceCameraEnabled(this.enabled);
+
+  final bool enabled;
+
+  @override
+  List<Object?> get props => [enabled];
+}
+
+class _CallControlEventConferenceCameraSwitched extends CallControlEvent {
+  const _CallControlEventConferenceCameraSwitched();
+
+  @override
+  List<Object?> get props => [];
 }
 
 class _CallControlEventConferenceSelfMuted extends CallControlEvent {
@@ -1658,6 +1680,9 @@ sealed class _CallMutationEvent extends CallEvent {
   /// A continuation of the room's own, taking its turn in the queue; see
   /// [ConferenceStep].
   const factory _CallMutationEvent.conferenceStep(ConferenceStep step) = _CallMutationEventConferenceStep;
+
+  /// An event of the room's video (protocol section 18), for the room.
+  const factory _CallMutationEvent.conferenceVideo(Event event) = _CallMutationEventConferenceVideo;
 }
 
 // ── perform variants ─────────────────────────────────────────────────────────
@@ -2100,6 +2125,15 @@ class _CallMutationEventConferenceTerminated extends _ConferenceMutationEvent {
   final int? room;
   @override
   List<Object?> get props => [room];
+}
+
+class _CallMutationEventConferenceVideo extends _ConferenceMutationEvent {
+  const _CallMutationEventConferenceVideo(this.event);
+
+  final Event event;
+
+  @override
+  List<Object?> get props => [event];
 }
 
 class _CallMutationEventConferenceStep extends _ConferenceMutationEvent {

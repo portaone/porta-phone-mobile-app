@@ -218,7 +218,7 @@ void main() {
     test('the camera goes out alone, named for Core, and its candidates wait for the publish', () async {
       final published = session.publish();
       final peerConnection = await _created(factory);
-      expect(await published, isTrue);
+      expect((await published).published, isTrue);
 
       expect(peerConnection.addedTracks.map((track) => track.kind), ['video'], reason: 'audio stays in the mixer');
       expect(peerConnection.fakeTransceivers.single.direction, TransceiverDirection.SendOnly);
@@ -256,7 +256,7 @@ void main() {
     test('a refused publication gives the camera back', () async {
       signaling.answers[ConferenceVideoPublishRequest] = const ConferenceRequestResult.refused('video_disabled');
 
-      expect(await session.publish(), isFalse);
+      expect(await session.publish(), isA<CameraRefused>().having((it) => it.reason, 'reason', 'video_disabled'));
 
       expect(session.isPublishing, isFalse);
       expect(factory.created.single.closes, 1);
@@ -289,7 +289,7 @@ void main() {
     test('an ICE restart renegotiates the same publication', () async {
       await session.publish();
 
-      expect(await session.restartPublisher(), isTrue);
+      expect(await session.restartPublisher(), isA<CameraPublished>());
 
       expect(factory.created, hasLength(1));
       expect(factory.created.single.offerConstraints.last, {'iceRestart': true});
@@ -501,7 +501,7 @@ void main() {
     test('a first publication that went unanswered twice is undone, not left with Core', () async {
       signaling.answers[ConferenceVideoPublishRequest] = const ConferenceRequestResult.unanswered();
 
-      expect(await session.publish(), isFalse);
+      expect(await session.publish(), isA<CameraNotPublished>());
 
       expect(signaling.of<ConferenceVideoPublishRequest>(), hasLength(2));
       expect(signaling.sent.last, isA<ConferenceVideoUnpublishRequest>());
@@ -512,7 +512,7 @@ void main() {
 
     test('a publication the session could not send waits for the reconnect', () async {
       signaling.answers[ConferenceVideoPublishRequest] = const ConferenceRequestResult.notSent();
-      await session.publish();
+      expect(await session.publish(), isA<CameraNotPublished>());
       expect(session.isPublishing, isTrue);
       expect(factory.created.single.closes, 1);
 
@@ -689,7 +689,10 @@ void main() {
       await session.publish();
       signaling.answers[ConferenceVideoPublishRequest] = const ConferenceRequestResult.refused('not_in_conference');
 
-      expect(await session.restartPublisher(), isFalse);
+      expect(
+        await session.restartPublisher(),
+        isA<CameraRefused>().having((it) => it.reason, 'reason', 'not_in_conference'),
+      );
 
       expect(session.isPublishing, isFalse);
       expect(factory.created.single.closes, 1);
@@ -729,10 +732,19 @@ void main() {
       expect(factory.created, hasLength(2));
     });
 
+    test('a camera that cannot be opened says so, and nothing is published', () async {
+      media.buildError = StateError('camera in use');
+
+      expect(await session.publish(), isA<CameraUnavailable>());
+
+      expect(session.isPublishing, isFalse);
+      expect(signaling.sent, isEmpty);
+    });
+
     test('an offer the platform cannot make gives the camera back', () async {
       factory.offerError = StateError('no codecs');
 
-      expect(await session.publish(), isFalse);
+      expect(await session.publish(), isA<CameraNotPublished>());
 
       expect(session.isPublishing, isFalse);
       expect(factory.created.single.closes, 1);

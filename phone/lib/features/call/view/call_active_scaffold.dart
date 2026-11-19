@@ -28,6 +28,7 @@ class CallActiveScaffold extends StatefulWidget {
     required this.canAdd,
     required this.canStartAttendedTransfer,
     required this.conference,
+    this.invitedVideo,
     required this.conferenceParked,
     required this.localePlaceholderBuilder,
     required this.remotePlaceholderBuilder,
@@ -88,6 +89,10 @@ class CallActiveScaffold extends StatefulWidget {
   /// The conference room, when this session hosts one: the panel renders it
   /// and the control grid acts on it instead of on the focused leg.
   final ConferenceState conference;
+
+  /// The video of somebody else's room this client was invited to, when it
+  /// was: the camera control of the call it came through is the room's.
+  final InvitedConferenceVideo? invitedVideo;
 
   final WidgetBuilder? localePlaceholderBuilder;
   final WidgetBuilder? remotePlaceholderBuilder;
@@ -195,7 +200,11 @@ class CallActiveScaffoldState extends State<CallActiveScaffold> {
   /// at once).
   bool get _remoteVideoHidden {
     final activeCall = widget.activeCalls.current;
-    return activeCall.held || widget.focusedCall.callId != activeCall.callId;
+    // In a room every participant's picture belongs to the room; one leg's
+    // call video behind its rows would single that one out.
+    return activeCall.held ||
+        widget.focusedCall.callId != activeCall.callId ||
+        widget.conference.isLeg(activeCall.callId);
   }
 
   /// Whether the picture of the other person is on the screen right now - the
@@ -414,6 +423,7 @@ class CallActiveScaffoldState extends State<CallActiveScaffold> {
       onMerge: widget.canMerge ? _mergeCalls : null,
       onConferenceAdd: widget.canAdd ? _addToConference : null,
       conference: widget.conference,
+      invitedVideo: widget.invitedVideo,
       conferenceParked: widget.conferenceParked,
       onConversationSwitched: (callId) => _callBloc.add(CallControlEvent.conversationSwitched(callId)),
       onConferenceSelfMuted: (muted) => _callBloc.add(CallControlEvent.conferenceSelfMuted(muted)),
@@ -421,6 +431,8 @@ class CallActiveScaffoldState extends State<CallActiveScaffold> {
           _callBloc.add(CallControlEvent.conferenceParticipantMuted(callId, muted)),
       onConferenceParticipantHangup: (callId) =>
           _callBloc.add(CallControlEvent.ended(callId, endedBy: CallkeepEndedBy.user)),
+      onConferenceCameraChanged: (enabled) => _callBloc.add(CallControlEvent.conferenceCameraEnabled(enabled)),
+      onConferenceCameraSwitched: () => _callBloc.add(const CallControlEvent.conferenceCameraSwitched()),
       addParticipantAvailability: widget.addParticipantAvailability,
       onAddParticipant: _addParticipant,
       onAddParticipantCancelled: _cancelAddParticipant,
