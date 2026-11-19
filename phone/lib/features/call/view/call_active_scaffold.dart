@@ -200,8 +200,8 @@ class CallActiveScaffoldState extends State<CallActiveScaffold> {
   /// at once).
   bool get _remoteVideoHidden {
     final activeCall = widget.activeCalls.current;
-    // In a room every participant's picture belongs to the room; one leg's
-    // call video behind its rows would single that one out.
+    // In a room every participant's picture is in the room's own rows and
+    // tiles; one leg's call video behind them would single that one out.
     return activeCall.held ||
         widget.focusedCall.callId != activeCall.callId ||
         widget.conference.isLeg(activeCall.callId);
@@ -222,6 +222,15 @@ class CallActiveScaffoldState extends State<CallActiveScaffold> {
       !_watchPageOpen &&
       _remotePictureShown &&
       widget.activeCalls.shouldAutoHideControls(keepControlsVisible: widget.keepControlsVisible);
+
+  /// The phone's arrangement, which opens the room in full screen and closes
+  /// it when it stops applying.
+  final _handset = GlobalKey<CallScreenHandsetState>();
+
+  void _openConferenceFullScreen() {
+    _handset.currentState?.openConferenceFullScreen();
+    _compactController.setCompact(false, reason: 'conference full screen');
+  }
 
   /// Whether a watch has a page or the keypad over the call: it is being read,
   /// so the controls neither hide on their own nor on a tap.
@@ -433,6 +442,10 @@ class CallActiveScaffoldState extends State<CallActiveScaffold> {
           _callBloc.add(CallControlEvent.ended(callId, endedBy: CallkeepEndedBy.user)),
       onConferenceCameraChanged: (enabled) => _callBloc.add(CallControlEvent.conferenceCameraEnabled(enabled)),
       onConferenceCameraSwitched: () => _callBloc.add(const CallControlEvent.conferenceCameraSwitched()),
+      onConferenceFullScreen:
+          widget.conference.hasVideo && CallScreenHandsetState.roomApplies(widget.conference, widget.focusedCall)
+          ? _openConferenceFullScreen
+          : null,
       addParticipantAvailability: widget.addParticipantAvailability,
       onAddParticipant: _addParticipant,
       onAddParticipantCancelled: _cancelAddParticipant,
@@ -445,6 +458,7 @@ class CallActiveScaffoldState extends State<CallActiveScaffold> {
         activeCall: activeCall,
         style: style,
         controls: CallScreenHandset(
+          key: _handset,
           compact: _compactController,
           callStatus: widget.callStatus,
           popupMenuItems: _buildPopupMenuItems,

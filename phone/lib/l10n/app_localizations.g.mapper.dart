@@ -175,6 +175,10 @@ extension AppLocalizationsExtension on AppLocalizations {
       'call_ConferencePanel_participantMuted' =>
         call_ConferencePanel_participantMuted,
       'call_ConferencePanel_end' => call_ConferencePanel_end,
+      'call_ConferenceFullScreen_switchCamera' =>
+        call_ConferenceFullScreen_switchCamera,
+      'call_SemanticsLabel_conferenceFullScreen' =>
+        call_SemanticsLabel_conferenceFullScreen,
       'call_SemanticsLabel_conferenceEnd' => call_SemanticsLabel_conferenceEnd,
       'call_CallList_merge' => call_CallList_merge,
       'call_SemanticsLabel_merge' => call_SemanticsLabel_merge,
@@ -2192,6 +2196,12 @@ extension AppLocalizationsExtension on AppLocalizations {
         [final int count] => call_ConferencePanel_header(count),
         _ => throw ArgumentError(
           'call_ConferencePanel_header requires 1 arguments',
+        ),
+      },
+      'call_ConferenceFullScreen_participantLeft' => switch (args) {
+        [final String name] => call_ConferenceFullScreen_participantLeft(name),
+        _ => throw ArgumentError(
+          'call_ConferenceFullScreen_participantLeft requires 1 arguments',
         ),
       },
       'call_SemanticsLabel_conferenceParticipantMenu' => switch (args) {

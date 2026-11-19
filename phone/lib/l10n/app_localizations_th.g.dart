@@ -454,9 +454,20 @@ class AppLocalizationsTh extends AppLocalizations {
   String get call_ConferencePanel_end => 'สิ้นสุด';
 
   @override
+  String get call_ConferenceFullScreen_switchCamera => 'สลับกล้อง';
+
+  @override
+  String call_ConferenceFullScreen_participantLeft(String name) {
+    return '$name ออกจากการประชุมแล้ว';
+  }
+
+  @override
   String call_SemanticsLabel_conferenceParticipantMenu(String name) {
     return 'เพิ่มเติมสำหรับ $name';
   }
+
+  @override
+  String get call_SemanticsLabel_conferenceFullScreen => 'แสดงการประชุมแบบเต็มหน้าจอ';
 
   @override
   String call_SemanticsLabel_conferenceParticipantMute(String name) {

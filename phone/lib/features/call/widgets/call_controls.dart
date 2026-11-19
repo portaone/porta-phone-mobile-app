@@ -56,6 +56,7 @@ class CallScreenParams {
     this.onConferenceSelfMuted,
     this.onConferenceParticipantMuted,
     this.onConferenceParticipantHangup,
+    this.onConferenceFullScreen,
     this.onConferenceCameraChanged,
     this.onConferenceCameraSwitched,
     this.audioDevice,
@@ -150,6 +151,9 @@ class CallScreenParams {
   /// Brings the calls outside the room into it; `null` while none of them
   /// can join, which shows the control disabled rather than hiding it.
   final VoidCallback? onConferenceAdd;
+
+  /// Opens the room in full screen; `null` where the room has no video.
+  final VoidCallback? onConferenceFullScreen;
 
   /// Publishes this client's camera to the room's video, or takes it off.
   final ValueChanged<bool>? onConferenceCameraChanged;
