@@ -17,6 +17,7 @@ that joins it, and how it is taken down.
 lib/features/call/
   conference/
     conference_peer_connection.dart   the client's own connection to the mixer
+    conference_video_session.dart     the room's video: subscriber and publisher connections (not wired yet)
     leg_mute_sync.dart                keeps the platform's mute for each leg in step with the room's
   models/conference_state.dart        ConferenceState, ConferencePhase
   models/linked_call.dart             LinkedCall: a call placed to join a call or the room (purpose join)
@@ -570,3 +571,61 @@ all while there is nothing to tell apart - is taken as this one.
 
 A room does not survive a Janus restart, and there is exactly one room per
 signalling session.
+
+## Video (not wired yet)
+
+`ConferenceVideoSession` is the client's side of the conference video room
+(protocol section 18): two video-only connections next to the mixer's audio one.
+Nothing in `CallBloc` creates it yet; it is the component the video conference will
+be built on.
+
+- The **subscriber** receives everyone else's video. `subscribe` asks the room, which
+  offers through Core; every offer is answered on the same connection, except the
+  first after a subscribe and one that arrives while the connection is spent - Core
+  sends that one unasked after Janus hung the subscriber up, for a new connection.
+  An offer with no subscription standing is not answered.
+- The **publisher** sends the camera, video only: the microphone in the camera stream
+  belongs to the mixer and is not added. The camera m-line is named `camera` for Core;
+  a later publish renegotiates the same publication on the same connection, an ICE
+  restart among them. The shared camera track is turned on for the room; when the room
+  lets it go it goes back as the calls want it then (`callsWantCamera`), or as the
+  room found it where the owner does not say. A second answer to one publish is
+  ignored.
+- An offer with a new SDP session id (`o=`) is a new subscription and gets a new
+  connection at once, without waiting for the old one's state to say so; what the
+  room said of the old streams is dropped with it, since Core names the new ones
+  right after the offer. The offer of a restart this client asked for is answered on
+  the same connection even if its ICE has failed.
+- Candidates a connection gathers before Core acknowledged the request behind it
+  would be refused with `no_peer_connection`, so they wait here and go out tagged
+  with their `pc`. Remote candidates ahead of an offer or answer wait for it.
+- Candidates waiting for the acknowledgement go out at once and in order when it
+  comes, so that one gathered meanwhile cannot pass them. An ICE restart starts the
+  wait over for both ends: the room's candidates wait for the restart's offer or
+  answer, this client's for the publish or answer that carries the new credentials.
+  A refused candidate (`conference_video_failed` naming the trickle, for an invited
+  far end whose controller acknowledged ahead of the host's) has that connection's
+  candidates sent once more when the connection is known to be there.
+- An invited far end's own controller acknowledges every answer, so an acknowledged
+  answer does not reset the subscriber's retry: a connected subscriber does.
+- `conference_video_failed` closes that connection; it is made again once in a row and
+  then left gone (the room's 100 publishers, `code` 432, among the reasons).
+- A refusal says what to do (protocol section 10): `not_subscribed` subscribes again,
+  `attach_failed` asks again once after a short delay, anything else
+  (`not_in_conference`, `video_disabled`, ...) ends that connection - a publication
+  being renegotiated or restarted as much as a first one. The same holds for the
+  refusals an invited far end gets from the host's controller.
+- A subscribe or publish that went unanswered may have been taken and is sent once
+  more; an answer that went unanswered lets its candidates go all the same; a first publication unanswered twice is undone with `conference_video_unpublish`
+  so that Core is not left with it. One that could not be sent at all stays wanted
+  and is made again after the reconnect.
+- `unpublish` sends the request before it closes the connection, so the room does not
+  report the closed one as a failure. `leave` tells the room and closes both;
+  `teardown` closes both and tells nobody.
+- After a signalling reconnect the subscription is remade from scratch and the
+  publisher restarts ICE: events sent while the socket was down are lost and the video
+  is not in the handshake.
+- Received streams are named by the participant through the `mid` -> `feed` list of
+  the last `conference_video_updated`; a stream the room has not named yet is not
+  reported.
+

@@ -668,6 +668,7 @@ on that line's PeerConnection.
 | `line_without_active_call` | `lineWithoutActiveCall` | `merge`, `conference_add` | no call on that line |
 | `room_create_failed: <text>` | `roomCreateFailed` | `merge` | AudioBridge `create` failed |
 | `attach_failed: <text>` | `attachFailed` | `merge`, `conference_add` | could not attach an AudioBridge handle, e.g. plugin not loaded |
+| `attach_failed` | `attachFailed` | `conference_video_publish`, `conference_video_subscribe` | Janus refused a VideoRoom handle; retry the publish or subscribe later |
 | `no_conference` | `noConference` | `conference_add`, `conference_mute`, `conference_rejoin` | nothing to act on |
 | `conference_not_established` | `conferenceNotEstablished` | `conference_rejoin` | an offer is still pending: the first one, or the one answering an earlier rejoin; wait for it |
 | `line_already_in_conference` | `lineAlreadyInConference` | `conference_add` | |

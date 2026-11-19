@@ -99,7 +99,7 @@ class ConferencePeerConnection {
   /// not the presence of the object.
   bool get isUp {
     final peerConnection = _peerConnection;
-    return peerConnection != null && _isUsable(peerConnection);
+    return peerConnection != null && peerConnection.isUsable;
   }
 
   /// What the room's audio is to be, which is also what it will be: applying
@@ -224,7 +224,7 @@ class ConferencePeerConnection {
   /// the connection that replaces it.
   void _giveUpUnappliedRoom() {
     final peerConnection = _peerConnection;
-    if (peerConnection == null || !_isUsable(peerConnection)) return;
+    if (peerConnection == null || !peerConnection.isUsable) return;
     _logger.warning('apply: the room audio cannot be applied, giving the room up');
     onConnectionLost();
   }
@@ -344,9 +344,4 @@ class ConferencePeerConnection {
     final inbound = await peerConnection.audioReceiverTrack();
     if (inbound != null) inbound.enabled = _wanted.audible;
   }
-
-  static bool _isUsable(RTCPeerConnection peerConnection) => switch (peerConnection.connectionState) {
-    RTCPeerConnectionState.RTCPeerConnectionStateClosed || RTCPeerConnectionState.RTCPeerConnectionStateFailed => false,
-    _ => true,
-  };
 }

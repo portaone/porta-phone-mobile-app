@@ -15,6 +15,15 @@ extension RTCPeerConnectionSafeAddTrack on RTCPeerConnection {
   }
 }
 
+/// Whether this connection can still carry media: not closed, and not failed
+/// for good.
+extension RTCPeerConnectionUsable on RTCPeerConnection {
+  bool get isUsable => switch (connectionState) {
+    RTCPeerConnectionState.RTCPeerConnectionStateClosed || RTCPeerConnectionState.RTCPeerConnectionStateFailed => false,
+    _ => true,
+  };
+}
+
 /// Finds the sender that carries this connection's microphone.
 ///
 /// The transceiver's own media decides, not the track currently on the
