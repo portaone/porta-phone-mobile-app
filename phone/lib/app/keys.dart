@@ -147,6 +147,10 @@ const String conferenceParticipantHangupId = 'conferenceParticipantHangup';
 const String conferenceEndId = 'conferenceEnd';
 const String conferenceParticipantMenuId = 'conferenceParticipantMenu';
 
+/// The camera of a participant on their row of the conference, numbered as
+/// the row's other parts are.
+const String conferenceParticipantCameraId = 'conferenceParticipantCamera';
+
 // Bottom navigation of the main screen: which tabs are there and what they are
 // called both come from the server-side menu configuration, so the entry is
 // addressed by the section it opens.

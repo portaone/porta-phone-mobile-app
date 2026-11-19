@@ -127,7 +127,7 @@ void main() {
       );
       await pumpEventQueue();
 
-      expect(h.bloc.state.conference.videoOfLine(0), same(stream));
+      expect(h.bloc.state.conference.videoOfLine(0), ParticipantCamera(stream: stream, trackId: 'v0'));
       expect(h.bloc.state.conference.hasVideo, isTrue);
     });
 

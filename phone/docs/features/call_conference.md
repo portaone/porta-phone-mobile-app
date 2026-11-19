@@ -705,7 +705,13 @@ the bloc has no part of the video of its own (see "In the room" below).
   is not in the handshake.
 - Received streams are named by the participant through the `mid` -> `feed` list of
   the last `conference_video_updated`; a stream the room has not named yet is not
-  reported.
+  reported. The list is taken in turn with the offers, on the session's queue: when a
+  participant unpublishes, Core offers a new subscription and sends its list 9 ms
+  later, while the offer is still being taken - taken first, the list would be
+  dropped by the offer, and the cameras that remain would show no more.
+- A renegotiation hands the same track over in a new stream object; it is the same
+  camera (`ParticipantCamera.isSameTrackAs`), given to the renderer again but not
+  waited for: the platform reports a first frame only for a new track.
 
 ### In the room
 
@@ -770,3 +776,25 @@ lifecycle (`onAppLifecycleChanged`), a session that came back (`onSessionBack`;
   `CallState.invitedVideo` for an invited far end; the host's own published camera is
   `ConferenceState.selfVideo`. A video call outside the room keeps its own preview;
   one that joins a room loses it.
+- On the default screen the host sees a participant's camera on their row of the
+  panel (`ConferenceParticipantCamera`): round and of the avatar's own size, over the
+  avatar, which stays where it is - a row is the same with a camera and without one,
+  does not move when a camera comes or goes, and its picture is not made again. The
+  camera shows once it has drawn a frame, and after a new stream for it (a
+  subscription made again) once that one has: until then the avatar is seen, not an
+  empty circle. The renderer is given the camera's own track (`ParticipantCamera`):
+  the room gives every track of its subscription the same stream id (Janus sends
+  `a=msid:janus janus<N>`), and a stream id alone would show the first participant's
+  camera on every row. A leg whose call is not known yet shows no picture and no
+  camera. The camera is `conferenceParticipantCamera<N>` for a case while it is seen.
+
+### Redesign / in progress
+
+- A camera that stops sending after its first frame shows its last frame, or black,
+  over the avatar: nothing tells the row that the frames stopped.
+- An invited far end sees no camera yet: what it receives is in
+  `CallState.invitedVideo` and is shown nowhere. The host does not see his own
+  published camera (`ConferenceState.selfVideo`) either.
+- The call screen has two more owners of an `RTCVideoRenderer` (`StreamThumbnail`,
+  `RTCStreamView`) that release one before it is made and so keep its texture; this
+  widget does not, and is not shared with them yet.

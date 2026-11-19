@@ -10,6 +10,7 @@ import '../view/call_screen_style.dart';
 import '../utils/contact_resolver.dart';
 import 'call_action_button.dart';
 import 'call_row_frame.dart';
+import 'conference_participant_camera.dart';
 import 'popup_menu.dart';
 
 /// The conference room: who is in it, who is muted for everyone, and the way
@@ -95,6 +96,7 @@ class ConferencePanel extends StatelessWidget {
             index: index,
             call: calls.firstWhereOrNull((call) => call.callId == leg.key),
             callId: leg.key,
+            camera: conference.videoOfLine(leg.value),
             // Core answers a mute for a participant it has not finished
             // wiring with line_not_ready, so the control waits for the
             // participant to appear in a list of its own.
@@ -124,6 +126,7 @@ class _ParticipantRow extends StatelessWidget {
     required this.index,
     required this.call,
     required this.callId,
+    required this.camera,
     required this.ready,
     required this.muted,
     required this.onTap,
@@ -142,6 +145,9 @@ class _ParticipantRow extends StatelessWidget {
   /// it out of the room and the bloc dropping the leg.
   final ActiveCall? call;
   final String callId;
+
+  /// The participant's camera as the video room sends it; `null` without one.
+  final ParticipantCamera? camera;
   final bool ready;
   final bool muted;
   final VoidCallback? onTap;
@@ -162,11 +168,6 @@ class _ParticipantRow extends StatelessWidget {
   final CallInfoStyle? style;
   final CallListStyle? listStyle;
 
-  Widget? _leading() {
-    final call = this.call;
-    return call == null ? null : CallRowAvatar(call: call, contactResolver: contactResolver);
-  }
-
   @override
   Widget build(BuildContext context) {
     final call = this.call;
@@ -184,7 +185,11 @@ class _ParticipantRow extends StatelessWidget {
       // The picture of whoever this leg is with, the same as a roster row -
       // a leg of a room is still a call with somebody. No state badge: the
       // row says in words whether they are muted for everyone.
-      leading: _leading(),
+      // A leg whose call is not known yet, or gone, has no picture - and no
+      // camera either, which would otherwise make a picture of its own.
+      leading: call == null
+          ? null
+          : _ParticipantPicture(index: index, call: call, camera: camera, contactResolver: contactResolver),
       // The duration stands with the status rather than beside the controls:
       // past an hour it grows to HH:MM:SS, and on a narrow screen at a large
       // text scale a trailing group of that width has nowhere to go.
@@ -228,6 +233,33 @@ class _ParticipantRow extends StatelessWidget {
           ),
         ),
       ],
+    );
+  }
+}
+
+/// Who a participant is, on their row: the picture of whoever the leg is
+/// with, and their camera over it - round and of the picture's size - while
+/// the room sends one.
+class _ParticipantPicture extends StatelessWidget {
+  const _ParticipantPicture({
+    required this.index,
+    required this.call,
+    required this.camera,
+    required this.contactResolver,
+  });
+
+  final int index;
+  final ActiveCall call;
+  final ParticipantCamera? camera;
+  final ContactResolver? contactResolver;
+
+  @override
+  Widget build(BuildContext context) {
+    return ConferenceParticipantCamera(
+      camera: camera,
+      diameter: CallRowAvatar.radius * 2,
+      avatar: CallRowAvatar(call: call, contactResolver: contactResolver),
+      identifier: numberedId(conferenceParticipantCameraId, index),
     );
   }
 }

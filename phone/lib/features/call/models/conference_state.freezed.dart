@@ -51,7 +51,7 @@ abstract mixin class $ConferenceStateCopyWith<$Res>  {
   factory $ConferenceStateCopyWith(ConferenceState value, $Res Function(ConferenceState) _then) = _$ConferenceStateCopyWithImpl;
 @useResult
 $Res call({
- int? room, ConferencePhase phase, Map<String, int> legs, List<ConferenceParticipant> participants, bool selfMuted, Map<int, MediaStream> videoFeeds, MediaStream? selfVideo, bool videoDisabled
+ int? room, ConferencePhase phase, Map<String, int> legs, List<ConferenceParticipant> participants, bool selfMuted, Map<int, ParticipantCamera> videoFeeds, MediaStream? selfVideo, bool videoDisabled
 });
 
 
@@ -76,7 +76,7 @@ as ConferencePhase,legs: null == legs ? _self.legs : legs // ignore: cast_nullab
 as Map<String, int>,participants: null == participants ? _self.participants : participants // ignore: cast_nullable_to_non_nullable
 as List<ConferenceParticipant>,selfMuted: null == selfMuted ? _self.selfMuted : selfMuted // ignore: cast_nullable_to_non_nullable
 as bool,videoFeeds: null == videoFeeds ? _self.videoFeeds : videoFeeds // ignore: cast_nullable_to_non_nullable
-as Map<int, MediaStream>,selfVideo: freezed == selfVideo ? _self.selfVideo : selfVideo // ignore: cast_nullable_to_non_nullable
+as Map<int, ParticipantCamera>,selfVideo: freezed == selfVideo ? _self.selfVideo : selfVideo // ignore: cast_nullable_to_non_nullable
 as MediaStream?,videoDisabled: null == videoDisabled ? _self.videoDisabled : videoDisabled // ignore: cast_nullable_to_non_nullable
 as bool,
   ));

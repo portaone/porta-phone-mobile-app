@@ -1,5 +1,11 @@
-import 'package:material_ui/material_ui.dart';
+import 'dart:async';
+
+import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:material_ui/material_ui.dart';
+
+import 'package:flutter_webrtc/flutter_webrtc.dart';
+
 import 'package:signaling/signaling.dart';
 
 import 'package:webtrit_phone/app/keys.dart';
@@ -188,6 +194,236 @@ void main() {
       await tester.pumpWidget(const SizedBox());
     });
 
+    group('cameras of the room', () {
+      // What the platform was asked of the renderers, in order.
+      late List<String> rendererCalls;
+      late int textures;
+      const webrtc = MethodChannel('FlutterWebRTC.Method');
+
+      TestDefaultBinaryMessenger messenger() => TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger;
+
+      /// The renderer of [textureId] drew its first frame.
+      Future<void> firstFrame(WidgetTester tester, int textureId) async {
+        await messenger().handlePlatformMessage(
+          'FlutterWebRTC/Texture$textureId',
+          const StandardMethodCodec().encodeSuccessEnvelope({'event': 'didFirstFrameRendered', 'id': textureId}),
+          (_) {},
+        );
+        await tester.pump();
+      }
+
+      /// Lets a renderer's release reach the platform: it waits on its event
+      /// channel first.
+      Future<void> releases(WidgetTester tester) async {
+        for (var turn = 0; turn < 10; turn++) {
+          await tester.runAsync(() => Future<void>.delayed(Duration.zero));
+          await tester.pump();
+        }
+      }
+
+      double cameraOpacity(WidgetTester tester) => tester
+          .widget<Opacity>(find.ancestor(of: find.byType(RTCVideoView), matching: find.byType(Opacity)).first)
+          .opacity;
+
+      setUp(() {
+        rendererCalls = [];
+        textures = 0;
+        // The plugin's own event stream, which the renderers' calls start.
+        messenger().setMockMethodCallHandler(const MethodChannel('FlutterWebRTC.Event'), (_) async => null);
+        messenger().setMockMethodCallHandler(webrtc, (call) async {
+          rendererCalls.add(call.method);
+          if (call.method != 'createVideoRenderer') return null;
+          final textureId = ++textures;
+          // The renderer listens to its texture's events.
+          messenger().setMockMethodCallHandler(MethodChannel('FlutterWebRTC/Texture$textureId'), (_) async => null);
+          return {'textureId': textureId};
+        });
+      });
+
+      tearDown(() {
+        messenger().setMockMethodCallHandler(webrtc, null);
+        messenger().setMockMethodCallHandler(const MethodChannel('FlutterWebRTC.Event'), null);
+      });
+
+      // The room's feeds are keyed by line + 2: Anna (line 0) is 2, Boris 3.
+      ConferenceState roomWith(Map<int, ParticipantCamera> feeds) => _room().copyWith(videoFeeds: feeds);
+
+      testWidgets('the picture stands until the camera has drawn a frame, then the camera shows', (tester) async {
+        await tester.pumpWidget(subject(conference: roomWith({3: _camera('boris')})));
+        await tester.pump();
+
+        expect(find.byType(CallRowAvatar), findsNWidgets(2), reason: 'both pictures, Boris\'s under his camera');
+        expect(cameraOpacity(tester), 0, reason: 'no frame yet: not an empty circle');
+        expect(find.bySemanticsIdentifier(numberedId(conferenceParticipantCameraId, 1)), findsNothing);
+
+        await firstFrame(tester, 1);
+
+        expect(cameraOpacity(tester), 1);
+        expect(find.bySemanticsIdentifier(numberedId(conferenceParticipantCameraId, 1)), findsOneWidget);
+        expect(find.bySemanticsIdentifier(conferenceParticipantCameraId), findsNothing, reason: 'Anna has none');
+        await tester.pumpWidget(const SizedBox());
+      });
+
+      testWidgets('a camera that comes or goes does not move the rows', (tester) async {
+        Rect row(String callId) => tester.getRect(find.byKey(ValueKey('ConferenceParticipant-$callId')));
+        await tester.pumpWidget(subject());
+        final before = (a: row('a'), b: row('b'), name: tester.getTopLeft(find.text('Boris Klein')));
+
+        // The first camera of the room arrives, and draws.
+        await tester.pumpWidget(subject(conference: roomWith({3: _camera('boris')})));
+        await tester.pump();
+        await firstFrame(tester, 1);
+
+        expect(row('a'), before.a);
+        expect(row('b'), before.b);
+        expect(tester.getTopLeft(find.text('Boris Klein')), before.name);
+
+        // And goes: the room's last.
+        await tester.pumpWidget(subject());
+        await tester.pump();
+
+        expect(row('a'), before.a);
+        expect(row('b'), before.b);
+        await tester.pumpWidget(const SizedBox());
+      });
+
+      testWidgets('the camera is round and of the picture\'s size', (tester) async {
+        await tester.pumpWidget(subject(conference: roomWith({3: _camera('boris')})));
+        await tester.pump();
+        await firstFrame(tester, 1);
+
+        final avatars = find.byType(CallRowAvatar);
+        expect(tester.getSize(find.byType(RTCVideoView)), tester.getSize(avatars.first));
+        expect(find.ancestor(of: find.byType(RTCVideoView), matching: find.byType(ClipOval)), findsOneWidget);
+        await tester.pumpWidget(const SizedBox());
+      });
+
+      testWidgets('a rebuild with the same camera asks nothing more of its renderer', (tester) async {
+        final conference = roomWith({3: _camera('boris')});
+        // The same camera object on every rebuild.
+        await tester.pumpWidget(subject(conference: conference));
+        await tester.pump();
+        final asked = rendererCalls.length;
+
+        await tester.pumpWidget(subject(conference: conference, roomParked: true));
+        await tester.pumpWidget(subject(conference: conference));
+        await tester.pump();
+
+        expect(rendererCalls, hasLength(asked));
+        await tester.pumpWidget(const SizedBox());
+      });
+
+      testWidgets('a camera that goes gives the picture back and releases its renderer', (tester) async {
+        final anna = _camera('anna');
+        await tester.pumpWidget(subject(conference: roomWith({2: anna, 3: _camera('boris')})));
+        await tester.pump();
+        expect(find.byType(RTCVideoView), findsNWidgets(2));
+
+        await tester.pumpWidget(subject(conference: roomWith({2: anna})));
+        await tester.pump();
+
+        expect(find.byType(RTCVideoView), findsOneWidget);
+        expect(find.byType(CallRowAvatar), findsNWidgets(2));
+        await releases(tester);
+        expect(rendererCalls.where((method) => method == 'videoRendererDispose'), hasLength(1));
+        await tester.pumpWidget(const SizedBox());
+      });
+
+      testWidgets('a row that goes while its renderer is being made releases it, with no stream', (tester) async {
+        final made = Completer<void>();
+        messenger().setMockMethodCallHandler(webrtc, (call) async {
+          rendererCalls.add(call.method);
+          if (call.method != 'createVideoRenderer') return null;
+          await made.future;
+          messenger().setMockMethodCallHandler(const MethodChannel('FlutterWebRTC/Texture1'), (_) async => null);
+          return {'textureId': 1};
+        });
+        await tester.pumpWidget(subject(conference: roomWith({3: _camera('boris')})));
+
+        await tester.pumpWidget(const SizedBox());
+        made.complete();
+        await releases(tester);
+
+        expect(rendererCalls, isNot(contains('videoRendererSetSrcObject')));
+        expect(rendererCalls, contains('videoRendererDispose'));
+      });
+
+      testWidgets("each row shows its participant's own track, though the streams share an id", (tester) async {
+        final shown = <String>[];
+        final calls = <MethodCall>[];
+        messenger().setMockMethodCallHandler(webrtc, (call) async {
+          calls.add(call);
+          if (call.method != 'createVideoRenderer') return null;
+          final textureId = ++textures;
+          messenger().setMockMethodCallHandler(MethodChannel('FlutterWebRTC/Texture$textureId'), (_) async => null);
+          return {'textureId': textureId};
+        });
+        await tester.pumpWidget(subject(conference: roomWith({2: _camera('anna'), 3: _camera('boris')})));
+        await tester.pump();
+        await tester.pump();
+        for (final call in calls.where((call) => call.method == 'videoRendererSetSrcObject')) {
+          shown.add((call.arguments as Map)['trackId'] as String);
+        }
+
+        expect(shown..sort(), ['anna-video', 'boris-video']);
+        await tester.pumpWidget(const SizedBox());
+      });
+
+      testWidgets('a new stream for the same participant waits for its own first frame', (tester) async {
+        await tester.pumpWidget(subject(conference: roomWith({3: _camera('boris')})));
+        await tester.pump();
+        await firstFrame(tester, 1);
+        expect(cameraOpacity(tester), 1);
+
+        // The subscription is made again: a new connection, the same track id.
+        await tester.pumpWidget(subject(conference: roomWith({3: _camera('boris', connection: 'subscriber-2')})));
+        await tester.pump();
+
+        expect(cameraOpacity(tester), 0, reason: 'the avatar until the new stream draws');
+        expect(find.bySemanticsIdentifier(numberedId(conferenceParticipantCameraId, 1)), findsNothing);
+        await firstFrame(tester, 1);
+        expect(cameraOpacity(tester), 1);
+        await tester.pumpWidget(const SizedBox());
+      });
+
+      testWidgets('a renegotiation hands the same camera over in a new stream, and it stays seen', (tester) async {
+        // The platform reports a first frame only for a new track: waiting for
+        // one here would leave the avatar for good.
+        await tester.pumpWidget(subject(conference: roomWith({3: _camera('boris')})));
+        await tester.pump();
+        await firstFrame(tester, 1);
+        final asked = rendererCalls.length;
+
+        await tester.pumpWidget(subject(conference: roomWith({3: _camera('boris')})));
+        await tester.pump();
+
+        expect(cameraOpacity(tester), 1);
+        expect(rendererCalls.skip(asked), ['videoRendererSetSrcObject'], reason: 'handed over again, not waited for');
+        await tester.pumpWidget(const SizedBox());
+      });
+
+      testWidgets('the picture under a camera is not made again when the camera comes or goes', (tester) async {
+        await tester.pumpWidget(subject());
+        final before = tester.state(find.byType(CallRemoteAvatar).last);
+
+        await tester.pumpWidget(subject(conference: roomWith({3: _camera('boris')})));
+        await tester.pump();
+        await tester.pumpWidget(subject());
+        await tester.pump();
+
+        expect(tester.state(find.byType(CallRemoteAvatar).last), same(before));
+        await tester.pumpWidget(const SizedBox());
+      });
+
+      testWidgets('a room without cameras asks nothing of the platform', (tester) async {
+        await tester.pumpWidget(subject());
+
+        expect(find.byType(RTCVideoView), findsNothing);
+        expect(rendererCalls, isEmpty);
+        await tester.pumpWidget(const SizedBox());
+      });
+    });
+
     testWidgets('a leg falls back to its number, and to its id before the call is known', (tester) async {
       await tester.pumpWidget(subject(calls: [_call('a')]));
 
@@ -275,4 +511,23 @@ void main() {
       await tester.pumpWidget(const SizedBox());
     });
   });
+}
+
+/// A participant's camera as the room sends it: a stream of the id every
+/// track of the subscription shares, and its own track.
+ParticipantCamera _camera(String name, {String connection = 'subscriber-1'}) =>
+    ParticipantCamera(stream: _Stream(connection), trackId: '$name-video');
+
+class _Stream extends Fake implements MediaStream {
+  _Stream(this.ownerTag);
+
+  @override
+  String get id => 'janus';
+
+  /// The connection the stream arrived on.
+  @override
+  final String ownerTag;
+
+  @override
+  List<MediaStreamTrack> getVideoTracks() => const [];
 }

@@ -23,7 +23,7 @@ typedef ConferenceVideoFeedsChanged = void Function(List<ConferenceVideoFeed> fe
 
 /// One video stream of one participant, as this client receives it.
 class ConferenceVideoFeed {
-  const ConferenceVideoFeed({required this.feed, required this.kind, required this.stream});
+  const ConferenceVideoFeed({required this.feed, required this.kind, required this.stream, required this.trackId});
 
   /// The participant, as `conference_video_updated` numbers them: the host is
   /// 1, the far end of the host's line N is N + 2.
@@ -32,8 +32,12 @@ class ConferenceVideoFeed {
   /// A camera or a shared screen.
   final ConferenceVideoKind kind;
 
-  /// What a renderer shows.
+  /// The stream the feed arrived in.
   final MediaStream stream;
+
+  /// The feed's own track in [stream]: what a renderer shows. The room may
+  /// give every track of the subscription the same stream id.
+  final String trackId;
 }
 
 /// What became of one publication of the camera.
@@ -156,6 +160,9 @@ class ConferenceVideoSession {
 
   /// Remote tracks by the `mid` of their m-line on the subscriber connection.
   final Map<String, MediaStream> _streamsByMid = {};
+
+  /// The video track received on each mid, beside its stream.
+  final Map<String, String> _tracksByMid = {};
 
   /// What the room last said each `mid` carries.
   List<ConferenceVideoStream> _roomStreams = const [];
@@ -566,11 +573,14 @@ class ConferenceVideoSession {
   }
 
   /// Takes what the room says each stream carries
-  /// (`conference_video_updated`).
-  void handleUpdated(ConferenceVideoUpdatedEvent event) {
+  /// (`conference_video_updated`). In turn with the offers, on the session's
+  /// queue: Core sends the list of a new subscription right after its offer,
+  /// and an offer still being taken when the list arrives would otherwise
+  /// drop the names the list has just given.
+  Future<void> handleUpdated(ConferenceVideoUpdatedEvent event) => _operations.run(() async {
     _roomStreams = event.streams;
     _reportFeeds();
-  }
+  });
 
   /// The signalling session came back: events sent while it was down are
   /// lost and the video is not in the handshake, so the subscription is made
@@ -653,6 +663,7 @@ class ConferenceVideoSession {
       final stream = event.streams.isEmpty ? null : event.streams.first;
       if (mid == null || stream == null || event.track.kind != 'video') return;
       _streamsByMid[mid] = stream;
+      _tracksByMid[mid] = event.track.id ?? '';
       _reportFeeds();
     };
     // Connected is what says the subscription works; an acknowledged answer
@@ -783,6 +794,7 @@ class ConferenceVideoSession {
       _subscriberSession = null;
       final hadStreams = _streamsByMid.isNotEmpty;
       _streamsByMid.clear();
+      _tracksByMid.clear();
       if (hadStreams) _reportFeeds();
     }
     if (peerConnection != null) {
@@ -824,7 +836,14 @@ class ConferenceVideoSession {
     for (final roomStream in _roomStreams) {
       final stream = _streamsByMid[roomStream.mid];
       if (stream == null) continue;
-      feeds.add(ConferenceVideoFeed(feed: roomStream.feed, kind: roomStream.kind, stream: stream));
+      feeds.add(
+        ConferenceVideoFeed(
+          feed: roomStream.feed,
+          kind: roomStream.kind,
+          stream: stream,
+          trackId: _tracksByMid[roomStream.mid] ?? '',
+        ),
+      );
     }
     onFeedsChanged(List.unmodifiable(feeds));
   }
