@@ -41,7 +41,9 @@ what CallKit itself needs - it has no native tests.
 - The CallKit UUID is a name-based v5 UUID of the callId, computed the same way in Dart and
   Objective-C, so a push and a signaling report of one call meet on one UUID.
 - CallKit keeps one active and one held call; a call going active while another ungrouped one is
-  active makes CallKit end that one. Hold the other call in the same transaction.
+  active makes CallKit end that one. Hold the other call first, in a transaction of its own, and
+  go on once the call observer shows it held: a transaction's completion means CallKit took the
+  request, not that the hold was performed (iOS 16 performed it after the start went active).
 - A `perform...Action` is fulfilled or failed only once the delegate answered; `false` fails it
   and the system UI goes back. Never block the main thread in a provider delegate callback - call
   Dart asynchronously through Pigeon.

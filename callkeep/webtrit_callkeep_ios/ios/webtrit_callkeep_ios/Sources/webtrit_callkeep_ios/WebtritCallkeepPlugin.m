@@ -1358,11 +1358,18 @@ displayNameOrContactIdentifier:(NSString *)displayNameOrContactIdentifier
 /// application as the answer of the incoming call (performStartCallAction). iOS's call history
 /// lists it as outgoing.
 ///
-/// The call in conversation is held in the same transaction: a call going active beside another
-/// active ungrouped one makes CallKit end that one. A conference is held first, in a transaction
-/// of its own: riding with the start, its holds were still pending when CallKit ended every member
-/// of the room. Should CallKit refuse either transaction, or the application the answer, what was
-/// held is taken off hold again and the call waits again, at the head of the queue.
+/// The call in conversation is held first, in a transaction of its own, and the start is asked
+/// for once CallKit's call observer shows it on hold (see waitUntilObserverShowsHeld): a call going
+/// active beside another active ungrouped one makes CallKit end that one. Riding in one
+/// transaction with the start, the hold was still being performed when the start went active, and
+/// iOS 16 ended the call in conversation (measured on BrowserStack iPhones, iOS 16: 3 of 8 runs;
+/// iOS 17 and later waited for it). A conference is held first too, in a transaction of its own,
+/// and the start waits until the observer shows its members on hold: riding with the start, its
+/// holds were still pending when CallKit ended every member of the room. Should CallKit refuse
+/// either transaction, or the application the answer, what was held is taken off hold again and
+/// the call waits again, at the head of the queue. A call that ends while the hold is awaited, or
+/// a provider reset in that time, gets no start: what was held is taken off hold, and the answer
+/// fails with unknownCallUuid.
 - (void)answerWaitingCallAsOutgoing:(NSUUID *)uuid
                              update:(CXCallUpdate *)update
                           waitingAt:(NSUInteger)place
@@ -1396,26 +1403,74 @@ displayNameOrContactIdentifier:(NSString *)displayNameOrContactIdentifier
   start.video = update.hasVideo;
   [actions addObject:start];
 
+  // Set once the holds of the ungrouped calls go in a transaction of their own: from then on a
+  // refused start leaves them held, and undoOutgoingEntry has to take them off hold.
+  __block BOOL heldApart = NO;
   void (^requestStart)(void) = ^{
+    if (![self isOutgoingEntryLive:callKitUuid presentation:presentation]) {
+      // The waiting call ended, or the provider was reset, while the hold was awaited: there is
+      // nothing to start. A start sent now would answer nothing, or after a reset be taken for a
+      // call the user dials.
+      WTPLog(@"[Callkeep][queue] %@ is over while its hold was awaited - no outgoing entry", uuid.UUIDString);
+      [self abandonOutgoingEntry:callKitUuid];
+      completion([WTPCallRequestError makeWithValue:WTPCallRequestErrorEnumUnknownCallUuid], nil);
+      return;
+    }
     [self requestTransaction:[[CXTransaction alloc] initWithActions:actions]
                   completion:^(WTPCallRequestError *error, FlutterError *flutterError) {
                     if (error != nil || flutterError != nil) {
                       dispatch_async(dispatch_get_main_queue(), ^{
                         WTPLog(@"[Callkeep][queue] CallKit refused the outgoing entry of %@", uuid.UUIDString);
-                        // A refused transaction performed none of its actions: only the conference
-                        // may have been held, by the transaction before.
-                        [self->_heldForOutgoingEntry removeObjectForKey:callKitUuid];
+                        // A refused transaction performed none of its actions: what rode in it was
+                        // not held. What was held before it - the conference, and the ungrouped calls
+                        // held apart - is taken off hold by undoOutgoingEntry.
+                        if (!heldApart) {
+                          [self->_heldForOutgoingEntry removeObjectForKey:callKitUuid];
+                        }
                         [self undoOutgoingEntry:callKitUuid ofLogicalUUID:uuid update:update at:place];
                       });
                     }
                     completion(error, flutterError);
                   }];
   };
+  // The ungrouped calls are held in a transaction of their own, and the start is asked for once the
+  // call observer shows them - and [alsoHeld], the members of a conference held before - on hold.
+  void (^holdThenStart)(NSArray<NSUUID *> *) = ^(NSArray<NSUUID *> *alsoHeld) {
+    if (held.count == 0) {
+      [self waitUntilObserverShowsHeld:alsoHeld what:@"the hold before the outgoing entry" then:requestStart];
+      return;
+    }
+    NSMutableArray<CXAction *> *holds = [NSMutableArray array];
+    for (CXAction *action in actions) {
+      if ([action isKindOfClass:[CXSetHeldCallAction class]]) {
+        [holds addObject:action];
+      }
+    }
+    [actions removeObjectsInArray:holds];
+    heldApart = YES;
+    [self requestTransaction:[[CXTransaction alloc] initWithActions:holds]
+                  completion:^(WTPCallRequestError *error, FlutterError *flutterError) {
+                    dispatch_async(dispatch_get_main_queue(), ^{
+                      if (error != nil || flutterError != nil) {
+                        WTPLog(@"[Callkeep][queue] CallKit refused to hold before the outgoing entry of %@",
+                              uuid.UUIDString);
+                        [self->_heldForOutgoingEntry removeObjectForKey:callKitUuid];
+                        [self undoOutgoingEntry:callKitUuid ofLogicalUUID:uuid update:update at:place];
+                        completion(error, flutterError);
+                        return;
+                      }
+                      [self waitUntilObserverShowsHeld:[alsoHeld arrayByAddingObjectsFromArray:held]
+                                                  what:@"the hold before the outgoing entry"
+                                                  then:requestStart];
+                    });
+                  }];
+  };
   NSArray<CXAction *> *groupHolds = [self holdActionsForGroup:_groupMemberUuids onHold:YES];
   if (groupHolds.count == 0) {
-    requestStart();
+    holdThenStart(@[]);
     return;
   }
+  NSArray<NSUUID *> *members = _groupMemberUuids.allObjects;
   [_groupHeldForOutgoingEntry addObject:callKitUuid];
   [self requestGroupHoldTransaction:[[CXTransaction alloc] initWithActions:groupHolds]
                          completion:^(WTPCallRequestError *error, FlutterError *flutterError) {
@@ -1427,9 +1482,46 @@ displayNameOrContactIdentifier:(NSString *)displayNameOrContactIdentifier
                              });
                              completion(error, flutterError);
                            } else {
-                             dispatch_async(dispatch_get_main_queue(), requestStart);
+                             dispatch_async(dispatch_get_main_queue(), ^{
+                               holdThenStart(members);
+                             });
                            }
                          }];
+}
+
+/// Whether the outgoing entry of a waiting call can still be started: the plugin still counts it as
+/// its own outgoing entry (a provider reset forgets them all) and the call is still live under the
+/// presentation it entered with (the application ends a call by its logical UUID).
+- (BOOL)isOutgoingEntryLive:(NSUUID *)callKitUuid presentation:(CallPresentation *)presentation {
+  return [_outgoingEntryUuids containsObject:callKitUuid] && [_ownCallUuids containsObject:callKitUuid] &&
+         [_presentations isLive:presentation];
+}
+
+/// An outgoing entry whose call is over before its start was asked for: what was held for it is
+/// taken off hold, and nothing of the call is put back in the queue.
+- (void)abandonOutgoingEntry:(NSUUID *)callKitUuid {
+  [_outgoingEntryUuids removeObject:callKitUuid];
+  [_ownCallUuids removeObject:callKitUuid];
+  NSMutableArray<CXAction *> *resumes = [NSMutableArray array];
+  for (NSUUID *heldUuid in _heldForOutgoingEntry[callKitUuid] ?: @[]) {
+    if ([self isLiveOwnCallUUID:heldUuid]) {
+      [resumes addObject:[[CXSetHeldCallAction alloc] initWithCallUUID:heldUuid onHold:NO]];
+    }
+  }
+  [_heldForOutgoingEntry removeObjectForKey:callKitUuid];
+  if (resumes.count > 0) {
+    [self requestTransaction:[[CXTransaction alloc] initWithActions:resumes]
+                  completion:^(WTPCallRequestError *error, FlutterError *flutterError) {}];
+  }
+  if ([_groupHeldForOutgoingEntry containsObject:callKitUuid]) {
+    [_groupHeldForOutgoingEntry removeObject:callKitUuid];
+    NSArray<CXAction *> *groupResumes = [self holdActionsForGroup:_groupMemberUuids onHold:NO];
+    if (groupResumes.count > 0) {
+      [self requestGroupHoldTransaction:[[CXTransaction alloc] initWithActions:groupResumes]
+                             completion:^(WTPCallRequestError *error, FlutterError *flutterError) {}];
+    }
+  }
+  [self syncCallWaitingTone:_callController.callObserver];
 }
 
 /// An outgoing entry that did not come to an answer: what was held for it is taken off hold
