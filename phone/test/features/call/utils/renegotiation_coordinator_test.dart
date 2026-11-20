@@ -216,6 +216,18 @@ void main() {
     });
   });
 
+  test('an offer awaits its answer from its acknowledgement until it completes', () {
+    final coordinator = RenegotiationCoordinator(onCommand: (_) {});
+    final offer = RTCSessionDescription('v=0', 'offer');
+
+    expect(coordinator.awaitsAnswer('call'), isFalse);
+    coordinator.awaitAnswer('call', offer);
+    expect(coordinator.awaitsAnswer('call'), isTrue);
+    coordinator.offerCompleted('call');
+    expect(coordinator.awaitsAnswer('call'), isFalse);
+    expect(coordinator.hasKeptOffer('call'), isFalse);
+  });
+
   test('an offer waiting for its answer is replayable only after reconnect', () {
     fakeAsync((async) {
       final commands = <RenegotiationCommand>[];

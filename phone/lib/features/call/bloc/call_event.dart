@@ -229,6 +229,11 @@ sealed class _CallSignalingEvent extends CallEvent {
 
   const factory _CallSignalingEvent.updated({required int? line, required String callId}) = _CallSignalingEventUpdated;
 
+  /// The far end refused an offer of ours that the server had already
+  /// acknowledged with `updating`: no answer is coming for it.
+  const factory _CallSignalingEvent.declining({required int? line, required String callId, required int code}) =
+      _CallSignalingEventDeclining;
+
   const factory _CallSignalingEvent.transfer({
     required int? line,
     required String referId,
@@ -518,6 +523,19 @@ class _CallSignalingEventUpdated extends _CallSignalingEvent {
 
   @override
   List<Object?> get props => [line, callId];
+}
+
+class _CallSignalingEventDeclining extends _CallSignalingEvent {
+  const _CallSignalingEventDeclining({required this.line, required this.callId, required this.code});
+
+  final int? line;
+
+  final String callId;
+
+  final int code;
+
+  @override
+  List<Object?> get props => [line, callId, code];
 }
 
 class _CallSignalingEventTransfer extends _CallSignalingEvent {
@@ -1592,6 +1610,8 @@ sealed class _CallMutationEvent extends CallEvent {
   }) = _CallMutationEventSignalingIncoming;
   const factory _CallMutationEvent.signalingAccepted({required String callId, JsepValue? jsep}) =
       _CallMutationEventSignalingAccepted;
+  const factory _CallMutationEvent.signalingDeclined({required String callId, required int code}) =
+      _CallMutationEventSignalingDeclined;
   const factory _CallMutationEvent.signalingHangup({
     required String callId,
     required int code,
@@ -1899,6 +1919,14 @@ class _CallMutationEventSignalingAccepted extends _CallMutationEvent {
   final JsepValue? jsep;
   @override
   List<Object?> get props => [callId, jsep];
+}
+
+class _CallMutationEventSignalingDeclined extends _CallMutationEvent {
+  const _CallMutationEventSignalingDeclined({required this.callId, required this.code});
+  final String callId;
+  final int code;
+  @override
+  List<Object?> get props => [callId, code];
 }
 
 class _CallMutationEventSignalingHangup extends _CallMutationEvent {

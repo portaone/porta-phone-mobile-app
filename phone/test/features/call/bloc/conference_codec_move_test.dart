@@ -149,6 +149,40 @@ void main() {
     expect(h.notifications.single, isA<ConferenceFailedNotification>());
   });
 
+  test('a far end that refuses the move after its acknowledgement keeps its call as it was', () async {
+    // PortaSIP acknowledges the re-INVITE, the far end refuses it, and the
+    // server says `declining 500` in place of the answer.
+    final a = seedCallOn('a', 0, _g722);
+    seedCallOn('b', 1, _pcmu);
+
+    h.bloc.add(const CallControlEvent.merged(['a', 'b']));
+    final update = await updateOf('a');
+    a.signalingStateValue = RTCSignalingState.RTCSignalingStateHaveLocalOffer;
+    a.nativeSignalingStateValue = RTCSignalingState.RTCSignalingStateHaveLocalOffer;
+    h.signaling.emit(UpdatingEvent(transaction: update.transaction, line: 0, callId: 'a'));
+    await h.settle(() => h.bloc.state.retrieveActiveCall('a')!.updating);
+
+    h.signaling.emit(const DecliningEvent(line: 0, callId: 'a', code: 500));
+    await h.settle(() => h.notifications.isNotEmpty);
+
+    expect(a.localDescriptions.last.type, 'rollback', reason: 'the failed re-INVITE left the session as it was');
+    expect(h.bloc.state.retrieveActiveCall('a'), isNotNull);
+    expect(h.bloc.state.retrieveActiveCall('a')!.updating, isFalse, reason: 'hold and keypad are usable');
+    expect(h.signaling.requests.whereType<MergeRequest>(), isEmpty);
+    expect(h.signaling.requests.whereType<HangupRequest>(), isEmpty);
+    expect(h.notifications.single, isA<ConferenceFailedNotification>());
+  });
+
+  test('a declining for a call with no offer awaiting its answer changes nothing', () async {
+    final a = seedCallOn('a', 0, _g722);
+
+    h.signaling.emit(const DecliningEvent(line: 0, callId: 'a', code: 486));
+    await pumpEventQueue();
+
+    expect(a.localDescriptions.where((it) => it.type == 'rollback'), isEmpty);
+    expect(h.bloc.state.retrieveActiveCall('a'), isNotNull);
+  });
+
   test('a call that ends while it is moved takes the merge with it', () async {
     seedCallOn('a', 0, _g722);
     seedCallOn('b', 1, _pcmu);
