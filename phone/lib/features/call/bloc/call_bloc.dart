@@ -1172,6 +1172,7 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
       _CallSignalingEventUpdating() => __onCallSignalingEventUpdating(event, emit),
       _CallSignalingEventCallUpdating() => __onCallSignalingEventCallUpdating(event, emit),
       _CallSignalingEventUpdated() => __onCallSignalingEventUpdated(event, emit),
+      _CallSignalingEventDeclining() => __onCallSignalingEventDeclining(event, emit),
       _CallSignalingEventPeerMediaState() => __onCallSignalingEventPeerMediaState(event, emit),
       _CallSignalingEventPeerConferenceMute() => __onCallSignalingEventPeerConferenceMute(event, emit),
       _CallSignalingEventPeerConferenceHostAway() => __onCallSignalingEventPeerConferenceHostAway(event, emit),
@@ -1652,6 +1653,12 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
 
   Future<void> __onCallSignalingEventUpdated(_CallSignalingEventUpdated event, Emitter<CallState> emit) async {
     // intercepted right inside [_CallMutationEvent.signalingCallUpdating] [__onMutationRenegotiate] call after [UpdateRequest] executed
+  }
+
+  /// Queued behind the offer it refuses, as the answer it stands for would be.
+  Future<void> __onCallSignalingEventDeclining(_CallSignalingEventDeclining event, Emitter<CallState> emit) async {
+    if (state.retrieveActiveCall(event.callId) == null) return;
+    add(_CallMutationEvent.signalingDeclined(callId: event.callId, code: event.code));
   }
 
   Future<void> __onCallSignalingEventTransfer(_CallSignalingEventTransfer event, Emitter<CallState> emit) async {
@@ -2487,6 +2494,7 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
       _CallMutationEventControlAttendedDecline() => __onMutationControlAttendedDecline(event, emit),
       _CallMutationEventSignalingIncoming() => __onMutationSignalingIncoming(event, emit),
       _CallMutationEventSignalingAccepted() => __onMutationSignalingAccepted(event, emit),
+      _CallMutationEventSignalingDeclined() => __onMutationSignalingDeclined(event, emit),
       _CallMutationEventSignalingHangup() => __onMutationSignalingHangup(event, emit),
       _CallMutationEventSignalingCallUpdating() => __onMutationSignalingCallUpdating(event, emit),
       _CallMutationEventRenegotiate() => __onMutationRenegotiate(event, emit),
@@ -3859,6 +3867,41 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
         _logger.warning('__onMutationSignalingAccepted: setRemoteDescription failed ($e)');
       }
     }
+  }
+
+  /// The far end refused the offer that moves a call onto the conference
+  /// codecs, after the server acknowledged it with `updating`. A failed
+  /// re-INVITE leaves the session as it was (RFC 3261 14.1), so the offer is
+  /// rolled back and the call stays on what it had; the move gives up and
+  /// keeps the call out of the room.
+  ///
+  /// Only the move's offer is rolled back. Any other offer is one the
+  /// connection itself asked for (a camera, an ICE restart): rolled back, the
+  /// connection asks for it again at once and the far end refuses it again -
+  /// a few re-INVITEs a second for as long as the call lasts (seen on the
+  /// stand). Such an offer is left as it was before this handler existed.
+  /// Other declining events, those of our own decline of an incoming call
+  /// among them, find no offer awaiting its answer and are left too.
+  Future<void> __onMutationSignalingDeclined(_CallMutationEventSignalingDeclined event, Emitter<CallState> emit) async {
+    final callId = event.callId;
+    if (!_renegotiationCoordinator.awaitsAnswer(callId)) return;
+    if (!_room.legNegotiation.offered(callId)) {
+      _logger.warning('__onMutationSignalingDeclined: an offer of $callId was refused with ${event.code}, not a move');
+      return;
+    }
+    _logger.warning('__onMutationSignalingDeclined: the offer of $callId was refused with ${event.code}');
+    _renegotiationCoordinator.offerCompleted(callId);
+    final peerConnection = await _callPeerConnectionManager.retrieve(callId, allowWaiting: false);
+    if (peerConnection != null &&
+        await peerConnection.getSignalingState() == RTCSignalingState.RTCSignalingStateHaveLocalOffer) {
+      try {
+        await peerConnection.setLocalDescription(RTCSessionDescription('', 'rollback'));
+      } catch (er) {
+        _logger.warning('__onMutationSignalingDeclined: rolling back the offer of $callId failed: $er');
+      }
+    }
+    if (state.retrieveActiveCall(callId) != null) emit(_updateSettled(callId));
+    _room.legNegotiation.declined(callId, event.code);
   }
 
   Future<void> __onMutationSignalingHangup(_CallMutationEventSignalingHangup event, Emitter<CallState> emit) async {

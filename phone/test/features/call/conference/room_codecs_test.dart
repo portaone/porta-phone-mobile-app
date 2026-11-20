@@ -209,7 +209,7 @@ void main() {
       move({'a': false});
 
       expect(codecs.offerFailed('a', 491), RoomOfferError.asUsual);
-      expect(codecs.offerFailed('a', 500), RoomOfferError.asUsual);
+      expect(codecs.offerFailed('a', 503), RoomOfferError.asUsual);
       expect(codecs.isMoving, isTrue);
     });
 
@@ -353,6 +353,51 @@ void main() {
         expect(codecs.offReason(['b']), RoomCodecs.notMixable);
         codecs.dispose();
       });
+    });
+
+    test('refused by the far end gives the move up, and nothing is left to take back', () {
+      fakeAsync((async) {
+        final codecs = RoomCodecs(onCommand: onCommand, timeout: timeout);
+        codecs.check({'a': (codec: 'g722', held: true)}, request: request('merge'));
+        codecs.offerSent('a');
+        codecs.acknowledged('a');
+
+        codecs.declined('a', 500);
+
+        expect(asked, ['merge'], reason: 'the request is asked again and finds the call still off the codecs');
+        expect(codecs.isMoving, isFalse);
+        expect(codecs.offReason(['a']), RoomCodecs.notMixable);
+        async.elapse(timeout * 2);
+        expect(takenBack(), isEmpty);
+        expect(codecs.takesBack('a'), isFalse);
+        expect(heldAgain(), isEmpty, reason: 'the refused offer changed nothing on the far end');
+        codecs.dispose();
+      });
+    });
+
+    test('refused with a code that is not about the codecs fails as a move not answered', () {
+      fakeAsync((async) {
+        final codecs = RoomCodecs(onCommand: onCommand, timeout: timeout);
+        codecs.check({'a': (codec: 'g722', held: true)}, request: request('merge'));
+        codecs.offerSent('a');
+        codecs.acknowledged('a');
+
+        codecs.declined('a', 503);
+
+        expect(asked, ['merge']);
+        expect(codecs.isMoving, isFalse);
+        expect(codecs.offReason(['a']), RoomCodecs.notAnswered);
+        async.elapse(timeout * 2);
+        expect(takenBack(), isEmpty);
+        codecs.dispose();
+      });
+    });
+
+    test('a refusal of an offer that is not the move\'s is not touched', () {
+      codecs.declined('a', 500);
+
+      expect(asked, isEmpty);
+      expect(commands, isEmpty);
     });
 
     test('is not taken back once its answer is applied', () {
