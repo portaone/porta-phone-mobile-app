@@ -198,6 +198,9 @@ class RenegotiationCoordinator {
   /// See [isSignalingLoss].
   bool isTransientSignalingFailure(Object error) => isSignalingLoss(error);
 
+  /// Whether an offer of this call was acknowledged and waits for its answer.
+  bool awaitsAnswer(String callId) => _awaitingAnswer.contains(callId);
+
   /// Whether a local offer of this call is kept, replayable or still waiting
   /// for its answer.
   bool hasKeptOffer(String callId) => _pendingOffers.containsKey(callId);

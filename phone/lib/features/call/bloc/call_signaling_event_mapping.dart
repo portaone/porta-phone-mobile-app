@@ -71,6 +71,9 @@ extension _SignalingEventMapping on Event {
       case UpdatedEvent():
         _logger.info('toCallEvent: UpdatedEvent');
         return _CallSignalingEvent.updated(line: event.line, callId: event.callId);
+      case DecliningEvent():
+        _logger.info('toCallEvent: DecliningEvent callId=${event.callId} code=${event.code}');
+        return _CallSignalingEvent.declining(line: event.line, callId: event.callId, code: event.code);
 
       // What the other party's app says about itself during a call. Sealed:
       // no default. A message of an unknown type has no bloc event.
