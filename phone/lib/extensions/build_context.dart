@@ -29,8 +29,9 @@ class AppSnackBars {
     SnackBarAction? action,
     Duration duration = const Duration(seconds: 3),
     bool? persist,
+    String identifier = appSnackBarId,
   }) {
-    return _show(content: data, action: action, duration: duration, persist: persist);
+    return _show(content: data, action: action, duration: duration, persist: persist, identifier: identifier);
   }
 
   ScaffoldFeatureController<SnackBar, SnackBarClosedReason> showError(
@@ -38,6 +39,7 @@ class AppSnackBars {
     SnackBarAction? action,
     Duration duration = const Duration(seconds: 5),
     bool? persist,
+    String identifier = appSnackBarId,
   }) {
     final styles = _theme.extension<SnackBarStyles>()?.primary;
 
@@ -46,6 +48,7 @@ class AppSnackBars {
       action: action,
       duration: duration,
       persist: persist,
+      identifier: identifier,
       backgroundColor: styles?.errorBackgroundColor ?? _theme.colorScheme.error,
     );
   }
@@ -55,6 +58,7 @@ class AppSnackBars {
     SnackBarAction? action,
     Duration duration = const Duration(seconds: 5),
     bool? persist,
+    String identifier = appSnackBarId,
   }) {
     final styles = _theme.extension<SnackBarStyles>()?.primary;
 
@@ -63,6 +67,7 @@ class AppSnackBars {
       action: action,
       duration: duration,
       persist: persist,
+      identifier: identifier,
       backgroundColor: styles?.successBackgroundColor ?? _theme.colorScheme.tertiary,
     );
   }
@@ -72,18 +77,22 @@ class AppSnackBars {
     SnackBarAction? action,
     Duration duration = const Duration(seconds: 1),
     bool? persist,
+    String identifier = appSnackBarId,
   }) {
     return _show(
       content: data,
       action: action,
       duration: duration,
       persist: persist,
+      identifier: identifier,
       behavior: SnackBarBehavior.floating,
     );
   }
 
   /// Shows the one snack bar the app has, so every message is announced the
-  /// same way and can be found by the same id.
+  /// same way and can be found by the same id - [appSnackBarId], unless the
+  /// message is one a flow has to tell from the others, which then carries
+  /// an [identifier] of its own.
   ///
   /// A message that offers something to do waits for the answer instead of
   /// timing out: three seconds is not enough to notice an action, let alone
@@ -104,6 +113,7 @@ class AppSnackBars {
     required SnackBarAction? action,
     required Duration duration,
     required bool? persist,
+    required String identifier,
     Color? backgroundColor,
     SnackBarBehavior? behavior,
   }) {
@@ -116,7 +126,7 @@ class AppSnackBars {
 
     return (_messenger..removeCurrentSnackBar()).showSnackBar(
       SnackBar(
-        content: SemanticId(identifier: appSnackBarId, child: Text(content)),
+        content: SemanticId(identifier: identifier, child: Text(content)),
         action: action,
         backgroundColor: backgroundColor,
         behavior: behavior,
@@ -146,8 +156,9 @@ extension BuildContextSnackBar on BuildContext {
     SnackBarAction? action,
     Duration duration = const Duration(seconds: 3),
     bool? persist,
+    String identifier = appSnackBarId,
   }) {
-    return snackBars.show(data, action: action, duration: duration, persist: persist);
+    return snackBars.show(data, action: action, duration: duration, persist: persist, identifier: identifier);
   }
 
   ScaffoldFeatureController<SnackBar, SnackBarClosedReason> showErrorSnackBar(
@@ -155,8 +166,9 @@ extension BuildContextSnackBar on BuildContext {
     SnackBarAction? action,
     Duration duration = const Duration(seconds: 5),
     bool? persist,
+    String identifier = appSnackBarId,
   }) {
-    return snackBars.showError(data, action: action, duration: duration, persist: persist);
+    return snackBars.showError(data, action: action, duration: duration, persist: persist, identifier: identifier);
   }
 
   ScaffoldFeatureController<SnackBar, SnackBarClosedReason> showFloatingSnackBar(
@@ -164,8 +176,9 @@ extension BuildContextSnackBar on BuildContext {
     SnackBarAction? action,
     Duration duration = const Duration(seconds: 1),
     bool? persist,
+    String identifier = appSnackBarId,
   }) {
-    return snackBars.showFloating(data, action: action, duration: duration, persist: persist);
+    return snackBars.showFloating(data, action: action, duration: duration, persist: persist, identifier: identifier);
   }
 
   ScaffoldFeatureController<SnackBar, SnackBarClosedReason> showSuccessSnackBar(
@@ -173,8 +186,9 @@ extension BuildContextSnackBar on BuildContext {
     SnackBarAction? action,
     Duration duration = const Duration(seconds: 5),
     bool? persist,
+    String identifier = appSnackBarId,
   }) {
-    return snackBars.showSuccess(data, action: action, duration: duration, persist: persist);
+    return snackBars.showSuccess(data, action: action, duration: duration, persist: persist, identifier: identifier);
   }
 
   T? readOrNull<T>() {

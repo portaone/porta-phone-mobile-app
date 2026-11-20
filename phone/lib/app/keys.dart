@@ -165,6 +165,10 @@ const String conferenceFullScreenMicId = 'conferenceFullScreenMic';
 const String conferenceFullScreenAddId = 'conferenceFullScreenAdd';
 const String conferenceFullScreenEndId = 'conferenceFullScreenEnd';
 
+/// The notice over the tiles of the full screen that somebody has left the
+/// room: its words carry the name, so a flow finds it by this id.
+const String conferenceFullScreenNoticeId = 'conferenceFullScreenNotice';
+
 /// The camera of a participant on their row of the conference, numbered as
 /// the row's other parts are.
 const String conferenceParticipantCameraId = 'conferenceParticipantCamera';
@@ -252,7 +256,16 @@ const String conversationMenuId = 'conversationMenu';
 const String aboutBackendCapabilitiesButtonId = 'aboutBackendCapabilitiesButton';
 const String aboutBackendCapabilitiesId = 'aboutBackendCapabilities';
 const String actionPadOverflowId = 'actionPadOverflow';
+
+/// The video call entry of the keypad's overflow menu, which takes the place
+/// of the video button when the menu is shown.
+const String actionPadOverflowVideoCallId = 'actionPadOverflowVideoCall';
 const String appSnackBarId = 'appSnackBar';
+
+/// The snack bar saying that the person called into a call - to join it or
+/// to take it over - declined; it carries this id instead of [appSnackBarId],
+/// so a flow can tell it from any other message.
+const String notificationLinkedCallDeclinedId = 'notificationLinkedCallDeclined';
 const String actionPadTransferId = 'actionPadTransfer';
 const String actionPadVoiceCallId = 'actionPadVoiceCall';
 const String callActionsAcceptId = 'callActionsAccept';

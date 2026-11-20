@@ -119,6 +119,27 @@ void main() {
     handle.dispose();
   });
 
+  testWidgets('the video call of the overflow menu is found by its id and places the call', (tester) async {
+    final handle = tester.ensureSemantics();
+
+    var called = false;
+    await tester.pumpWidget(
+      buildTestable(onAudioCallPressed: () {}, onVideoCallPressed: () => called = true, onTransferPressed: () {}),
+    );
+
+    expect(find.bySemanticsIdentifier(actionPadVideoCallId), findsNothing, reason: 'the menu stands in for it');
+    await tapViaSemantics(tester, find.bySemanticsIdentifier(actionPadOverflowId));
+    await tester.pumpAndSettle();
+
+    final video = find.bySemanticsIdentifier(actionPadOverflowVideoCallId);
+    expect(tester.getSemantics(video), isSemantics(identifier: actionPadOverflowVideoCallId, label: 'Video call'));
+    await tapViaSemantics(tester, video);
+    await tester.pumpAndSettle();
+    expect(called, isTrue);
+
+    handle.dispose();
+  });
+
   testWidgets('call button fires its callback when activated through semantics', (tester) async {
     final handle = tester.ensureSemantics();
 
