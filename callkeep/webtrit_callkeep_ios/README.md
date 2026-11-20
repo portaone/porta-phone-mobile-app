@@ -168,6 +168,15 @@ transaction of its own: riding with the start, the holds of a conference were st
 CallKit ended every member of the room. What this costs: iOS's call history lists the answered
 call as outgoing.
 
+With one call of ours held and another active, iOS builds the screen of a third call without
+`Hold & Accept`: it offers `End & Accept` and `End Held & Accept`, and both end a call. With
+`holdActiveBeforeThirdIncoming` the plugin holds the active call in CallKit before it reports the
+third one, and reports it once CallKit's call observer shows the hold, at most a second later: on
+iOS 16 the completion of the hold's transaction came before the hold was performed, and the screen
+was built without it. The active call goes off hold again as soon as CallKit has the report;
+neither change reaches the application. A third call that ends during the wait is still reported,
+and ended at once.
+
 ---
 
 ## Mute after the audio session comes back
