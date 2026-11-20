@@ -417,6 +417,19 @@
   "@call_ConferencePanel_end": {
     "description": "Label of the button that ends the conference and every call in it."
   },
+  "call_ConferenceFullScreen_switchCamera": "Cambia fotocamera",
+  "@call_ConferenceFullScreen_switchCamera": {
+    "description": "Entry of the More menu of the conference full screen that switches the front and the rear camera."
+  },
+  "call_ConferenceFullScreen_participantLeft": "{name} ha lasciato la conferenza",
+  "@call_ConferenceFullScreen_participantLeft": {
+    "description": "Short notice on the conference full screen when a participant leaves the room.",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "call_SemanticsLabel_conferenceParticipantMenu": "Altro per {name}",
   "@call_SemanticsLabel_conferenceParticipantMenu": {
     "description": "Name of the menu of one conference participant that holds ending their call.",
@@ -425,6 +438,10 @@
         "type": "String"
       }
     }
+  },
+  "call_SemanticsLabel_conferenceFullScreen": "Mostra la conferenza a schermo intero",
+  "@call_SemanticsLabel_conferenceFullScreen": {
+    "description": "Name of the round control at the right of the conference panel header that opens the room as video tiles."
   },
   "call_SemanticsLabel_conferenceParticipantMute": "Silenzia {name} per tutti",
   "@call_SemanticsLabel_conferenceParticipantMute": {

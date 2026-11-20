@@ -484,9 +484,20 @@ class AppLocalizationsUk extends AppLocalizations {
   String get call_ConferencePanel_end => 'Завершити';
 
   @override
+  String get call_ConferenceFullScreen_switchCamera => 'Змінити камеру';
+
+  @override
+  String call_ConferenceFullScreen_participantLeft(String name) {
+    return '$name більше не в конференції';
+  }
+
+  @override
   String call_SemanticsLabel_conferenceParticipantMenu(String name) {
     return 'Ще для $name';
   }
+
+  @override
+  String get call_SemanticsLabel_conferenceFullScreen => 'Показати конференцію на весь екран';
 
   @override
   String call_SemanticsLabel_conferenceParticipantMute(String name) {

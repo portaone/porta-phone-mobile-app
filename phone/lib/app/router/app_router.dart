@@ -694,10 +694,13 @@ class FeatureGuard implements AutoRouteGuard {
 
 /// The pages of the call screen: the call itself first - the default screen
 /// on a phone, the face on a watch - each other page taking the place of the
-/// controls, back returning to the one before. Only a watch opens the others;
-/// a phone declares its stack itself (CallScreenHandset).
+/// controls, back returning to the one before. A phone opens the room in full
+/// screen and one participant of it, declaring its stack itself
+/// (CallScreenHandset); a watch opens the rest.
 final List<AutoRoute> callScreenRoutes = [
   AutoRoute(page: CallHomeScreenPageRoute.page, path: '', initial: true),
+  AutoRoute(page: ConferenceFullScreenPageRoute.page, path: 'room'),
+  AutoRoute(page: ConferenceParticipantPageRoute.page, path: 'room-participant'),
   AutoRoute(page: CallWatchMoreScreenPageRoute.page, path: 'more'),
   AutoRoute(page: CallWatchAudioScreenPageRoute.page, path: 'audio'),
   AutoRoute(page: CallWatchTransferScreenPageRoute.page, path: 'transfer'),

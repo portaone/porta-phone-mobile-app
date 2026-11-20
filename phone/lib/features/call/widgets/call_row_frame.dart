@@ -197,7 +197,15 @@ class CallRowAvatar extends StatelessWidget {
 /// this is the one place that says how: the panel's header went without an
 /// action slot for as long as the two were written separately.
 class CallRowHeader extends StatelessWidget {
-  const CallRowHeader({super.key, required this.label, this.action, this.note, this.noteIdentifier, this.style});
+  const CallRowHeader({
+    super.key,
+    required this.label,
+    this.action,
+    this.trailing,
+    this.note,
+    this.noteIdentifier,
+    this.style,
+  });
 
   final String label;
 
@@ -210,6 +218,9 @@ class CallRowHeader extends StatelessWidget {
 
   /// The control offered beside the label; absent where the list offers none.
   final CallListAction? action;
+
+  /// A control of another shape beside the label, after [action].
+  final Widget? trailing;
 
   final CallInfoStyle? style;
 
@@ -224,6 +235,7 @@ class CallRowHeader extends StatelessWidget {
           ),
         ),
         if (action case final action?) CallListActionButton(action: action, style: style),
+        ?trailing,
       ],
     );
     final note = this.note;

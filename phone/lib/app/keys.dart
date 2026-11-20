@@ -145,7 +145,25 @@ const String conferenceParkedNoteId = 'conferenceParkedNote';
 const String conferenceParticipantMuteId = 'conferenceParticipantMute';
 const String conferenceParticipantHangupId = 'conferenceParticipantHangup';
 const String conferenceEndId = 'conferenceEnd';
+const String conferenceFullScreenId = 'conferenceFullScreen';
+const String conferenceFullScreenBackId = 'conferenceFullScreenBack';
+const String conferenceTileId = 'conferenceTile';
+const String conferenceTileMuteId = 'conferenceTileMute';
+const String conferenceTileMenuId = 'conferenceTileMenu';
+const String conferenceTileEndId = 'conferenceTileEnd';
 const String conferenceParticipantMenuId = 'conferenceParticipantMenu';
+const String conferenceSelfTileSwitchId = 'conferenceSelfTileSwitch';
+const String conferenceFullScreenCameraId = 'conferenceFullScreenCamera';
+const String conferenceFullScreenSpeakerId = 'conferenceFullScreenSpeaker';
+const String conferenceFullScreenMoreId = 'conferenceFullScreenMore';
+const String conferenceFullScreenKeypadId = 'conferenceFullScreenKeypad';
+const String conferenceFullScreenSwitchCameraId = 'conferenceFullScreenSwitchCamera';
+const String conferenceFullScreenHoldId = 'conferenceFullScreenHold';
+const String conferenceParticipantPageId = 'conferenceParticipantPage';
+const String conferenceSelfTileId = 'conferenceSelfTile';
+const String conferenceFullScreenMicId = 'conferenceFullScreenMic';
+const String conferenceFullScreenAddId = 'conferenceFullScreenAdd';
+const String conferenceFullScreenEndId = 'conferenceFullScreenEnd';
 
 /// The camera of a participant on their row of the conference, numbered as
 /// the row's other parts are.

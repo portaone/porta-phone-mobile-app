@@ -30,6 +30,7 @@ class CallInfoBlock extends StatelessWidget {
     this.onConversationSwitched,
     this.onParticipantMutedChanged,
     this.onParticipantHangup,
+    this.onFullScreen,
     this.onAddPressed,
     this.mergeSupported = false,
     this.onMergePressed,
@@ -49,6 +50,7 @@ class CallInfoBlock extends StatelessWidget {
       onConversationSwitched = params.onConversationSwitched,
       onParticipantMutedChanged = params.onConferenceParticipantMuted,
       onParticipantHangup = params.onConferenceParticipantHangup,
+      onFullScreen = params.onConferenceFullScreen,
       onAddPressed = params.onConferenceAdd,
       mergeSupported = params.callConfig.isConferenceEnabled,
       onMergePressed = params.onMerge,
@@ -74,6 +76,9 @@ class CallInfoBlock extends StatelessWidget {
 
   final void Function(String callId, bool muted)? onParticipantMutedChanged;
   final ValueChanged<String>? onParticipantHangup;
+
+  /// Opens the room in full screen; see [ConferencePanel.onFullScreen].
+  final VoidCallback? onFullScreen;
 
   /// Brings the calls standing outside the room into it; `null` while none of
   /// them can join - one is still ringing, or the room is still assembling -
@@ -113,6 +118,7 @@ class CallInfoBlock extends StatelessWidget {
             onSwitchToConference: onConversationSwitched,
             onParticipantMutedChanged: onParticipantMutedChanged ?? (_, _) {},
             onParticipantHangup: onParticipantHangup ?? (_) {},
+            onFullScreen: onFullScreen,
             contactResolver: contactResolver,
             style: style?.callInfo,
             listStyle: style?.list,

@@ -38,6 +38,7 @@ class ConferencePanel extends StatelessWidget {
     required this.onSwitchToConference,
     required this.onParticipantMutedChanged,
     required this.onParticipantHangup,
+    this.onFullScreen,
     this.contactResolver,
     this.style,
     this.listStyle,
@@ -67,6 +68,10 @@ class ConferencePanel extends StatelessWidget {
   /// Ends one participant's call, which takes them out of the room.
   final ValueChanged<String> onParticipantHangup;
 
+  /// Opens the room in full screen, the participants as video tiles; `null`
+  /// leaves the header without the control.
+  final VoidCallback? onFullScreen;
+
   /// Resolves who a leg is with, for the picture on its row.
   final ContactResolver? contactResolver;
 
@@ -88,6 +93,7 @@ class ConferencePanel extends StatelessWidget {
           label: context.l10n.call_ConferencePanel_header(legs.length),
           note: roomParked ? context.l10n.call_ConferencePanel_parkedNote : null,
           noteIdentifier: conferenceParkedNoteId,
+          trailing: onFullScreen == null ? null : _FullScreenButton(onPressed: onFullScreen!, style: style),
           style: style,
         ),
         for (final (index, leg) in legs.indexed)
@@ -267,7 +273,8 @@ class _ParticipantPicture extends StatelessWidget {
 /// The menu of one participant: End their call, the destructive control kept
 /// one tap away from the mute beside it. It opens under its trigger, so a
 /// second tap on the trigger does not land on End, and closes when the
-/// participant's row goes - the call it would end is gone or leaving.
+/// participant's row goes - the call it would end is gone or leaving. Shared
+/// by the rows and the tiles.
 class ConferenceParticipantMenu extends StatefulWidget {
   const ConferenceParticipantMenu({
     super.key,
@@ -276,6 +283,7 @@ class ConferenceParticipantMenu extends StatefulWidget {
     required this.onHangup,
     required this.style,
     this.endColor,
+    this.shadows,
   });
 
   /// Who the participant is, in the names of the trigger and of End.
@@ -292,6 +300,9 @@ class ConferenceParticipantMenu extends StatefulWidget {
 
   /// The colour of End; the theme's error colour where none is given.
   final Color? endColor;
+
+  /// Shadows of the trigger's glyph, where it sits over a picture.
+  final List<Shadow>? shadows;
 
   @override
   State<ConferenceParticipantMenu> createState() => _ConferenceParticipantMenuState();
@@ -348,7 +359,34 @@ class _ConferenceParticipantMenuState extends State<ConferenceParticipantMenu> {
           textStyle: Theme.of(context).textTheme.bodyMedium,
         ),
       ],
-      child: const Icon(Icons.more_vert, size: 20),
+      child: Icon(Icons.more_vert, size: 20, shadows: widget.shadows),
+    );
+  }
+}
+
+/// The round control at the right of the header that opens the room in full
+/// screen: a glyph without a word, as the design has it.
+class _FullScreenButton extends StatelessWidget {
+  const _FullScreenButton({required this.onPressed, required this.style});
+
+  final VoidCallback onPressed;
+  final CallInfoStyle? style;
+
+  @override
+  Widget build(BuildContext context) {
+    final foreground = style?.callStatus?.color ?? Theme.of(context).colorScheme.onSurface;
+    return CallActionButton(
+      label: context.l10n.call_SemanticsLabel_conferenceFullScreen,
+      identifier: conferenceFullScreenId,
+      onPressed: onPressed,
+      style: TextButton.styleFrom(
+        minimumSize: const Size(40, 40),
+        padding: EdgeInsets.zero,
+        shape: const CircleBorder(),
+        foregroundColor: foreground,
+        side: BorderSide(color: foreground),
+      ),
+      child: const Icon(Icons.open_in_full, size: 18),
     );
   }
 }

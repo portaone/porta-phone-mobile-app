@@ -474,9 +474,20 @@ class AppLocalizationsFr extends AppLocalizations {
   String get call_ConferencePanel_end => 'Terminer';
 
   @override
+  String get call_ConferenceFullScreen_switchCamera => 'Changer de caméra';
+
+  @override
+  String call_ConferenceFullScreen_participantLeft(String name) {
+    return '$name a quitté la conférence';
+  }
+
+  @override
   String call_SemanticsLabel_conferenceParticipantMenu(String name) {
     return 'Plus pour $name';
   }
+
+  @override
+  String get call_SemanticsLabel_conferenceFullScreen => 'Afficher la conférence en plein écran';
 
   @override
   String call_SemanticsLabel_conferenceParticipantMute(String name) {

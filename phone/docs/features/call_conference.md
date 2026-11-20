@@ -29,6 +29,8 @@ lib/features/call/
   bloc/call_conference_event_mapping.dart  which step of the room takes each conference event of the queue
   bloc/call_state.dart                the derivations: mergeableCallIds, mergeableLegs, canMerge, canAdd
   widgets/conference_panel.dart       the room on screen: its participants
+  widgets/conference_full_screen.dart the room in full screen: video tiles, "You", the room's control bar
+  view/call_screen_handset.dart       the phone's call screen: its routes, the full screen among them
   widgets/call_row_frame.dart         the row every list on the call screen is made of
   widgets/call_list_action.dart       the Merge and Add controls in a roster header
 ```
@@ -774,8 +776,8 @@ lifecycle (`onAppLifecycleChanged`), a session that came back (`onSessionBack`;
   of, when that call is a video call.
 - Received cameras go to `ConferenceState.videoFeeds` for the host and to
   `CallState.invitedVideo` for an invited far end; the host's own published camera is
-  `ConferenceState.selfVideo`. A video call outside the room keeps its own preview;
-  one that joins a room loses it.
+  `ConferenceState.selfVideo`, shown only in full screen, as the "You" tile. A video
+  call outside the room keeps its own preview; one that joins a room loses it.
 - On the default screen the host sees a participant's camera on their row of the
   panel (`ConferenceParticipantCamera`): round and of the avatar's own size, over the
   avatar, which stays where it is - a row is the same with a camera and without one,
@@ -788,13 +790,42 @@ lifecycle (`onAppLifecycleChanged`), a session that came back (`onSessionBack`;
   camera on every row. A leg whose call is not known yet shows no picture and no
   camera. The camera is `conferenceParticipantCamera<N>` for a case while it is seen.
 
+### Full screen
+
+The room in full screen is a page of the call screen's routes on a phone
+(`ConferenceFullScreenPage`, one participant `ConferenceParticipantPage`, in
+`callScreenRoutes`), declared by `CallScreenHandset` over the default screen. It opens
+from the round button of the panel's header while the room has video and the focused
+call is one of its legs. Back - the arrow or the system Back - pops the top page. It
+closes by itself, as the watch's pages do: a call ringing, the focus moving to a call
+outside the room (calling somebody in through Add moves it) and the end of the room
+bring back the default screen; the focus moving from one leg to another - the first leg
+leaving a room that goes on - keeps it open. A participant who leaves takes his page
+with him, showing him until it is gone, and the page on top - the tiles or another
+participant - says who left. The tiles under a participant's page are not seen and
+hold no cameras; they get them back when the page closes. The "You" tile shows the
+front camera mirrored, as the local preview does, and the rear one as it is. The routes
+are shared with the watch, which never opens the room: under a host without the phone's
+call screen a page of the room shows nothing and pops itself. The tiles show the cameras through
+`ParticipantVideo`, the same widget as the rows' round camera
+(`widgets/conference_participant_camera.dart`): the avatar until a first frame, the
+participant's own track, the renderer released with the tile. A tile keeps its renderer
+when it moves to another row. The end control of its bar ends the room, as the default
+screen's hangup does while the focused call is a leg.
+
 ### Redesign / in progress
 
 - A camera that stops sending after its first frame shows its last frame, or black,
   over the avatar: nothing tells the row that the frames stopped.
 - An invited far end sees no camera yet: what it receives is in
-  `CallState.invitedVideo` and is shown nowhere. The host does not see his own
-  published camera (`ConferenceState.selfVideo`) either.
+  `CallState.invitedVideo` and is shown nowhere.
 - The call screen has two more owners of an `RTCVideoRenderer` (`StreamThumbnail`,
-  `RTCStreamView`) that release one before it is made and so keep its texture; this
-  widget does not, and is not shared with them yet.
+  `RTCStreamView`) that release one before it is made and so keep its texture;
+  `ParticipantVideo`, shared by the rows and the tiles, does not, and is not shared
+  with them yet.
+- While the room is in full screen the default screen stays built under it, so a
+  participant's camera is drawn by the renderer of their row as well as by their tile
+  (the tiles under a participant's page hold none).
+- The speaker / audio device control of the full screen's bar is a third copy of the
+  audio route control, beside the default screen's and the watch's; the three are to be
+  one shared control.

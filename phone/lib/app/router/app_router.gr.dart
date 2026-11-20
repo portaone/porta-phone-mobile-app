@@ -508,6 +508,67 @@ class CompatibilityIssueScreenPageRoute extends PageRouteInfo<void> {
 }
 
 /// generated route for
+/// [ConferenceFullScreenPage]
+class ConferenceFullScreenPageRoute extends PageRouteInfo<void> {
+  const ConferenceFullScreenPageRoute({List<PageRouteInfo>? children})
+    : super(ConferenceFullScreenPageRoute.name, initialChildren: children);
+
+  static const String name = 'ConferenceFullScreenPageRoute';
+
+  static PageInfo page = PageInfo(
+    name,
+    builder: (data) {
+      return ConferenceFullScreenPage();
+    },
+  );
+}
+
+/// generated route for
+/// [ConferenceParticipantPage]
+class ConferenceParticipantPageRoute
+    extends PageRouteInfo<ConferenceParticipantPageRouteArgs> {
+  ConferenceParticipantPageRoute({
+    required String callId,
+    List<PageRouteInfo>? children,
+  }) : super(
+         ConferenceParticipantPageRoute.name,
+         args: ConferenceParticipantPageRouteArgs(callId: callId),
+         initialChildren: children,
+       );
+
+  static const String name = 'ConferenceParticipantPageRoute';
+
+  static PageInfo page = PageInfo(
+    name,
+    builder: (data) {
+      final args = data.argsAs<ConferenceParticipantPageRouteArgs>();
+      return ConferenceParticipantPage(callId: args.callId);
+    },
+  );
+}
+
+class ConferenceParticipantPageRouteArgs {
+  const ConferenceParticipantPageRouteArgs({required this.callId});
+
+  final String callId;
+
+  @override
+  String toString() {
+    return 'ConferenceParticipantPageRouteArgs{callId: $callId}';
+  }
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+    if (other is! ConferenceParticipantPageRouteArgs) return false;
+    return callId == other.callId;
+  }
+
+  @override
+  int get hashCode => callId.hashCode;
+}
+
+/// generated route for
 /// [ContactScreenPage]
 class ContactScreenPageRoute extends PageRouteInfo<ContactScreenPageRouteArgs> {
   ContactScreenPageRoute({

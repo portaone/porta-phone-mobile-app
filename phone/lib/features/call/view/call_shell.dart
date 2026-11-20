@@ -203,7 +203,7 @@ class _CallShellState extends State<CallShell> {
 
       case CallDisplay.screen:
         final activeCall = state.activeCalls.current;
-        // In a room the host's own camera is not on the default screen; a
+        // In a room the host sees himself only in full screen, as a tile; a
         // video call outside the room keeps its preview.
         if (activeCall.isCameraActive && !state.conference.isLeg(activeCall.callId)) {
           _showLocalCameraPreview(context, state);

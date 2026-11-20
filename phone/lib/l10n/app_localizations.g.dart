@@ -827,11 +827,29 @@ abstract class AppLocalizations {
   /// **'End'**
   String get call_ConferencePanel_end;
 
+  /// Entry of the More menu of the conference full screen that switches the front and the rear camera.
+  ///
+  /// In en, this message translates to:
+  /// **'Switch camera'**
+  String get call_ConferenceFullScreen_switchCamera;
+
+  /// Short notice on the conference full screen when a participant leaves the room.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} left the conference'**
+  String call_ConferenceFullScreen_participantLeft(String name);
+
   /// Name of the menu of one conference participant that holds ending their call.
   ///
   /// In en, this message translates to:
   /// **'More for {name}'**
   String call_SemanticsLabel_conferenceParticipantMenu(String name);
+
+  /// Name of the round control at the right of the conference panel header that opens the room as video tiles.
+  ///
+  /// In en, this message translates to:
+  /// **'Show the conference in full screen'**
+  String get call_SemanticsLabel_conferenceFullScreen;
 
   /// Accessibility name of the control that mutes one conference participant for everyone; the name identifies which participant.
   ///

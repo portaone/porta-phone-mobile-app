@@ -3,6 +3,7 @@ export 'call_screen.dart';
 export 'call_screen_page.dart';
 export 'call_home_screen_page.dart';
 export 'call_screen_handset.dart';
+export 'conference_full_screen_pages.dart';
 export 'call_screen_watch.dart';
 export 'call_watch_screen_pages.dart';
 export 'call_screen_style.dart';
