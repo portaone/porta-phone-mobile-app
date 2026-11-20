@@ -124,6 +124,10 @@ abstract interface class LegNegotiation {
   /// An answer was applied to [callId].
   void answerApplied(String callId);
 
+  /// The far end refused the acknowledged offer of [callId] with [code]; the
+  /// owner rolled it back.
+  void declined(String callId, int code);
+
   /// The far end updated [callId]; [stable] when its connection is back in stable.
   void updated(String callId, {required bool stable});
 
@@ -157,8 +161,10 @@ class RoomCodecs implements LegNegotiation {
   /// How long the calls being moved get to be answered.
   final Duration timeout;
 
-  /// What a far end answers when it will not speak the codecs offered.
-  static const refusals = {415, 488, 606};
+  /// What a far end answers when it will not speak the codecs offered. 500
+  /// is among them: PortaSIP answers `500 SDP Negotiation Failed` to a
+  /// re-INVITE whose codecs the far end refused, whatever it said itself.
+  static const refusals = {415, 488, 500, 606};
 
   /// The reason a request fails with when a call stays off the codecs.
   static const notMixable = 'codec_not_mixable';
@@ -373,6 +379,22 @@ class RoomCodecs implements LegNegotiation {
     _acknowledged.remove(callId);
     _giveUp();
     return RoomOfferError.rollBack;
+  }
+
+  /// The far end refused the acknowledged offer of [callId], which the owner
+  /// rolled back: the move gives up as on a refusal answered at once, and
+  /// nothing is left to take back.
+  @override
+  void declined(String callId, int code) {
+    if (!_offered.remove(callId)) return;
+    _logger.warning('the move of $callId was refused with $code');
+    _acknowledged.remove(callId);
+    _takenBack.remove(callId);
+    _giveUp();
+    if (_acknowledged.isEmpty) {
+      _deadline?.cancel();
+      _deadline = null;
+    }
   }
 
   /// [callId] is gone. When it was the last call awaited, the requests are
