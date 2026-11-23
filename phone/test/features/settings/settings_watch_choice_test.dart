@@ -192,6 +192,9 @@ void main() {
     expect(find.text('Default'), findsOneWidget);
     expect(find.bySemanticsIdentifier(settingsOptionId(settingsLanguageOptionIdPrefix, 'system')), findsOneWidget);
     await tester.scrollUntilVisible(find.text('Ukrainian'), 60, scrollable: find.byType(Scrollable).last);
+    // The row can be built below the round screen's edge; bring it under the finger.
+    await tester.ensureVisible(find.text('Ukrainian'));
+    await tester.pumpAndSettle();
     await tester.tap(find.text('Ukrainian'));
     await tester.pumpAndSettle();
 

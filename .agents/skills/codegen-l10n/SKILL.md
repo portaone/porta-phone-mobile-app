@@ -1,6 +1,6 @@
 ---
 name: codegen-l10n
-description: Runs the generators and the formatter of the phone app through the pinned SDK and keeps their side rewrites out of the change - `build_runner`, `flutter gen-l10n`, `dart format` - and adds or changes a localized string in the four ARB files. Load it when a request mentions build_runner, codegen, regenerate, `.g.dart`/`.freezed.dart`, gen-l10n, l10n, ARB, translation, a new string or key, the l10n mapper, `check_l10n`, or `dart format`.
+description: Runs the generators and the formatter of the phone app through the pinned SDK and keeps their side rewrites out of the change - `build_runner`, `flutter gen-l10n`, `dart format` - and adds or changes a localized string in the six ARB files. Load it when a request mentions build_runner, codegen, regenerate, `.g.dart`/`.freezed.dart`, gen-l10n, l10n, ARB, translation, a new string or key, the l10n mapper, `check_l10n`, or `dart format`.
 ---
 
 # Codegen, formatting and l10n
@@ -31,13 +31,13 @@ Adding or changing a string (`phone/`, procedure in
 
 6. Name the key `<bloc>_<Widget><Fields>[_<variant>]` (`lobby_AppBarTitle`) ([phone/AGENTS.md](../../../phone/AGENTS.md)).
    Insert it as text, before an anchor key, in `lib/l10n/arb/app_en.arb` (with its `@key`
-   metadata) and at the same place in `app_uk.arb`, `app_it.arb`, `app_th.arb` - all four in
-   the same change.
+   metadata) and at the same place in `app_uk.arb`, `app_it.arb`, `app_th.arb`, `app_fr.arb`,
+   `app_pt.arb` - all six in the same change.
 7. `fvm exec melos run l10n:generate` (gen-l10n, then format of `lib/l10n` at 120).
 8. `fvm dart run build_runner build --delete-conflicting-outputs` for the mapper, then
    `fvm dart format --line-length 120 lib/l10n` again, since build_runner writes at 80.
 9. `fvm dart tool/check_l10n.dart` - must print no findings and exit 0.
-10. Commit the four ARB files with `lib/l10n/app_localizations*.g.dart` and
+10. Commit the six ARB files with `lib/l10n/app_localizations*.g.dart` and
     `lib/l10n/app_localizations.g.mapper.dart`, nothing else from the generator run.
 11. A reworded existing string does not reach customers by itself:
     [localization.md](../../../phone/docs/guides/localization.md#how-these-files-reach-a-customer).
@@ -45,7 +45,7 @@ Adding or changing a string (`phone/`, procedure in
 ## Before handing over
 
 - `git diff --numstat -- phone/lib/l10n/arb` shows only added lines for a new key, about the
-  same count in each of the four files.
+  same count in each of the six files.
 - `git status --short` lists only files your change explains; no stray `*.g.dart`.
 - `fvm dart tool/check_l10n.dart` and `fvm flutter analyze` pass, and printed real output.
 - The generated diff of `lib/l10n/*.g.dart` is a few lines per key, not thousands.

@@ -568,6 +568,7 @@ extension AppLocalizationsExtension on AppLocalizations {
       'locale_uk' => locale_uk,
       'locale_th' => locale_th,
       'locale_fr' => locale_fr,
+      'locale_pt' => locale_pt,
       'login_Button_coreUrlAssignProceed' => login_Button_coreUrlAssignProceed,
       'login_Button_otpSigninRequestProceed' =>
         login_Button_otpSigninRequestProceed,

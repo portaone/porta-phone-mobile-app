@@ -64,5 +64,10 @@ void main() {
       expect(await nameOf(tester, const Locale('fr'), const Locale('en')), 'French');
       expect(await nameOf(tester, const Locale('fr'), const Locale('fr')), 'Français');
     });
+
+    testWidgets('Portuguese is named in English and in Portuguese', (tester) async {
+      expect(await nameOf(tester, const Locale('pt'), const Locale('en')), 'Portuguese');
+      expect(await nameOf(tester, const Locale('pt'), const Locale('pt')), 'Português');
+    });
   });
 }

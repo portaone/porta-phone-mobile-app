@@ -1393,6 +1393,9 @@ class AppLocalizationsIt extends AppLocalizations {
   String get locale_fr => 'Francese';
 
   @override
+  String get locale_pt => 'Portoghese';
+
+  @override
   String get login_Button_coreUrlAssignProceed => 'Procedi';
 
   @override
