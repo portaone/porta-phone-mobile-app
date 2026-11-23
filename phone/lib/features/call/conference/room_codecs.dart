@@ -82,10 +82,13 @@ enum RoomOfferError {
 /// answers do not come within [timeout], and an error that arrives after that
 /// rolls its offer back too.
 ///
-/// An offer the server acknowledged with `updating` gets no error after that:
-/// its answer is the only thing left to come, and a call left waiting for it
-/// stays updating - hold and the keypad locked - with nothing that would end
-/// the wait. Such an offer is taken back when [timeout] runs out, even when a
+/// An offer the server acknowledged with `updating` gets no error after that.
+/// What the far end makes of it comes as its answer, or as a `declining`
+/// event with the code it refused the offer with ([declined]): the owner
+/// rolls the offer back and the move gives up, whatever the code. When
+/// neither comes, a call left waiting stays updating - hold and the keypad
+/// locked - with nothing that would end the wait. Such an offer is taken back
+/// when [timeout] runs out, even when a
 /// refusal of another call gave the move up first, or at once when its
 /// acknowledgement arrives after the move was given up ([TakeBackForRoom]).
 /// The owner then brings both ends back to one description with a fresh
@@ -112,6 +115,9 @@ abstract interface class LegNegotiation {
   /// Whether an offer kept for [callId] is withdrawn for the move's own.
   bool withdrawsKeptOffer(String callId);
 
+  /// Whether the offer of [callId] that is out is the move's.
+  bool offered(String callId);
+
   /// The move's offer for [callId] went out.
   void offerSent(String callId);
 
@@ -123,6 +129,10 @@ abstract interface class LegNegotiation {
 
   /// An answer was applied to [callId].
   void answerApplied(String callId);
+
+  /// The far end refused the acknowledged offer of [callId] with [code]; the
+  /// owner rolled it back.
+  void declined(String callId, int code);
 
   /// The far end updated [callId]; [stable] when its connection is back in stable.
   void updated(String callId, {required bool stable});
@@ -157,14 +167,17 @@ class RoomCodecs implements LegNegotiation {
   /// How long the calls being moved get to be answered.
   final Duration timeout;
 
-  /// What a far end answers when it will not speak the codecs offered.
-  static const refusals = {415, 488, 606};
+  /// What a far end answers when it will not speak the codecs offered. 500
+  /// is among them: PortaSIP answers `500 SDP Negotiation Failed` to a
+  /// re-INVITE whose codecs the far end refused, whatever it said itself.
+  static const refusals = {415, 488, 500, 606};
 
   /// The reason a request fails with when a call stays off the codecs.
   static const notMixable = 'codec_not_mixable';
 
   /// The reason a request fails with when the answer to a call's move did not
-  /// come and its offer was taken back.
+  /// come and its offer was taken back, or the far end turned the offer down
+  /// with a code that is not among [refusals].
   static const notAnswered = 'codec_move_not_answered';
 
   /// The codecs the mixer speaks: a call on any of them can be put in a room
@@ -305,6 +318,9 @@ class RoomCodecs implements LegNegotiation {
   @override
   bool withdrawsKeptOffer(String callId) => moves(callId) && !_offered.contains(callId);
 
+  @override
+  bool offered(String callId) => _offered.contains(callId);
+
   /// An offer of [callId] is out.
   @override
   void offerSent(String callId) {
@@ -373,6 +389,25 @@ class RoomCodecs implements LegNegotiation {
     _acknowledged.remove(callId);
     _giveUp();
     return RoomOfferError.rollBack;
+  }
+
+  /// The far end refused the acknowledged offer of [callId], which the owner
+  /// rolled back: the move gives up as on a refusal answered at once, and
+  /// nothing is left to take back. A [code] that is not among [refusals]
+  /// (491, 503) says nothing about the codecs, and the offer is gone all the
+  /// same: the request fails as for a move that was not answered, and asked
+  /// again it moves the call anew.
+  @override
+  void declined(String callId, int code) {
+    if (!_offered.remove(callId)) return;
+    _logger.warning('the move of $callId was refused with $code');
+    _acknowledged.remove(callId);
+    if (!refusals.contains(code)) _unanswered.add(callId);
+    _giveUp();
+    if (_acknowledged.isEmpty) {
+      _deadline?.cancel();
+      _deadline = null;
+    }
   }
 
   /// [callId] is gone. When it was the last call awaited, the requests are

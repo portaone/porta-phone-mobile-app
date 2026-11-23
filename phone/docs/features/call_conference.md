@@ -420,12 +420,25 @@ attended transfer and described in [`call_arch.md`](call_arch.md) under
     anchor's way back if the new call ends - stays until it is made;
   - an offer kept for replay from before carries every codec: it is withdrawn
     and the move's own offer made;
-  - a far end that answers 415, 488 or 606 keeps its call as it was: the offer
-    is rolled back, not kept and sent again as other refused offers are, and
-    the request asked again fails with `ConferenceFailedNotification`
-    (`codec_not_mixable`). Other errors (491, a 5xx) are retried as for any
+  - a far end that answers 415, 488, 500 or 606 keeps its call as it was: the
+    offer is rolled back, not kept and sent again as other refused offers are,
+    and the request asked again fails with `ConferenceFailedNotification`
+    (`codec_not_mixable`). 500 is among them because PortaSIP answers
+    `500 SDP Negotiation Failed` to a re-INVITE whose codecs the far end
+    refused. Other errors answered at once (491, 503) are retried as for any
     renegotiation. Answers that do not come in 20 s give the move up the same
     way, and an error that arrives after that rolls the offer back too;
+  - the server acknowledges an offer with `updating` before the far end has
+    seen it, so the far end's refusal comes after that, as a `declining` event
+    with its code (`signalingDeclined`): the offer is rolled back, the call is
+    no longer updating and the move gives up. With a code of the list above
+    the request fails with `codec_not_mixable`; with any other (491, 503) with
+    `codec_move_not_answered`, and asked again it moves the call anew. Only
+    the move's offer is rolled back: an offer the connection asked for itself
+    (a camera, an ICE restart) would be asked for again at once and refused
+    again, several times a second (seen on the stand), so it is left. A
+    `declining` for a call with no offer awaiting its answer, or one that
+    names a transfer, changes nothing;
   - a held call is moved as it is: the connection offers sendrecv - the hold is
     the server's - so the move takes it off hold on the far end, as the merge
     would a moment later; when no room takes it after all, the hold is asked
@@ -436,8 +449,9 @@ attended transfer and described in [`call_arch.md`](call_arch.md) under
   - a moved call that ends takes nothing with it: the request asked again
     finds fewer calls and does nothing, and the person has seen the call end.
 
-  PortaSIP answers such an offer itself and transcodes, so a refusal comes from
-  a PBX that passes SDP through. Not covered: an offer kept for replay from
+  PortaSIP passes such an offer on to the far end (seen on the stand with
+  transcoding off and on) and answers 500 when the far end refuses it. Not
+  covered: an offer kept for replay from
   before a call became a leg goes out as it was kept.
 - **The join** - `signalingAccepted` of the new call queues `linkedCallJoin`,
   which runs the same merge or add a person's tap runs. Being queued, it runs
