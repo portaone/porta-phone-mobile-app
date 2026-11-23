@@ -1363,6 +1363,8 @@
   "@locale_th": {},
   "locale_fr": "Français",
   "@locale_fr": {},
+  "locale_pt": "Portugais",
+  "@locale_pt": {},
   "login_Button_coreUrlAssignProceed": "Continuer",
   "@login_Button_coreUrlAssignProceed": {},
   "login_Button_otpSigninRequestProceed": "Continuer",

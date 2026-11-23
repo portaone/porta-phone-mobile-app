@@ -41,8 +41,8 @@ flow against the screen.
    control also needs a widget-test anchor; screen anchors and controls that no
    widget test looks up live in the identifier-only groups of that file.
 3. **Names come from localization** - never a hardcoded English string. A new key
-   is named `<bloc>_SemanticsLabel_<control>` and is added to all four arb files
-   (`app_en`, `app_it`, `app_uk`, `app_th`); an existing key whose text already
+   is named `<bloc>_SemanticsLabel_<control>` and is added to all six arb files
+   (`app_en`, `app_it`, `app_uk`, `app_th`, `app_fr`, `app_pt`); an existing key whose text already
    reads as the name of the control may be reused instead.
 4. **The screen has a `*_semantics_test.dart`.** For each control it asserts name
    + identifier + action on one node via `expectTapTargetSemantics`, drives

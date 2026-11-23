@@ -1249,6 +1249,8 @@
   "@locale_th": {},
   "locale_fr": "Французька",
   "@locale_fr": {},
+  "locale_pt": "Португальська",
+  "@locale_pt": {},
   "login_Button_coreUrlAssignProceed": "Продовжити",
   "@login_Button_coreUrlAssignProceed": {},
   "login_Button_otpSigninRequestProceed": "Продовжити",

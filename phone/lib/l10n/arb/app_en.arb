@@ -1395,6 +1395,8 @@
   "@locale_th": {},
   "locale_fr": "French",
   "@locale_fr": {},
+  "locale_pt": "Portuguese",
+  "@locale_pt": {},
   "login_Button_coreUrlAssignProceed": "Proceed",
   "@login_Button_coreUrlAssignProceed": {},
   "login_Button_otpSigninRequestProceed": "Proceed",

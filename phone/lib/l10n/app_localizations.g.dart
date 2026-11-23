@@ -8,6 +8,7 @@ import 'package:intl/intl.dart' as intl;
 import 'app_localizations_en.g.dart';
 import 'app_localizations_fr.g.dart';
 import 'app_localizations_it.g.dart';
+import 'app_localizations_pt.g.dart';
 import 'app_localizations_th.g.dart';
 import 'app_localizations_uk.g.dart';
 
@@ -97,6 +98,7 @@ abstract class AppLocalizations {
     Locale('en'),
     Locale('fr'),
     Locale('it'),
+    Locale('pt'),
     Locale('th'),
     Locale('uk'),
   ];
@@ -2488,6 +2490,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'French'**
   String get locale_fr;
+
+  /// No description provided for @locale_pt.
+  ///
+  /// In en, this message translates to:
+  /// **'Portuguese'**
+  String get locale_pt;
 
   /// No description provided for @login_Button_coreUrlAssignProceed.
   ///
@@ -8352,7 +8360,7 @@ class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> 
   }
 
   @override
-  bool isSupported(Locale locale) => <String>['en', 'fr', 'it', 'th', 'uk'].contains(locale.languageCode);
+  bool isSupported(Locale locale) => <String>['en', 'fr', 'it', 'pt', 'th', 'uk'].contains(locale.languageCode);
 
   @override
   bool shouldReload(_AppLocalizationsDelegate old) => false;
@@ -8367,6 +8375,8 @@ AppLocalizations lookupAppLocalizations(Locale locale) {
       return AppLocalizationsFr();
     case 'it':
       return AppLocalizationsIt();
+    case 'pt':
+      return AppLocalizationsPt();
     case 'th':
       return AppLocalizationsTh();
     case 'uk':
