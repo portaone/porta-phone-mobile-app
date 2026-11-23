@@ -163,10 +163,22 @@ which is then taken out of CallKit for it - enters CallKit as an outgoing call
 incoming call. An incoming report answered at once brings CallKit's own in-call screen over the
 application for about a second (iPhone 12 mini, iOS 27), the application goes to the background
 for it, and the call taken out comes back with the system's call-waiting screen; a start the
-application makes in front brings up nothing. The call in conversation is held in the same transaction, and a conference first, in a
-transaction of its own: riding with the start, the holds of a conference were still pending when
-CallKit ended every member of the room. What this costs: iOS's call history lists the answered
-call as outgoing.
+application makes in front brings up nothing. The call in conversation is held first, in a
+transaction of its own, and so is a conference, and the start is asked for once CallKit's call
+observer shows them on hold, at most a second later: riding with the start, the hold was still
+being performed when the start went active, and iOS 16 ended the call in conversation (the holds
+of a conference, every member of the room). A waiting call that ends during the wait gets no
+start, and what was held goes off hold again. What this costs: iOS's call history lists the
+answered call as outgoing.
+
+With one call of ours held and another active, iOS builds the screen of a third call without
+`Hold & Accept`: it offers `End & Accept` and `End Held & Accept`, and both end a call. With
+`holdActiveBeforeThirdIncoming` the plugin holds the active call in CallKit before it reports the
+third one, and reports it once CallKit's call observer shows the hold, at most a second later: on
+iOS 16 the completion of the hold's transaction came before the hold was performed, and the screen
+was built without it. The active call goes off hold again as soon as CallKit has the report;
+neither change reaches the application. A third call that ends during the wait is still reported,
+and ended at once.
 
 ---
 
