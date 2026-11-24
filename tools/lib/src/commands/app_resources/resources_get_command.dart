@@ -11,6 +11,7 @@ import 'constants/constants.dart';
 import 'models/models.dart';
 import 'processors/processors.dart';
 import 'services/services.dart';
+import 'utils/utils.dart';
 
 const _argApplicationId = 'applicationId';
 const _argToken = 'token';
@@ -79,6 +80,18 @@ class AppResourcesGetCommand extends Command<int> {
         await _httpClient.getBuildBundle(context.applicationId, headers: context.authHeader),
       );
       _logger.info('- Theme: ${bundle.themeId}');
+
+      // Before anything is written, and not as a step the run survives: every
+      // other shortfall leaves an app that starts with something stock in it,
+      // this one leaves an app that never gets past its splash screen. Nothing
+      // downstream would notice - the build compiles the same either way.
+      if (TermsEmbedCheck.problemIn(bundle.files) case final problem?) {
+        _logger
+          ..err(problem)
+          ..err('  -> the app stays on the splash screen: it does not start without that page.')
+          ..err('Add the page to the brand in the configurator and run again; nothing was written.');
+        return ExitCode.data.code;
+      }
 
       final writer = BundleWriter(httpClient: _httpClient, logger: _logger);
 

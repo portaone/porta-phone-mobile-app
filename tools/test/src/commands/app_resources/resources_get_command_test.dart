@@ -39,7 +39,14 @@ void main() {
 
   String bundlePath() => '/v1/build/applications/$_applicationId/bundle';
 
-  Map<String, Object?> bundle({List<Map<String, String>> splash = const [], List<String> locales = const []}) => {
+  Map<String, Object?> bundle({
+    List<Map<String, String>> splash = const [],
+    List<String> locales = const [],
+    List<Map<String, Object?>> embeddeds = const [
+      {'id': 'terms-1', 'type': 'terms', 'uri': 'https://brand.one/terms'},
+    ],
+  }) =>
+      {
         'themeId': _themeId,
         'application': {
           'id': _applicationId,
@@ -56,7 +63,7 @@ void main() {
               {'type': 'videoCall'},
             ],
           },
-          'assets/themes/app.embedded.config.json': <Object?>[],
+          'assets/themes/app.embedded.config.json': embeddeds,
         },
         'assets': <Object?>[],
         'brandImages': {
@@ -277,6 +284,55 @@ app_version: 1.16.5+3
       final said = verify(() => logger.err(captureAny())).captured.join('\n');
       expect(said, contains('step(s) failed'));
       expect(said, contains('translations'));
+    });
+  });
+
+  group('a brand without a terms page', () {
+    // The phone looks for the embedded page of type `terms` when it launches
+    // and has nothing to fall back on: without it the app stays on its splash
+    // screen. A build cannot tell - the list is one more asset to it - so this
+    // command is the last place the gap can be caught before it ships.
+    setUp(() {
+      writePubspec('''
+name: webtrit_phone
+app_version: 1.16.5+3
+''');
+    });
+
+    test('is refused, and the run says which page is missing', () async {
+      backend.serveJson(bundlePath(), bundle(embeddeds: const []));
+
+      expect(await runResources(), ExitCode.data.code);
+
+      final said = verify(() => logger.err(captureAny())).captured.join('\n');
+      expect(said, contains('Terms resource is missing'));
+      expect(said, contains('splash screen'));
+    });
+
+    test('is refused before anything of it reaches the checkout', () async {
+      // A half-written brand would be built by whoever reads only the files:
+      // the settings of a brand that cannot start are worth nothing on disk.
+      backend.serveJson(bundlePath(), bundle(embeddeds: const []));
+
+      await runResources();
+
+      expect(appConfig().existsSync(), isFalse);
+    });
+
+    test('is refused when its terms page has no address', () async {
+      backend.serveJson(
+        bundlePath(),
+        bundle(
+          embeddeds: const [
+            {'id': 'terms-1', 'type': 'terms', 'uri': ''},
+          ],
+        ),
+      );
+
+      expect(await runResources(), ExitCode.data.code);
+
+      final said = verify(() => logger.err(captureAny())).captured.join('\n');
+      expect(said, contains('has no address'));
     });
   });
 
