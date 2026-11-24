@@ -24,6 +24,11 @@ later commands read.
 | `--keystores-path` | no | The project's keystore folder. Without it the SSL certificates and signing keystore are skipped |
 | `--cache-session-data-path` | no | Where the session data is cached between processes |
 
+It refuses a brand the phone could not start: the app looks for the embedded page of type
+`terms` when it launches and stays on its splash screen without one, and no later step of a
+build reads that list. A bundle with no such page, or with one whose `uri` is empty, ends the
+run with exit code 65 before anything is written.
+
 Which backend it asks is not an option: the address is the constant
 `configuratorProdApiUrl` in `lib/src/constants.dart`, and only
 `WEBTRIT_CONFIGURATOR_API_URL` overrides it.
