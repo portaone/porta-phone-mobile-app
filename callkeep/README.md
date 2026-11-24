@@ -128,7 +128,7 @@ Use these methods to notify the platform about call state changes.
 | --- | --- |
 | `setUp(options)` | Register phone account, initialize notification channels |
 | `tearDown()` | Hang up all calls and release resources |
-| `reportNewIncomingCall(callId, handle, ..., offeredAt)` | Register an incoming call with the platform. `offeredAt` is when the server offered it: a call offered after the end of an earlier attempt the app never held is a new attempt, not a ghost (Android, web) |
+| `reportNewIncomingCall(callId, handle, ..., offeredAt, offeredAtSource, offeredVia)` | Register an incoming call with the platform. `offeredAt` is when the server offered it, `offeredAtSource` where that time comes from (Core's `offered_at`, or temporarily FCM `sentTime` / this phone) and `offeredVia` how it arrived. With Core's time on both, an offer with another `offered_at` than the ended attempt of the id is a new attempt and a copy with the same one is a ghost (Android, iOS); without it the older rule applies (Android, web). See `phone/docs/architecture/incoming_call_lifecycle.md` |
 | `reportConnectingOutgoingCall(callId, handle, ...)` | Mark outgoing call as connecting |
 | `reportConnectedOutgoingCall(callId, handle, ...)` | Mark outgoing call as connected |
 | `reportUpdateCall(callId, ...)` | Update call metadata (display name, video, etc.) |

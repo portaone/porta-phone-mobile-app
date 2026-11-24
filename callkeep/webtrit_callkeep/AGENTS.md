@@ -38,8 +38,10 @@ example/integration_test/              # the public API on a real device
 
 - `setUp(CallkeepOptions)` / `tearDown()` - initialize/shutdown native integration
 - `reportNewIncomingCall` / `startCall` / `answerCall` / `endCall` - call lifecycle; `reportNewIncomingCall`
-  takes `offeredAt`, when the server offered the call (null when not known), which tells a new
-  attempt of an id from a ghost of its ended one
+  takes `offeredAt`, when the server offered the call (null when not known), with `offeredAtSource`
+  (Core's `offered_at`; FCM and device times are temporary, for a Core without it) and `offeredVia`:
+  they tell a new attempt of a reused id from a ghost of its ended one (Android `CallAttempts`, iOS
+  `CallPresentations`; shared cases in `callkeep/call_attempt_vectors.json`)
 - `setHeld` / `setMuted` / `sendDTMF` / `setAudioDevice` - in-call controls
 - `setCallGroup(groupId, callIds)` / `unsetCallGroup` - present several calls to the OS as one named group; the list is
   the whole membership, an empty one does nothing

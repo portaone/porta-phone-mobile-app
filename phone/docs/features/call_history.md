@@ -130,6 +130,14 @@ backend again would clear the calls made in between.
   per page than asked.
 - A wide range is a cost on the switch, not on the app. Widening a slice is a
   deployment decision, which is why the widths are knobs rather than constants.
+- A call id is not a record id. PortaSwitch reuses the SIP Call-ID, and the
+  backend reports several records under one: a transfer back comes back as the
+  incoming call, the forwarded leg and the call that came back. A record is
+  therefore told apart by `CdrRecord.recordKey` - the call id, the connect time
+  and the direction - in the store (primary key since migration v29), in the
+  lists, their merges and the sync worker. An IVR call reported twice at one
+  moment, once without a direction, keeps both rows in the store; the history
+  shows the attributed leg only (`isUnattributedCopyOf`).
 
 ## Tests
 
@@ -138,6 +146,8 @@ backend again would clear the calls made in between.
 | The slice rule itself | `test/services/history_windows_test.dart` |
 | The lists against a backend with a default window | `test/features/cdrs/cdrs_history_walk_test.dart` |
 | The sync cycles, a clear seen from another device | `test/features/cdrs/cdrs_sync_worker_test.dart` |
+| Several records of one call id, the IVR copy | `packages/data/app_database/test/cdrs_dao_test.dart`, `test/models/cdr/record_merge_test.dart` |
+| The v29 key migration | `packages/data/app_database/test/migrations_test.dart` |
 | Clearing from this device | `test/features/cdrs/cdrs_history_clear_cubit_test.dart`, `test/features/recents/recents_actions_semantics_test.dart` |
 | The unified header | `test/features/recents/recents_unified_header_semantics_test.dart` |
 | Clearing the local call log | `test/features/recents/recents_bloc_test.dart`, `packages/data/app_database/test/recents_dao_test.dart` |

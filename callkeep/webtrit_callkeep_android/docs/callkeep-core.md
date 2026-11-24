@@ -375,15 +375,18 @@ or a hosted engine (`ExternalEngineCallApi`) - and the core does the same five t
    still waiting on it;
 2. for a never-presented end, arms the ghost guard with the time of the end, so a replay, a late
    confirmation or a late push of the same call is refused and the backend is asked to cancel it;
-   a report the server offered after that time is a new attempt of the id (a blind transfer
-   repeated to this device) and clears the guard (`registerIncomingCall`, `offeredAtMs`);
+   whether a later report of the id is a new attempt (a transfer back, a blind transfer repeated
+   to this device) that clears the guard is decided by `CallAttempts`: with Core's `offered_at` by
+   equality with the ended attempt's, without it by the offer time after the end (temporary);
 3. marks the end dispatched, so no engine is asked to end the call again: the incoming-call
    service, on the `IC_RELEASE_ENDED` that follows, hands the call off to its session
    (`performHandoff`) instead of asking it to end the call - the push session would otherwise
    send the server a decline for a call the server hung up;
 4. leaves a pending release (`PendingBroadcastQueue`) when no incoming-call service is running,
    so one started for this call afterwards ends it without showing it; a running service takes
-   the `IC_RELEASE_ENDED` through its receiver instead;
+   the `IC_RELEASE_ENDED` through its receiver instead. A new attempt of the id drops that release,
+   and the end of a call this phone made (presented, no incoming attempt) leaves none: no
+   incoming-call service starts for it, and the release would end the transfer back of the call;
 5. ends the call in the backend (`startDeclineCall`; an end request without `endedBy` is the
    app's, so the connection reports APP).
 
