@@ -73,9 +73,6 @@ class WebtritCallkeepPlugin :
         BackgroundPushNotificationIsolateBootstrapApi(context).let {
             PHostBackgroundPushNotificationIsolateBootstrapApi.setUp(messenger, it)
         }
-        SmsReceptionConfigBootstrapApi(context).let {
-            PHostSmsReceptionConfigApi.setUp(messenger, it)
-        }
 
         // Helper APIs
 

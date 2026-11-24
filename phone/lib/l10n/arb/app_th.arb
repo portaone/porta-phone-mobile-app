@@ -2906,16 +2906,8 @@
   "@settings_LogoutConfirmDialog_title": {},
   "settings_missingMicrophoneIndicator_title": "ไม่มีสิทธิ์ใช้ไมโครโฟน ไม่สามารถโทรออกได้",
   "@settings_missingMicrophoneIndicator_title": {},
-  "settings_network_fallbackCalls_description": "หากไม่ได้รับการแจ้งเตือนแบบพุชเกี่ยวกับสาย แอปจะรับ SMS พิเศษและแสดงหน้าจอสายเรียกเข้า",
-  "@settings_network_fallbackCalls_description": {
-    "description": "Tooltip description for fallback SMS-based call trigger"
-  },
   "settings_network_Watch_howTheyDiffer": "ต่างกันอย่างไร",
   "@settings_network_Watch_howTheyDiffer": {},
-  "settings_network_fallbackCalls_title": "สายเรียกเข้าสำรอง",
-  "@settings_network_fallbackCalls_title": {
-    "description": "Title for fallback incoming calls section"
-  },
   "settings_network_incomingCallType_pushNotification_description": "เมื่อไม่ได้ใช้งานแอป แอปจะหยุดทำงานและใช้ทรัพยากรน้อยที่สุด ซึ่งช่วยประหยัดแบตเตอรี่ ระหว่างที่มีสายเรียกเข้า เซิร์ฟเวอร์จะส่ง push notification ไปยังโทรศัพท์ เพื่อให้ระบบปฏิบัติการมือถือเปิดแอปขึ้นมารับสาย อย่างไรก็ตาม วิธีนี้ไม่รับประกันว่าจะได้รับทุกสาย หากโทรศัพท์ไม่ได้ใช้งานเป็นเวลานาน Android บางเวอร์ชันอาจจำกัด push notification ซึ่งอาจทำให้คุณพลาดสายเรียกเข้าได้",
   "@settings_network_incomingCallType_pushNotification_description": {},
   "settings_network_incomingCallType_pushNotification_title": "การแจ้งเตือนแบบพุช",
@@ -2926,10 +2918,6 @@
   "@settings_network_incomingCallType_socket_title": {},
   "settings_network_incomingCallType_title": "การส่งสายเรียกเข้า",
   "@settings_network_incomingCallType_title": {},
-  "settings_network_smsFallback_toggle": "SMS เป็นช่องทางสำรอง",
-  "@settings_network_smsFallback_toggle": {
-    "description": "Toggle label for enabling SMS fallback"
-  },
   "settings_registerStatusSnackBar_requestFailed": "ไม่สามารถติดต่อเซิร์ฟเวอร์ได้ - โปรดลองอีกครั้ง",
   "@settings_registerStatusSnackBar_requestFailed": {},
   "settings_registerStatusSnackBar_unavailable": "ไม่มีการเชื่อมต่อกับเซิร์ฟเวอร์ - เปลี่ยนการตั้งค่านี้ไม่ได้",

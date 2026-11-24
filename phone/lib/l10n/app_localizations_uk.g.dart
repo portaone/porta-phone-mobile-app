@@ -3505,14 +3505,7 @@ class AppLocalizationsUk extends AppLocalizations {
       'Відсутній дозвіл на використання мікрофона. Неможливо здійснювати дзвінки.';
 
   @override
-  String get settings_network_fallbackCalls_description =>
-      'Якщо push-сповіщення про виклик не доходять, застосунок отримає спеціальне SMS та покаже екран вхідного дзвінка.';
-
-  @override
   String get settings_network_Watch_howTheyDiffer => 'Чим вони відрізняються';
-
-  @override
-  String get settings_network_fallbackCalls_title => 'Резервні вхідні дзвінки';
 
   @override
   String get settings_network_incomingCallType_pushNotification_description =>
@@ -3530,9 +3523,6 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get settings_network_incomingCallType_title => 'Отримання вхідних дзвінків';
-
-  @override
-  String get settings_network_smsFallback_toggle => 'SMS як резервний канал';
 
   @override
   String get settings_registerStatusSnackBar_requestFailed => 'Не вдалося зв\'язатися з сервером - спробуйте ще раз';

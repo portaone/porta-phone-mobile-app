@@ -6,7 +6,6 @@ import 'package:material_ui/material_ui.dart';
 
 import 'package:logging/logging.dart';
 
-import 'package:webtrit_phone/environment_config.dart';
 import 'package:webtrit_phone/extensions/extensions.dart';
 import 'package:webtrit_phone/models/models.dart';
 import 'package:webtrit_phone/theme/theme.dart';
@@ -572,12 +571,6 @@ abstract final class CallMapper {
         isConferenceEnabled: isConferenceEnabled,
         isConferenceRejoinEnabled: isConferenceRejoinEnabled,
         isConferenceVideoEnabled: isConferenceVideoEnabled,
-      ),
-      triggerConfig: CallTriggerConfig(
-        smsFallback: SmsFallbackTriggerConfig(
-          enabled: EnvironmentConfig.CALL_TRIGGER_MECHANISM_SMS,
-          available: EnvironmentConfig.CALL_TRIGGER_MECHANISM_SMS,
-        ),
       ),
       encoding: EncodingConfig(
         bypassConfig: encodingConfig.bypassConfig,

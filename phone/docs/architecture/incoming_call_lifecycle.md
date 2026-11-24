@@ -1,7 +1,7 @@
 # Incoming-call lifecycle: one call id, many reports
 
 An incoming call is known by its call id, and the same id reaches the phone more than once: from
-the signaling socket, from a push, from a handshake after a reconnect, sometimes from an SMS. This
+the signaling socket, from a push, from a handshake after a reconnect. This
 page follows one id from its first report to its end, and shows how the app tells apart the four
 things such a report can be:
 
@@ -25,7 +25,6 @@ path says when the server offered the call (`offeredAt`):
 | Live event on the app's socket | `CallBloc`, via `call_signaling_event_mapping.dart` | the moment the event arrived (`clock.now()`), before the bloc's queues |
 | Live event on the persistent socket (Android 14+, foreground service) | `onSignalingBackgroundCallEvent` | the moment the event arrived |
 | FCM push | `_handleBackgroundMessage` in `bootstrap.dart` | `RemoteMessage.sentTime` |
-| SMS trigger | `IncomingCallSmsTriggerReceiver` | the time the SMS centre took the message |
 | Handshake after a (re)connect | `_handleHandshakeReceived` in `CallBloc`, via `handshake_processor.dart` | the server's time of the newest `incoming_call` in the line's call log |
 
 The handshake is how the app learns of a call that started while it had no socket and whose push did
@@ -115,7 +114,7 @@ handshake finds the call gone from the server and ends it.
 ## Limits
 
 - **Two clocks.** Every time here is milliseconds since the epoch in UTC, so time zones play no
-  part. The offer time of a push, an SMS or a handshake is the network's, the end is this phone's
+  part. The offer time of a push or a handshake is the network's, the end is this phone's
   clock: a phone clock set by hand a minute or more off the network's can let a late copy through
   or refuse a new attempt. A phone that takes its time from the network is seconds off at most.
 - **iOS** accepts `offeredAt` and ignores it: CallKit keeps no such end. The web implementation
@@ -126,8 +125,8 @@ handshake finds the call gone from the server and ends it.
 - callkeep Android: `ForegroundServiceIncomingRegistrationTest` and `ReportCallEndedTest` (the rule
   for socket and push reports, the boundary, the release a new attempt drops),
   `MainProcessConnectionTrackerTest` (the kept end and its time), `IncomingCallServiceReleaseTest`
-  (the reservation the push session's release drops), `IncomingCallSmsTriggerReceiverTest` (the SMS
-  centre's time), `ForegroundServiceProxyTest` (the offer time through Pigeon).
+  (the reservation the push session's release drops), `ForegroundServiceProxyTest` (the offer time
+  through Pigeon).
 - callkeep Dart: `offered_at_forwarding_test.dart` (`webtrit_callkeep`),
   `webtrit_callkeep_android_offered_at_test.dart`, `offered_at_test.dart` (iOS ignores it),
   `webtrit_callkeep_web_new_attempt_test.dart`.

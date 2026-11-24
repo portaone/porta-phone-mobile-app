@@ -185,38 +185,6 @@ class EnvironmentConfig {
     const bool.fromEnvironment(IOS_KEEP_INCOMING_IN_APP_IN_FRONT__NAME, defaultValue: true),
   );
 
-  // SMS-based incoming call trigger mechanism (fallback).
-  // If enabled, the app listens for specially formatted incoming SMS messages to trigger incoming calls.
-  static const CALL_TRIGGER_MECHANISM_SMS__NAME = 'WEBTRIT_CALL_TRIGGER_MECHANISM_SMS';
-  static bool get CALL_TRIGGER_MECHANISM_SMS => _env.boolean(
-    CALL_TRIGGER_MECHANISM_SMS__NAME,
-    const bool.fromEnvironment(CALL_TRIGGER_MECHANISM_SMS__NAME, defaultValue: false),
-  );
-
-  // SMS-based incoming call trigger prefix.
-  // Used to filter incoming SMS messages. Only messages starting with this prefix are processed.
-  //
-  // The prefix is one half of a contract: the sender has to emit exactly what the app matches on.
-  // The default below only applies to a build that enables the mechanism without configuring the
-  // prefix, so a brand that turns the mechanism on is expected to set both sides deliberately.
-  static const CALL_TRIGGER_MECHANISM_SMS_PREFIX__NAME = 'WEBTRIT_CALL_TRIGGER_MECHANISM_SMS_PREFIX';
-  static String get CALL_TRIGGER_MECHANISM_SMS_PREFIX => _env.string(
-    CALL_TRIGGER_MECHANISM_SMS_PREFIX__NAME,
-    const String.fromEnvironment(CALL_TRIGGER_MECHANISM_SMS_PREFIX__NAME, defaultValue: '<#> PORTAPHONE:'),
-  );
-
-  // ICU regex pattern to extract callId, handle, displayName and hasVideo from SMS body.
-  static const CALL_TRIGGER_MECHANISM_SMS_REGEX_PATTERN__NAME = 'WEBTRIT_CALL_TRIGGER_MECHANISM_SMS_REGEX_PATTERN';
-  static String get CALL_TRIGGER_MECHANISM_SMS_REGEX_PATTERN => _env.string(
-    CALL_TRIGGER_MECHANISM_SMS_REGEX_PATTERN__NAME,
-    const String.fromEnvironment(
-      CALL_TRIGGER_MECHANISM_SMS_REGEX_PATTERN__NAME,
-      // Host-agnostic on purpose: every brand serves this link from its own domain, so naming one
-      // here would make the default wrong for all the others.
-      defaultValue: r'https://[^/]+/call\?callId=([^&]+)&handle=([^&]+)&displayName=([^&]+)&hasVideo=(true|false)',
-    ),
-  );
-
   static const CONNECTIVITY_CHECK_URL__NAME = 'WEBTRIT_APP_CONNECTIVITY_CHECK_URL';
   static const String? _CONNECTIVITY_CHECK_URL_ENV = bool.hasEnvironment(CONNECTIVITY_CHECK_URL__NAME)
       ? String.fromEnvironment(CONNECTIVITY_CHECK_URL__NAME)

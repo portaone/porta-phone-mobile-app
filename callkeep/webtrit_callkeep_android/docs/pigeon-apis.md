@@ -128,12 +128,6 @@ Implemented by: `BackgroundPushNotificationIsolateBootstrapApi`
 
 ---
 
-### `SmsReceptionConfigBootstrapApi`
-
-Configures the optional SMS-based incoming call trigger (`IncomingCallSmsTriggerReceiver`).
-
----
-
 ## Flutter APIs (Dart implements, Kotlin calls)
 
 ### `PDelegateFlutterApi`

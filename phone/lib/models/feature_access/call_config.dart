@@ -1,6 +1,5 @@
 import 'package:equatable/equatable.dart';
 
-import '../call/call_trigger_config.dart';
 import 'call_audio_config.dart';
 import 'call_pull_video_strategy.dart';
 import '../peer_connection_settings.dart';
@@ -14,7 +13,6 @@ class CallConfig extends Equatable {
     required this.capabilities,
     required this.encoding,
     required this.peerConnection,
-    required this.triggerConfig,
     this.ice = const IceConfig(),
     this.audio = const CallAudioConfig(),
   });
@@ -29,11 +27,8 @@ class CallConfig extends Equatable {
   /// What this deployment decided about a call's audio output.
   final CallAudioConfig audio;
 
-  /// Configuration for how incoming calls are triggered.
-  final CallTriggerConfig triggerConfig;
-
   @override
-  List<Object?> get props => [capabilities, encoding, peerConnection, triggerConfig, ice, audio];
+  List<Object?> get props => [capabilities, encoding, peerConnection, ice, audio];
 }
 
 /// UI-level configuration for call features.

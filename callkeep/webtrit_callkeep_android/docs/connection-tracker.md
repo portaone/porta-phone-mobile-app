@@ -202,7 +202,7 @@ must preserve them (most are pinned by `MainProcessConnectionTrackerTest`):
    makes derived termination and the `endCall` re-fire path work.
 7. **`addPending` returning true is an ownership token.** The core's incoming dispatch (behind
    `registerIncomingCall`) uses it to arbitrate concurrent registrations of the same callId: only
-   the inserting caller proceeds and owns the rollback duty. Push, signaling and SMS reports of
+   the inserting caller proceeds and owns the rollback duty. Push and signaling reports of
    one call no longer race here -- the later ones join the registration already waiting.
 
 ## Thread Safety and Atomicity

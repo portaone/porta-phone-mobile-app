@@ -3472,14 +3472,7 @@ class AppLocalizationsPt extends AppLocalizations {
       'Falta a permissão do microfone. Não é possível fazer chamadas.';
 
   @override
-  String get settings_network_fallbackCalls_description =>
-      'Se as notificações push de chamadas não forem recebidas, o app receberá um SMS especial e exibirá a tela de chamada recebida.';
-
-  @override
   String get settings_network_Watch_howTheyDiffer => 'Qual é a diferença';
-
-  @override
-  String get settings_network_fallbackCalls_title => 'Canal alternativo para chamadas recebidas';
 
   @override
   String get settings_network_incomingCallType_pushNotification_description =>
@@ -3497,9 +3490,6 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get settings_network_incomingCallType_title => 'Entrega de chamadas recebidas';
-
-  @override
-  String get settings_network_smsFallback_toggle => 'SMS como canal de reserva';
 
   @override
   String get settings_registerStatusSnackBar_requestFailed => 'Não foi possível acessar o servidor - tente novamente';

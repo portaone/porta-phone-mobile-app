@@ -59,16 +59,12 @@ def envDefine = [WEBTRIT_ANDROID_RELEASE_UPLOAD_KEYSTORE_PATH: projectPropertyDa
 // file decides the feature both in the app and in the manifest.
 def appLinkDomain = projectPropertyDartDefines['WEBTRIT_APP_LINK_DOMAIN'] ?: ''
 def deeplinksEnabled = !appLinkDomain.trim().isEmpty()
-def smsTriggerEnabled = (projectPropertyDartDefines['WEBTRIT_CALL_TRIGGER_MECHANISM_SMS'] ?: 'false').trim() == 'true'
 
 def optionalManifests = []
 if (deeplinksEnabled) {
     optionalManifests << 'optional-manifests/deeplinks/AndroidManifest.xml'
 }
-if (smsTriggerEnabled) {
-    optionalManifests << 'optional-manifests/sms-receiver/AndroidManifest.xml'
-}
-println("Deep links: ${deeplinksEnabled ? 'enabled' : 'disabled'}, SMS call trigger: ${smsTriggerEnabled ? 'enabled' : 'disabled'}")
+println("Deep links: ${deeplinksEnabled ? 'enabled' : 'disabled'}")
 
 def generateNetworkSecurityConfig = tasks.register("generateNetworkSecurityConfig") {
     doLast {

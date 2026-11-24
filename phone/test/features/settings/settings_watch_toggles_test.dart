@@ -59,7 +59,6 @@ void main() {
     router = _MockStackRouter();
     root = _MockRootStackRouter();
     when(() => network.state).thenReturn(NetworkState(incomingCallTypeModels: [push, socket]));
-    when(() => network.smsFallbackAvailable).thenReturn(false);
     when(() => network.selectIncomingCallType(any())).thenAnswer((_) async {});
     when(() => media.state).thenReturn(_media());
     when(() => router.root).thenReturn(root);
@@ -147,14 +146,6 @@ void main() {
       final route = verify(() => root.navigate(captureAny())).captured.single as WatchTextScreenPageRoute;
       expect(route.args!.text, startsWith('Push Notification\n\n'));
       expect(route.args!.text, contains('Persistent Connection to the Server\n\n'));
-    });
-
-    testWidgets('the SMS backup is a toggle pill, offering nothing where the brand does not offer it', (tester) async {
-      watchPresets.last.apply(tester);
-      await tester.pumpWidget(app(const NetworkScreen()));
-      await tester.scrollUntilVisible(find.text('SMS as a backup channel'), 60, scrollable: list());
-
-      expect(tester.widget<WatchToggleChip>(find.byType(WatchToggleChip)).onChanged, isNull);
     });
   });
 

@@ -23,10 +23,9 @@ lib/src/
     |   |-- background_push_notification_bootstrap_service.dart
     |   `-- background_push_notification_service.dart
     `-- utils/
-        |-- android_callkeep_utils.dart    # AndroidCallkeepUtils - diagnostics, SMS, activity
+        |-- android_callkeep_utils.dart    # AndroidCallkeepUtils - diagnostics, activity
         |-- activity_control.dart
-        |-- callkeep_diagnostics.dart
-        `-- sms_bootstrap_reception_config.dart
+        `-- callkeep_diagnostics.dart
 example/integration_test/              # the public API on a real device
 ```
 
@@ -56,13 +55,11 @@ Entry point for Android background modes. Always use these static singletons:
 
 - `backgroundPushNotificationBootstrapService` - configure + trigger push-notification-based calls
 - `backgroundPushNotificationService` - end calls from push notification isolate
-- `smsReceptionConfig` - **deprecated**, use `AndroidCallkeepUtils.smsReceptionConfig` instead
 
 ### `AndroidCallkeepUtils` (static, Android only)
 
 - `activityControl` - lock screen overlay, wake screen, send to background
 - `diagnostics` - get diagnostic report map
-- `smsReceptionConfig` - initialize SMS-triggered call reception
 
 ### `CallkeepConnections` (singleton, Android and web)
 
@@ -92,7 +89,7 @@ No gate or Jenkins job runs them.
 - **Do not** add platform-specific imports. A platform guard uses `kIsWeb` and
   `defaultTargetPlatform` from `package:flutter/foundation.dart`, as `CallkeepConnections` does.
   `dart:io` `Platform` throws on web, where this package also runs: the guards that still use it
-  check `kIsWeb` first (`sms_bootstrap_reception_config.dart`), except `activity_control.dart`.
+  check `kIsWeb` first (`callkeep_diagnostics.dart`), except `activity_control.dart`.
 - **Do not** expose Pigeon types - all public API uses types from `webtrit_callkeep_platform_interface`.
 - `setSpeaker` is `@Deprecated` - use `setAudioDevice` with a `CallkeepAudioDevice` instead.
 - Background service callbacks **must** be top-level functions annotated `@pragma('vm:entry-point')`.

@@ -3228,17 +3228,9 @@
   "@settings_LogoutConfirmDialog_title": {},
   "settings_missingMicrophoneIndicator_title": "Missing microphone permission. Unable to make calls.",
   "@settings_missingMicrophoneIndicator_title": {},
-  "settings_network_fallbackCalls_description": "If push notifications about calls are not received, the app will receive a special SMS and display the incoming call screen.",
-  "@settings_network_fallbackCalls_description": {
-    "description": "Tooltip description for fallback SMS-based call trigger"
-  },
   "settings_network_Watch_howTheyDiffer": "How they differ",
   "@settings_network_Watch_howTheyDiffer": {
     "description": "On a watch, the row under the two ways incoming calls are delivered: opens both explanations as a page of text."
-  },
-  "settings_network_fallbackCalls_title": "Fallback Incoming Calls",
-  "@settings_network_fallbackCalls_title": {
-    "description": "Title for fallback incoming calls section"
   },
   "settings_network_incomingCallType_pushNotification_description": "When the app is not in use, it stops running and consumes minimal resources, which helps conserve battery life. During an incoming call, the server sends a push notification to the phone, prompting the mobile operating system to launch the app to handle the call. However, this method does not guarantee that all calls will be received. If the phone has been inactive for an extended period, some versions of Android may limit push notifications, potentially causing you to miss an incoming call.",
   "@settings_network_incomingCallType_pushNotification_description": {},
@@ -3250,10 +3242,6 @@
   "@settings_network_incomingCallType_socket_title": {},
   "settings_network_incomingCallType_title": "Incoming Call Delivery",
   "@settings_network_incomingCallType_title": {},
-  "settings_network_smsFallback_toggle": "SMS as a backup channel",
-  "@settings_network_smsFallback_toggle": {
-    "description": "Toggle label for enabling SMS fallback"
-  },
   "settings_registerStatusSnackBar_requestFailed": "Could not reach the server - please try again",
   "@settings_registerStatusSnackBar_requestFailed": {
     "description": "Shown in an error snackbar when a register-status request fails: an explicit refresh of the account registration setting, or a change of it (in which case the switch also rolls back to its previous value)."

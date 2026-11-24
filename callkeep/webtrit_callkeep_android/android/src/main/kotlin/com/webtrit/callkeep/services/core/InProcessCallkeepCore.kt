@@ -164,7 +164,7 @@ class InProcessCallkeepCore internal constructor(
         val registration = incomingRegistrations[callId]
         when (event) {
             CallLifecycleEvent.IncomingConnectionReported -> {
-                // Raw dispatch clients (SMS) have no waiter, but still receive confirmation.
+                // A call can have no waiter here, but still receives confirmation.
                 // A host failure is final: Dart may already have declined the server call.
                 if (isStaleIncomingConfirmation(callId)) return true
                 val metadata = CallMetadata.fromBundle(data)
@@ -207,7 +207,7 @@ class InProcessCallkeepCore internal constructor(
                 if (registration != null) {
                     rejectIncomingRegistration(registration, "Telecom refused registration", RaiseEnd.REFUSED)
                 } else if (isPending(callId)) {
-                    // A dispatch-only SMS registration still owns a pending reservation.
+                    // A call with no waiter can still own a pending reservation.
                     rejectUnconfirmedIncomingCall(callId)
                 }
             }
@@ -720,8 +720,8 @@ class InProcessCallkeepCore internal constructor(
                             error?.value == PIncomingCallErrorEnum.CALL_ID_ALREADY_EXISTS ||
                                 error?.value == PIncomingCallErrorEnum.CALL_ID_ALREADY_EXISTS_AND_ANSWERED
                         if (duplicate) {
-                            // A prior dispatch-only report (SMS) or a cold-start connection can
-                            // already exist in the backend. Adoption belongs to the core too.
+                            // A prior report or a cold-start connection can already exist in the
+                            // backend. Adoption belongs to the core too.
                             val result = adoptIncomingCall(metadata, error)
                             incomingRegistrations.complete(registration, Result.success(result))
                         } else {

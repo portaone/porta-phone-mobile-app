@@ -106,11 +106,6 @@ maintainability and enabling tools to parse configuration reliably.
 - `_WEBTRIT_ANDROID_RELEASE_UPLOAD_KEYSTORE_PATH` – Path for keystore directory used in Android
   release signing.
 - `WEBTRIT_HTTP_ALLOWED_DOMAINS` – List of HTTP domains allowed for cleartext traffic.
-- `WEBTRIT_CALL_TRIGGER_MECHANISM_SMS` – Enables fallback call triggering via SMS (
-  _default: **false**_).
-- `WEBTRIT_CALL_TRIGGER_MECHANISM_SMS_PREFIX` – Prefix for SMS-based call triggers.
-- `WEBTRIT_CALL_TRIGGER_MECHANISM_SMS_REGEX_PATTERN` – Regex pattern to extract call data from SMS
-  content.
 
 > Default build variables are located in [`dart_define.json`](../../dart_define.json) and can be
 > applied

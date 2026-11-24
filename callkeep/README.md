@@ -250,32 +250,6 @@ with `WebtritCallkeep.attachToEngine`. See
 
 ---
 
-## Android: SMS-triggered incoming call
-
-Android only. Allows triggering an incoming call from a specially formatted SMS — useful when push
-delivery is unreliable.
-
-**Declared by the app, not the plugin**: `RECEIVE_SMS` and the `IncomingCallSmsTriggerReceiver`
-receiver, guarded by `android:permission="android.permission.BROADCAST_SMS"` (the phone app keeps
-them in `android/app/optional-manifests/sms-receiver/`).
-
-The app chooses the prefix; the receiver ignores a message that does not contain it. The rest of the message is parsed by a caller-supplied ICU-compatible regex that captures 4 groups
-in order: `callId`, `handle`, `displayName`, `hasVideo`.
-
-```dart
-await AndroidCallkeepUtils.smsReceptionConfig.configureReceivedSms(
-  prefix: '<#> WEBTRIT:',
-  regexPattern: r'your-regex-here',
-);
-```
-
-Full regex specification: [`docs/sms_trigger_regex_requirements.md`](docs/sms_trigger_regex_requirements.md)
-
-> SMS access is a sensitive Play Store permission. You must justify its use and ensure the regex
-> only matches messages from your own backend.
-
----
-
 ## Required permissions
 
 ### Android (`AndroidManifest.xml`)
@@ -284,8 +258,6 @@ Full regex specification: [`docs/sms_trigger_regex_requirements.md`](docs/sms_tr
 <uses-permission android:name="android.permission.MANAGE_OWN_CALLS" />
 <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
 <uses-permission android:name="android.permission.FOREGROUND_SERVICE_PHONE_CALL" />
-<!-- Optional: SMS fallback, with the receiver described above -->
-<uses-permission android:name="android.permission.RECEIVE_SMS" />
 ```
 
 ### iOS (`Info.plist` / Xcode capabilities)

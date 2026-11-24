@@ -609,32 +609,6 @@ abstract class PPushRegistryDelegateFlutterApi {
   void didUpdatePushTokenForPushTypeVoIP(String? token);
 }
 
-@FlutterApi()
-abstract class PDelegateSmsReceiverFlutterApi {
-  /// Called by native side when a matching SMS is received
-  @async
-  void onSmsReceived(String text);
-}
-
-@HostApi()
-abstract class PHostSmsReceptionConfigApi {
-  /// Initializes the SMS receiver on Android and sets a prefix and regex to filter and parse messages.
-  ///
-  /// Only SMS messages starting with [messagePrefix] and matching [regexPattern]
-  /// will be processed. The [regexPattern] must contain exactly 4 capturing groups
-  /// in the following order:
-  /// 1. callId
-  /// 2. handle
-  /// 3. displayName
-  /// 4. hasVideo (true|false)
-  ///
-  /// Example:
-  /// messagePrefix: "<#> WEBTRIT:"
-  /// regexPattern: r'\{"type":"incoming","handle":"([^"]+)","callID":"([^"]+)","displayName":"([^"]+)","hasVideo":(true|false)\}'
-  @async
-  void initializeSmsReception({required String messagePrefix, required String regexPattern});
-}
-
 // ------------------------------------------------------------------------------------------------
 // Android Activity Control section
 // ------------------------------------------------------------------------------------------------

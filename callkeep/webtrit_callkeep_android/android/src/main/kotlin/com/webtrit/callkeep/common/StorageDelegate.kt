@@ -124,29 +124,6 @@ object StorageDelegate {
         fun getOutgoingCallTimeoutMs(context: Context): Long = sharedPreferences(context).getLong(OUTGOING_CALL_TIMEOUT_MS, DEFAULT_TIMEOUT_MS)
     }
 
-    object IncomingCallSmsConfig {
-        private const val SMS_PREFIX = "SMS_PREFIX"
-        private const val SMS_REGEX_PATTERN = "SMS_REGEX_PATTERN"
-
-        fun setSmsPrefix(
-            context: Context,
-            prefix: String,
-        ) {
-            sharedPreferences(context).edit().putString(SMS_PREFIX, prefix).apply()
-        }
-
-        fun getSmsPrefix(context: Context): String? = sharedPreferences(context).getString(SMS_PREFIX, null)
-
-        fun setRegexPattern(
-            context: Context,
-            pattern: String,
-        ) {
-            sharedPreferences(context).edit().putString(SMS_REGEX_PATTERN, pattern).apply()
-        }
-
-        fun getRegexPattern(context: Context): String? = sharedPreferences(context).getString(SMS_REGEX_PATTERN, null)
-    }
-
     object Logging {
         private const val LOG_FILE_PATH = "LOG_FILE_PATH_KEY"
 

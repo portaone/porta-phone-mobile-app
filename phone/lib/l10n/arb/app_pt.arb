@@ -3228,17 +3228,9 @@
   "@settings_LogoutConfirmDialog_title": {},
   "settings_missingMicrophoneIndicator_title": "Falta a permissão do microfone. Não é possível fazer chamadas.",
   "@settings_missingMicrophoneIndicator_title": {},
-  "settings_network_fallbackCalls_description": "Se as notificações push de chamadas não forem recebidas, o app receberá um SMS especial e exibirá a tela de chamada recebida.",
-  "@settings_network_fallbackCalls_description": {
-    "description": "Tooltip description for fallback SMS-based call trigger"
-  },
   "settings_network_Watch_howTheyDiffer": "Qual é a diferença",
   "@settings_network_Watch_howTheyDiffer": {
     "description": "On a watch, the row under the two ways incoming calls are delivered: opens both explanations as a page of text."
-  },
-  "settings_network_fallbackCalls_title": "Canal alternativo para chamadas recebidas",
-  "@settings_network_fallbackCalls_title": {
-    "description": "Title for fallback incoming calls section"
   },
   "settings_network_incomingCallType_pushNotification_description": "Quando não está em uso, o app para de ser executado e consome o mínimo de recursos, o que ajuda a economizar bateria. Ao chegar uma chamada, o servidor envia uma notificação push ao telefone, e o sistema operacional abre o app para tratar a chamada. No entanto, esse método não garante que todas as chamadas sejam recebidas. Se o telefone ficar inativo por um período prolongado, algumas versões do Android podem limitar as notificações push, o que pode fazer você perder uma chamada.",
   "@settings_network_incomingCallType_pushNotification_description": {},
@@ -3250,10 +3242,6 @@
   "@settings_network_incomingCallType_socket_title": {},
   "settings_network_incomingCallType_title": "Entrega de chamadas recebidas",
   "@settings_network_incomingCallType_title": {},
-  "settings_network_smsFallback_toggle": "SMS como canal de reserva",
-  "@settings_network_smsFallback_toggle": {
-    "description": "Toggle label for enabling SMS fallback"
-  },
   "settings_registerStatusSnackBar_requestFailed": "Não foi possível acessar o servidor - tente novamente",
   "@settings_registerStatusSnackBar_requestFailed": {
     "description": "Shown in an error snackbar when a register-status request fails: an explicit refresh of the account registration setting, or a change of it (in which case the switch also rolls back to its previous value)."

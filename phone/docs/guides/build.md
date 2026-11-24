@@ -17,17 +17,16 @@ see [Verifying a Change Compiles](build_verification.md).
 
 ## Optional Android Features  [Optional features](../reference/optional_features.md)
 
-The project has no build flavors. Two Android features are still decided at build time, because a
-brand that does not use them must not ship their permission or their manifest components:
+The project has no build flavors. One Android feature is still decided at build time, because a
+brand that does not use it must not ship its manifest components:
 
 * `WEBTRIT_APP_LINK_DOMAIN` - non-empty merges the deep-link intent filter into the manifest
-* `WEBTRIT_CALL_TRIGGER_MECHANISM_SMS` - `"true"` merges in `RECEIVE_SMS` and the SMS receiver
 
-Both are read from `dart_define.json`, the same file the app itself reads, so no build command has
+It is read from `dart_define.json`, the same file the app itself reads, so no build command has
 to carry a feature name. Every build prints what it resolved:
 
 ```
-Deep links: enabled, SMS call trigger: disabled
+Deep links: enabled
 ```
 
 ---

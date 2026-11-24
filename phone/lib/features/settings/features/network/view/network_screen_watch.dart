@@ -19,8 +19,7 @@ import '../models/incoming_call_type_model.dart';
 
 /// The network settings on a watch: the two ways calls are delivered as a
 /// choice, the page staying where it is; their explanations behind one row,
-/// as a page of text; the SMS fallback as a toggle pill, as offered as the
-/// phone's checkbox.
+/// as a page of text.
 class NetworkScreenWatch extends StatelessWidget {
   const NetworkScreenWatch({super.key, required this.onTypeReminder, required this.onBatteryWarning});
 
@@ -57,14 +56,6 @@ class NetworkScreenWatch extends StatelessWidget {
             leading: const Icon(Icons.info_outline),
             title: l10n.settings_network_Watch_howTheyDiffer,
             onTap: () => _onHowTheyDiffer(context, state),
-          ),
-          WatchListLabel(l10n.settings_network_fallbackCalls_title),
-          WatchToggleChip(
-            label: l10n.settings_network_smsFallback_toggle,
-            value: state.smsFallbackEnabled,
-            // As the phone's checkbox: shown enabled where the brand offers
-            // the fallback, and changing nothing.
-            onChanged: cubit.smsFallbackAvailable ? (_) {} : null,
           ),
         ],
       ),

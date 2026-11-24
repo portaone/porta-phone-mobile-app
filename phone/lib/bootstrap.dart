@@ -299,7 +299,7 @@ Future<AppDependencies> _bootstrap({
   deps.share(firebase.analytics);
 
   // Final side-effect initializations that rely on the components above
-  await trace.measure('callkeep', () => _initCallkeep(featureAccess));
+  await trace.measure('callkeep', _initCallkeep);
   await trace.measure('work-manager', _initWorkManager);
 
   final defaultPresentationConfig = (
@@ -444,7 +444,7 @@ Future<AppPermissions> _createAppPermissions(
 /// Must be called once at app startup before any background isolates are spawned.
 /// Each registration is awaited so that handles are persisted to SharedPreferences
 /// before the service starts and reads them in the background isolate.
-Future<void> _initCallkeep(FeatureAccess featureAccess) async {
+Future<void> _initCallkeep() async {
   final logger = Logger('bootstrap');
 
   // Registers the factory used by the signaling service to create a [SignalingModule]
@@ -460,7 +460,7 @@ Future<void> _initCallkeep(FeatureAccess featureAccess) async {
   }
 
   // The remaining callkeep services (Android background push isolate,
-  // persistent-mode call-event handler, SMS triggers) are Android-only; web has
+  // persistent-mode call-event handler) are Android-only; web has
   // no background isolates and iOS does not use them. kIsWeb short-circuits before
   // the dart:io Platform check (which is unavailable on web).
   if (kIsWeb || !Platform.isAndroid) return;
@@ -483,19 +483,6 @@ Future<void> _initCallkeep(FeatureAccess featureAccess) async {
     await WebtritSignalingService.setCallEventHandler(onSignalingBackgroundCallEvent);
   } catch (e, s) {
     logger.severe('setCallEventHandler failed -- call events in persistent mode may not work', e, s);
-  }
-
-  // Configures Android CallKeep to process incoming SMS messages as call triggers
-  // when the SMS fallback mechanism is enabled in the feature access config.
-  if (featureAccess.callConfig.triggerConfig.smsFallback.enabled) {
-    try {
-      await AndroidCallkeepUtils.smsReceptionConfig.configureReceivedSms(
-        prefix: EnvironmentConfig.CALL_TRIGGER_MECHANISM_SMS_PREFIX,
-        regexPattern: EnvironmentConfig.CALL_TRIGGER_MECHANISM_SMS_REGEX_PATTERN,
-      );
-    } catch (e, s) {
-      logger.severe('configureReceivedSms failed -- SMS call trigger may not work', e, s);
-    }
   }
 }
 

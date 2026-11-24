@@ -18,25 +18,21 @@ part 'network_cubit.freezed.dart';
 
 class NetworkCubit extends Cubit<NetworkState> {
   NetworkCubit(
-    this._callTriggerConfig,
     this._deviceInfo,
     this._incomingCallTypeRepository,
     this._onIncomingCallTypeChanged,
     this._callkeepPermissions, {
     NetworkCrashlyticsContext crashlyticsContext = const NetworkCrashlyticsContext(),
   }) : _crashlyticsContext = crashlyticsContext,
-       super(NetworkState(smsFallbackEnabled: _callTriggerConfig.smsFallback.enabled)) {
+       super(const NetworkState()) {
     _initializeActiveIncomingType();
   }
 
-  final CallTriggerConfig _callTriggerConfig;
   final DeviceInfo _deviceInfo;
   final IncomingCallTypeRepository _incomingCallTypeRepository;
   final Future<void> Function(IncomingCallType) _onIncomingCallTypeChanged;
   final WebtritCallkeepPermissions _callkeepPermissions;
   final NetworkCrashlyticsContext _crashlyticsContext;
-
-  bool get smsFallbackAvailable => _callTriggerConfig.smsFallback.available;
 
   void _initializeActiveIncomingType() {
     final currentType = _incomingCallTypeRepository.getIncomingCallType();

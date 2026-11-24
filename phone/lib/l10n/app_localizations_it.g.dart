@@ -3483,14 +3483,7 @@ class AppLocalizationsIt extends AppLocalizations {
       'Autorizzazione microfono mancante. Impossibile effettuare chiamate.';
 
   @override
-  String get settings_network_fallbackCalls_description =>
-      'Se le notifiche push relative alle chiamate non arrivano, l\'applicazione riceverà un SMS speciale e mostrerà la schermata delle chiamate in arrivo.';
-
-  @override
   String get settings_network_Watch_howTheyDiffer => 'Come si differenziano';
-
-  @override
-  String get settings_network_fallbackCalls_title => 'Chiamate in entrata di riserva';
 
   @override
   String get settings_network_incomingCallType_pushNotification_description =>
@@ -3508,9 +3501,6 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get settings_network_incomingCallType_title => 'Ricezione delle chiamate in entrata';
-
-  @override
-  String get settings_network_smsFallback_toggle => 'SMS come canale di riserva';
 
   @override
   String get settings_registerStatusSnackBar_requestFailed => 'Impossibile raggiungere il server - riprova';
