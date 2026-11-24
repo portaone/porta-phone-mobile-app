@@ -382,7 +382,7 @@ class ConferenceVideoSession {
       offer = await peerConnection.createOffer({if (iceRestart) 'iceRestart': true});
       await peerConnection.setLocalDescription(offer);
       _publisher.offerPending = true;
-      descriptions = await _cameraDescriptions(peerConnection);
+      descriptions = await _descriptions(peerConnection);
     } catch (e) {
       _logger.warning('publish: the offer could not be made', e);
       if (firstOffer) {
@@ -680,22 +680,7 @@ class ConferenceVideoSession {
   Future<RTCPeerConnection> _openPublisher({bool? frontCamera}) async {
     final peerConnection = await _factory.create();
     try {
-      final camera = await _userMediaBuilder.build(video: true, frontCamera: frontCamera);
-      _camera = camera;
-      final videoTracks = camera.getVideoTracks();
-      if (videoTracks.isEmpty) throw StateError('no camera track');
-      // The track is shared with the calls that send video; one of them may
-      // have it turned off, and the room was asked for the camera. It goes
-      // back as it was when the room lets it go.
-      _cameraWasEnabled = videoTracks.first.enabled;
-      videoTracks.first.enabled = true;
-      // Video only: the microphone in this stream belongs to the mixer.
-      await peerConnection.addTrack(videoTracks.first, camera);
-      for (final transceiver in await peerConnection.getTransceivers()) {
-        await transceiver.setDirection(TransceiverDirection.SendOnly);
-      }
-      _wire(_publisher, peerConnection);
-      _publisher.peerConnection = peerConnection;
+      await _wirePublisher(peerConnection, await _openCamera(frontCamera: frontCamera));
       _reportFeeds();
       return peerConnection;
     } catch (e) {
@@ -705,9 +690,34 @@ class ConferenceVideoSession {
     }
   }
 
-  /// The camera's m-line, named for Core; read after the local description,
-  /// when the transceivers have their `mid`.
-  Future<List<ConferenceVideoDescription>> _cameraDescriptions(RTCPeerConnection peerConnection) async {
+  /// Opens the camera for the room and holds it as [_camera].
+  Future<MediaStream> _openCamera({bool? frontCamera}) async {
+    final camera = await _userMediaBuilder.build(video: true, frontCamera: frontCamera);
+    _camera = camera;
+    final videoTracks = camera.getVideoTracks();
+    if (videoTracks.isEmpty) throw StateError('no camera track');
+    // The track is shared with the calls that send video; one of them may
+    // have it turned off, and the room was asked for the camera. It goes
+    // back as it was when the room lets it go.
+    _cameraWasEnabled = videoTracks.first.enabled;
+    videoTracks.first.enabled = true;
+    return camera;
+  }
+
+  /// Makes [peerConnection] the publisher, sending the video of [stream]
+  /// alone: the microphone in a camera stream belongs to the mixer.
+  Future<void> _wirePublisher(RTCPeerConnection peerConnection, MediaStream stream) async {
+    await peerConnection.addTrack(stream.getVideoTracks().first, stream);
+    for (final transceiver in await peerConnection.getTransceivers()) {
+      await transceiver.setDirection(TransceiverDirection.SendOnly);
+    }
+    _wire(_publisher, peerConnection);
+    _publisher.peerConnection = peerConnection;
+  }
+
+  /// The publisher's m-line, the camera's, named for Core. Read after the
+  /// local description, when the transceivers have their `mid`.
+  Future<List<ConferenceVideoDescription>> _descriptions(RTCPeerConnection peerConnection) async {
     final descriptions = <ConferenceVideoDescription>[];
     for (final transceiver in await peerConnection.getTransceivers()) {
       final mid = transceiver.mid;
@@ -809,22 +819,23 @@ class ConferenceVideoSession {
         _logger.warning('closing the ${side.pc.value} connection failed', e);
       }
     }
-    if (side.pc == ConferenceVideoPc.publisher) {
-      final camera = _camera;
-      _camera = null;
-      if (camera != null) {
-        // The shared track goes back as the calls want it now, or as the
-        // room found it where nobody says.
-        final enabled = callsWantCamera?.call() ?? _cameraWasEnabled;
-        if (!enabled) camera.getVideoTracks().firstOrNull?.enabled = false;
-        _cameraWasEnabled = true;
-        _reportFeeds();
-        try {
-          await _userMediaBuilder.release(camera);
-        } catch (e) {
-          _logger.warning('releasing the camera failed', e);
-        }
-      }
+    if (side.pc == ConferenceVideoPc.publisher) await _releaseCamera();
+  }
+
+  /// Lets the room's camera go: the shared track goes back as the calls want
+  /// it now, or as the room found it where nobody says.
+  Future<void> _releaseCamera() async {
+    final camera = _camera;
+    _camera = null;
+    if (camera == null) return;
+    final enabled = callsWantCamera?.call() ?? _cameraWasEnabled;
+    if (!enabled) camera.getVideoTracks().firstOrNull?.enabled = false;
+    _cameraWasEnabled = true;
+    _reportFeeds();
+    try {
+      await _userMediaBuilder.release(camera);
+    } catch (e) {
+      _logger.warning('releasing the camera failed', e);
     }
   }
 
