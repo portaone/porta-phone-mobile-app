@@ -17,7 +17,7 @@ webtrit_callkeep_web/                 in-memory implementation, no system call U
 webtrit_callkeep_linux|macos|windows/ stubs: the base class's UnimplementedError
 tool/pigeon.sh                        regenerates one platform package's Pigeon output
 docs/                                 release_process.md, external-flutter-engines.md,
-                                      sms_trigger_regex_requirements.md, ios-call-waiting-tone.md
+                                      ios-call-waiting-tone.md
 ```
 
 ## Toolchain
@@ -101,7 +101,6 @@ not versioned); it changes only at an app release, in a commit of its own,
 | change Objective-C, the iOS Pigeon definition, call groups, hold or mute on iOS | [webtrit_callkeep_ios/README.md](webtrit_callkeep_ios/README.md), `webtrit_callkeep_ios/AGENTS.md` | `callkeep-ios-change` |
 | add or change a method of the public API | `webtrit_callkeep_platform_interface/AGENTS.md`, [pigeon-apis.md](webtrit_callkeep_android/docs/pigeon-apis.md) | both of the above |
 | host callkeep on an engine of your own | [external-flutter-engines.md](docs/external-flutter-engines.md) | |
-| change the SMS call trigger | [sms_trigger_regex_requirements.md](docs/sms_trigger_regex_requirements.md) | `callkeep-android-change` |
 | bump the plugin version at a release | [release_process.md](docs/release_process.md) | `release-cut` |
 | push a change | [gerrit_push.md](../docs/gerrit_push.md) | `gerrit-push` |
 

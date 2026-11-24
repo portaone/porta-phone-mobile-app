@@ -47,7 +47,7 @@ assignment is the single point to change IPC strategy without touching call site
 Known consumers: `ForegroundService`, `ConnectionsApi`, `LockScreenPresence` (whether a call is
 there when the call alert opens the Activity), `BackgroundPushNotificationIsolateBootstrapApi`, `ExternalEngineCallApi`,
 `IncomingCallService` + its handlers/controller, `ActiveCallService`,
-`IncomingCallSmsTriggerReceiver`, `StandaloneCallService` (event delivery), `CallDiagnostics`.
+`StandaloneCallService` (event delivery), `CallDiagnostics`.
 
 ## State Query API
 
@@ -166,9 +166,8 @@ synchronous throw -- drains the reservation exactly once before the waiting call
 
 ### Incoming registration
 
-The signaling and push Pigeon entry points and the SMS trigger receiver all call
-`registerIncomingCall(metadata, client)`. The receiver keeps its broadcast alive with
-`goAsync()` until the operation answers, which the registration deadline bounds. This suspend
+The signaling and push Pigeon entry points both call
+`registerIncomingCall(metadata, client)`. This suspend
 operation waits for the backend's outcome or the registration deadline, rather than returning
 dispatch acceptance. The core checks the never-presented-call guard, adopts an existing call
 when appropriate, joins a registration already in progress or starts a new one. The first caller

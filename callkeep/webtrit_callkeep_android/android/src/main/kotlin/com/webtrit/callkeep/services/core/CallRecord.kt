@@ -56,7 +56,7 @@ internal data class CallRecord(
     // time (a blind transfer repeated offers the same id): that registration is a new attempt.
     val endedWithoutFlutterStateAtMs: Long? = null,
     // The app reported this call itself (its foreground bridge registered it), as opposed to a
-    // push or an SMS trigger alone. Such a call is the app's already and is not presented back
+    // push alone. Such a call is the app's already and is not presented back
     // to it. Lives for one life of the call id: cleared when the call terminates, so a
     // transfer-back that reuses the id starts unreported.
     val reportedByApp: Boolean = false,

@@ -23,7 +23,6 @@ outgoing call screens are rendered entirely by the Flutter application.
 | Feature | Notes |
 | --- | --- |
 | Android background/push notification service | Android-only |
-| Android SMS reception | Android-only |
 | Android activity control (lock screen, wake) | Android-only |
 | iOS PushKit / push registry | iOS-only |
 | Native permissions (phone state, etc.) | Returns `granted` for all |

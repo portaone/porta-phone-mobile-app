@@ -79,7 +79,7 @@ Telecom lets one self-managed incoming call ring at a time. The core holds the s
 (`incomingCallWhileRinging: queue`, the default; with `reject` the flow is the next section's).
 
 ```text
-1.  B is reported (signaling, push or SMS) while A rings or is being registered
+1.  B is reported (signaling or push) while A rings or is being registered
         |   CallkeepCore.registerIncomingCall(B) -> no error, but no dispatch
         |   IncomingCallQueue keeps B; QueuedCallNotifications posts its silent notification
         |   The app holds B as an ordinary incoming call; the caller of B hears ringback

@@ -17,12 +17,6 @@
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
 
     <!--
-        Required only if the SMS receiver is used.
-        Allows the app to receive SMS messages to trigger incoming calls as a fallback when push notifications fail.
-    -->
-    <!-- <uses-permission android:name="android.permission.RECEIVE_SMS" /> -->
-
-    <!--
         Signature-level permission used to protect internal IC_RELEASE broadcasts.
         Only components signed with the same key can send or receive these broadcasts.
     -->
@@ -174,31 +168,5 @@
         <receiver
             android:name=".services.receivers.QueuedCallActionReceiver"
             android:exported="false" />
-
-        <!--
-          [Optional Integration] SMS Fallback Receiver
-
-          This receiver is used to trigger the foreground service when an incoming call is announced via SMS,
-          typically as a fallback mechanism when push notifications are unavailable.
-
-          This component is NOT enabled by default and is not required for all use cases.
-          If your application supports incoming calls via SMS fallback, you must:
-
-             1. Add the following <receiver> declaration to your app's AndroidManifest.xml
-             2. Add the RECEIVE_SMS permission at the manifest level:
-                <uses-permission android:name="android.permission.RECEIVE_SMS" />
-                -->
-
-        <!--
-        <receiver
-            android:name="com.webtrit.callkeep.services.receivers.IncomingCallSmsTriggerReceiver"
-            android:enabled="true"
-            android:exported="true"
-            android:permission="android.permission.BROADCAST_SMS">
-            <intent-filter>
-                <action android:name="android.provider.Telephony.SMS_RECEIVED" />
-            </intent-filter>
-        </receiver>
-        -->
     </application>
 </manifest>

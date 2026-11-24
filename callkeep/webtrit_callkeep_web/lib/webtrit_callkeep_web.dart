@@ -4,7 +4,7 @@ import 'package:webtrit_callkeep_platform_interface/webtrit_callkeep_platform_in
 ///
 /// Manages call state in memory and forwards events to the registered
 /// [CallkeepDelegate]. Platform-specific features (Android background
-/// services, SMS, lock-screen control, iOS PushKit) are no-ops.
+/// services, lock-screen control, iOS PushKit) are no-ops.
 class WebtritCallkeepWeb extends WebtritCallkeepPlatform {
   /// Registers this class as the default instance of [WebtritCallkeepPlatform].
   static void registerWith([Object? registrar]) {
@@ -381,13 +381,6 @@ class WebtritCallkeepWeb extends WebtritCallkeepPlatform {
 
   @override
   Future<dynamic> releaseCallBackgroundPushNotificationService(String callId) async {}
-
-  // ---------------------------------------------------------------------------
-  // Android SMS reception (no-op on web)
-  // ---------------------------------------------------------------------------
-
-  @override
-  Future<void> initializeSmsReception({required String messagePrefix, required String regexPattern}) async {}
 
   // ---------------------------------------------------------------------------
   // Android activity control (no-op on web)

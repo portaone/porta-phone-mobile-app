@@ -38,17 +38,6 @@ once Telecom shows it, `IncomingCallService` starts and runs the callback in a n
 `performEndCall` and `performHandoff`; the callback's future completing is what stops the service.
 Details: [background-services.md](docs/background-services.md).
 
-## SMS trigger
-
-The app turns it on: it declares `RECEIVE_SMS` and the `IncomingCallSmsTriggerReceiver` receiver
-(guarded by `android:permission="android.permission.BROADCAST_SMS"`) in its own manifest - both
-are only comments in this package's manifest - and calls
-`AndroidCallkeepUtils.smsReceptionConfig.configureReceivedSms(prefix:, regexPattern:)`. The
-prefix is the app's configuration, stored with the regex in `StorageDelegate`; the receiver
-takes a message whose body contains it and that the regex matches. A matched message goes
-through `CallkeepCore.registerIncomingCall`, as push and signaling do. The regex:
-[sms_trigger_regex_requirements.md](../docs/sms_trigger_regex_requirements.md).
-
 ## Key invariants
 
 - `CallMetadata` must not be `Parcelable` or `@Parcelize`: it reaches `system_server` inside a

@@ -17,7 +17,7 @@ Flutter app is backgrounded or killed.
 
 ### Responsibility
 
-Spawned when an FCM push notification (or SMS trigger) announces an incoming call. It:
+Spawned when an FCM push notification announces an incoming call. It:
 
 1. Starts a short-lived Flutter background isolate.
 2. Shows the incoming-call notification / system UI.
