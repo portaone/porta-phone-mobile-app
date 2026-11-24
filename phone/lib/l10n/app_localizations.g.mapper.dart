@@ -249,6 +249,11 @@ extension AppLocalizationsExtension on AppLocalizations {
         call_SystemErrorDialog_description,
       'callStatus_serviceUnavailable' => callStatus_serviceUnavailable,
       'call_SystemErrorDialog_title' => call_SystemErrorDialog_title,
+      'call_ScreenShareTile_title' => call_ScreenShareTile_title,
+      'call_ScreenShareTile_stop' => call_ScreenShareTile_stop,
+      'call_screenShare_actionLabel_share' =>
+        call_screenShare_actionLabel_share,
+      'call_screenShare_actionLabel_stop' => call_screenShare_actionLabel_stop,
       'call_ThumbnailAvatar_currentlyNoActiveCall' =>
         call_ThumbnailAvatar_currentlyNoActiveCall,
       'call_videoBackground_actionLabel_disableBlur' =>

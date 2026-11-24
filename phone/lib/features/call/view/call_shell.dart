@@ -204,8 +204,12 @@ class _CallShellState extends State<CallShell> {
       case CallDisplay.screen:
         final activeCall = state.activeCalls.current;
         // In a room the host sees himself only in full screen, as a tile; a
-        // video call outside the room keeps its preview.
-        if (activeCall.isCameraActive && !state.conference.isLeg(activeCall.callId)) {
+        // video call outside the room keeps its preview. While the screen is
+        // shown in place of the camera, a tile saying so takes the preview's
+        // place.
+        if (activeCall.screenShare == ScreenShareStatus.sharing) {
+          _showScreenShareTile(context);
+        } else if (activeCall.isCameraActive && !state.conference.isLeg(activeCall.callId)) {
           _showLocalCameraPreview(context, state);
         } else {
           _hideOverlay();
@@ -290,6 +294,29 @@ class _CallShellState extends State<CallShell> {
             onSwitchCameraPressed: activeCall.frontCamera == null
                 ? null
                 : () => callBloc.add(CallControlEvent.cameraSwitched(activeCall.callId)),
+          );
+        },
+      ),
+    );
+  }
+
+  void _showScreenShareTile(BuildContext context) {
+    final callBloc = context.read<CallBloc>();
+
+    _thumbnailManager.show(
+      context,
+      child: BlocBuilder<CallBloc, CallState>(
+        bloc: callBloc,
+        buildWhen: (previous, current) =>
+            previous.activeCalls.isEmpty ||
+            current.activeCalls.isEmpty ||
+            previous.activeCalls.current.callId != current.activeCalls.current.callId,
+        builder: (context, state) {
+          if (state.activeCalls.isEmpty) return const SizedBox.shrink();
+          final callId = state.activeCalls.current.callId;
+          return ScreenShareTile(
+            orientation: MediaQuery.of(context).orientation,
+            onStopPressed: () => callBloc.add(CallControlEvent.screenShareStopped(callId)),
           );
         },
       ),

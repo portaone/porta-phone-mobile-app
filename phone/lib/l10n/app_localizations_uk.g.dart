@@ -724,6 +724,18 @@ class AppLocalizationsUk extends AppLocalizations {
   String get call_SystemErrorDialog_title => 'Системна помилка';
 
   @override
+  String get call_ScreenShareTile_title => 'Показ екрана';
+
+  @override
+  String get call_ScreenShareTile_stop => 'Зупинити';
+
+  @override
+  String get call_screenShare_actionLabel_share => 'Показати екран';
+
+  @override
+  String get call_screenShare_actionLabel_stop => 'Зупинити показ';
+
+  @override
   String get call_ThumbnailAvatar_currentlyNoActiveCall => 'Зараз немає активних дзвінків';
 
   @override

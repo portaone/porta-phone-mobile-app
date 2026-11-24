@@ -238,8 +238,10 @@ class CallControls extends StatelessWidget {
 
   final CallStatus callStatus;
 
-  /// The view options offered in the toolbar; they belong to the screen, which
-  /// owns how the video is fitted and what is behind it.
+  /// The options offered in the toolbar menu; they belong to the screen, which
+  /// owns how the video is fitted and what is behind it, and decides which
+  /// apply. The menu is there only while it has an item: the picture's options
+  /// while the far end's video is, the screen share where a call can share.
   final List<PopupMenuEntry<void>> popupMenuItems;
 
   final CallScreenParams params;
@@ -268,7 +270,7 @@ class CallControls extends StatelessWidget {
             style: style?.callInfo,
           ),
           actions: [
-            if (activeCalls.shouldAutoCompact)
+            if (popupMenuItems.isNotEmpty)
               SemanticAction.button(
                 label: context.l10n.call_settings_additional_options,
                 identifier: callActionsOptionsId,

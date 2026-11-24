@@ -706,6 +706,18 @@ class AppLocalizationsPt extends AppLocalizations {
   String get call_SystemErrorDialog_title => 'Erro do sistema';
 
   @override
+  String get call_ScreenShareTile_title => 'Compartilhando a tela';
+
+  @override
+  String get call_ScreenShareTile_stop => 'Parar';
+
+  @override
+  String get call_screenShare_actionLabel_share => 'Compartilhar tela';
+
+  @override
+  String get call_screenShare_actionLabel_stop => 'Parar compartilhamento';
+
+  @override
   String get call_ThumbnailAvatar_currentlyNoActiveCall => 'No momento, não há chamada ativa';
 
   @override

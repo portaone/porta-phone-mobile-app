@@ -702,6 +702,18 @@ class AppLocalizationsEn extends AppLocalizations {
   String get call_SystemErrorDialog_title => 'System Error';
 
   @override
+  String get call_ScreenShareTile_title => 'Sharing screen';
+
+  @override
+  String get call_ScreenShareTile_stop => 'Stop';
+
+  @override
+  String get call_screenShare_actionLabel_share => 'Share screen';
+
+  @override
+  String get call_screenShare_actionLabel_stop => 'Stop sharing';
+
+  @override
   String get call_ThumbnailAvatar_currentlyNoActiveCall => 'Currently, there is no active call';
 
   @override

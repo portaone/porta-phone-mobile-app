@@ -128,6 +128,13 @@ const String callFrontCameraPreviewId = 'callFrontCameraPreview';
 const callFrontCameraPreviewKey = Key(callFrontCameraPreviewId);
 const String callActiveThumbnailId = 'callActiveThumbnail';
 const String callControlsToggleId = 'callControlsToggle';
+
+/// The toolbar menu's entry that starts or stops showing the phone's screen in the call.
+const String callActionsScreenShareId = 'callActionsScreenShare';
+
+/// The tile that stands in for the camera preview while the screen is shown, and its Stop.
+const String callScreenShareTileId = 'callScreenShareTile';
+const String callScreenShareStopId = 'callScreenShareStop';
 const String callRowId = 'callRow';
 
 /// The state of a row of the list of calls: exactly one of the three is a

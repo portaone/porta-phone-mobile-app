@@ -25,6 +25,7 @@ export 'call_screen_home_scope.dart';
 export 'call_toolbar_status.dart';
 export 'draggable_thumbnail.dart';
 export 'local_camera_preview_thumbnail.dart';
+export 'screen_share_tile.dart';
 export 'popup_menu.dart';
 export 'remote_video_view_overlay.dart';
 export 'rtc_stream_view.dart';

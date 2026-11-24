@@ -89,7 +89,7 @@ ActiveCall makeCall({
 /// either way. [framesArrive] false is a far side that announces video but
 /// never delivers a frame worth showing: no track, so no probe ever succeeds.
 class VideoCall extends ActiveCall {
-  VideoCall({this.cameraOn = true, this.framesArrive = true, super.held})
+  VideoCall({this.cameraOn = true, this.framesArrive = true, super.held, super.remoteCameraEnabled})
     : _remoteStream = framesArrive ? _UnprobableRemoteStream() : null,
       super(
         callId: 'video',
@@ -174,6 +174,7 @@ Widget buildCallScaffold(
   DestinationPickingCubit? picking,
   bool canStartAttendedTransfer = true,
   AddParticipantAvailability addParticipantAvailability = AddParticipantAvailability.hidden,
+  bool canShareScreen = false,
 }) {
   Widget scaffold = BlocProvider<CallBloc>.value(
     value: callBloc,
@@ -203,6 +204,7 @@ Widget buildCallScaffold(
           ).handOverFor(focusedCall.callId),
       canStartAttendedTransfer: canStartAttendedTransfer,
       addParticipantAvailability: addParticipantAvailability,
+      canShareScreen: canShareScreen,
     ),
   );
   // Only a transfer or a call to join that asks the lists for a choice needs

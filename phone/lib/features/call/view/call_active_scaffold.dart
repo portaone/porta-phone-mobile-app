@@ -38,6 +38,7 @@ class CallActiveScaffold extends StatefulWidget {
     this.handOver,
     this.addParticipantAvailability = AddParticipantAvailability.hidden,
     this.voiceNoiseReductionFailed = false,
+    this.canShareScreen = false,
   });
 
   final CallStatus callStatus;
@@ -81,6 +82,11 @@ class CallActiveScaffold extends StatefulWidget {
 
   /// Whether the voice noise reduction asked for did not start on the open microphone.
   final bool voiceNoiseReductionFailed;
+
+  /// Whether the focused call can show the phone's screen now ([CallState.canShareScreen], which
+  /// also says whether this phone can share at all); the menu offers to start a share only then,
+  /// and to stop one whenever it runs.
+  final bool canShareScreen;
 
   /// Whether the room has stood aside for a call outside it
   /// ([CallState.conferenceMustPark]).
@@ -197,12 +203,15 @@ class CallActiveScaffoldState extends State<CallActiveScaffold> {
   /// hold and one resumes, the other would see video start while still held)
   /// and while another call is focused (the controls describe that one, and a
   /// live picture of somebody else behind them would put two people on screen
-  /// at once).
+  /// at once), and while the far end says it sends no picture: a line that
+  /// stopped sending - a screen share ended where no camera follows - would
+  /// freeze on its last frame.
   bool get _remoteVideoHidden {
     final activeCall = widget.activeCalls.current;
     // In a room every participant's picture is in the room's own rows and
     // tiles; one leg's call video behind them would single that one out.
     return activeCall.held ||
+        activeCall.remoteCameraEnabled == false ||
         widget.focusedCall.callId != activeCall.callId ||
         widget.conference.isLeg(activeCall.callId);
   }
@@ -632,27 +641,56 @@ class CallActiveScaffoldState extends State<CallActiveScaffold> {
     _callBloc.add(CallControlEvent.ended(linked.callId, endedBy: CallkeepEndedBy.user));
   }
 
-  /// Generates the list of menu items for the call options popup.
+  /// Generates the list of menu items for the call options popup; the toolbar
+  /// shows the menu only when the list has something in it.
   ///
-  /// The list always includes the video fit toggle. The background mode toggle
-  /// is conditionally added only when the video is in 'contain' mode, as the
-  /// background is not visible in 'cover' mode.
+  /// The picture's items - the video fit toggle, and the background mode toggle
+  /// in 'contain' mode only, as the background is not visible in 'cover' mode -
+  /// are there while the far end's video is ([ActiveCallListAutoCompact.shouldAutoCompact]).
+  /// The screen share item follows them where the call can share
+  /// ([canShareScreen]), in audio calls too: there it is the menu's one item.
   List<PopupMenuEntry<void>> get _buildPopupMenuItems {
     final iconColor = Theme.of(context).colorScheme.onSurface;
+    final screenShare = _screenShareMenuItem(iconColor);
 
     return [
-      CallPopupMenuItem(
-        onTap: _onVideoFitTogglePressed,
-        text: _videoFit.actionLabelL10n(context),
-        icon: Icon(_videoFit.actionIcon, color: iconColor),
-      ),
-      if (_videoFit.isContain)
+      if (widget.activeCalls.shouldAutoCompact) ...[
         CallPopupMenuItem(
-          onTap: _onBlurTogglePressed,
-          text: _backgroundMode.actionLabelL10n(context),
-          icon: Icon(_backgroundMode.actionIcon, color: iconColor),
+          onTap: _onVideoFitTogglePressed,
+          text: _videoFit.actionLabelL10n(context),
+          icon: Icon(_videoFit.actionIcon, color: iconColor),
         ),
+        if (_videoFit.isContain)
+          CallPopupMenuItem(
+            onTap: _onBlurTogglePressed,
+            text: _backgroundMode.actionLabelL10n(context),
+            icon: Icon(_backgroundMode.actionIcon, color: iconColor),
+          ),
+      ],
+      ?screenShare,
     ];
+  }
+
+  /// Starts showing the phone's screen in the focused call, or stops it while it is shown; `null`
+  /// where there is nothing to offer: a phone that cannot share, or a call that cannot (held, a
+  /// leg of the room, not answered) - both are [canShareScreen].
+  CallPopupMenuItem<void>? _screenShareMenuItem(Color iconColor) {
+    final callId = widget.focusedCall.callId;
+    if (widget.focusedCall.screenShare != null) {
+      return CallPopupMenuItem(
+        identifier: callActionsScreenShareId,
+        onTap: () => _callBloc.add(CallControlEvent.screenShareStopped(callId)),
+        text: context.l10n.call_screenShare_actionLabel_stop,
+        icon: Icon(Icons.stop_screen_share_outlined, color: iconColor),
+      );
+    }
+    if (!widget.canShareScreen) return null;
+    return CallPopupMenuItem(
+      identifier: callActionsScreenShareId,
+      onTap: () => _callBloc.add(CallControlEvent.screenShareStarted(callId)),
+      text: context.l10n.call_screenShare_actionLabel_share,
+      icon: Icon(Icons.screen_share_outlined, color: iconColor),
+    );
   }
 
   void _onVideoFitTogglePressed() {

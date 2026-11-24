@@ -657,6 +657,22 @@
   "@call_SystemErrorDialog_description": {},
   "call_SystemErrorDialog_title": "Системна помилка",
   "@call_SystemErrorDialog_title": {},
+  "call_ScreenShareTile_title": "Показ екрана",
+  "@call_ScreenShareTile_title": {
+    "description": "On the small tile that replaces the own camera preview while the phone's screen is shown to the other side of the call."
+  },
+  "call_ScreenShareTile_stop": "Зупинити",
+  "@call_ScreenShareTile_stop": {
+    "description": "Button on the screen sharing tile of the call screen; stops showing the phone's screen to the other side."
+  },
+  "call_screenShare_actionLabel_share": "Показати екран",
+  "@call_screenShare_actionLabel_share": {
+    "description": "Entry of the call screen's options menu: shows the phone's screen to the other side of the call instead of the camera."
+  },
+  "call_screenShare_actionLabel_stop": "Зупинити показ",
+  "@call_screenShare_actionLabel_stop": {
+    "description": "Entry of the call screen's options menu while the phone's screen is shown: stops showing it and gives the call its camera back if it was on."
+  },
   "call_ThumbnailAvatar_currentlyNoActiveCall": "Зараз немає активних дзвінків",
   "@call_ThumbnailAvatar_currentlyNoActiveCall": {},
   "call_videoBackground_actionLabel_disableBlur": "Вимкнути розмиття",

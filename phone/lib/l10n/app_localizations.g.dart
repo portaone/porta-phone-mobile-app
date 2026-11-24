@@ -1249,6 +1249,30 @@ abstract class AppLocalizations {
   /// **'System Error'**
   String get call_SystemErrorDialog_title;
 
+  /// On the small tile that replaces the own camera preview while the phone's screen is shown to the other side of the call.
+  ///
+  /// In en, this message translates to:
+  /// **'Sharing screen'**
+  String get call_ScreenShareTile_title;
+
+  /// Button on the screen sharing tile of the call screen; stops showing the phone's screen to the other side.
+  ///
+  /// In en, this message translates to:
+  /// **'Stop'**
+  String get call_ScreenShareTile_stop;
+
+  /// Entry of the call screen's options menu: shows the phone's screen to the other side of the call instead of the camera.
+  ///
+  /// In en, this message translates to:
+  /// **'Share screen'**
+  String get call_screenShare_actionLabel_share;
+
+  /// Entry of the call screen's options menu while the phone's screen is shown: stops showing it and gives the call its camera back if it was on.
+  ///
+  /// In en, this message translates to:
+  /// **'Stop sharing'**
+  String get call_screenShare_actionLabel_stop;
+
   /// No description provided for @call_ThumbnailAvatar_currentlyNoActiveCall.
   ///
   /// In en, this message translates to:

@@ -99,6 +99,7 @@ class _CallScreenState extends State<CallScreen> with AutoRouteAwareStateMixin {
               ),
               conference: state.conference,
               invitedVideo: state.invitedVideo,
+              canShareScreen: state.canShareScreen(state.focusedCall!.callId),
               voiceNoiseReductionFailed: state.voiceNoiseReductionFailed,
               localePlaceholderBuilder: widget.localePlaceholderBuilder,
               remotePlaceholderBuilder: widget.remotePlaceholderBuilder,

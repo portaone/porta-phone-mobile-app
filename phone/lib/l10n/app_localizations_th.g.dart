@@ -691,6 +691,18 @@ class AppLocalizationsTh extends AppLocalizations {
   String get call_SystemErrorDialog_title => 'ข้อผิดพลาดของระบบ';
 
   @override
+  String get call_ScreenShareTile_title => 'กำลังแชร์หน้าจอ';
+
+  @override
+  String get call_ScreenShareTile_stop => 'หยุด';
+
+  @override
+  String get call_screenShare_actionLabel_share => 'แชร์หน้าจอ';
+
+  @override
+  String get call_screenShare_actionLabel_stop => 'หยุดแชร์';
+
+  @override
   String get call_ThumbnailAvatar_currentlyNoActiveCall => 'ขณะนี้ไม่มีสายที่ใช้งานอยู่';
 
   @override

@@ -707,6 +707,18 @@ class AppLocalizationsIt extends AppLocalizations {
   String get call_SystemErrorDialog_title => 'Errore di sistema';
 
   @override
+  String get call_ScreenShareTile_title => 'Condivisione schermo';
+
+  @override
+  String get call_ScreenShareTile_stop => 'Interrompi';
+
+  @override
+  String get call_screenShare_actionLabel_share => 'Condividi schermo';
+
+  @override
+  String get call_screenShare_actionLabel_stop => 'Interrompi condivisione';
+
+  @override
   String get call_ThumbnailAvatar_currentlyNoActiveCall => 'Actualmente, no hay ninguna llamada activa';
 
   @override

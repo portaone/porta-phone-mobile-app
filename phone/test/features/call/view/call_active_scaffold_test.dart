@@ -796,6 +796,17 @@ void main() {
       await teardownCallScaffold(tester);
     });
 
+    testWidgets('a far end that says its video is off shows its avatar, not its last frame', (tester) async {
+      // A picture that stopped arriving - a screen share ended on a line that then sends nothing -
+      // would freeze on its last frame: the far end's word that it sends no picture is taken.
+      final stopped = VideoCall(remoteCameraEnabled: false);
+      await pumpCallScaffold(tester, buildCallScaffold(callBloc, activeCalls: [stopped], focusedCall: stopped));
+      await tester.pump(const Duration(milliseconds: 1));
+
+      expect(find.byType(CallRemoteAvatar), findsOneWidget);
+      await teardownCallScaffold(tester);
+    });
+
     testWidgets('with a held call focused, the avatar shows that call, not the live one', (tester) async {
       tester.view.physicalSize = const Size(1080, 2400);
       tester.view.devicePixelRatio = 3;
