@@ -3450,14 +3450,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get settings_missingMicrophoneIndicator_title => 'Missing microphone permission. Unable to make calls.';
 
   @override
-  String get settings_network_fallbackCalls_description =>
-      'If push notifications about calls are not received, the app will receive a special SMS and display the incoming call screen.';
-
-  @override
   String get settings_network_Watch_howTheyDiffer => 'How they differ';
-
-  @override
-  String get settings_network_fallbackCalls_title => 'Fallback Incoming Calls';
 
   @override
   String get settings_network_incomingCallType_pushNotification_description =>
@@ -3475,9 +3468,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get settings_network_incomingCallType_title => 'Incoming Call Delivery';
-
-  @override
-  String get settings_network_smsFallback_toggle => 'SMS as a backup channel';
 
   @override
   String get settings_registerStatusSnackBar_requestFailed => 'Could not reach the server - please try again';

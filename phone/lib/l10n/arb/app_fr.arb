@@ -3145,16 +3145,8 @@
   "@settings_LogoutConfirmDialog_title": {},
   "settings_missingMicrophoneIndicator_title": "Autorisation du microphone manquante. Impossible de passer des appels.",
   "@settings_missingMicrophoneIndicator_title": {},
-  "settings_network_fallbackCalls_description": "Si les notifications push d'appels ne sont pas reçues, l'application recevra un SMS spécial et affichera l'écran d'appel entrant.",
-  "@settings_network_fallbackCalls_description": {
-    "description": "Tooltip description for fallback SMS-based call trigger"
-  },
   "settings_network_Watch_howTheyDiffer": "Quelle différence",
   "@settings_network_Watch_howTheyDiffer": {},
-  "settings_network_fallbackCalls_title": "Appels entrants de secours",
-  "@settings_network_fallbackCalls_title": {
-    "description": "Title for fallback incoming calls section"
-  },
   "settings_network_incomingCallType_pushNotification_description": "Lorsque l'application n'est pas utilisée, elle cesse de fonctionner et consomme peu de ressources, ce qui préserve la batterie. Lors d'un appel entrant, le serveur envoie une notification push au téléphone, demandant au système d'exploitation mobile de lancer l'application pour gérer l'appel. Toutefois, cette méthode ne garantit pas que tous les appels seront reçus. Si le téléphone est resté inactif longtemps, certaines versions d'Android peuvent limiter les notifications push, ce qui risque de vous faire manquer un appel entrant.",
   "@settings_network_incomingCallType_pushNotification_description": {},
   "settings_network_incomingCallType_pushNotification_title": "Notification push",
@@ -3165,10 +3157,6 @@
   "@settings_network_incomingCallType_socket_title": {},
   "settings_network_incomingCallType_title": "Réception des appels entrants",
   "@settings_network_incomingCallType_title": {},
-  "settings_network_smsFallback_toggle": "SMS comme canal de secours",
-  "@settings_network_smsFallback_toggle": {
-    "description": "Toggle label for enabling SMS fallback"
-  },
   "settings_registerStatusSnackBar_requestFailed": "Serveur inaccessible - réessayez",
   "@settings_registerStatusSnackBar_requestFailed": {
     "description": "Shown in an error snackbar when a register-status request fails: an explicit refresh of the account registration setting, or a change of it (in which case the switch also rolls back to its previous value)."

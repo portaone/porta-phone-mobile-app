@@ -27,20 +27,20 @@ $NetworkStateCopyWith<NetworkState> get copyWith => _$NetworkStateCopyWithImpl<N
 @override
 bool operator ==(Object other) {
   final _this = this as NetworkState;
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is NetworkState&&const DeepCollectionEquality().equals(other.incomingCallTypeModels, _this.incomingCallTypeModels)&&const DeepCollectionEquality().equals(other.incomingCallTypesRemainder, _this.incomingCallTypesRemainder)&&(identical(other.smsFallbackEnabled, _this.smsFallbackEnabled) || other.smsFallbackEnabled == _this.smsFallbackEnabled));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is NetworkState&&const DeepCollectionEquality().equals(other.incomingCallTypeModels, _this.incomingCallTypeModels)&&const DeepCollectionEquality().equals(other.incomingCallTypesRemainder, _this.incomingCallTypesRemainder));
 }
 
 
 @override
 int get hashCode {
   final _this = this as NetworkState;
-  return Object.hash(runtimeType,const DeepCollectionEquality().hash(_this.incomingCallTypeModels),const DeepCollectionEquality().hash(_this.incomingCallTypesRemainder),_this.smsFallbackEnabled);
+  return Object.hash(runtimeType,const DeepCollectionEquality().hash(_this.incomingCallTypeModels),const DeepCollectionEquality().hash(_this.incomingCallTypesRemainder));
 }
 
 @override
 String toString() {
   final _this = this as NetworkState;
-  return 'NetworkState(incomingCallTypeModels: ${_this.incomingCallTypeModels}, incomingCallTypesRemainder: ${_this.incomingCallTypesRemainder}, smsFallbackEnabled: ${_this.smsFallbackEnabled})';
+  return 'NetworkState(incomingCallTypeModels: ${_this.incomingCallTypeModels}, incomingCallTypesRemainder: ${_this.incomingCallTypesRemainder})';
 }
 
 
@@ -51,7 +51,7 @@ abstract mixin class $NetworkStateCopyWith<$Res>  {
   factory $NetworkStateCopyWith(NetworkState value, $Res Function(NetworkState) _then) = _$NetworkStateCopyWithImpl;
 @useResult
 $Res call({
- List<IncomingCallTypeModel> incomingCallTypeModels, List<IncomingCallType> incomingCallTypesRemainder, bool smsFallbackEnabled
+ List<IncomingCallTypeModel> incomingCallTypeModels, List<IncomingCallType> incomingCallTypesRemainder
 });
 
 
@@ -68,12 +68,11 @@ class _$NetworkStateCopyWithImpl<$Res>
 
 /// Create a copy of NetworkState
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? incomingCallTypeModels = null,Object? incomingCallTypesRemainder = null,Object? smsFallbackEnabled = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? incomingCallTypeModels = null,Object? incomingCallTypesRemainder = null,}) {
   return _then(NetworkState(
 incomingCallTypeModels: null == incomingCallTypeModels ? _self.incomingCallTypeModels : incomingCallTypeModels // ignore: cast_nullable_to_non_nullable
 as List<IncomingCallTypeModel>,incomingCallTypesRemainder: null == incomingCallTypesRemainder ? _self.incomingCallTypesRemainder : incomingCallTypesRemainder // ignore: cast_nullable_to_non_nullable
-as List<IncomingCallType>,smsFallbackEnabled: null == smsFallbackEnabled ? _self.smsFallbackEnabled : smsFallbackEnabled // ignore: cast_nullable_to_non_nullable
-as bool,
+as List<IncomingCallType>,
   ));
 }
 

@@ -3433,14 +3433,7 @@ class AppLocalizationsTh extends AppLocalizations {
   String get settings_missingMicrophoneIndicator_title => 'ไม่มีสิทธิ์ใช้ไมโครโฟน ไม่สามารถโทรออกได้';
 
   @override
-  String get settings_network_fallbackCalls_description =>
-      'หากไม่ได้รับการแจ้งเตือนแบบพุชเกี่ยวกับสาย แอปจะรับ SMS พิเศษและแสดงหน้าจอสายเรียกเข้า';
-
-  @override
   String get settings_network_Watch_howTheyDiffer => 'ต่างกันอย่างไร';
-
-  @override
-  String get settings_network_fallbackCalls_title => 'สายเรียกเข้าสำรอง';
 
   @override
   String get settings_network_incomingCallType_pushNotification_description =>
@@ -3458,9 +3451,6 @@ class AppLocalizationsTh extends AppLocalizations {
 
   @override
   String get settings_network_incomingCallType_title => 'การส่งสายเรียกเข้า';
-
-  @override
-  String get settings_network_smsFallback_toggle => 'SMS เป็นช่องทางสำรอง';
 
   @override
   String get settings_registerStatusSnackBar_requestFailed => 'ไม่สามารถติดต่อเซิร์ฟเวอร์ได้ - โปรดลองอีกครั้ง';

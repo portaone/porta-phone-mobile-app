@@ -78,24 +78,6 @@ class _NetworkScreenState extends State<NetworkScreen> {
                     },
                   ),
                 ),
-                ListTile(
-                  title: Text(
-                    context.l10n.settings_network_fallbackCalls_title,
-                    style: Theme.of(context).textTheme.titleMedium,
-                  ),
-                  trailing: InfoTooltip(message: context.l10n.settings_network_fallbackCalls_description),
-                ),
-                CheckboxListTile(
-                  value: state.smsFallbackEnabled,
-                  enabled: _cubit.smsFallbackAvailable,
-                  controlAffinity: ListTileControlAffinity.leading,
-                  visualDensity: VisualDensity.compact,
-                  onChanged: (value) {},
-                  title: Text(
-                    context.l10n.settings_network_smsFallback_toggle,
-                    style: Theme.of(context).textTheme.titleMedium,
-                  ),
-                ),
               ],
             ),
           );

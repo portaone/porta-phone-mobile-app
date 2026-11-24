@@ -20,20 +20,14 @@ class NetworkScreenPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     const widget = NetworkScreen();
-    final featureAccess = context.read<FeatureAccess>();
 
     return MultiProvider(
       providers: [
         BlocProvider(
-          create: (context) => NetworkCubit(
-            featureAccess.callConfig.triggerConfig,
-            context.read<DeviceInfo>(),
-            context.read<IncomingCallTypeRepository>(),
-            (type) async {
-              await WebtritSignalingService.updateMode(type.toSignalingServiceMode());
-            },
-            WebtritCallkeepPermissions(),
-          ),
+          create: (context) =>
+              NetworkCubit(context.read<DeviceInfo>(), context.read<IncomingCallTypeRepository>(), (type) async {
+                await WebtritSignalingService.updateMode(type.toSignalingServiceMode());
+              }, WebtritCallkeepPermissions()),
         ),
       ],
       child: widget,

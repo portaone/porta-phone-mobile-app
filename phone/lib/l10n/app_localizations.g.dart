@@ -6298,23 +6298,11 @@ abstract class AppLocalizations {
   /// **'Missing microphone permission. Unable to make calls.'**
   String get settings_missingMicrophoneIndicator_title;
 
-  /// Tooltip description for fallback SMS-based call trigger
-  ///
-  /// In en, this message translates to:
-  /// **'If push notifications about calls are not received, the app will receive a special SMS and display the incoming call screen.'**
-  String get settings_network_fallbackCalls_description;
-
   /// On a watch, the row under the two ways incoming calls are delivered: opens both explanations as a page of text.
   ///
   /// In en, this message translates to:
   /// **'How they differ'**
   String get settings_network_Watch_howTheyDiffer;
-
-  /// Title for fallback incoming calls section
-  ///
-  /// In en, this message translates to:
-  /// **'Fallback Incoming Calls'**
-  String get settings_network_fallbackCalls_title;
 
   /// No description provided for @settings_network_incomingCallType_pushNotification_description.
   ///
@@ -6345,12 +6333,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Incoming Call Delivery'**
   String get settings_network_incomingCallType_title;
-
-  /// Toggle label for enabling SMS fallback
-  ///
-  /// In en, this message translates to:
-  /// **'SMS as a backup channel'**
-  String get settings_network_smsFallback_toggle;
 
   /// Shown in an error snackbar when a register-status request fails: an explicit refresh of the account registration setting, or a change of it (in which case the switch also rolls back to its previous value).
   ///

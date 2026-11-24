@@ -1540,12 +1540,8 @@ extension AppLocalizationsExtension on AppLocalizations {
         settings_LogoutConfirmDialog_title,
       'settings_missingMicrophoneIndicator_title' =>
         settings_missingMicrophoneIndicator_title,
-      'settings_network_fallbackCalls_description' =>
-        settings_network_fallbackCalls_description,
       'settings_network_Watch_howTheyDiffer' =>
         settings_network_Watch_howTheyDiffer,
-      'settings_network_fallbackCalls_title' =>
-        settings_network_fallbackCalls_title,
       'settings_network_incomingCallType_pushNotification_description' =>
         settings_network_incomingCallType_pushNotification_description,
       'settings_network_incomingCallType_pushNotification_title' =>
@@ -1556,8 +1552,6 @@ extension AppLocalizationsExtension on AppLocalizations {
         settings_network_incomingCallType_socket_title,
       'settings_network_incomingCallType_title' =>
         settings_network_incomingCallType_title,
-      'settings_network_smsFallback_toggle' =>
-        settings_network_smsFallback_toggle,
       'settings_registerStatusSnackBar_requestFailed' =>
         settings_registerStatusSnackBar_requestFailed,
       'settings_registerStatusSnackBar_unavailable' =>

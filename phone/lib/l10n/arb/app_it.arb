@@ -2903,16 +2903,8 @@
   "@settings_LogoutConfirmDialog_title": {},
   "settings_missingMicrophoneIndicator_title": "Autorizzazione microfono mancante. Impossibile effettuare chiamate.",
   "@settings_missingMicrophoneIndicator_title": {},
-  "settings_network_fallbackCalls_description": "Se le notifiche push relative alle chiamate non arrivano, l'applicazione riceverà un SMS speciale e mostrerà la schermata delle chiamate in arrivo.",
-  "@settings_network_fallbackCalls_description": {
-    "description": "Tooltip description for fallback SMS-based call trigger"
-  },
   "settings_network_Watch_howTheyDiffer": "Come si differenziano",
   "@settings_network_Watch_howTheyDiffer": {},
-  "settings_network_fallbackCalls_title": "Chiamate in entrata di riserva",
-  "@settings_network_fallbackCalls_title": {
-    "description": "Title for fallback incoming calls section"
-  },
   "settings_network_incomingCallType_pushNotification_description": "Quando l'app non è in uso, smette di funzionare e consuma risorse minime, il che aiuta a conservare la durata della batteria. Durante una chiamata in arrivo, il server invia una notifica push al telefono, spingendo il sistema operativo mobile a lanciare l'app per gestire la chiamata. Tuttavia, questo metodo non garantisce che tutte le chiamate verranno ricevute. Se il telefono è stato inattivo per un periodo prolungato, alcune versioni di Android potrebbero limitare le notifiche push, con il rischio di perdere una chiamata in arrivo.",
   "@settings_network_incomingCallType_pushNotification_description": {},
   "settings_network_incomingCallType_pushNotification_title": "Notifica Push",
@@ -2923,10 +2915,6 @@
   "@settings_network_incomingCallType_socket_title": {},
   "settings_network_incomingCallType_title": "Ricezione delle chiamate in entrata",
   "@settings_network_incomingCallType_title": {},
-  "settings_network_smsFallback_toggle": "SMS come canale di riserva",
-  "@settings_network_smsFallback_toggle": {
-    "description": "Toggle label for enabling SMS fallback"
-  },
   "settings_registerStatusSnackBar_requestFailed": "Impossibile raggiungere il server - riprova",
   "@settings_registerStatusSnackBar_requestFailed": {},
   "settings_registerStatusSnackBar_unavailable": "Nessuna connessione al server - impossibile modificare ora",

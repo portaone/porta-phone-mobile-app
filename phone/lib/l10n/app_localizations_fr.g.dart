@@ -3491,14 +3491,7 @@ class AppLocalizationsFr extends AppLocalizations {
       'Autorisation du microphone manquante. Impossible de passer des appels.';
 
   @override
-  String get settings_network_fallbackCalls_description =>
-      'Si les notifications push d\'appels ne sont pas reçues, l\'application recevra un SMS spécial et affichera l\'écran d\'appel entrant.';
-
-  @override
   String get settings_network_Watch_howTheyDiffer => 'Quelle différence';
-
-  @override
-  String get settings_network_fallbackCalls_title => 'Appels entrants de secours';
 
   @override
   String get settings_network_incomingCallType_pushNotification_description =>
@@ -3516,9 +3509,6 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get settings_network_incomingCallType_title => 'Réception des appels entrants';
-
-  @override
-  String get settings_network_smsFallback_toggle => 'SMS comme canal de secours';
 
   @override
   String get settings_registerStatusSnackBar_requestFailed => 'Serveur inaccessible - réessayez';
