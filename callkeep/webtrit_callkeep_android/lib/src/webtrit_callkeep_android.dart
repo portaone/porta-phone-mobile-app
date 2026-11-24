@@ -25,6 +25,7 @@ class WebtritCallkeepAndroid extends WebtritCallkeepPlatform {
   final _soundApi = PHostSoundApi();
   final _connectionsApi = PHostConnectionsApi();
   final _activityControlApi = PHostActivityControlApi();
+  final _screenShareApi = PHostScreenShareApi();
 
   int? _pushNotificationIsolatePluginCallbackHandle;
 
@@ -375,6 +376,34 @@ class WebtritCallkeepAndroid extends WebtritCallkeepPlatform {
   Future<bool> isDeviceLocked() {
     return _activityControlApi.isDeviceLocked();
   }
+
+  // ------------------------------------------------------------------------------------------------
+  // Android Screen Share section
+  // ------------------------------------------------------------------------------------------------
+
+  @override
+  Future<void> startScreenShareService() {
+    return _screenShareApi.startScreenShareService();
+  }
+
+  @override
+  Future<void> stopScreenShareService() {
+    return _screenShareApi.stopScreenShareService();
+  }
+
+  @override
+  void setScreenShareDelegate(CallkeepScreenShareDelegate? delegate) {
+    PDelegateScreenShareFlutterApi.setUp(delegate == null ? null : _ScreenShareDelegateRelay(delegate));
+  }
+}
+
+class _ScreenShareDelegateRelay implements PDelegateScreenShareFlutterApi {
+  const _ScreenShareDelegateRelay(this._delegate);
+
+  final CallkeepScreenShareDelegate _delegate;
+
+  @override
+  void didEndScreenShare() => _delegate.didEndScreenShare();
 }
 
 class _CallkeepDelegateRelay implements PDelegateFlutterApi {

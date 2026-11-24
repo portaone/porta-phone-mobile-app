@@ -20,6 +20,7 @@ services, broadcast-based IPC, and a Pigeon bridge to the Flutter layer.
 | [connection-manager.md](connection-manager.md)             | `ConnectionManager` — call registry inside `:callkeep_core`                 |
 | [ipc-broadcasting.md](ipc-broadcasting.md)                 | `ConnectionServicePerformBroadcaster` — cross-process event bus             |
 | [background-services.md](background-services.md)           | `IncomingCallService`, `ActiveCallService` — background foreground services |
+| [screen-share-service.md](screen-share-service.md)         | `ScreenShareService` - the `mediaProjection` service of a screen share      |
 | [pigeon-apis.md](pigeon-apis.md)                           | All Pigeon host and Flutter API definitions                                 |
 | [models.md](models.md)                                     | `CallMetadata`, `CallHandle`, `AudioDevice`, and other data models          |
 | [notifications.md](notifications.md)                       | Notification builders and channel management                                |
@@ -47,6 +48,7 @@ membership rules. Telecom and standalone retain their own platform effects and p
 │                                                                  │
 │  IncomingCallService   (one-shot foreground service)             │
 │  ActiveCallService     (active call foreground service)          │
+│  ScreenShareService    (mediaProjection, while sharing)          │
 │                                                                  │
 │  ◄── broadcasts ──────────────────────── broadcasts ──►          │
 │  ◄── startService intents ──────────────────────────────►        │

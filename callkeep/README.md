@@ -250,6 +250,30 @@ with `WebtritCallkeep.attachToEngine`. See
 
 ---
 
+## Android: screen share service
+
+Android only. Since Android 14 an app may capture the screen only while it runs a foreground
+service of the `mediaProjection` type, which the system starts only after the person has granted
+the capture. The plugin runs that service (`ScreenShareService`, declared with the
+`FOREGROUND_SERVICE_MEDIA_PROJECTION` permission in the plugin's manifest); the consent and the
+capture are the WebRTC plugin's:
+
+```dart
+if (await Helper.requestCapturePermission()) {
+  await AndroidCallkeepUtils.screenShare.start(); // throws if the system refused the service
+  final stream = await navigator.mediaDevices.getDisplayMedia({'video': true});
+  // ... and once the capture is released:
+  await AndroidCallkeepUtils.screenShare.stop();
+}
+```
+
+`AndroidCallkeepUtils.screenShare.setDelegate(...)` is told (`CallkeepScreenShareDelegate`) when
+the capture ends outside the app: the Stop of the service's notification, or the system ending the
+projection. Details:
+[`webtrit_callkeep_android/docs/screen-share-service.md`](webtrit_callkeep_android/docs/screen-share-service.md).
+
+---
+
 ## Required permissions
 
 ### Android (`AndroidManifest.xml`)

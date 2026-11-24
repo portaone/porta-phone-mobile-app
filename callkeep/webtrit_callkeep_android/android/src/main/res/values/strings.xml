@@ -25,4 +25,9 @@
     <string name="queued_call_description">%1$s is waiting while another call rings</string>
     <string name="queued_call_answer_button_text">Answer</string>
     <string name="queued_call_decline_ringing_button_text">Decline current</string>
+    <string name="screen_share_channel_title">Screen sharing</string>
+    <string name="screen_share_channel_description">Shown while your screen is shared in a call</string>
+    <string name="screen_share_notification_title">Sharing your screen</string>
+    <string name="screen_share_notification_text">The other side of the call sees your screen</string>
+    <string name="screen_share_stop_button_text">Stop sharing</string>
 </resources>

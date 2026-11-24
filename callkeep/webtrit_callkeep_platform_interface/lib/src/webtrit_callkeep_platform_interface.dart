@@ -446,4 +446,27 @@ abstract class WebtritCallkeepPlatform extends PlatformInterface {
   Future<bool> isDeviceLocked() {
     throw UnimplementedError('isDeviceLocked() has not been implemented.');
   }
+
+  // ------------------------------------------------------------------------------------------------
+  // Android Screen Share section
+  // ------------------------------------------------------------------------------------------------
+
+  /// Puts the foreground service a screen capture needs in the foreground (`mediaProjection`).
+  ///
+  /// Android 14 lets an app capture the screen only while such a service runs, and starts one only
+  /// after the person has granted the capture: call it between the consent and the capture. Fails
+  /// when the system refused the service. This is an Android-only feature.
+  Future<void> startScreenShareService() {
+    throw UnimplementedError('startScreenShareService() has not been implemented.');
+  }
+
+  /// Stops the service [startScreenShareService] started; nothing when it does not run.
+  Future<void> stopScreenShareService() {
+    throw UnimplementedError('stopScreenShareService() has not been implemented.');
+  }
+
+  /// Sets the delegate told when a screen share ends outside the app, or clears it with `null`.
+  void setScreenShareDelegate(CallkeepScreenShareDelegate? delegate) {
+    throw UnimplementedError('setScreenShareDelegate() has not been implemented.');
+  }
 }

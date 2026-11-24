@@ -14,8 +14,9 @@ skill; the commands are in [../AGENTS.md](../AGENTS.md).
   (bound by the activity, host of `PHostApi`, forwards call events to Dart), `IncomingCallService`
   (a ringing call on the Telecom path and the push isolate), `ActiveCallService` (the foreground
   service and ongoing notification of every answered Telecom call, typed
-  `phoneCall|microphone|camera`) and `StandaloneCallService` (the call backend where Telecom
-  cannot host calls).
+  `phoneCall|microphone|camera`), `StandaloneCallService` (the call backend where Telecom
+  cannot host calls) and `ScreenShareService` (the `mediaProjection` service a screen capture
+  needs while the app shows the screen in a call, [screen-share-service.md](docs/screen-share-service.md)).
 - The processes talk through app-scoped broadcasts (`:callkeep_core` to main) and explicit
   `startService` intents (main to the backend). The contract and the event catalogue:
   [dual-process.md](docs/dual-process.md), [ipc-broadcasting.md](docs/ipc-broadcasting.md).

@@ -21,6 +21,10 @@ object NotificationChannelManager {
     // never heads up over the ringing call or an open app, and the ringing call has the sound.
     const val QUEUED_CALL_NOTIFICATION_CHANNEL_ID = "QUEUED_CALL_NOTIFICATION_CHANNEL"
 
+    // The screen of the phone shown to the other side of a call. Low importance: it is the
+    // person's own action, said once and kept in the shade with its Stop.
+    const val SCREEN_SHARE_NOTIFICATION_CHANNEL_ID = "SCREEN_SHARE_NOTIFICATION_CHANNEL"
+
     /**
      * What each channel is worth, in one place.
      *
@@ -36,6 +40,7 @@ object NotificationChannelManager {
             ACTIVE_CALL_SERVICE_NOTIFICATION_CHANNEL_ID to NotificationManager.IMPORTANCE_LOW,
             FOREGROUND_CALL_NOTIFICATION_CHANNEL_ID to NotificationManager.IMPORTANCE_LOW,
             QUEUED_CALL_NOTIFICATION_CHANNEL_ID to NotificationManager.IMPORTANCE_LOW,
+            SCREEN_SHARE_NOTIFICATION_CHANNEL_ID to NotificationManager.IMPORTANCE_LOW,
         )
 
     /** Channels that carry no tone of their own, because the app plays one. */
@@ -107,6 +112,18 @@ object NotificationChannelManager {
         registerIncomingCallChannel(context)
         registerForegroundCallChannel(context)
         registerQueuedCallChannel(context)
+        registerScreenShareChannel(context)
+    }
+
+    /** Registers the channel of the notification shown while the screen is shared in a call. */
+    private fun registerScreenShareChannel(context: Context) {
+        registerNotificationChannel(
+            context,
+            channelId = SCREEN_SHARE_NOTIFICATION_CHANNEL_ID,
+            title = context.getString(R.string.screen_share_channel_title),
+            description = context.getString(R.string.screen_share_channel_description),
+            importance = importanceOf(SCREEN_SHARE_NOTIFICATION_CHANNEL_ID),
+        )
     }
 
     /** Registers the channel for calls waiting in the queue while another incoming call rings. */

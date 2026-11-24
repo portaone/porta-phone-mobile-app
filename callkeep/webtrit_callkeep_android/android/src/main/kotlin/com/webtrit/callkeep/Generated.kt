@@ -3034,3 +3034,96 @@ interface PHostActivityControlApi {
     }
   }
 }
+/** Generated interface from Pigeon that represents a handler of messages from Flutter. */
+interface PHostScreenShareApi {
+  /**
+   * Puts the screen share service in the foreground with the `mediaProjection` type.
+   *
+   * Android 14 lets an app capture the screen only while such a service runs, and starts one
+   * only after the person has granted the capture: call it between the consent and the capture.
+   * Completes once the service is in the foreground; fails when the system refused it.
+   */
+  suspend fun startScreenShareService()
+  /** Takes the screen share service out of the foreground and stops it. Nothing when it does not run. */
+  suspend fun stopScreenShareService()
+
+  companion object {
+    /** The codec used by PHostScreenShareApi. */
+    val codec: MessageCodec<Any?> by lazy {
+      GeneratedPigeonCodec()
+    }
+    /** Sets up an instance of `PHostScreenShareApi` to handle messages through the `binaryMessenger`. */
+    @JvmOverloads
+    fun setUp(binaryMessenger: BinaryMessenger, api: PHostScreenShareApi?, messageChannelSuffix: String = "") {
+      val separatedMessageChannelSuffix = if (messageChannelSuffix.isNotEmpty()) ".$messageChannelSuffix" else ""
+      run {
+        val channel = BasicMessageChannel<Any?>(binaryMessenger, "dev.flutter.pigeon.webtrit_callkeep_android.PHostScreenShareApi.startScreenShareService$separatedMessageChannelSuffix", codec)
+        if (api != null) {
+          channel.setMessageHandler { _, reply ->
+            CoroutineScope(Dispatchers.Main).launch {
+              val wrapped: List<Any?> = try {
+                api.startScreenShareService()
+                listOf(null)
+              } catch (exception: Throwable) {
+                GeneratedPigeonUtils.wrapError(exception)
+              }
+              reply.reply(wrapped)
+            }
+          }
+        } else {
+          channel.setMessageHandler(null)
+        }
+      }
+      run {
+        val channel = BasicMessageChannel<Any?>(binaryMessenger, "dev.flutter.pigeon.webtrit_callkeep_android.PHostScreenShareApi.stopScreenShareService$separatedMessageChannelSuffix", codec)
+        if (api != null) {
+          channel.setMessageHandler { _, reply ->
+            CoroutineScope(Dispatchers.Main).launch {
+              val wrapped: List<Any?> = try {
+                api.stopScreenShareService()
+                listOf(null)
+              } catch (exception: Throwable) {
+                GeneratedPigeonUtils.wrapError(exception)
+              }
+              reply.reply(wrapped)
+            }
+          }
+        } else {
+          channel.setMessageHandler(null)
+        }
+      }
+    }
+  }
+}
+/** Generated class from Pigeon that represents Flutter messages that can be called from Kotlin. */
+class PDelegateScreenShareFlutterApi(private val binaryMessenger: BinaryMessenger, private val messageChannelSuffix: String = "") {
+  companion object {
+    /** The codec used by PDelegateScreenShareFlutterApi. */
+    val codec: MessageCodec<Any?> by lazy {
+      GeneratedPigeonCodec()
+    }
+  }
+  /**
+   * The screen share ended outside the app: the Stop action of its notification, or the system
+   * ending the capture. The service has stopped already.
+   */
+  suspend fun didEndScreenShare()
+{
+    val separatedMessageChannelSuffix = if (messageChannelSuffix.isNotEmpty()) ".$messageChannelSuffix" else ""
+    return suspendCancellableCoroutine { continuation ->
+      val channelName = "dev.flutter.pigeon.webtrit_callkeep_android.PDelegateScreenShareFlutterApi.didEndScreenShare$separatedMessageChannelSuffix"
+      val channel = BasicMessageChannel<Any?>(binaryMessenger, channelName, codec)
+      channel.send(null) {
+        if (it is List<*>) {
+          if (it.size > 1) {
+            continuation.resumeWithException(FlutterError(it[0] as String, it[1] as String, it[2] as String?))
+          } else {
+            continuation.resume(Unit)
+          }
+        } else {
+          continuation.resumeWithException(GeneratedPigeonUtils.createConnectionError(channelName))
+        }
+      }
+    }
+  }
+}
