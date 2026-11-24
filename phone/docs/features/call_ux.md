@@ -98,8 +98,10 @@ focus to follow - see
 Android only. The person shows the phone's screen to the far end in place of the camera; the
 far end, an app or a SIP phone, sees it as video. In a conference the screen goes to the room
 (see [call_conference.md](call_conference.md), The screen in the room): the host shares from
-the room's More menu or from the three-dot menu of a leg, and every participant sees it in the
-main place of the room's full screen, the tiles in a row under it.
+the room's More menu or from the three-dot menu of a leg - More then carries a ring and a
+screen badge, and no tile stands for the share - and every participant sees it in the main
+place of the room's full screen, under a line saying who shares, the participants in a row
+under it.
 
 - **Entry.** The toolbar's three-dot menu (`callActionsOptionsId`) gets "Share screen"
   (`callActionsScreenShareId`) after the picture's entries ("Fit"/"Cover", "Enable/Disable
@@ -185,7 +187,7 @@ what it does.
 | `CallInfo`               | `widgets/call_info.dart`               | Focused-call name / number / call description / timer                       |
 | `IncomingCallActions`    | `widgets/incoming_call_actions.dart`   | Decline / Answer for the focused ringing call                               |
 | `ActiveCallActions`      | `widgets/active_call_actions.dart`     | In-call control grid + keypad (the hangup row rides along in portrait only) |
-| `ScreenShareTile`        | `widgets/screen_share_tile.dart`       | Stands in for the camera preview, or the room's "You" tile, while shared   |
+| `ScreenShareTile`        | `widgets/screen_share_tile.dart`       | Stands in for the camera preview while the screen is shared                 |
 
 ### Landscape
 

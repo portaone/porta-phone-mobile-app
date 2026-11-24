@@ -475,6 +475,28 @@ class AppLocalizationsPt extends AppLocalizations {
   }
 
   @override
+  String call_ConferenceFullScreen_title(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Conferência · $count participantes',
+      one: 'Conferência · $count participante',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String call_ConferenceFullScreen_sharing(String name) {
+    return '$name está compartilhando a tela';
+  }
+
+  @override
+  String get call_ConferenceFullScreen_holdUnavailable => 'A espera não está disponível em uma conferência';
+
+  @override
+  String get call_ConferenceFullScreen_showLarge => 'Mostrar em tamanho grande';
+
+  @override
   String call_SemanticsLabel_conferenceParticipantMenu(String name) {
     return 'Mais opções para $name';
   }

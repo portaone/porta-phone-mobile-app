@@ -462,6 +462,23 @@ class AppLocalizationsTh extends AppLocalizations {
   }
 
   @override
+  String call_ConferenceFullScreen_title(int count) {
+    String _temp0 = intl.Intl.pluralLogic(count, locale: localeName, other: 'การประชุมสาย · ผู้เข้าร่วม $count คน');
+    return '$_temp0';
+  }
+
+  @override
+  String call_ConferenceFullScreen_sharing(String name) {
+    return '$name กำลังแชร์หน้าจอ';
+  }
+
+  @override
+  String get call_ConferenceFullScreen_holdUnavailable => 'พักสายไม่ได้ในการประชุมสาย';
+
+  @override
+  String get call_ConferenceFullScreen_showLarge => 'แสดงขนาดใหญ่';
+
+  @override
   String call_SemanticsLabel_conferenceParticipantMenu(String name) {
     return 'เพิ่มเติมสำหรับ $name';
   }

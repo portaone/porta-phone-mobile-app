@@ -702,11 +702,14 @@ class CallActiveScaffoldState extends State<CallActiveScaffold> {
   CallPopupMenuItem<void>? _screenShareMenuItem(Color iconColor) {
     final callId = widget.focusedCall.callId;
     if (widget.screenShare != null) {
+      // In the accent, as the full screen's: what stops the screen the others see.
+      final accent = Theme.of(context).colorScheme.primary;
       return CallPopupMenuItem(
         identifier: callActionsScreenShareId,
         onTap: () => _callBloc.add(CallControlEvent.screenShareStopped(callId)),
         text: context.l10n.call_screenShare_actionLabel_stop,
-        icon: Icon(Icons.stop_screen_share_outlined, color: iconColor),
+        icon: Icon(Icons.stop_screen_share_outlined, color: accent),
+        accent: accent,
       );
     }
     if (!widget.canShareScreen) return null;

@@ -23,7 +23,7 @@ void main() {
     messenger.setMockStreamHandler(const EventChannel('FlutterWebRTC/Texture$texture'), null);
   });
 
-  Widget subject() => MaterialApp(
+  Widget subject({ValueChanged<double>? onAspectChanged}) => MaterialApp(
     home: SizedBox(
       width: 300,
       height: 400,
@@ -31,6 +31,7 @@ void main() {
         camera: ParticipantCamera(stream: _Stream(), trackId: 'screen'),
         placeholder: const Text('waiting'),
         fit: RTCVideoViewObjectFit.RTCVideoViewObjectFitContain,
+        onAspectChanged: onAspectChanged,
       ),
     ),
   );
@@ -52,6 +53,26 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('waiting'), findsNothing);
+  });
+
+  testWidgets('the proportions are told once a frame is drawn, and again when they change', (tester) async {
+    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger.setMockStreamHandler(
+      const EventChannel('FlutterWebRTC/Texture$texture'),
+      MockStreamHandler.inline(
+        onListen: (arguments, events) {
+          events.success({'event': 'didTextureChangeVideoSize', 'width': 1280, 'height': 720});
+          events.success({'event': 'didFirstFrameRendered'});
+          events.success({'event': 'didTextureChangeVideoSize', 'width': 640, 'height': 360});
+          events.success({'event': 'didTextureChangeRotation', 'rotation': 90});
+        },
+      ),
+    );
+    final told = <double>[];
+
+    await tester.pumpWidget(subject(onAspectChanged: told.add));
+    await tester.pumpAndSettle();
+
+    expect(told, [1280 / 720, 360 / 640], reason: 'the same proportions at another size are no change');
   });
 }
 

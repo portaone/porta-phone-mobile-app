@@ -57,8 +57,8 @@ class ConferencePanel extends StatelessWidget {
   final bool roomParked;
 
   /// Takes the user back into the room from a call they took outside it: any
-  /// row of the room is that way in. `null` where there is nothing to come
-  /// back from.
+  /// row of the room is that way in while the room stands aside. `null` where
+  /// there is nothing to come back from.
   final ValueChanged<String>? onSwitchToConference;
 
   /// Mutes a participant for everyone in the room. The outcome arrives as the
@@ -68,7 +68,8 @@ class ConferencePanel extends StatelessWidget {
   /// Ends one participant's call, which takes them out of the room.
   final ValueChanged<String> onParticipantHangup;
 
-  /// Opens the room in full screen, the participants as video tiles; `null`
+  /// Opens the room in full screen, the participants as video tiles: the
+  /// header's control, and a tap on a row while the room is in use; `null`
   /// leaves the header without the control.
   final VoidCallback? onFullScreen;
 
@@ -85,6 +86,7 @@ class ConferencePanel extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final legs = conference.legs.entries.toList()..sort((a, b) => a.value.compareTo(b.value));
+    final opensFullScreen = !roomParked && onFullScreen != null;
 
     return Column(
       mainAxisSize: MainAxisSize.min,
@@ -108,7 +110,13 @@ class ConferencePanel extends StatelessWidget {
             // participant to appear in a list of its own.
             ready: conference.isReady(leg.key),
             muted: conference.participantMuted(leg.key),
-            onTap: onSwitchToConference == null ? null : () => onSwitchToConference!(leg.key),
+            // In use, a row is the big way into the tiles; standing aside, the way back into the room.
+            onTap: opensFullScreen
+                ? onFullScreen
+                : onSwitchToConference == null
+                ? null
+                : () => onSwitchToConference!(leg.key),
+            tapHint: opensFullScreen ? context.l10n.call_SemanticsLabel_conferenceFullScreen : null,
             // The room is not the conversation in use, so its own controls step
             // back rather than shout from it.
             dimmed: roomParked,
@@ -136,6 +144,7 @@ class _ParticipantRow extends StatelessWidget {
     required this.ready,
     required this.muted,
     required this.onTap,
+    this.tapHint,
     required this.dimmed,
     required this.onMutedChanged,
     required this.onHangup,
@@ -157,6 +166,9 @@ class _ParticipantRow extends StatelessWidget {
   final bool ready;
   final bool muted;
   final VoidCallback? onTap;
+
+  /// What a tap on the row does, for a screen reader, where its name alone does not say.
+  final String? tapHint;
 
   /// Whether the room is standing aside, so this row's controls are not what
   /// the user is acting through. They keep working - a room-wide mute and
@@ -185,7 +197,8 @@ class _ParticipantRow extends StatelessWidget {
         ? context.l10n.call_ConferencePanel_participantMuted
         : context.l10n.call_ConferencePanel_participantStatus;
 
-    return CallRowFrame(
+    final onTap = this.onTap;
+    final frame = CallRowFrame(
       name: name,
       onTap: onTap,
       // The picture of whoever this leg is with, the same as a roster row -
@@ -239,6 +252,18 @@ class _ParticipantRow extends StatelessWidget {
           ),
         ),
       ],
+    );
+    if (onTap == null) return frame;
+    // The row's own node, with its tap: the mute and the menu inside keep nodes and taps of their
+    // own, which a merge of the row would swallow.
+    return Semantics(
+      container: true,
+      button: true,
+      identifier: numberedId(conferenceParticipantRowId, index),
+      label: name,
+      hint: tapHint,
+      onTap: onTap,
+      child: frame,
     );
   }
 }
@@ -364,8 +389,8 @@ class _ConferenceParticipantMenuState extends State<ConferenceParticipantMenu> {
   }
 }
 
-/// The round control at the right of the header that opens the room in full
-/// screen: a glyph without a word, as the design has it.
+/// The control at the right of the header that opens the room in full screen:
+/// a plain glyph without a word or a ring, in a tap target of 40 dp.
 class _FullScreenButton extends StatelessWidget {
   const _FullScreenButton({required this.onPressed, required this.style});
 
@@ -384,9 +409,8 @@ class _FullScreenButton extends StatelessWidget {
         padding: EdgeInsets.zero,
         shape: const CircleBorder(),
         foregroundColor: foreground,
-        side: BorderSide(color: foreground),
       ),
-      child: const Icon(Icons.open_in_full, size: 18),
+      child: const Icon(Icons.open_in_full, size: 20),
     );
   }
 }

@@ -158,8 +158,21 @@ const String conferenceTileId = 'conferenceTile';
 const String conferenceTileMuteId = 'conferenceTileMute';
 const String conferenceTileMenuId = 'conferenceTileMenu';
 const String conferenceTileEndId = 'conferenceTileEnd';
+
+/// The entry of a participant's tile menu on the conference full screen that shows him large.
+const String conferenceTileOpenId = 'conferenceTileOpen';
+
+/// The three dots at the top right corner of a participant's tile on the conference full screen:
+/// they open the same menu as the tile.
+const String conferenceTileMoreId = 'conferenceTileMore';
+
+/// The sign on a participant's tile that his microphone is off for the room.
+const String conferenceTileMutedId = 'conferenceTileMuted';
 const String conferenceParticipantMenuId = 'conferenceParticipantMenu';
-const String conferenceSelfTileSwitchId = 'conferenceSelfTileSwitch';
+
+/// A participant's row of the room's panel on the call screen: a tap opens the room in full screen
+/// (back into the room while it stands aside for a call outside it).
+const String conferenceParticipantRowId = 'conferenceParticipantRow';
 const String conferenceFullScreenCameraId = 'conferenceFullScreenCamera';
 const String conferenceFullScreenSpeakerId = 'conferenceFullScreenSpeaker';
 const String conferenceFullScreenMoreId = 'conferenceFullScreenMore';
@@ -172,8 +185,14 @@ const String callScreenShareConferenceId = 'callScreenShareConference';
 
 /// The screen a participant shares in the room, in the main place of the room's tiles.
 const String callScreenShareConferenceScreenId = 'callScreenShareConferenceScreen';
+
+/// The line above that screen saying who shares it.
+const String callScreenShareConferenceLabelId = 'callScreenShareConferenceLabel';
+
+/// The badge on the room's More control while the host shares his screen to the room.
+const String callScreenShareConferenceBadgeId = 'callScreenShareConferenceBadge';
+const String callActionsScreenShareBadgeId = 'callActionsScreenShareBadge';
 const String conferenceParticipantPageId = 'conferenceParticipantPage';
-const String conferenceSelfTileId = 'conferenceSelfTile';
 const String conferenceFullScreenMicId = 'conferenceFullScreenMic';
 const String conferenceFullScreenAddId = 'conferenceFullScreenAdd';
 const String conferenceFullScreenEndId = 'conferenceFullScreenEnd';

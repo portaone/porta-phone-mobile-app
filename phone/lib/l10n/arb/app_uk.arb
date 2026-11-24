@@ -430,6 +430,26 @@
       }
     }
   },
+  "call_ConferenceFullScreen_title": "{count, plural, one{Конференція · {count} учасник} few{Конференція · {count} учасники} other{Конференція · {count} учасників}}",
+  "@call_ConferenceFullScreen_title": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "call_ConferenceFullScreen_sharing": "{name} показує екран",
+  "@call_ConferenceFullScreen_sharing": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "call_ConferenceFullScreen_holdUnavailable": "Утримання недоступне в конференції",
+  "@call_ConferenceFullScreen_holdUnavailable": {},
+  "call_ConferenceFullScreen_showLarge": "Показати великим",
+  "@call_ConferenceFullScreen_showLarge": {},
   "call_SemanticsLabel_conferenceParticipantMenu": "Ще для {name}",
   "@call_SemanticsLabel_conferenceParticipantMenu": {
     "description": "Name of the menu of one conference participant that holds ending their call.",

@@ -430,6 +430,26 @@
       }
     }
   },
+  "call_ConferenceFullScreen_title": "{count, plural, other{การประชุมสาย · ผู้เข้าร่วม {count} คน}}",
+  "@call_ConferenceFullScreen_title": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "call_ConferenceFullScreen_sharing": "{name} กำลังแชร์หน้าจอ",
+  "@call_ConferenceFullScreen_sharing": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "call_ConferenceFullScreen_holdUnavailable": "พักสายไม่ได้ในการประชุมสาย",
+  "@call_ConferenceFullScreen_holdUnavailable": {},
+  "call_ConferenceFullScreen_showLarge": "แสดงขนาดใหญ่",
+  "@call_ConferenceFullScreen_showLarge": {},
   "call_SemanticsLabel_conferenceParticipantMenu": "เพิ่มเติมสำหรับ {name}",
   "@call_SemanticsLabel_conferenceParticipantMenu": {
     "description": "Name of the menu of one conference participant that holds ending their call.",

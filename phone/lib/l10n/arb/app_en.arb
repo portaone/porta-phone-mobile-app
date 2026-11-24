@@ -512,6 +512,32 @@
       }
     }
   },
+  "call_ConferenceFullScreen_title": "{count, plural, one{Conference · {count} participant} other{Conference · {count} participants}}",
+  "@call_ConferenceFullScreen_title": {
+    "description": "Title of the conference full screen; the count is everyone in the room, this client included.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "call_ConferenceFullScreen_sharing": "{name} is sharing the screen",
+  "@call_ConferenceFullScreen_sharing": {
+    "description": "Above the shared screen on the conference full screen: who shares it.",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "call_ConferenceFullScreen_holdUnavailable": "Hold is not available in a conference",
+  "@call_ConferenceFullScreen_holdUnavailable": {
+    "description": "Hint on a long press of Hold in the conference full screen menu: a leg of the room cannot be held."
+  },
+  "call_ConferenceFullScreen_showLarge": "Show large",
+  "@call_ConferenceFullScreen_showLarge": {
+    "description": "Entry of a participant's menu on the conference full screen: shows the participant alone, large."
+  },
   "call_SemanticsLabel_conferenceParticipantMenu": "More for {name}",
   "@call_SemanticsLabel_conferenceParticipantMenu": {
     "description": "Name of the menu of one conference participant that holds ending their call.",

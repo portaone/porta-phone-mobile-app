@@ -492,6 +492,29 @@ class AppLocalizationsUk extends AppLocalizations {
   }
 
   @override
+  String call_ConferenceFullScreen_title(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Конференція · $count учасників',
+      few: 'Конференція · $count учасники',
+      one: 'Конференція · $count учасник',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String call_ConferenceFullScreen_sharing(String name) {
+    return '$name показує екран';
+  }
+
+  @override
+  String get call_ConferenceFullScreen_holdUnavailable => 'Утримання недоступне в конференції';
+
+  @override
+  String get call_ConferenceFullScreen_showLarge => 'Показати великим';
+
+  @override
   String call_SemanticsLabel_conferenceParticipantMenu(String name) {
     return 'Ще для $name';
   }

@@ -2,6 +2,7 @@ import 'package:material_ui/material_ui.dart';
 
 import 'package:auto_route/auto_route.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_webrtc/flutter_webrtc.dart';
 
 import 'package:webtrit_callkeep/webtrit_callkeep.dart';
 
@@ -11,6 +12,7 @@ import 'package:webtrit_phone/l10n/l10n.dart';
 import 'package:webtrit_phone/utils/utils.dart';
 import 'package:webtrit_phone/widgets/widgets.dart';
 import 'package:webtrit_phone/app/constants.dart';
+import 'package:webtrit_phone/extensions/extensions.dart';
 
 import '../call.dart';
 
@@ -36,6 +38,46 @@ class CallShell extends StatefulWidget {
   ///    up, and the router of the call screen's watch pages takes any path for its page of the empty
   ///    path, so a path left the watch on the call screen after the call had ended; and the root,
   ///    with a page over the whole app such as a watch's text page, is left as it is.
+  /// What floats over the call screen for the focused call of [state]: what goes out from this
+  /// phone, in one window on every call screen - a call's, the room's panel, the room's full
+  /// screen - at the same place. The camera preview while the camera is on: the call's own, the
+  /// room's for a leg of the room (the host sees what his room gets), the camera published to the
+  /// room an invitation came through. A screen shown from this call - on its own sender, to the
+  /// host's own room from a leg of it, or to the room its far end invited it to - has a tile in
+  /// the preview's place. Nothing goes out: nothing floats.
+  static CallFloating floatingOf(CallState state) {
+    if (state.activeCalls.isEmpty) return CallFloating.none;
+    final call = state.activeCalls.current;
+    final leg = state.conference.isLeg(call.callId);
+    if (leg && state.roomScreenShare == ScreenShareStatus.sharing) return CallFloating.screenShareTile;
+    final ownShare = switch (state.screenShare?.target) {
+      CallScreenShareTarget(:final callId) ||
+      RoomScreenShareTarget(invitedCallId: final callId?) => callId == call.callId,
+      _ => false,
+    };
+    if (ownShare && state.screenShareOf(call.callId) == ScreenShareStatus.sharing) return CallFloating.screenShareTile;
+    if (leg) return state.conference.selfVideo == null ? CallFloating.none : CallFloating.cameraPreview;
+    return call.isCameraActive || _invitedCamera(state, call) != null ? CallFloating.cameraPreview : CallFloating.none;
+  }
+
+  /// The camera the preview shows for [call]: the room's for a leg of the host's room; the camera
+  /// published to the room an invitation to somebody else's room came through - a voice call
+  /// sends none of its own, the camera goes to that room; the call's own otherwise.
+  static MediaStream? cameraOf(CallState state, ActiveCall call) => state.conference.isLeg(call.callId)
+      ? state.conference.selfVideo
+      : _invitedCamera(state, call) ?? call.localStream;
+
+  /// Whether the room's camera is the front one: the way the legs that share it show; the front
+  /// one, as it is published first, where none says.
+  static bool roomFrontCamera(CallState state) =>
+      state.activeCalls.firstWhereOrNull((call) => state.conference.isLeg(call.callId) && call.video)?.frontCamera ??
+      true;
+
+  static MediaStream? _invitedCamera(CallState state, ActiveCall call) {
+    final invited = state.invitedVideo;
+    return invited != null && call.line == invited.line ? invited.selfVideo : null;
+  }
+
   static void backToMainScreen(StackRouter router) {
     final shell = router.root.innerRouterOf<StackRouter>(AppShellRoute.name) ?? router;
     shell.navigate(const MainShellRoute());
@@ -43,6 +85,17 @@ class CallShell extends StatefulWidget {
 
   @override
   State<CallShell> createState() => _CallShellState();
+}
+
+/// What floats over the call screen for the focused call.
+enum CallFloating {
+  /// The tile that stands in for the camera preview while the screen is on the call's own sender.
+  screenShareTile,
+
+  /// The call's own camera preview.
+  cameraPreview,
+
+  none,
 }
 
 class _CallShellState extends State<CallShell> {
@@ -162,19 +215,9 @@ class _CallShellState extends State<CallShell> {
     return prevCall != nextCall ||
         previous.conference.isPresent != current.conference.isPresent ||
         joinedOrLeft ||
-        previous.screenShare != current.screenShare;
-  }
-
-  /// The room's full screen opened or closed: the tile of a share to the room is shown on the
-  /// default screen only.
-  void _onConferenceFullScreen() {
-    if (mounted) _updateOverlayContent(context, context.read<CallBloc>().state, context.router);
-  }
-
-  @override
-  void initState() {
-    super.initState();
-    ConferenceFullScreen.isOpen.addListener(_onConferenceFullScreen);
+        previous.screenShare != current.screenShare ||
+        previous.conference.selfVideo != current.conference.selfVideo ||
+        previous.invitedVideo?.selfVideo != current.invitedVideo?.selfVideo;
   }
 
   void _updateOrientations(BuildContext context, CallDisplay display) {
@@ -217,22 +260,13 @@ class _CallShellState extends State<CallShell> {
         break;
 
       case CallDisplay.screen:
-        final activeCall = state.activeCalls.current;
-        // In a room the host sees himself only in full screen, as a tile; a
-        // video call outside the room keeps its preview. While the screen is
-        // shown - in the call or, for a leg, in the room - a tile saying so
-        // takes the preview's place; the room's full screen says it on the
-        // host's own tile instead.
-        if (state.screenShareOf(activeCall.callId) == ScreenShareStatus.sharing) {
-          if (ConferenceFullScreen.isOpen.value) {
-            _hideOverlay();
-          } else {
+        switch (CallShell.floatingOf(state)) {
+          case CallFloating.screenShareTile:
             _showScreenShareTile(context);
-          }
-        } else if (activeCall.isCameraActive && !state.conference.isLeg(activeCall.callId)) {
-          _showLocalCameraPreview(context, state);
-        } else {
-          _hideOverlay();
+          case CallFloating.cameraPreview:
+            _showLocalCameraPreview(context, state);
+          case CallFloating.none:
+            _hideOverlay();
         }
         break;
 
@@ -298,7 +332,9 @@ class _CallShellState extends State<CallShell> {
         buildWhen: (previous, current) =>
             previous.activeCalls.isEmpty ||
             current.activeCalls.isEmpty ||
-            previous.activeCalls.current != current.activeCalls.current,
+            previous.activeCalls.current != current.activeCalls.current ||
+            previous.conference.selfVideo != current.conference.selfVideo ||
+            previous.invitedVideo?.selfVideo != current.invitedVideo?.selfVideo,
         builder: (context, state) {
           if (state.activeCalls.isEmpty) {
             return const SizedBox.shrink();
@@ -306,12 +342,22 @@ class _CallShellState extends State<CallShell> {
 
           final activeCall = state.activeCalls.current;
           final orientation = MediaQuery.of(context).orientation;
+          final stream = CallShell.cameraOf(state, activeCall);
+          final hostedRoom = state.conference.isLeg(activeCall.callId);
+          // The camera of a room - the host's own, or the one this call was invited to: switched there.
+          final inRoom = stream != activeCall.localStream;
 
           return LocalCameraPreviewThumbnail(
             orientation: orientation,
-            frontCamera: activeCall.frontCamera,
-            localStream: activeCall.localStream,
-            onSwitchCameraPressed: activeCall.frontCamera == null
+            frontCamera: hostedRoom
+                ? CallShell.roomFrontCamera(state)
+                : inRoom
+                ? activeCall.frontCamera ?? true
+                : activeCall.frontCamera,
+            localStream: stream,
+            onSwitchCameraPressed: inRoom
+                ? () => callBloc.add(const CallControlEvent.conferenceCameraSwitched())
+                : activeCall.frontCamera == null
                 ? null
                 : () => callBloc.add(CallControlEvent.cameraSwitched(activeCall.callId)),
           );
@@ -373,7 +419,6 @@ class _CallShellState extends State<CallShell> {
 
   @override
   void dispose() {
-    ConferenceFullScreen.isOpen.removeListener(_onConferenceFullScreen);
     _thumbnailManager.dispose();
     super.dispose();
   }

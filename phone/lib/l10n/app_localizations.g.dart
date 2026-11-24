@@ -841,6 +841,30 @@ abstract class AppLocalizations {
   /// **'{name} left the conference'**
   String call_ConferenceFullScreen_participantLeft(String name);
 
+  /// Title of the conference full screen; the count is everyone in the room, this client included.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, one{Conference · {count} participant} other{Conference · {count} participants}}'**
+  String call_ConferenceFullScreen_title(int count);
+
+  /// Above the shared screen on the conference full screen: who shares it.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} is sharing the screen'**
+  String call_ConferenceFullScreen_sharing(String name);
+
+  /// Hint on a long press of Hold in the conference full screen menu: a leg of the room cannot be held.
+  ///
+  /// In en, this message translates to:
+  /// **'Hold is not available in a conference'**
+  String get call_ConferenceFullScreen_holdUnavailable;
+
+  /// Entry of a participant's menu on the conference full screen: shows the participant alone, large.
+  ///
+  /// In en, this message translates to:
+  /// **'Show large'**
+  String get call_ConferenceFullScreen_showLarge;
+
   /// Name of the menu of one conference participant that holds ending their call.
   ///
   /// In en, this message translates to:

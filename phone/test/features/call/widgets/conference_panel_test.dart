@@ -13,6 +13,8 @@ import 'package:webtrit_phone/features/call/call.dart';
 import 'package:webtrit_phone/l10n/l10n.dart';
 import 'package:webtrit_phone/models/models.dart';
 
+import '../../../helpers/helpers.dart';
+
 ActiveCall _call(String callId, {int line = 0, String? displayName}) => ActiveCall(
   callId: callId,
   direction: CallDirection.incoming,
@@ -40,11 +42,13 @@ void main() {
   late List<({String callId, bool muted})> participantMutes;
   late List<String> hangups;
   late List<String> switched;
+  late int fullScreens;
 
   setUp(() {
     participantMutes = [];
     hangups = [];
     switched = [];
+    fullScreens = 0;
   });
 
   Widget subject({
@@ -52,6 +56,7 @@ void main() {
     List<ActiveCall>? calls,
     bool scrollable = false,
     bool roomParked = false,
+    bool fullScreen = false,
   }) => MaterialApp(
     locale: const Locale('en'),
     localizationsDelegates: appLocalizationsDelegates,
@@ -68,6 +73,7 @@ void main() {
           onSwitchToConference: switched.add,
           onParticipantMutedChanged: (callId, muted) => participantMutes.add((callId: callId, muted: muted)),
           onParticipantHangup: hangups.add,
+          onFullScreen: fullScreen ? () => fullScreens++ : null,
         ),
       ),
     ),
@@ -127,6 +133,55 @@ void main() {
       await tester.tap(find.text('Anna Marchenko'));
       await tester.pump();
       expect(switched, ['a'], reason: 'a leg row names its own leg');
+      await tester.pumpWidget(const SizedBox());
+    });
+
+    testWidgets('a row of the room in use opens the full screen; its mute and menu keep their own taps', (
+      tester,
+    ) async {
+      final semantics = tester.ensureSemantics();
+      await tester.pumpWidget(subject(fullScreen: true));
+
+      final row = find.bySemanticsIdentifier(numberedId(conferenceParticipantRowId, 1));
+      expect(row, findsOneWidget);
+      await tapViaSemantics(tester, row);
+      expect(fullScreens, 1);
+      expect(switched, isEmpty, reason: 'in use, the row is the way into the tiles');
+
+      await tester.tap(find.bySemanticsIdentifier(numberedId(conferenceParticipantMuteId, 1)));
+      await tester.pump();
+      expect(participantMutes, [(callId: 'b', muted: true)]);
+      await tester.tap(find.bySemanticsIdentifier(numberedId(conferenceParticipantMenuId, 1)));
+      await tester.pumpAndSettle();
+      expect(fullScreens, 1, reason: 'the mute and the menu open no full screen');
+
+      semantics.dispose();
+      await tester.pumpWidget(const SizedBox());
+    });
+
+    testWidgets('standing aside, a row is the way back into the room, not into the tiles', (tester) async {
+      await tester.pumpWidget(subject(roomParked: true, fullScreen: true));
+
+      await tester.tap(find.text('Boris Klein'));
+      await tester.pump();
+      expect(switched, ['b']);
+      expect(fullScreens, 0);
+      await tester.pumpWidget(const SizedBox());
+    });
+
+    testWidgets('the header opens the full screen with a plain glyph, no ring, in a 40 dp target', (tester) async {
+      await tester.pumpWidget(subject(fullScreen: true));
+
+      final control = find.bySemanticsIdentifier(conferenceFullScreenId);
+      final size = tester.getSize(control);
+      expect(size.width, greaterThanOrEqualTo(40));
+      expect(size.height, greaterThanOrEqualTo(40));
+      final button = tester.widget<TextButton>(find.descendant(of: control, matching: find.byType(TextButton)));
+      expect(button.style?.side?.resolve(const {}), isNull, reason: 'no ring');
+      expect(tester.widget<Icon>(find.byIcon(Icons.open_in_full)).size, 20);
+      await tester.tap(control);
+      await tester.pump();
+      expect(fullScreens, 1);
       await tester.pumpWidget(const SizedBox());
     });
 

@@ -512,6 +512,26 @@
       }
     }
   },
+  "call_ConferenceFullScreen_title": "{count, plural, one{Conferência · {count} participante} other{Conferência · {count} participantes}}",
+  "@call_ConferenceFullScreen_title": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "call_ConferenceFullScreen_sharing": "{name} está compartilhando a tela",
+  "@call_ConferenceFullScreen_sharing": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "call_ConferenceFullScreen_holdUnavailable": "A espera não está disponível em uma conferência",
+  "@call_ConferenceFullScreen_holdUnavailable": {},
+  "call_ConferenceFullScreen_showLarge": "Mostrar em tamanho grande",
+  "@call_ConferenceFullScreen_showLarge": {},
   "call_SemanticsLabel_conferenceParticipantMenu": "Mais opções para {name}",
   "@call_SemanticsLabel_conferenceParticipantMenu": {
     "description": "Name of the menu of one conference participant that holds ending their call.",

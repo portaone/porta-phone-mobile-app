@@ -177,6 +177,10 @@ extension AppLocalizationsExtension on AppLocalizations {
       'call_ConferencePanel_end' => call_ConferencePanel_end,
       'call_ConferenceFullScreen_switchCamera' =>
         call_ConferenceFullScreen_switchCamera,
+      'call_ConferenceFullScreen_holdUnavailable' =>
+        call_ConferenceFullScreen_holdUnavailable,
+      'call_ConferenceFullScreen_showLarge' =>
+        call_ConferenceFullScreen_showLarge,
       'call_SemanticsLabel_conferenceFullScreen' =>
         call_SemanticsLabel_conferenceFullScreen,
       'call_SemanticsLabel_conferenceEnd' => call_SemanticsLabel_conferenceEnd,
@@ -2234,6 +2238,18 @@ extension AppLocalizationsExtension on AppLocalizations {
         [final String name] => call_ConferenceFullScreen_participantLeft(name),
         _ => throw ArgumentError(
           'call_ConferenceFullScreen_participantLeft requires 1 arguments',
+        ),
+      },
+      'call_ConferenceFullScreen_title' => switch (args) {
+        [final int count] => call_ConferenceFullScreen_title(count),
+        _ => throw ArgumentError(
+          'call_ConferenceFullScreen_title requires 1 arguments',
+        ),
+      },
+      'call_ConferenceFullScreen_sharing' => switch (args) {
+        [final String name] => call_ConferenceFullScreen_sharing(name),
+        _ => throw ArgumentError(
+          'call_ConferenceFullScreen_sharing requires 1 arguments',
         ),
       },
       'call_SemanticsLabel_conferenceParticipantMenu' => switch (args) {

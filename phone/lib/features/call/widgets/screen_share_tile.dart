@@ -1,8 +1,7 @@
 // The tile that stands in for the camera preview while the phone's screen is shown in the call:
 // the same size and place as the preview, the menu's colour, a screen icon, "Sharing screen" and a
-// Stop in the end-call colour. Shown by CallShell in the floating overlay of the call screen, and
-// by ConferenceFullScreen in place of the host's own tile while he shows the screen to the room
-// ([fill]); the Stop goes to CallBloc as CallControlEvent.screenShareStopped.
+// Stop in the end-call colour. Shown by CallShell in the floating overlay of the call screen; the
+// Stop goes to CallBloc as CallControlEvent.screenShareStopped.
 import 'package:material_ui/material_ui.dart';
 
 import 'package:webtrit_phone/app/keys.dart';
@@ -22,8 +21,6 @@ class ScreenShareTile extends StatelessWidget {
     required this.orientation,
     required this.onStopPressed,
     this.smallerSide = ThumbnailLayout.defaultSmallerSide,
-    this.fill = false,
-    this.radius = 8,
   });
 
   /// Current device orientation; the tile is upright in portrait and lying down in landscape,
@@ -35,13 +32,6 @@ class ScreenShareTile extends StatelessWidget {
 
   /// The smaller side of the tile; the other one follows the aspect ratio.
   final double smallerSide;
-
-  /// Whether the tile takes all the space it is given, as a tile of the room does, rather than the
-  /// camera preview's size.
-  final bool fill;
-
-  /// The radius of the tile's corners.
-  final double radius;
 
   @override
   Widget build(BuildContext context) {
@@ -61,9 +51,9 @@ class ScreenShareTile extends StatelessWidget {
     return SemanticId(
       identifier: callScreenShareTileId,
       child: SizedBox.fromSize(
-        size: fill ? null : ThumbnailLayout.calcFrameSize(orientation: orientation, smallerSide: smallerSide),
+        size: ThumbnailLayout.calcFrameSize(orientation: orientation, smallerSide: smallerSide),
         child: ClipRRect(
-          borderRadius: BorderRadius.circular(radius),
+          borderRadius: BorderRadius.circular(8),
           child: ColoredBox(
             // The colour of the call screen's menu, where the share is started and stopped.
             color: colorScheme.surfaceContainer,

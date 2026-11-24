@@ -78,6 +78,14 @@ void main() {
 
   bool fullScreenShown() => find.byType(ConferenceFullScreen).evaluate().isNotEmpty;
 
+  /// Opens a participant's page from the menu of his tile; [suffix] numbers the tile as its id does.
+  Future<void> openPage(WidgetTester tester, [String suffix = '']) async {
+    await tester.tap(byId('$conferenceTileId$suffix'));
+    await tester.pumpAndSettle();
+    await tester.tap(byId('$conferenceTileOpenId$suffix'));
+    await tester.pumpAndSettle();
+  }
+
   Future<void> openFullScreen(WidgetTester tester) async {
     await pumpCallScaffold(tester, screen());
     await tester.tap(byId(conferenceFullScreenId));
@@ -92,8 +100,7 @@ void main() {
     final semantics = tester.ensureSemantics();
     await openFullScreen(tester);
 
-    await tester.tap(byId(conferenceTileId));
-    await tester.pumpAndSettle();
+    await openPage(tester);
     expect(byId(conferenceParticipantPageId), findsOneWidget);
 
     await tester.tap(byId(conferenceFullScreenBackId));
@@ -167,8 +174,7 @@ void main() {
     await pumpCallScaffold(tester, screen(calls: [anna, boris, carol], conference: three));
     await tester.tap(byId(conferenceFullScreenId));
     await tester.pumpAndSettle();
-    await tester.tap(byId('${conferenceTileId}3'));
-    await tester.pumpAndSettle();
+    await openPage(tester, '3');
     expect(byId(conferenceParticipantPageId), findsOneWidget);
 
     await tester.pumpWidget(screen(calls: [anna, boris], conference: room));
@@ -286,8 +292,7 @@ void main() {
       await openThree(tester);
       expect(camerasHeld(), 4, reason: 'the default screen and the tiles, each with Anna and Carol');
 
-      await tester.tap(byId(conferenceTileId));
-      await tester.pumpAndSettle();
+      await openPage(tester);
       expect(camerasHeld(), 3, reason: "the default screen's two and Anna's page");
 
       await tester.tap(byId(conferenceFullScreenBackId));
@@ -300,8 +305,7 @@ void main() {
     testWidgets('a participant who leaves is said on the page on top', (tester) async {
       final semantics = tester.ensureSemantics();
       await openThree(tester);
-      await tester.tap(byId('${conferenceTileId}2'));
-      await tester.pumpAndSettle();
+      await openPage(tester, '2');
 
       await tester.pumpWidget(
         screen(
@@ -321,8 +325,7 @@ void main() {
     testWidgets('the page of a participant who leaves shows him to the end, never the tiles', (tester) async {
       final semantics = tester.ensureSemantics();
       await openThree(tester);
-      await tester.tap(byId('${conferenceTileId}3'));
-      await tester.pumpAndSettle();
+      await openPage(tester, '3');
       final onPage = find.text('Carol Young').evaluate().length;
 
       await tester.pumpWidget(
@@ -343,37 +346,21 @@ void main() {
     });
   });
 
-  group('the You tile', () {
-    final self = _SelfCamera();
-    testWidgets('mirrors the front camera, as the local preview does', (tester) async {
-      final semantics = tester.ensureSemantics();
-      await pumpCallScaffold(tester, screen(conference: room.copyWith(selfVideo: self)));
-      await tester.tap(byId(conferenceFullScreenId));
-      await tester.pumpAndSettle();
+  testWidgets('the host\'s own camera is no tile and no window of the page: the call screen floats it', (tester) async {
+    final semantics = tester.ensureSemantics();
+    await pumpCallScaffold(tester, screen(conference: room.copyWith(selfVideo: _SelfCamera())));
+    await tester.tap(byId(conferenceFullScreenId));
+    await tester.pumpAndSettle();
 
-      expect(_selfVideo(tester).mirror, isTrue);
-      semantics.dispose();
-      await teardownCallScaffold(tester);
-    });
-
-    testWidgets('shows the rear camera as it is', (tester) async {
-      final semantics = tester.ensureSemantics();
-      final rear = anna.copyWith(video: true, frontCamera: false);
-      await pumpCallScaffold(
-        tester,
-        screen(
-          calls: [rear, boris],
-          focused: rear,
-          conference: room.copyWith(selfVideo: self),
-        ),
-      );
-      await tester.tap(byId(conferenceFullScreenId));
-      await tester.pumpAndSettle();
-
-      expect(_selfVideo(tester).mirror, isFalse);
-      semantics.dispose();
-      await teardownCallScaffold(tester);
-    });
+    expect(
+      find.byWidgetPredicate((widget) => widget is ParticipantVideo && widget.camera?.trackId == 'self-video'),
+      findsNothing,
+    );
+    // One window on every call screen, the room's panel and this page alike: CallShell's overlay
+    // (call_shell_floating_test), not a second one drawn by the page.
+    expect(byId(callFrontCameraPreviewId), findsNothing);
+    semantics.dispose();
+    await teardownCallScaffold(tester);
   });
 
   testWidgets('a page of the room outside the phone\'s call screen shows nothing and leaves', (tester) async {
@@ -400,10 +387,6 @@ void main() {
 }
 
 /// The camera tile of the host: the one [ParticipantVideo] with his track.
-ParticipantVideo _selfVideo(WidgetTester tester) => tester.widget<ParticipantVideo>(
-  find.byWidgetPredicate((widget) => widget is ParticipantVideo && widget.camera?.trackId == 'self-video'),
-);
-
 /// This client's own camera as the room gets it: a local stream of one track.
 class _SelfCamera extends Fake implements MediaStream {
   final _track = _Track();

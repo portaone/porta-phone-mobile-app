@@ -14,6 +14,7 @@ import 'call_controls_landscape.dart';
 import 'call_controls_portrait.dart';
 import 'call_toolbar_status.dart';
 import 'popup_menu.dart';
+import 'screen_share_mark.dart';
 
 /// Everything the call screen presents and dispatches, bundled once: the calls
 /// on screen, the display state around them, and the intent callbacks the
@@ -285,10 +286,13 @@ class CallControls extends StatelessWidget {
           ),
           actions: [
             if (popupMenuItems.isNotEmpty)
-              SemanticAction.button(
-                label: context.l10n.call_settings_additional_options,
-                identifier: callActionsOptionsId,
-                child: CallPopupMenuButton<void>(items: popupMenuItems, child: const Icon(Icons.more_vert)),
+              _optionsMarkedFor(
+                params.roomScreenShare,
+                SemanticAction.button(
+                  label: context.l10n.call_settings_additional_options,
+                  identifier: callActionsOptionsId,
+                  child: CallPopupMenuButton<void>(items: popupMenuItems, child: const Icon(Icons.more_vert)),
+                ),
               ),
           ],
         ),
@@ -303,3 +307,9 @@ class CallControls extends StatelessWidget {
     );
   }
 }
+
+/// The options menu, marked while the host shares to his room: the menu holds the share's Stop.
+/// The mark goes around the merged control, not inside it: a node of its own inside would take the
+/// control's id and bounds with it.
+Widget _optionsMarkedFor(ScreenShareStatus? roomScreenShare, Widget options) =>
+    roomScreenShare == null ? options : ScreenShareMark(identifier: callActionsScreenShareBadgeId, child: options);
