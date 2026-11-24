@@ -3910,6 +3910,18 @@ abstract class AppLocalizations {
   /// **'Settings'**
   String get notifications_messageSnackBarAction_callVideoDowngraded;
 
+  /// Shown when sharing the phone's screen in a call did not start (the system refused it or the capture failed); the call goes on as before.
+  ///
+  /// In en, this message translates to:
+  /// **'Screen sharing could not start'**
+  String get notifications_messageSnackBar_screenShareFailed;
+
+  /// Shown when the other side of an audio call did not accept video, so sharing the phone's screen stopped; the call goes on as an audio call.
+  ///
+  /// In en, this message translates to:
+  /// **'The other side does not accept video - screen sharing stopped'**
+  String get notifications_messageSnackBar_screenShareVideoRefused;
+
   /// Shown when a conference that was being set up failed; the merged calls go on as separate calls.
   ///
   /// In en, this message translates to:

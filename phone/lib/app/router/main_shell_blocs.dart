@@ -256,6 +256,9 @@ class MainShellBlocs extends StatelessWidget {
               signalingEvents: signalingInbound.call,
               callPeerConnectionManager: callPeerConnectionManager,
               connectivityService: context.read<ConnectivityService>(),
+              // One for the process (bootstrap): the plugin reports the end of a capture to one
+              // delegate, which a bloc made again for the same sign-in shares with the old one.
+              screenCapturer: context.read<ScreenCapturer>(),
               foregroundCallPushSignal: RemotePushBroker.pendingCallForegroundPushs,
             )..add(const CallStarted());
           },

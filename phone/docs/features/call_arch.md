@@ -3,7 +3,7 @@
 `CallBloc` (`lib/features/call/bloc/call_bloc.dart`) is the central component of the entire app.
 It implements both `Bloc<CallEvent, CallState>` and `CallkeepDelegate`, making it the single point
 that bridges signaling, native call UI, WebRTC media, and the Flutter UI layer.
-Last reviewed: 2026-10-28.
+Last reviewed: 2026-11-23.
 
 The product/UX view lives in [`call_ux.md`](call_ux.md); incoming-call background scenarios with
 diagrams in [`../architecture/incoming_call_scenarios.md`](../architecture/incoming_call_scenarios.md); merging calls into a
@@ -246,6 +246,72 @@ the pull resume can be removed.
   the answer.
 
 The settling time is a heuristic, not a SIP deadline.
+
+## Screen share
+
+An ordinary call - not a leg of a room - can show the phone's screen to the far end in place of the
+camera (Android). Nothing changes in the protocol: the call's own connection keeps its one video
+line, and the screen goes out on its video sender (`RTCRtpSender.replaceTrack`). The far end, an
+app or a SIP phone behind Janus and PortaSIP, receives video as it would from a camera.
+
+`ScreenShare` (`features/call/utils/screen_share.dart`) holds the share and its steps, and is the
+one place where a share's status is kept: it reports every change (`onChanged`), and the bloc maps
+it into `ActiveCall.screenShare` (`starting`, `sharing`) for the screen (`_ScreenShareChanged`),
+also for a change made outside the mutation queue, such as a refused consent. The bloc decides when
+a share may start and when it has to stop. The platform side is `ScreenCapturer`:
+`DefaultScreenCapturer` (`screen_capturer.dart`) asks for the consent and captures through
+flutter_webrtc, and runs callkeep's `mediaProjection` foreground service in between, which Android
+14 demands before a capture and refuses before the consent (`AndroidCallkeepUtils.screenShare`,
+[screen-share-service.md](../../../callkeep/webtrit_callkeep_android/docs/screen-share-service.md)).
+It is built once by `bootstrap()` and handed to the bloc (`MainShellBlocs`): callkeep reports the
+end of a capture to one delegate, and a bloc made again for the same sign-in shares it with the
+old one. `ScreenCapturer.isSupported` (Android) becomes `CallState.screenShareSupported`, part of
+`canShareScreen`, so the screen does not decide the platform itself.
+
+- **Start** (`CallControlEvent.screenShareStarted`): only while `CallState.canShareScreen` holds -
+  a phone that can share; answered, connected, not held, not on its way out, no transfer under way
+  (`Transfer.isUnderWay`: the picker being open is not one), not a leg and no room being put
+  together - and one share at a time. The consent, the service and the capture run outside the
+  queues, since the consent is a system dialog a hangup must not wait behind; only putting the
+  screen on the connection is a mutation (`screenShareAttach`), which checks the call again.
+- **Video sender.** A call with a video sender (the camera on or soft-muted) gets the screen on it.
+  The call's camera is let go meanwhile (`UserMediaBuilder.releaseVideoTrack`): kept open it would
+  capture for nobody, its indicator on, behind the tile standing in for its preview; the camera
+  stops unless another call or the room still holds it. A track on the sender that is not the
+  call's own camera is kept as it is. A call without a video sender - an audio call - gets one
+  added for the screen, which renegotiates the call through `onRenegotiationNeeded`, the way a
+  camera turned on in an audio call does; `ActiveCall.video` (the camera intent) stays as it was.
+- **The far end's answer.** `screenShareVerify` runs on each answer while the share waits for one,
+  and reads the negotiated direction of the line the share added (`ScreenShare.videoAnswer`): a
+  line refused or inactive stops the share and the person is told
+  (`ScreenShareVideoRefusedNotification`). An answer to an offer made before the line - one already
+  out when the share added its sender - leaves the line with no negotiated direction and decides
+  nothing; the share waits for the answer to its own offer. A declined offer stops the share only
+  when it carried the line (`videoOffered`: the line has a `mid` and no direction yet).
+- **media_state.** The far end app hides a picture the call says is off, so the share announces
+  `video: true` and its stop announces the camera's own state again.
+- **Camera control.** Disabled while the screen is shared, and `cameraEnabled` is ignored then: the
+  camera would fight the screen for the one sender.
+- **Stop** (`screenShareStop`), whatever asks for it, once (`markStopping`): the person (the menu,
+  the tile's Stop), the capture ending outside the app (the notification's Stop, the system's),
+  and the call no longer able to share - held, a room being put together, ending or gone - read
+  from the state in `onChange` (`_followScreenShare`), which every one of those paths passes
+  through. A merge or an add into the room stops the share inside its own mutation, before the
+  room touches the connection (`_onConferenceMutation`), whoever asked for it - the person or the
+  room retrying one. The sender gets back what it carried: the call's camera, opened again as it
+  was (on or soft-muted), or nothing; a camera that does not open again turns the call's video off
+  and is told (`CallUserMediaErrorNotification`). A call going away gets no camera back. A call
+  that became a video call for the share stays one, with its camera off and its video sender
+  empty; `videoSender()` finds that empty sender again for the camera and for the far end's
+  re-INVITE with video (`PeerConnectionPolicyApplier`), so no second video line is added. The
+  capture is released and the service stopped. A refused consent changes nothing and says
+  nothing; a service or capture that failed is told (`ScreenShareFailedNotification`), unless the
+  share was stopped meanwhile - its stop takes the service away, and the capture under way fails
+  for it. The service is stopped after a failed start too: the start may have timed out on the
+  app's side with the service still coming up, and callkeep then stops it once it is up.
+
+What the unit tests cannot show: the consent dialog, the system's refusal of the service, the
+system stopping the projection, the capture itself, and how a far end renders the screen.
 
 ## Isolates
 

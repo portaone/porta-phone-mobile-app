@@ -64,8 +64,10 @@ class CallBlocHarness {
     int? lines,
     OutgoingFromNumberResolver? resolveOutgoingFromNumber,
     SignalingReconnect? signalingReconnect,
+    bool screenShareSupported = true,
   }) : peerFactory = peerConnectionFactory ?? FakePeerConnectionFactory() {
     TestWidgetsFlutterBinding.ensureInitialized();
+    screen.isSupported = screenShareSupported;
     installPlatformStubs();
     // The line rotation is process-wide; left as an earlier test set it, the
     // line an outgoing call takes would depend on the order tests run in.
@@ -112,6 +114,7 @@ class CallBlocHarness {
       roomCodecMoveTimer: roomCodecMoveTimer,
       conferenceAudioCodecs: conferenceAudioCodecs,
       conferenceAudioProfiles: conferenceAudioProfiles,
+      screenCapturer: screen,
       onCallEnded: () {
         callsEnded++;
         sideEffectOrder.add('call ended');
@@ -158,6 +161,9 @@ class CallBlocHarness {
   /// test that needs a connection which misbehaves passes its own.
   final FakePeerConnectionFactory peerFactory;
   final FakeUserMediaBuilder media = FakeUserMediaBuilder();
+
+  /// The platform side of a screen share: the consent, the service and the capture.
+  final FakeScreenCapturer screen = FakeScreenCapturer();
   late final CallPeerConnectionManager peers = CallPeerConnectionManager(factory: peerFactory);
 
   /// Everything the bloc asked the user to see, in order.
@@ -960,16 +966,27 @@ class FakeRtpTransceiver extends Fake implements RTCRtpTransceiver {
   @override
   final FakeRtpReceiver receiver;
 
+  /// The line's place in the SDP; empty until an offer carried the line.
   @override
-  String get mid => '0';
+  String mid = '0';
 
   /// An established call sends and receives on every transceiver until the
   /// bloc turns one; [directions] keeps every turn.
   TransceiverDirection direction = TransceiverDirection.SendRecv;
   final List<TransceiverDirection> directions = [];
 
+  /// Whether the transceiver was stopped: it sends and receives nothing any more.
   @override
-  Future<TransceiverDirection> getDirection() async => direction;
+  bool stoped = false;
+
+  /// How many times the direction was read.
+  int directionReads = 0;
+
+  @override
+  Future<TransceiverDirection> getDirection() async {
+    directionReads++;
+    return direction;
+  }
 
   @override
   Future<void> setDirection(TransceiverDirection direction) async {
@@ -977,8 +994,12 @@ class FakeRtpTransceiver extends Fake implements RTCRtpTransceiver {
     directions.add(direction);
   }
 
+  /// What the last offer and answer settled on; a far end that refused the line leaves it
+  /// inactive, and a line no answer has covered yet has none (`null`).
+  TransceiverDirection? negotiatedDirection = TransceiverDirection.SendRecv;
+
   @override
-  Future<TransceiverDirection> getCurrentDirection() async => TransceiverDirection.SendRecv;
+  Future<TransceiverDirection?> getCurrentDirection() async => negotiatedDirection;
 }
 
 class FakeRtpReceiver extends Fake implements RTCRtpReceiver {
@@ -1008,6 +1029,12 @@ class FakeRtpSender extends Fake implements RTCRtpSender {
   /// complete before taking effect - so a test can read what else has already
   /// happened while the sender is still being changed.
   Completer<void>? gate;
+
+  /// The streams the sender was tied to by [setStreams], last call only.
+  List<MediaStream>? streams;
+
+  @override
+  Future<void> setStreams(List<MediaStream> streams) async => this.streams = List.of(streams);
 
   @override
   MediaStreamTrack? get track => _track;
@@ -1056,6 +1083,12 @@ class FakeMediaStream extends Fake implements MediaStream {
 
   @override
   List<MediaStreamTrack> getVideoTracks() => _tracks.where((track) => track.kind == 'video').toList();
+
+  @override
+  Future<void> addTrack(MediaStreamTrack track, {bool addToNative = true}) async => _tracks.add(track);
+
+  @override
+  Future<void> removeTrack(MediaStreamTrack track, {bool removeFromNative = true}) async => _tracks.remove(track);
 
   @override
   Future<void> dispose() async {}
@@ -1116,6 +1149,45 @@ class FakeUserMediaBuilder extends Fake implements UserMediaBuilder {
   Future<void> release(MediaStream stream) async {
     released.add(stream);
     if (--_references <= 0) microphone.stopped = true;
+  }
+
+  /// Every camera taken off a stream, stopped as the one holder let it go.
+  final List<FakeMediaStreamTrack> camerasReleased = [];
+
+  /// Every camera opened for a stream that had none.
+  final List<FakeMediaStreamTrack> camerasOpened = [];
+
+  /// Which camera each of those openings asked for, in order ([frontCameras] is the builds').
+  final List<bool?> reopenFrontCameras = [];
+
+  /// What opening a camera fails with; `null` opens one.
+  Object? cameraError;
+
+  /// Takes the camera off [stream] and stops it unless another stream this builder made still
+  /// holds it, as the real builder's pool of shared tracks does.
+  @override
+  Future<void> releaseVideoTrack(MediaStream stream) async {
+    for (final track in stream.getVideoTracks()) {
+      await stream.removeTrack(track);
+      final heldElsewhere = built.any(
+        (other) => !identical(other, stream) && other.getVideoTracks().any((it) => it.id == track.id),
+      );
+      if (heldElsewhere) continue;
+      await track.stop();
+      if (track is FakeMediaStreamTrack) camerasReleased.add(track);
+    }
+  }
+
+  @override
+  Future<MediaStreamTrack?> ensureVideoTrack(MediaStream stream, {bool? frontCamera}) async {
+    final existing = stream.getVideoTracks().firstOrNull;
+    if (existing != null) return existing;
+    reopenFrontCameras.add(frontCamera);
+    if (cameraError case final error?) throw error;
+    final camera = FakeMediaStreamTrack(kind: 'video', id: 'cam-opened-${camerasOpened.length}');
+    camerasOpened.add(camera);
+    await stream.addTrack(camera);
+    return camera;
   }
 }
 
@@ -1215,4 +1287,81 @@ class _FakeConnectivityService extends Fake implements ConnectivityService {
 
   @override
   Stream<ConnectivityResult> get connectivityResultStream => const Stream.empty();
+}
+
+/// The platform side of a screen share, recorded: what was asked of it, in order, and what it
+/// answers. The consent can be held open with [consentGate], as the system dialog is.
+class FakeScreenCapturer implements ScreenCapturer {
+  /// Whether the phone can share at all; off stands for iOS.
+  @override
+  bool isSupported = true;
+
+  /// What the person answers to the consent.
+  bool consent = true;
+
+  /// While set, the consent waits for it, as the dialog waits for the person.
+  Completer<void>? consentGate;
+
+  /// What the consent throws, once it is answered.
+  Object? consentError;
+
+  /// What starting the service throws: the system refusing it.
+  Object? serviceError;
+
+  /// While set, the capture waits for it, as `getDisplayMedia` takes its time.
+  Completer<void>? captureGate;
+
+  /// What the capture throws.
+  Object? captureError;
+
+  /// Every step asked for, in order.
+  final List<String> steps = [];
+
+  /// Whether the service runs.
+  bool serviceRunning = false;
+
+  /// The capture last handed out, to check it was released.
+  FakeMediaStream? lastCapture;
+
+  int _captures = 0;
+  final _ended = StreamController<void>.broadcast();
+
+  /// The capture ends outside the app: the notification's Stop, or the system's.
+  void endOutside() => _ended.add(null);
+
+  @override
+  Future<bool> requestConsent() async {
+    steps.add('consent');
+    await consentGate?.future;
+    if (consentError case final error?) throw error;
+    return consent;
+  }
+
+  @override
+  Future<void> startService() async {
+    steps.add('start service');
+    if (serviceError case final error?) throw error;
+    serviceRunning = true;
+  }
+
+  @override
+  Future<void> stopService() async {
+    steps.add('stop service');
+    serviceRunning = false;
+  }
+
+  @override
+  Future<MediaStream> capture() async {
+    steps.add('capture');
+    await captureGate?.future;
+    if (captureError case final error?) throw error;
+    _captures++;
+    return lastCapture = FakeMediaStream(
+      'screen-$_captures',
+      tracks: [FakeMediaStreamTrack(kind: 'video', id: 'screen-$_captures')],
+    );
+  }
+
+  @override
+  Stream<void> get endedOutside => _ended.stream;
 }

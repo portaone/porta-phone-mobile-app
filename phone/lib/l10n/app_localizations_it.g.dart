@@ -2170,6 +2170,13 @@ class AppLocalizationsIt extends AppLocalizations {
   String get notifications_messageSnackBarAction_callVideoDowngraded => 'Impostazioni';
 
   @override
+  String get notifications_messageSnackBar_screenShareFailed => 'Impossibile avviare la condivisione dello schermo';
+
+  @override
+  String get notifications_messageSnackBar_screenShareVideoRefused =>
+      'L\'altra parte non accetta il video - condivisione dello schermo interrotta';
+
+  @override
   String get notifications_messageSnackBar_conferenceFailed => 'Impossibile avviare la conferenza';
 
   @override

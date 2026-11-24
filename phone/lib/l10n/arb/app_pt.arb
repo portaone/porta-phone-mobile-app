@@ -2141,6 +2141,14 @@
   },
   "notifications_messageSnackBarAction_callVideoDowngraded": "Configurações",
   "@notifications_messageSnackBarAction_callVideoDowngraded": {},
+  "notifications_messageSnackBar_screenShareFailed": "Não foi possível iniciar o compartilhamento de tela",
+  "@notifications_messageSnackBar_screenShareFailed": {
+    "description": "Shown when sharing the phone's screen in a call did not start (the system refused it or the capture failed); the call goes on as before."
+  },
+  "notifications_messageSnackBar_screenShareVideoRefused": "O outro lado não aceita vídeo - compartilhamento de tela encerrado",
+  "@notifications_messageSnackBar_screenShareVideoRefused": {
+    "description": "Shown when the other side of an audio call did not accept video, so sharing the phone's screen stopped; the call goes on as an audio call."
+  },
   "notifications_messageSnackBar_conferenceFailed": "Não foi possível criar a conferência",
   "@notifications_messageSnackBar_conferenceFailed": {
     "description": "Shown when a conference that was being set up failed; the merged calls go on as separate calls."

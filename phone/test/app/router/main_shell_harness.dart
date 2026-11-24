@@ -32,6 +32,7 @@ import 'package:webtrit_phone/app/notifications/notifications.dart';
 import 'package:webtrit_phone/app/router/app_router.dart';
 import 'package:webtrit_phone/blocs/blocs.dart';
 import 'package:webtrit_phone/extensions/extensions.dart';
+import 'package:webtrit_phone/features/call/call.dart' show ScreenCapturer;
 import 'package:webtrit_phone/data/data.dart';
 import 'package:webtrit_phone/l10n/l10n.dart';
 import 'package:webtrit_phone/models/models.dart';
@@ -90,6 +91,15 @@ class FakeCallkeepConnections extends Fake implements CallkeepConnections {
 
   @override
   Future<CallkeepConnection?> getConnection(String callId) async => null;
+}
+
+/// A phone that cannot share its screen: the shell's call bloc only needs one to be given.
+class FakeScreenCapturer extends Fake implements ScreenCapturer {
+  @override
+  bool get isSupported => false;
+
+  @override
+  Stream<void> get endedOutside => const Stream.empty();
 }
 
 class FakeFirebaseMessaging extends Fake implements FirebaseMessaging {
@@ -356,6 +366,7 @@ class MainShellHarness {
         ),
         Provider<Callkeep>.value(value: callkeep),
         Provider<CallkeepConnections>.value(value: callkeepConnections),
+        Provider<ScreenCapturer>.value(value: FakeScreenCapturer()),
         Provider<SignalingServiceFactory>.value(value: signalingFactory),
         Provider<StartupFeatureAccessCheck>.value(value: startupFeatureAccessCheck),
         Provider<FirebaseMessaging>.value(value: firebaseMessaging),

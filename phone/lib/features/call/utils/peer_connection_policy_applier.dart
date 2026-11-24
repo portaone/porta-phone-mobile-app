@@ -1,6 +1,7 @@
 import 'package:flutter_webrtc/flutter_webrtc.dart';
 import 'package:logging/logging.dart';
 
+import 'package:webtrit_phone/extensions/extensions.dart';
 import 'package:webtrit_phone/models/models.dart';
 import 'package:webtrit_phone/repositories/peer_connection_settings/peer_connection_settings_repository.dart';
 
@@ -119,11 +120,12 @@ class ModifyWithSettingsPeerConnectionPolicyApplier implements PeerConnectionPol
     // Enabled by default for test purposes
     // TODO: if everything works well remove all related settings
 
-    // Check if a video track is already added to the peer connection
-    final senders = await peerConnection.getSenders();
-    final alreadyHasVideo = senders.any((sender) => sender.track != null && sender.track!.kind == 'video');
+    // The connection's own video sender, also when it is empty: a screen share that stopped on a
+    // call whose camera was off leaves its sender without a track, and a track added beside it
+    // would be a second video line.
+    final videoSender = await peerConnection.videoSender();
 
-    if (alreadyHasVideo) {
+    if (videoSender?.track != null) {
       _logger.fine('Video track already added to the peer connection, skipping');
       return;
     }
@@ -134,7 +136,7 @@ class ModifyWithSettingsPeerConnectionPolicyApplier implements PeerConnectionPol
     final activeTrack = localStream.getVideoTracks().where((t) => t.enabled).firstOrNull;
     if (activeTrack != null) {
       _logger.fine('Active local video track found in stream, re-adding to peer connection');
-      await peerConnection.addTrack(activeTrack, localStream);
+      await _putVideoTrack(peerConnection, videoSender, activeTrack, localStream);
       return;
     }
 
@@ -143,8 +145,25 @@ class ModifyWithSettingsPeerConnectionPolicyApplier implements PeerConnectionPol
     // Add the video track to the peer connection, disabled initially
     if (localVideoTrack != null) {
       localVideoTrack.enabled = false;
-      await peerConnection.addTrack(localVideoTrack, localStream);
+      await _putVideoTrack(peerConnection, videoSender, localVideoTrack, localStream);
       _logger.fine('Added inactive local video track to peer connection');
+    }
+  }
+
+  /// Puts [track] on the empty [videoSender] when there is one, else adds it as a new line. On the
+  /// empty sender the track is tied to [localStream] as `addTrack` ties it (the m-line's `msid`):
+  /// `replaceTrack` alone keeps whatever stream the sender was made with.
+  Future<void> _putVideoTrack(
+    RTCPeerConnection peerConnection,
+    RTCRtpSender? videoSender,
+    MediaStreamTrack track,
+    MediaStream localStream,
+  ) async {
+    if (videoSender != null) {
+      await videoSender.replaceTrack(track);
+      await videoSender.setStreams([localStream]);
+    } else {
+      await peerConnection.addTrack(track, localStream);
     }
   }
 }

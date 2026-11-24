@@ -927,6 +927,10 @@ extension AppLocalizationsExtension on AppLocalizations {
         notifications_messageSnackBar_callVideoDowngraded,
       'notifications_messageSnackBarAction_callVideoDowngraded' =>
         notifications_messageSnackBarAction_callVideoDowngraded,
+      'notifications_messageSnackBar_screenShareFailed' =>
+        notifications_messageSnackBar_screenShareFailed,
+      'notifications_messageSnackBar_screenShareVideoRefused' =>
+        notifications_messageSnackBar_screenShareVideoRefused,
       'notifications_messageSnackBar_conferenceFailed' =>
         notifications_messageSnackBar_conferenceFailed,
       'notifications_messageSnackBar_conferenceVideoLeg' =>

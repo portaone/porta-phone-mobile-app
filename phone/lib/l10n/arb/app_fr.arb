@@ -2074,6 +2074,14 @@
   },
   "notifications_messageSnackBarAction_callVideoDowngraded": "Paramètres",
   "@notifications_messageSnackBarAction_callVideoDowngraded": {},
+  "notifications_messageSnackBar_screenShareFailed": "Impossible de démarrer le partage d'écran",
+  "@notifications_messageSnackBar_screenShareFailed": {
+    "description": "Shown when sharing the phone's screen in a call did not start (the system refused it or the capture failed); the call goes on as before."
+  },
+  "notifications_messageSnackBar_screenShareVideoRefused": "Votre correspondant n'accepte pas la vidéo - partage d'écran arrêté",
+  "@notifications_messageSnackBar_screenShareVideoRefused": {
+    "description": "Shown when the other side of an audio call did not accept video, so sharing the phone's screen stopped; the call goes on as an audio call."
+  },
   "notifications_messageSnackBar_conferenceFailed": "La conférence n'a pas pu être établie",
   "@notifications_messageSnackBar_conferenceFailed": {
     "description": "Shown when a conference that was being set up failed; the merged calls go on as separate calls."

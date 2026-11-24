@@ -25,5 +25,6 @@ export 'package:flutter_webrtc/flutter_webrtc.dart' show RTCVideoRenderer;
 
 export 'participant_camera.dart';
 export 'processing_status.dart';
+export 'screen_share_status.dart';
 export 'transfer.dart';
 export 'uncompleted_peer_connection_exception.dart';

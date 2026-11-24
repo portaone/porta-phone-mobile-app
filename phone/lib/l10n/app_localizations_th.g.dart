@@ -2138,6 +2138,12 @@ class AppLocalizationsTh extends AppLocalizations {
   String get notifications_messageSnackBarAction_callVideoDowngraded => 'การตั้งค่า';
 
   @override
+  String get notifications_messageSnackBar_screenShareFailed => 'ไม่สามารถเริ่มแชร์หน้าจอได้';
+
+  @override
+  String get notifications_messageSnackBar_screenShareVideoRefused => 'ปลายสายไม่รับวิดีโอ - หยุดแชร์หน้าจอแล้ว';
+
+  @override
   String get notifications_messageSnackBar_conferenceFailed => 'ไม่สามารถตั้งค่าการประชุมสายได้';
 
   @override

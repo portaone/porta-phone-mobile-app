@@ -2164,6 +2164,13 @@ class AppLocalizationsPt extends AppLocalizations {
   String get notifications_messageSnackBarAction_callVideoDowngraded => 'Configurações';
 
   @override
+  String get notifications_messageSnackBar_screenShareFailed => 'Não foi possível iniciar o compartilhamento de tela';
+
+  @override
+  String get notifications_messageSnackBar_screenShareVideoRefused =>
+      'O outro lado não aceita vídeo - compartilhamento de tela encerrado';
+
+  @override
   String get notifications_messageSnackBar_conferenceFailed => 'Não foi possível criar a conferência';
 
   @override

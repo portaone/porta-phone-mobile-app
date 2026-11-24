@@ -19,6 +19,7 @@ class CallState with DiagnosticableTreeMixin, _$CallState {
     this.voiceNoiseReductionFailed = false,
     this.conferenceVideo = false,
     this.invitedVideo,
+    this.screenShareSupported = false,
   });
 
   final CallServiceState callServiceState;
@@ -75,6 +76,9 @@ class CallState with DiagnosticableTreeMixin, _$CallState {
   /// a video call can then be merged like an audio one.
   final bool conferenceVideo;
 
+  /// Whether this phone can show its screen in a call (Android; see `ScreenCapturer.isSupported`).
+  final bool screenShareSupported;
+
   /// Whether a video call may join the room: the server's rooms carry video
   /// and the room here, if there is one, was not refused its own.
   bool get roomTakesVideo => conferenceVideo && !conference.videoDisabled;
@@ -128,6 +132,27 @@ class CallState with DiagnosticableTreeMixin, _$CallState {
   /// exactly the calls outside it that qualify.
   bool canAdd({required bool isConferenceEnabled}) =>
       isConferenceEnabled && conference.phase == ConferencePhase.active && mergeableCallIds.isNotEmpty;
+
+  /// Whether the screen can be shown in [callId] in place of its camera: on a phone that can
+  /// share at all, an answered, connected call that is not held, not on its way out, not being
+  /// transferred, not a leg of the room and not while a room is being put together. A share that
+  /// runs stops the moment this turns false.
+  ///
+  /// The share replaces the track of the call's own connection; a room carries each leg's media
+  /// through the mixer instead, a held call sends nothing worth showing, and a transfer under way
+  /// hands the call to the server. The transfer picker being open is not a transfer yet.
+  bool canShareScreen(String callId) {
+    if (!screenShareSupported) return false;
+    final call = retrieveActiveCall(callId);
+    if (call == null) return false;
+    return call.wasAccepted &&
+        !call.wasHungUp &&
+        !call.held &&
+        call.processingStatus == CallProcessingStatus.connected &&
+        !(call.transfer?.isUnderWay ?? false) &&
+        !isConferenced(callId) &&
+        !conference.awaitsOffer;
+  }
 
   /// The main lines no call is on, in [lines] order.
   Iterable<int> _idleLinesAmong(Iterable<int> lines) =>

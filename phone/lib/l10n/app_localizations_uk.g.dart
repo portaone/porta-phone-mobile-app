@@ -2182,6 +2182,13 @@ class AppLocalizationsUk extends AppLocalizations {
   String get notifications_messageSnackBarAction_callVideoDowngraded => 'Налаштування';
 
   @override
+  String get notifications_messageSnackBar_screenShareFailed => 'Не вдалося почати показ екрана';
+
+  @override
+  String get notifications_messageSnackBar_screenShareVideoRefused =>
+      'Співрозмовник не приймає відео - показ екрана зупинено';
+
+  @override
   String get notifications_messageSnackBar_conferenceFailed => 'Не вдалося створити конференцію';
 
   @override
