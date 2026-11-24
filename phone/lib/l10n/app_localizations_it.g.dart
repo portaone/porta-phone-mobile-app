@@ -713,6 +713,9 @@ class AppLocalizationsIt extends AppLocalizations {
   String get call_ScreenShareTile_stop => 'Interrompi';
 
   @override
+  String get call_ConferenceFullScreen_screenWaiting => 'In attesa dello schermo';
+
+  @override
   String get call_screenShare_actionLabel_share => 'Condividi schermo';
 
   @override

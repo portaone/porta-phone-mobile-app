@@ -697,6 +697,9 @@ class AppLocalizationsTh extends AppLocalizations {
   String get call_ScreenShareTile_stop => 'หยุด';
 
   @override
+  String get call_ConferenceFullScreen_screenWaiting => 'กำลังรอหน้าจอ';
+
+  @override
   String get call_screenShare_actionLabel_share => 'แชร์หน้าจอ';
 
   @override

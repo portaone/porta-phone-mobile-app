@@ -1,4 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:flutter_webrtc/flutter_webrtc.dart';
 import 'package:signaling/signaling.dart';
 import 'package:webtrit_callkeep/webtrit_callkeep.dart';
 
@@ -47,6 +48,58 @@ ActiveCall _makeCall({
 // ---------------------------------------------------------------------------
 
 void main() {
+  group('CallState screen share of a room', () {
+    final a = _makeCall(callId: 'a', acceptedTime: DateTime(2024));
+    final b = _makeCall(callId: 'b', line: 1, acceptedTime: DateTime(2024));
+    const room = ConferenceState(phase: ConferencePhase.active, legs: {'a': 0, 'b': 1});
+
+    CallState stateOf(ConferenceState conference, {bool conferenceVideo = true, InvitedConferenceVideo? invited}) =>
+        CallState(
+          activeCalls: [a, b],
+          conference: conference,
+          conferenceVideo: conferenceVideo,
+          screenShareSupported: true,
+          invitedVideo: invited,
+        );
+
+    test('a leg shares for the room, while the room is up and has video', () {
+      expect(stateOf(room).canShareScreen('a'), isTrue);
+      expect(stateOf(room.copyWith(phase: ConferencePhase.assembling)).canShareScreen('a'), isFalse);
+      expect(stateOf(room.copyWith(videoDisabled: true)).canShareScreen('a'), isFalse);
+      expect(stateOf(room, conferenceVideo: false).canShareScreen('a'), isFalse);
+    });
+
+    test('a leg shows the room\'s share, an ordinary call its own', () {
+      final sharing = stateOf(room).copyWith(
+        screenShare: const ScreenShareState(target: RoomScreenShareTarget(), status: ScreenShareStatus.sharing),
+      );
+      expect(sharing.screenShareOf('a'), ScreenShareStatus.sharing);
+      expect(sharing.screenShareOf('b'), ScreenShareStatus.sharing, reason: 'the room\'s, whichever leg');
+      expect(sharing.roomScreenShare, ScreenShareStatus.sharing);
+      expect(sharing.canShareScreen('a'), isFalse, reason: 'one share at a time');
+      final ownCall = stateOf(const ConferenceState()).copyWith(
+        screenShare: const ScreenShareState(target: CallScreenShareTarget('a'), status: ScreenShareStatus.starting),
+      );
+      expect(ownCall.screenShareOf('a'), ScreenShareStatus.starting);
+      expect(ownCall.screenShareOf('b'), isNull);
+      expect(ownCall.roomScreenShare, isNull);
+    });
+
+    test('a call whose far end invited it to a room is told apart by its line', () {
+      final state = stateOf(const ConferenceState(), invited: const InvitedConferenceVideo(line: 1));
+      expect(state.isInvitedToRoom('b'), isTrue);
+      expect(state.isInvitedToRoom('a'), isFalse);
+    });
+
+    test('the main screen is the presenter\'s, else any received', () {
+      final first = ParticipantCamera(stream: FakeStream('s3'), trackId: 't3');
+      final second = ParticipantCamera(stream: FakeStream('s4'), trackId: 't4');
+      expect(room.copyWith(screens: {3: first, 4: second}, presenter: 4).mainScreen, second);
+      expect(room.copyWith(screens: {3: first}, presenter: 1).mainScreen, first, reason: 'the host presents himself');
+      expect(room.mainScreen, isNull);
+    });
+  });
+
   group('ActiveCall.isIncoming / isOutgoing', () {
     test('isIncoming is true for incoming direction', () {
       final call = _makeCall(direction: CallDirection.incoming);
@@ -2297,4 +2350,11 @@ void main() {
       expect(state.handOverFor('b'), isNull);
     });
   });
+}
+
+class FakeStream extends Fake implements MediaStream {
+  FakeStream(this.id);
+
+  @override
+  final String id;
 }

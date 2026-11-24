@@ -20,6 +20,7 @@ class CallState with DiagnosticableTreeMixin, _$CallState {
     this.conferenceVideo = false,
     this.invitedVideo,
     this.screenShareSupported = false,
+    this.screenShare,
   });
 
   final CallServiceState callServiceState;
@@ -79,6 +80,10 @@ class CallState with DiagnosticableTreeMixin, _$CallState {
   /// Whether this phone can show its screen in a call (Android; see `ScreenCapturer.isSupported`).
   final bool screenShareSupported;
 
+  /// The one screen share there is - where it goes and where it stands - as `ScreenShare` keeps
+  /// it; `null` without one. Read through [screenShareOf] and [roomScreenShare].
+  final ScreenShareState? screenShare;
+
   /// Whether a video call may join the room: the server's rooms carry video
   /// and the room here, if there is one, was not refused its own.
   bool get roomTakesVideo => conferenceVideo && !conference.videoDisabled;
@@ -133,26 +138,26 @@ class CallState with DiagnosticableTreeMixin, _$CallState {
   bool canAdd({required bool isConferenceEnabled}) =>
       isConferenceEnabled && conference.phase == ConferencePhase.active && mergeableCallIds.isNotEmpty;
 
-  /// Whether the screen can be shown in [callId] in place of its camera: on a phone that can
-  /// share at all, an answered, connected call that is not held, not on its way out, not being
-  /// transferred, not a leg of the room and not while a room is being put together. A share that
-  /// runs stops the moment this turns false.
-  ///
-  /// The share replaces the track of the call's own connection; a room carries each leg's media
-  /// through the mixer instead, a held call sends nothing worth showing, and a transfer under way
-  /// hands the call to the server. The transfer picker being open is not a transfer yet.
-  bool canShareScreen(String callId) {
-    if (!screenShareSupported) return false;
-    final call = retrieveActiveCall(callId);
-    if (call == null) return false;
-    return call.wasAccepted &&
-        !call.wasHungUp &&
-        !call.held &&
-        call.processingStatus == CallProcessingStatus.connected &&
-        !(call.transfer?.isUnderWay ?? false) &&
-        !isConferenced(callId) &&
-        !conference.awaitsOffer;
+  /// Whether a screen share can start from [callId] now: see [ScreenShareCoordinator.canStart],
+  /// which also says where it goes - the room's video for a leg of the room, the call's own
+  /// sender otherwise.
+  bool canShareScreen(String callId) => ScreenShareCoordinator.canStart(this, callId);
+
+  /// Whether the video of [callId] goes to somebody else's room this client was invited to: a
+  /// share of that call goes there, as the call's own video is not used by the room.
+  bool isInvitedToRoom(String callId) {
+    final line = invitedVideo?.line;
+    return line != null && retrieveActiveCall(callId)?.line == line;
   }
+
+  /// Where the screen share that [callId] shows stands ([ScreenShareCoordinator.statusShownFor]).
+  ScreenShareStatus? screenShareOf(String callId) => ScreenShareCoordinator.statusShownFor(this, callId);
+
+  /// Where the host's share to his room stands; `null` while he shares none there.
+  ScreenShareStatus? get roomScreenShare => switch (screenShare) {
+    ScreenShareState(target: RoomScreenShareTarget(hosted: true), :final status) => status,
+    _ => null,
+  };
 
   /// The main lines no call is on, in [lines] order.
   Iterable<int> _idleLinesAmong(Iterable<int> lines) =>

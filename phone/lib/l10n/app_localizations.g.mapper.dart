@@ -251,6 +251,8 @@ extension AppLocalizationsExtension on AppLocalizations {
       'call_SystemErrorDialog_title' => call_SystemErrorDialog_title,
       'call_ScreenShareTile_title' => call_ScreenShareTile_title,
       'call_ScreenShareTile_stop' => call_ScreenShareTile_stop,
+      'call_ConferenceFullScreen_screenWaiting' =>
+        call_ConferenceFullScreen_screenWaiting,
       'call_screenShare_actionLabel_share' =>
         call_screenShare_actionLabel_share,
       'call_screenShare_actionLabel_stop' => call_screenShare_actionLabel_stop,

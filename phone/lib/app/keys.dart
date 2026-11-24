@@ -166,6 +166,12 @@ const String conferenceFullScreenMoreId = 'conferenceFullScreenMore';
 const String conferenceFullScreenKeypadId = 'conferenceFullScreenKeypad';
 const String conferenceFullScreenSwitchCameraId = 'conferenceFullScreenSwitchCamera';
 const String conferenceFullScreenHoldId = 'conferenceFullScreenHold';
+
+/// The room's More entry that starts or stops showing the phone's screen to the room.
+const String callScreenShareConferenceId = 'callScreenShareConference';
+
+/// The screen a participant shares in the room, in the main place of the room's tiles.
+const String callScreenShareConferenceScreenId = 'callScreenShareConferenceScreen';
 const String conferenceParticipantPageId = 'conferenceParticipantPage';
 const String conferenceSelfTileId = 'conferenceSelfTile';
 const String conferenceFullScreenMicId = 'conferenceFullScreenMic';

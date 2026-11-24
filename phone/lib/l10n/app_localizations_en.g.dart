@@ -708,6 +708,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get call_ScreenShareTile_stop => 'Stop';
 
   @override
+  String get call_ConferenceFullScreen_screenWaiting => 'Waiting for the screen';
+
+  @override
   String get call_screenShare_actionLabel_share => 'Share screen';
 
   @override

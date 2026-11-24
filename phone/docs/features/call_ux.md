@@ -95,14 +95,18 @@ focus to follow - see
 
 ### Sharing the screen
 
-Android only, in an ordinary call - not a leg of a room. The person shows the phone's screen
-to the far end in place of the camera; the far end, an app or a SIP phone, sees it as video.
+Android only. The person shows the phone's screen to the far end in place of the camera; the
+far end, an app or a SIP phone, sees it as video. In a conference the screen goes to the room
+(see [call_conference.md](call_conference.md), The screen in the room): the host shares from
+the room's More menu or from the three-dot menu of a leg, and every participant sees it in the
+main place of the room's full screen, the tiles in a row under it.
 
 - **Entry.** The toolbar's three-dot menu (`callActionsOptionsId`) gets "Share screen"
   (`callActionsScreenShareId`) after the picture's entries ("Fit"/"Cover", "Enable/Disable
   Blur", which stay for a call with the far end's video). It is offered for an answered,
   connected call that is not held, not being transferred (the transfer picker open is not a
-  transfer yet), not a leg and while no room is being put together - on Android, where the
+  transfer yet) and while no room is being put together - for a leg, while the room is up and
+  has video - on Android, where the
   state says the phone can share (`CallState.canShareScreen`). The menu is shown whenever it
   has an entry, so an audio call on Android has the menu with "Share screen" as its one entry;
   on iOS an audio call still has no menu.
@@ -119,7 +123,8 @@ to the far end in place of the camera; the far end, an app or a SIP phone, sees 
   control is disabled and the camera itself is let go, its indicator off: the screen holds the
   call's video, and stopping the share opens the camera again as it was.
 - **Stop.** "Stop sharing", the tile's Stop, the notification's Stop or the system ending the
-  capture, a hold, a merge into a room, or the end of the call. The camera comes back as it was;
+  capture, a hold, a merge into a room or an invitation to one (the share is started again
+  from the room), or the end of the call. The camera comes back as it was;
   if it cannot be opened again the call's video goes off with the camera error message. A call
   that became a video call for the share stays one with the camera off. A share stopped while
   it was still starting says nothing.
@@ -180,7 +185,7 @@ what it does.
 | `CallInfo`               | `widgets/call_info.dart`               | Focused-call name / number / call description / timer                       |
 | `IncomingCallActions`    | `widgets/incoming_call_actions.dart`   | Decline / Answer for the focused ringing call                               |
 | `ActiveCallActions`      | `widgets/active_call_actions.dart`     | In-call control grid + keypad (the hangup row rides along in portrait only) |
-| `ScreenShareTile`        | `widgets/screen_share_tile.dart`       | Stands in for the camera preview while the screen is shared; its Stop       |
+| `ScreenShareTile`        | `widgets/screen_share_tile.dart`       | Stands in for the camera preview, or the room's "You" tile, while shared   |
 
 ### Landscape
 

@@ -201,6 +201,12 @@ final class RoomEndedNotice extends ConferenceNotice {
   const RoomEndedNotice();
 }
 
+/// The room would not take this client's shared screen, or let it go for
+/// good: the share has nowhere to go and is to be stopped.
+final class ScreenShareLostNotice extends ConferenceNotice {
+  const ScreenShareLostNotice();
+}
+
 /// A continuation of the room's own that takes its turn in the owner's
 /// queue: the owner hands it back to [ConferenceRoom.takeStep]. An owner that
 /// is closing drops it, as it drops a [ConferenceCommand].
@@ -252,12 +258,15 @@ final class AnswerFailedStep extends ConferenceStep {
   final ConferenceRequestResult? result;
 }
 
-/// The cameras the room's video sends changed.
+/// The cameras and screens the room's video sends changed, or its presenter.
 final class VideoFeedsChangedStep extends ConferenceStep {
-  const VideoFeedsChangedStep(this.feeds);
+  const VideoFeedsChangedStep(this.feeds, {this.presenter});
 
   /// Every feed the video session receives now.
   final List<ConferenceVideoFeed> feeds;
+
+  /// Whoever shares a screen, as the room says; `null` while nobody does.
+  final int? presenter;
 }
 
 /// The server refused the room's video with `video_disabled`.

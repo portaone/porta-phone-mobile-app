@@ -21,6 +21,8 @@ export 'renegotiation_coordinator.dart';
 export 'rtp_traffic_monitor.dart';
 export 'screen_capturer.dart';
 export 'screen_share.dart';
+export 'screen_share_destinations.dart';
+export 'camera_screen_swap.dart';
 export 'sdp_mod_builder.dart';
 export 'sdp_munger.dart';
 export 'sdp_sanitizer.dart';

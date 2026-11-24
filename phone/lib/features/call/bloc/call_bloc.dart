@@ -34,8 +34,11 @@ import '../extensions/extensions.dart';
 import '../models/models.dart';
 import '../services/services.dart';
 import '../utils/utils.dart';
+import 'screen_share_coordinator.dart';
 
 export 'package:webtrit_callkeep/webtrit_callkeep.dart' show CallkeepHandle, CallkeepHandleType;
+
+export 'screen_share_coordinator.dart';
 
 part 'call_bloc.freezed.dart';
 
@@ -193,11 +196,10 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
 
   final ConnectivityService _connectivityService;
 
-  /// The screen share of a call: its attempt, capture, service and the camera the call's video
-  /// sender carried before it. The bloc decides when it may start and stop, and runs its
-  /// connection steps in the mutation queue; [ActiveCall.screenShare] follows every change of it
-  /// (`_ScreenShareChanged`).
-  late final ScreenShare _screenShare;
+  /// The one screen share there is, of a call or of a room: where it goes, when it may start and
+  /// stop, its steps. The bloc runs the steps that touch a connection in the mutation queue;
+  /// [CallState.screenShare] follows every change of it (`_ScreenShareChanged`).
+  late final ScreenShareCoordinator _screenShare;
 
   CallBloc({
     required this.callLogsRepository,
@@ -286,10 +288,11 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
       prepareOffer: _prepareResumeOffer,
     );
     _handshakeProcessor = HandshakeProcessor(queuedTerminationRequestsRepository: queuedTerminationRequestsRepository);
-    _screenShare = ScreenShare(
+    _screenShare = ScreenShareCoordinator(
       capturer: screenCapturer,
       userMedia: userMediaBuilder,
-      onEndedOutside: (callId) => _askScreenShareStop(callId, ScreenShareStopReason.endedOutside),
+      room: () => _room.video,
+      onEndedOutside: () => _askScreenShareStop(ScreenShareStopReason.endedOutside),
       onChanged: _onScreenShareChanged,
     );
     _reconnectController = signalingReconnect;
@@ -2140,7 +2143,7 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
     // The screen holds the call's video sender while it is shared, and the camera is let go; the
     // camera would fight the screen for the sender. The screen's control is disabled then
     // (CallActionAvailability, from the same share), and this keeps any other path out.
-    if (_screenShare.statusOf(event.callId) != null) {
+    if (_screenShare.holdsCallSender(event.callId)) {
       _logger.info('cameraEnabled: ${event.callId} shares its screen, the camera is left as it is');
       return;
     }
@@ -2560,8 +2563,8 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
       _CallMutationEventControlConferenceAdd(:final callId) => [callId],
       _ => const <String>[],
     };
-    for (final callId in joining) {
-      await _stopScreenShare(callId, ScreenShareStopReason.callChanged, emit);
+    if (joining.any(_screenShare.holdsCallSender)) {
+      await _stopScreenShare(ScreenShareStopReason.callChanged, emit);
     }
     await event.applyTo(_room, _conferenceWrite(emit));
   }
@@ -2596,12 +2599,20 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
     // Not after close(): the call screen is gone, and the app's notifications
     // outlive it.
     if (isClosed) return;
-    submitNotification(switch (notice) {
-      RoomRefusedNotice(:final reason) => ConferenceRefusedNotification(reason),
-      RoomFailedNotice(:final reason) => ConferenceFailedNotification(reason: reason),
-      RoomEndedNotice() => const ConferenceEndedNotification(),
-      CameraUnavailableNotice() => const CallUserMediaErrorNotification(),
-    });
+    if (switch (notice) {
+          RoomRefusedNotice(:final reason) => ConferenceRefusedNotification(reason),
+          RoomFailedNotice(:final reason) => ConferenceFailedNotification(reason: reason),
+          RoomEndedNotice() => const ConferenceEndedNotification(),
+          CameraUnavailableNotice() => const CallUserMediaErrorNotification(),
+          // Said by the stop, which this asks for.
+          ScreenShareLostNotice() => null,
+        }
+        case final notification?) {
+      submitNotification(notification);
+    }
+    if (notice is ScreenShareLostNotice) {
+      if (_screenShare.inRoom) _askScreenShareStop(ScreenShareStopReason.roomLost);
+    }
   }
 
   /// Gives a call its audio back once it is an ordinary call again, as
@@ -3516,37 +3527,34 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
 
   // --- Screen share -----------------------------------------------------------------------------
   //
-  // The screen of the phone goes to the far end in place of the camera, on the call's own video
-  // sender (RTCRtpSender.replaceTrack); nothing changes in the protocol. The steps and their
-  // bookkeeping are ScreenShare's; this decides when a share may start and when it must stop.
+  // Where a share goes and whether it may start or go on is the coordinator's
+  // (ScreenShareCoordinator): a call's own video sender, or the room's video for a leg of the room
+  // and for a call an invitation to a room came through. This runs its steps - the consent, the
+  // service and the capture outside the queues, the attach and the stop in the mutation queue -
+  // tells the person what went wrong, and maps the share into the state (CallState.screenShare).
 
-  /// Starts a screen share of the call. The consent, the service and the capture run outside the
+  /// Starts a screen share from the call. The consent, the service and the capture run outside the
   /// queues: the consent is a system dialog the person may keep open, and neither a hangup (a
-  /// control event) nor anything in the mutation queue may wait for it. Only the step that puts
-  /// the screen on the connection is queued.
+  /// control event) nor anything in the mutation queue may wait for it. Only the step that hands
+  /// the screen to its destination is queued.
   Future<void> _onCallControlEventScreenShareStarted(
     _CallControlEventScreenShareStarted event,
     Emitter<CallState> emit,
   ) async {
-    final callId = event.callId;
-    if (!state.canShareScreen(callId)) {
-      _logger.info('screenShareStarted: $callId cannot share its screen now');
-      return;
-    }
-    final attempt = _screenShare.begin(callId);
+    final attempt = _screenShare.begin(state, event.callId);
     if (attempt == null) {
-      _logger.info('screenShareStarted: a screen share runs already');
+      _logger.info('screenShareStarted: no share can start from ${event.callId} now');
       return;
     }
-    unawaited(_captureScreen(callId, attempt));
+    unawaited(_captureScreen(attempt));
   }
 
-  Future<void> _captureScreen(String callId, Object attempt) async {
-    final result = await _screenShare.capture(callId, attempt);
+  Future<void> _captureScreen(Object attempt) async {
+    final result = await _screenShare.capture(attempt);
     if (isClosed) return;
     switch (result) {
       case ScreenShareCaptureResult.captured:
-        add(_CallMutationEvent.screenShareAttach(callId, attempt));
+        add(_CallMutationEvent.screenShareAttach(attempt));
       case ScreenShareCaptureResult.failed:
         submitNotification(const ScreenShareFailedNotification());
       case ScreenShareCaptureResult.refused || ScreenShareCaptureResult.cancelled:
@@ -3560,71 +3568,59 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
     _CallControlEventScreenShareStopped event,
     Emitter<CallState> emit,
   ) async {
-    _askScreenShareStop(event.callId, ScreenShareStopReason.user);
+    _askScreenShareStop(ScreenShareStopReason.user);
   }
 
-  /// Queues the stop of the screen share of [callId], once, whatever asks for it.
-  void _askScreenShareStop(String callId, ScreenShareStopReason reason) {
-    if (isClosed || !_screenShare.markStopping(callId)) return;
-    add(_CallMutationEvent.screenShareStop(callId, reason));
+  /// Queues the stop of the share, once, whatever asks for it.
+  void _askScreenShareStop(ScreenShareStopReason reason) {
+    if (isClosed || !_screenShare.markStopping()) return;
+    add(_CallMutationEvent.screenShareStop(reason));
   }
 
-  /// Stops a share the moment its call can no longer share: held from any path, merged into a
-  /// room, a room being put together, ending or gone. Read from the state, which every one of
-  /// those paths passes through, as the linked call is.
+  /// Stops the share the moment it cannot go on where it went ([ScreenShareCoordinator.stands]).
+  /// Read from the state, which every path that changes a call or the room passes through.
   void _followScreenShare(CallState next) {
-    for (final callId in _screenShare.callIds.toList()) {
-      if (!next.canShareScreen(callId)) _askScreenShareStop(callId, ScreenShareStopReason.callChanged);
-    }
+    if (_screenShare.mustStopIn(next)) _askScreenShareStop(ScreenShareStopReason.callChanged);
   }
 
-  /// [ScreenShare] reports every change of a share; the state takes it from there, so what the
-  /// screen shows never stands apart from the share itself.
-  void _onScreenShareChanged(String callId) {
-    if (!isClosed) add(_ScreenShareChanged(callId));
+  /// The share reports every change; the state takes it from there, so what the screen shows never
+  /// stands apart from the share itself.
+  void _onScreenShareChanged() {
+    if (!isClosed) add(const _ScreenShareChanged());
   }
 
   Future<void> _onScreenShareStatusChanged(_ScreenShareChanged event, Emitter<CallState> emit) async {
-    final status = _screenShare.statusOf(event.callId);
-    if (state.retrieveActiveCall(event.callId)?.screenShare == status) return;
-    emit(state.copyWithMappedActiveCall(event.callId, (call) => call.copyWith(screenShare: status)));
+    final share = _screenShare.state;
+    if (state.screenShare == share) return;
+    emit(state.copyWith(screenShare: share));
   }
 
-  /// Puts the captured screen on the call's connection, if the call can still share it.
+  /// Hands the captured screen to where the share goes, if it can still go there.
   Future<void> __onMutationScreenShareAttach(_CallMutationEventScreenShareAttach e, Emitter<CallState> emit) async {
-    final callId = e.callId;
-    final peerConnection = state.canShareScreen(callId)
-        ? await _callPeerConnectionManager.retrieve(callId, allowWaiting: false)
-        : null;
-    // Read again after the wait: a hold or an end may have come in.
-    final call = state.retrieveActiveCall(callId);
-    if (peerConnection == null || call == null || !state.canShareScreen(callId)) {
-      await _screenShare.stop(callId, attempt: e.attempt);
-      return;
-    }
-
     final result = await _screenShare.attach(
-      callId,
       e.attempt,
-      peerConnection: peerConnection,
-      localStream: call.localStream,
+      state,
+      connectionOf: (callId) => _callPeerConnectionManager.retrieve(callId, allowWaiting: false),
     );
     switch (result) {
-      case ScreenShareAttachResult.attached:
-      case ScreenShareAttachResult.attachedWithNewVideo:
-        // The far end hides a picture the call says is off (media_state), so the screen is
-        // announced as video; the camera's own state is announced again when the share stops.
-        // A share that added the video sender renegotiates the call through
-        // onRenegotiationNeeded, the way a camera turned on in an audio call does.
-        final current = state.retrieveActiveCall(callId);
-        if (current != null) _sendMediaState(current, video: true);
+      case ScreenShareAttachResult.attached || ScreenShareAttachResult.attachedWithNewVideo:
+        // The far end hides a picture the call says is off (media_state), so a screen on a call's
+        // sender is announced as video; the camera's own state is announced again when it stops.
+        // A share that added the video sender renegotiates the call through onRenegotiationNeeded,
+        // the way a camera turned on in an audio call does.
+        switch (state.screenShare?.target) {
+          case CallScreenShareTarget(:final callId):
+            final call = state.retrieveActiveCall(callId);
+            if (call != null) _sendMediaState(call, video: true);
+          case RoomScreenShareTarget(invitedCallId: null):
+            // The host's participants get the screen by their calls with him.
+            for (final call in _roomLegs()) {
+              _sendMediaState(call, video: true);
+            }
+          case _:
+            break;
+        }
       case ScreenShareAttachResult.failed:
-        await _screenShare.stop(
-          callId,
-          peerConnection: peerConnection,
-          attempt: e.attempt,
-          frontCamera: call.frontCamera,
-        );
         submitNotification(const ScreenShareFailedNotification());
       case ScreenShareAttachResult.cancelled:
         break;
@@ -3632,51 +3628,69 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
   }
 
   Future<void> __onMutationScreenShareStop(_CallMutationEventScreenShareStop e, Emitter<CallState> emit) =>
-      _stopScreenShare(e.callId, e.reason, emit);
+      _stopScreenShare(e.reason, emit);
 
-  /// Stops the screen share of the call: the sender gets back what it carried (the camera, opened
-  /// again, or nothing), the capture and its service are released. A call that became a video
-  /// call for the share stays one, with the camera off. Nothing is said or sent for a share that
-  /// is already gone.
-  Future<void> _stopScreenShare(String callId, ScreenShareStopReason reason, Emitter<CallState> emit) async {
-    if (_screenShare.statusOf(callId) == null) return;
-    final peerConnection = await _callPeerConnectionManager.retrieve(callId, allowWaiting: false);
-    final stopped = await _screenShare.stop(
-      callId,
-      peerConnection: peerConnection,
-      frontCamera: state.retrieveActiveCall(callId)?.frontCamera,
-    );
-    if (stopped == null) return;
-    if (stopped.cameraLost) {
-      emit(state.copyWithMappedActiveCall(callId, (call) => call.copyWith(video: false)));
-      submitNotification(const CallUserMediaErrorNotification());
+  /// Stops the share: its destination takes the screen off and puts the camera back, the capture
+  /// and its service are released. A call that became a video call for the share stays one, with
+  /// the camera off. Nothing is said or sent for a share that is already gone.
+  ///
+  /// The room takes the screen off on its own queue, with a round trip to the server, and puts its
+  /// camera back itself: that stop is not waited for here, and the share is over for the state at
+  /// once. A call's sender is the bloc's to put back, in this queue.
+  Future<void> _stopScreenShare(ScreenShareStopReason reason, Emitter<CallState> emit) async {
+    final share = _screenShare.state;
+    if (share == null) return;
+    final notice = switch (reason) {
+      ScreenShareStopReason.videoRefused => const ScreenShareVideoRefusedNotification(),
+      ScreenShareStopReason.roomLost => const ScreenShareFailedNotification(),
+      _ => null,
+    };
+    if (share.target case CallScreenShareTarget(:final callId)) {
+      final stopped = await _screenShare.stop();
+      if (stopped == null) return;
+      if (stopped.cameraLost) {
+        emit(state.copyWithMappedActiveCall(callId, (call) => call.copyWith(video: false)));
+        submitNotification(const CallUserMediaErrorNotification());
+      }
+      final call = state.retrieveActiveCall(callId);
+      if (stopped.attached && call != null && !call.wasHungUp) _sendMediaState(call, video: call.isCameraActive);
+    } else {
+      final hosted = share.target == const RoomScreenShareTarget();
+      unawaited(
+        _screenShare.stop().then((stopped) {
+          if (!hosted || stopped == null || !stopped.attached || isClosed) return;
+          // The legs' video goes back to the camera, or to nothing with it off.
+          for (final call in _roomLegs()) {
+            _sendMediaState(call, video: call.isCameraActive);
+          }
+        }),
+      );
     }
-    final call = state.retrieveActiveCall(callId);
-    if (stopped.attached && call != null && !call.wasHungUp) _sendMediaState(call, video: call.isCameraActive);
-    if (reason == ScreenShareStopReason.videoRefused) submitNotification(const ScreenShareVideoRefusedNotification());
+    if (notice != null) submitNotification(notice);
   }
+
+  /// The legs of the room this client hosts, still up.
+  Iterable<ActiveCall> _roomLegs() =>
+      state.activeCalls.where((call) => state.conference.isLeg(call.callId) && !call.wasHungUp);
 
   /// The far end answered an offer of a call whose share added video: the share stops when the
   /// answer to its own offer gives the screen no way out (the video line refused or left
   /// inactive). An answer to an earlier offer, which did not carry the line, decides nothing.
   Future<void> __onMutationScreenShareVerify(_CallMutationEventScreenShareVerify e, Emitter<CallState> emit) async {
-    final peerConnection = await _callPeerConnectionManager.retrieve(e.callId, allowWaiting: false);
-    if (peerConnection == null) return;
-    if (await _screenShare.videoAnswer(e.callId, peerConnection) == ScreenShareVideoAnswer.refused) {
+    final sender = _screenShare.callSenderOf(e.callId);
+    if (sender == null) return;
+    if (await sender.videoAnswer() == ScreenShareVideoAnswer.refused) {
       _logger.warning('screenShareVerify: the far end of ${e.callId} refused the video of the screen share');
-      _askScreenShareStop(e.callId, ScreenShareStopReason.videoRefused);
+      _askScreenShareStop(ScreenShareStopReason.videoRefused);
     }
   }
 
   /// An offer of [callId] was refused: the share stops when that offer was the one carrying the
   /// video line it added, as the screen then has no way out.
   Future<void> _onScreenShareOfferDeclined(String callId) async {
-    if (!_screenShare.awaitsVideo(callId)) return;
-    final peerConnection = await _callPeerConnectionManager.retrieve(callId, allowWaiting: false);
-    if (peerConnection == null) return;
-    if (await _screenShare.videoOffered(callId, peerConnection)) {
-      _askScreenShareStop(callId, ScreenShareStopReason.videoRefused);
-    }
+    final sender = _screenShare.callSenderOf(callId);
+    if (sender == null || !sender.awaitsVideo) return;
+    if (await sender.videoOffered()) _askScreenShareStop(ScreenShareStopReason.videoRefused);
   }
 
   /// Re-derives [ActiveCall.videoPermissionDenied] from the live camera
@@ -4070,7 +4084,9 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
         if (!initialAccept && remoteDescription.type == 'answer') {
           _renegotiationCoordinator.offerCompleted(event.callId);
           _room.legNegotiation.answerApplied(event.callId);
-          if (_screenShare.awaitsVideo(event.callId)) add(_CallMutationEvent.screenShareVerify(event.callId));
+          if (_screenShare.callSenderOf(event.callId)?.awaitsVideo ?? false) {
+            add(_CallMutationEvent.screenShareVerify(event.callId));
+          }
         }
         final transceivers = await peerConnection.getTransceivers();
         for (final t in transceivers) {

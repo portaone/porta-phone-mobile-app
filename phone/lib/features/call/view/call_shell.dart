@@ -159,7 +159,22 @@ class _CallShellState extends State<CallShell> {
     // whether there is a room, and its preview goes all the same.
     final nextId = nextCall?.callId;
     final joinedOrLeft = nextId != null && previous.conference.isLeg(nextId) != current.conference.isLeg(nextId);
-    return prevCall != nextCall || previous.conference.isPresent != current.conference.isPresent || joinedOrLeft;
+    return prevCall != nextCall ||
+        previous.conference.isPresent != current.conference.isPresent ||
+        joinedOrLeft ||
+        previous.screenShare != current.screenShare;
+  }
+
+  /// The room's full screen opened or closed: the tile of a share to the room is shown on the
+  /// default screen only.
+  void _onConferenceFullScreen() {
+    if (mounted) _updateOverlayContent(context, context.read<CallBloc>().state, context.router);
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    ConferenceFullScreen.isOpen.addListener(_onConferenceFullScreen);
   }
 
   void _updateOrientations(BuildContext context, CallDisplay display) {
@@ -205,10 +220,15 @@ class _CallShellState extends State<CallShell> {
         final activeCall = state.activeCalls.current;
         // In a room the host sees himself only in full screen, as a tile; a
         // video call outside the room keeps its preview. While the screen is
-        // shown in place of the camera, a tile saying so takes the preview's
-        // place.
-        if (activeCall.screenShare == ScreenShareStatus.sharing) {
-          _showScreenShareTile(context);
+        // shown - in the call or, for a leg, in the room - a tile saying so
+        // takes the preview's place; the room's full screen says it on the
+        // host's own tile instead.
+        if (state.screenShareOf(activeCall.callId) == ScreenShareStatus.sharing) {
+          if (ConferenceFullScreen.isOpen.value) {
+            _hideOverlay();
+          } else {
+            _showScreenShareTile(context);
+          }
         } else if (activeCall.isCameraActive && !state.conference.isLeg(activeCall.callId)) {
           _showLocalCameraPreview(context, state);
         } else {
@@ -353,6 +373,7 @@ class _CallShellState extends State<CallShell> {
 
   @override
   void dispose() {
+    ConferenceFullScreen.isOpen.removeListener(_onConferenceFullScreen);
     _thumbnailManager.dispose();
     super.dispose();
   }

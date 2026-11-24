@@ -160,7 +160,7 @@ class ConferenceRoom {
     AnswerTakenStep(:final room, :final attempt) => _answered(room: room, attempt: attempt, write: write),
     AnswerFailedStep(:final attempt, :final result) => _answerFailed(attempt: attempt, result: result, write: write),
     RejoinRepliedStep(:final attempt, :final result) => _rejoinReplied(attempt: attempt, result: result),
-    VideoFeedsChangedStep(:final feeds) => _videoFeedsChanged(feeds, write),
+    VideoFeedsChangedStep(:final feeds, :final presenter) => _videoFeedsChanged(feeds, presenter, write),
     VideoDisabledStep() => _videoDisabled(write),
     CameraSwitchedStep(:final frontCamera, :final trackId) => _cameraSwitched(frontCamera, trackId, write),
   };
@@ -1037,32 +1037,42 @@ class ConferenceRoom {
   // The video is [RoomVideo]'s: it raises the room's own steps, commands and
   // notices, and its steps write the owner's state here.
 
-  /// The cameras the room sends changed: they go to the room, or to the
-  /// invitation this client takes part in.
-  Future<void> _videoFeedsChanged(List<ConferenceVideoFeed> feeds, ConferenceWrite write) async {
-    final cameras = {
+  /// The cameras and screens the room sends changed: they go to the room, or
+  /// to the invitation this client takes part in. An invited client shows no
+  /// room of its own: a participant's screen is kept there as that
+  /// participant's video, in place of the camera it stands in for (Core lists
+  /// each stream with its feed and kind; a client that sends both, a browser,
+  /// is shown by its screen).
+  Future<void> _videoFeedsChanged(List<ConferenceVideoFeed> feeds, int? presenter, ConferenceWrite write) async {
+    Map<int, ParticipantCamera> of(ConferenceVideoKind kind) => {
       for (final feed in feeds)
-        if (feed.kind == ConferenceVideoKind.camera)
-          feed.feed: ParticipantCamera(stream: feed.stream, trackId: feed.trackId),
+        if (feed.kind == kind) feed.feed: ParticipantCamera(stream: feed.stream, trackId: feed.trackId),
     };
+    final cameras = of(ConferenceVideoKind.camera);
     if (_calls.conference.isPresent) {
       // A room of this client's own: an invitation that stood before it is
       // over, and its video with it.
       write(
         ConferenceUpdate(
-          conference: _calls.conference.copyWith(videoFeeds: cameras, selfVideo: _video.camera),
+          conference: _calls.conference.copyWith(
+            videoFeeds: cameras,
+            selfVideo: _video.camera,
+            screens: of(ConferenceVideoKind.screen),
+            presenter: presenter,
+          ),
           invitedVideo: (value: null),
         ),
       );
       return;
     }
     final invitedLine = _video.invitedLine;
+    final videos = {...cameras, ...of(ConferenceVideoKind.screen)};
     write(
       ConferenceUpdate(
         invitedVideo: (
           value: invitedLine == null
               ? null
-              : InvitedConferenceVideo(line: invitedLine, feeds: cameras, selfVideo: _video.camera),
+              : InvitedConferenceVideo(line: invitedLine, feeds: videos, selfVideo: _video.camera),
         ),
       ),
     );

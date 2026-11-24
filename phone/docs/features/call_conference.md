@@ -681,15 +681,38 @@ the bloc has no part of the video of its own (see "In the room" below).
 - The **publisher** sends the camera, video only: the microphone in the camera stream
   belongs to the mixer and is not added. The camera m-line is named `camera` for Core;
   a later publish renegotiates the same publication on the same connection, an ICE
-  restart among them. The shared camera track is turned on for the room; when the room
+  restart among them. A shared screen goes out on that same line in the camera's place
+  (`shareScreen`), named `screen` (`descriptions`): over a published camera the line's
+  sender takes the screen and the publication is renegotiated, the camera let go; with
+  no camera out a publication is made of the screen alone. `stopScreen` puts the camera
+  back on the line, opened again, while it is still wanted, and ends the publication
+  otherwise. While the screen is out the camera stays wanted but waits (`publish` says
+  `CameraNotPublished`), and taking the camera off - the user, the background - drops the
+  wish without touching the screen. A failed publisher is made again with what is
+  wanted, the screen first; a screen the room refuses or fails for good is given up and
+  told to the owner (`onScreenLost`) - the camera stays wanted then, and the room's video
+  puts it back when the person still wants it - and nothing is said when the owner stopped
+  it or left the video. A stop that comes before the queued share ran finds the camera
+  still on the line and leaves it there. The camera <-> screen move of the line is
+  `CameraScreenSwap`, the same as a call's share. The screen's stream belongs to whoever
+  captured it; the session never releases it. The shared camera track is turned on for the room; when the room
   lets it go it goes back as the calls want it then (`callsWantCamera`), or as the
   room found it where the owner does not say. A second answer to one publish is
   ignored.
+- A publication offers the room Baseline H.264 only (`withBaselineH264Only`, room_video_codecs.dart):
+  Janus gives a publication the first codec of its offer and sends it to every subscriber as it
+  is, an iPhone offers H.264 High first, and an Android phone's answer refuses that line
+  (`m=video 0`) - it saw nothing of an iPhone's camera or screen in the room.
 - An offer with a new SDP session id (`o=`) is a new subscription and gets a new
   connection at once, without waiting for the old one's state to say so; what the
   room said of the old streams is dropped with it, since Core names the new ones
   right after the offer. The offer of a restart this client asked for is answered on
-  the same connection even if its ICE has failed.
+  the same connection even if its ICE has failed. Janus offers the update of a
+  subscription - another participant's camera joining after this client subscribed -
+  under a new session id as well, but with the next version (`o=` version 2 after 1),
+  while a new subscription starts at 1: such an offer is answered on the same
+  connection. Taken for a new subscription, the closed connection made Janus hang the
+  subscriber up, and every picture of the room was gone.
 - Candidates a connection gathers before Core acknowledged the request behind it
   would be refused with `no_peer_connection`, so they wait here and go out tagged
   with their `pc`. Remote candidates ahead of an offer or answer wait for it.
@@ -720,7 +743,8 @@ the bloc has no part of the video of its own (see "In the room" below).
   publisher restarts ICE: events sent while the socket was down are lost and the video
   is not in the handshake.
 - Received streams are named by the participant through the `mid` -> `feed` list of
-  the last `conference_video_updated`; a stream the room has not named yet is not
+  the last `conference_video_updated`, each with its kind (`camera`, `screen`), and
+  reported with the room's `presenter`; a stream the room has not named yet is not
   reported. The list is taken in turn with the offers, on the session's queue: when a
   participant unpublishes, Core offers a new subscription and sends its list 9 ms
   later, while the offer is still being taken - taken first, the list would be
@@ -742,11 +766,13 @@ functions it is given and raises the room's own steps, commands and notices, wit
 vocabulary of its own: the cameras received and the refusal of the room's video as
 steps (`VideoFeedsChangedStep`, `VideoDisabledStep`, `CameraSwitchedStep`), which the
 room writes as a `ConferenceUpdate`, the camera of a leg as `SetLegCameraCommand`, a
-camera that could not be opened as `CameraUnavailableNotice`.
+camera that could not be opened as `CameraUnavailableNotice`, a shared screen the room
+would not take as `ScreenShareLostNotice`.
 
 The bloc hands the room's video, through `ConferenceRoom.video` (`RoomVideoControls`),
 only what concerns it: the video events of the signalling (`onEvent`, recognised by
-`RoomVideo.isEvent`), the camera controls (`setCamera`, `switchCamera`), the app's
+`RoomVideo.isEvent`), the camera controls (`setCamera`, `switchCamera`), the screen
+(`shareScreen`, `stopScreenShare`, `takesScreen`, through `RoomScreenDestination`), the app's
 lifecycle (`onAppLifecycleChanged`), a session that came back (`onSessionBack`;
 `onRoomKept` when the handshake keeps the room), and the calls as they change
 (`onCallsChanged`).
@@ -778,7 +804,10 @@ lifecycle (`onAppLifecycleChanged`), a session that came back (`onSessionBack`;
 - The camera is opened once and shared with the calls that send video. The room's
   camera button turns the legs' camera on and off with it - their video is not
   forwarded in the room, and a call left alone when the room is gone goes on as the
-  camera was - and a camera switch tells the legs which camera they show. A video
+  camera was - and a camera switch tells the legs which camera they show. A participant sees
+  the host by the video of its own call with him, so a leg that is a voice call is given the
+  camera when the room's is turned on: its call renegotiated with video, as a call's camera
+  button does; a far end that refuses the video stays a voice call. A video
   call outside the room that has its camera on keeps it when the room's is turned
   off, and when the room lets the camera go it stays on only for a call whose own
   camera the user has on.
@@ -803,6 +832,62 @@ lifecycle (`onAppLifecycleChanged`), a session that came back (`onSessionBack`;
   `a=msid:janus janus<N>`), and a stream id alone would show the first participant's
   camera on every row. A leg whose call is not known yet shows no picture and no
   camera. The camera is `conferenceParticipantCamera<N>` for a case while it is seen.
+
+### The screen in the room
+
+A screen is shared in a room where the video of the call goes (`ScreenShareCoordinator`, see
+[call_arch.md](call_arch.md), Screen share): for the host from a leg - the More menu of the full
+screen ("Share screen", `callScreenShareConferenceId`) or the default screen's three-dot menu while
+a leg is focused - as one share of the room whichever leg asked; for an invited far end from the
+call the invitation came through, as in a call. Its status is `CallState.screenShare` like any
+share's, read for a leg as the room's (`screenShareOf`, `roomScreenShare`). The consent, the
+service and the capture are a call's own; the captured screen goes to `RoomVideo.shareScreen`
+(`RoomScreenDestination`) instead of a call's sender. Its stop waits for the room to take the
+screen off before the capture is released, without holding the bloc's queue; the share is over
+for the state at once.
+
+- **Who may share.** The host while the room is up and has video and is not parked for a call
+  outside it; an invited far end while its invitation stands. One share at a time on a phone: while
+  one runs, no other call offers to start one. Anyone in the room may share while someone else
+  does: Core keeps them in order and calls the latest its presenter, the one before again when the
+  latest stops; this client follows the room's word.
+- **While sharing.** The screen takes the camera's place on the room's line and the camera is let
+  go. The camera control stays: what the person asks of it is remembered by the room's video
+  (the session holds the wish), and a camera wanted comes back after the share - the same for the
+  host and for an invited far end - facing the way the room's calls show it (`callsFrontCamera`),
+  the front camera where none says: opened without a facing, an iPhone gives the rear one. On the
+  default screen the call screen's floating tile says
+  "Sharing screen" with its Stop (`callScreenShareTileId`, `callScreenShareStopId`), as for a call;
+  on the full screen the host's "You" tile says it instead (`ConferenceFullScreen.isOpen` tells the
+  call screen). More reads "Stop sharing". In the background the screen stays in the room - the
+  person shares what they look at elsewhere - while a camera would leave. The room's SIP phones
+  get the screen (Core sends them the presenter's screen first).
+- **The host's participants.** A participant sees the host by the video of its own call with
+  him, not by the room's, so the host's share also goes on every leg's video sender in the
+  camera's place (`RoomScreenDestination` with a `CallSenderDestination` per leg) and the camera
+  goes back there after it, on or soft-muted as it was. A leg that is a voice call is given a
+  video sender for the screen, its call renegotiated, and keeps it empty after: the camera need
+  not have been on. A far end that refuses the video stays a voice call and the share goes on
+  for the others. The legs are told the video is on (`media_state`) for the share and as the
+  camera is after it. A camera turned on while the screen is out reaches the legs after it.
+- **Stop.** The person, the notification, the end of the capture outside the app, the end of the
+  room or of its video, a room parked for a call outside it (the person is talking to somebody
+  else), the end of the invitation, and a room that refuses or fails the screen for good (told as
+  "Screen sharing could not start"; the camera comes back when it is wanted). The host's way back
+  into the room (rejoining) keeps the share: the room's video is made again with the screen on its
+  line.
+- **A share that was there before.** A call that shares its screen and then joins a room -
+  merged or added by the host, or invited by its far end - stops its share first: the room's
+  video is not that call's, and the share is started again from the room.
+- **Receiving.** Received screens go to `ConferenceState.screens` with the room's `presenter`;
+  the full screen shows the presenter's screen in the main place (`ConferenceState.mainScreenFeed`:
+  the presenter's, else any received - the host's own is not received), whole (contained),
+  `callScreenShareConferenceScreenId`, and the tiles in one row under it that scrolls sideways. A
+  phone sends its screen only when the screen changes, so a picture opened after the sharer's last
+  change gets no frame until the next one (seen on the stand: a still home screen left the place
+  empty); until the first frame the place shows who shares and "Waiting for the screen". An
+  invited far end keeps a participant's screen as that participant's video
+  (`InvitedConferenceVideo.feeds`), in place of the camera it stands in for.
 
 ### Full screen
 
@@ -832,7 +917,10 @@ screen's hangup does while the focused call is a leg.
 - A camera that stops sending after its first frame shows its last frame, or black,
   over the avatar: nothing tells the row that the frames stopped.
 - An invited far end sees no camera yet: what it receives is in
-  `CallState.invitedVideo` and is shown nowhere.
+  `CallState.invitedVideo` (a participant's screen in place of the camera) and is shown nowhere.
+- A share of a call that joins a room stops rather than carrying over into the room's
+  video: the capture could move, but the room's publication comes later than the merge,
+  and a carried share would need a state of its own while it waits.
 - The call screen has two more owners of an `RTCVideoRenderer` (`StreamThumbnail`,
   `RTCStreamView`) that release one before it is made and so keep its texture;
   `ParticipantVideo`, shared by the rows and the tiles, does not, and is not shared

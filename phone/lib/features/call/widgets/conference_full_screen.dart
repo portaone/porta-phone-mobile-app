@@ -1,5 +1,7 @@
 // The conference in full screen: every participant as a video tile, the host
-// as one more tile "You", and the controls that act on the room.
+// as one more tile "You", and the controls that act on the room. While someone
+// shares a screen, it takes the main place and the tiles go to a row under it;
+// while the host shares his own, his tile says so, with a Stop.
 //
 // Two pages of the call screen's routes on a phone
 // (view/conference_full_screen_pages.dart): the tiles, opened by the round
@@ -9,6 +11,8 @@
 // back - the arrow or the system Back - is the router's. The page on top says
 // who left. What each control does arrives in CallScreenParams, as for the
 // default screen; the colours are the call screen's style (CallScreenStyles).
+import 'package:flutter/foundation.dart';
+
 import 'package:material_ui/material_ui.dart';
 
 import 'package:flutter_webrtc/flutter_webrtc.dart';
@@ -28,8 +32,15 @@ import 'call_row_frame.dart';
 import 'conference_panel.dart';
 import 'conference_participant_camera.dart';
 import 'popup_menu.dart';
+import 'screen_share_tile.dart';
 
 class ConferenceFullScreen extends StatefulWidget {
+  /// Whether the room's full screen is shown: the call screen's floating tile of a share to the
+  /// room gives way to the host's own tile here (CallShell).
+  static ValueListenable<bool> get isOpen => _open;
+  static final _open = ValueNotifier<bool>(false);
+  static int _mounted = 0;
+
   const ConferenceFullScreen({
     super.key,
     required this.params,
@@ -76,6 +87,18 @@ class _ConferenceFullScreenState extends State<ConferenceFullScreen> {
   final _selfTileKey = GlobalKey();
 
   GlobalKey _tileKey(String callId) => _tileKeys.putIfAbsent(callId, GlobalKey.new);
+
+  @override
+  void initState() {
+    super.initState();
+    ConferenceFullScreen._open.value = ++ConferenceFullScreen._mounted > 0;
+  }
+
+  @override
+  void dispose() {
+    ConferenceFullScreen._open.value = --ConferenceFullScreen._mounted > 0;
+    super.dispose();
+  }
 
   /// The participant this page was last built for, kept for the moment the
   /// page leaves after him: it shows him to the end of its transition rather
@@ -166,22 +189,50 @@ class _ConferenceFullScreenState extends State<ConferenceFullScreen> {
       title = context.l10n.call_ConferencePanel_header(legs.length).toUpperCase();
       final tiles = <Widget>[
         for (final (index, leg) in legs.indexed) tileOf(participantOf(index, leg)),
-        _SelfTile(
-          key: _selfTileKey,
-          video: covered ? null : conference.selfVideo,
-          // The room's camera faces the way the legs that share it show; the
-          // front one, as it is published first, where none says.
-          mirror:
-              params.activeCalls.firstWhereOrNull((call) => conference.isLeg(call.callId) && call.video)?.frontCamera ??
-              true,
-          muted: conference.selfMuted,
-          foreground: foreground,
-          overlay: overlay,
-          textStyle: textStyle,
-          onSwitchCamera: conference.selfVideo == null ? null : params.onConferenceCameraSwitched,
-        ),
+        if (params.roomScreenShare == ScreenShareStatus.sharing)
+          ScreenShareTile(
+            key: _selfTileKey,
+            orientation: MediaQuery.orientationOf(context),
+            fill: true,
+            radius: _tileRadius,
+            onStopPressed: () => params.onConferenceScreenShare?.call(false),
+          )
+        else
+          _SelfTile(
+            key: _selfTileKey,
+            video: covered ? null : conference.selfVideo,
+            // The room's camera faces the way the legs that share it show; the
+            // front one, as it is published first, where none says.
+            mirror:
+                params.activeCalls
+                    .firstWhereOrNull((call) => conference.isLeg(call.callId) && call.video)
+                    ?.frontCamera ??
+                true,
+            muted: conference.selfMuted,
+            foreground: foreground,
+            overlay: overlay,
+            textStyle: textStyle,
+            onSwitchCamera: conference.selfVideo == null ? null : params.onConferenceCameraSwitched,
+          ),
       ];
-      body = _TileGrid(tiles: tiles);
+      final screenFeed = covered ? null : conference.mainScreenFeed;
+      final screen = conference.screens[screenFeed];
+      if (screenFeed == null || screen == null) {
+        body = _TileGrid(tiles: tiles);
+      } else {
+        // The far end of the host's line N is feed N + 2; a guest of the room has no call here.
+        final presenter = legs.firstWhereOrNull((leg) => leg.value + 2 == screenFeed);
+        final call = presenter == null
+            ? null
+            : params.activeCalls.firstWhereOrNull((call) => call.callId == presenter.key);
+        body = _PresenterLayout(
+          screen: screen,
+          tiles: tiles,
+          name: call?.nameOrNumber,
+          foreground: foreground,
+          textStyle: textStyle,
+        );
+      }
     }
 
     final notice = _notice;
@@ -259,6 +310,109 @@ const _gap = 8.0;
 const _minRowHeight = 160.0;
 const _tileRadius = 16.0;
 const _shadows = [Shadow(blurRadius: 4)];
+
+/// A shared screen in the main place, whole (contained, never cut), and the
+/// tiles in one row under it that scrolls sideways past what fits.
+///
+/// A phone sends its screen only when the screen changes: one that shows something still sends
+/// nothing to a picture opened after its last change, and the place says who shares and that the
+/// picture is on its way, rather than standing empty.
+class _PresenterLayout extends StatelessWidget {
+  const _PresenterLayout({
+    required this.screen,
+    required this.tiles,
+    required this.name,
+    required this.foreground,
+    required this.textStyle,
+  });
+
+  final ParticipantCamera screen;
+  final List<Widget> tiles;
+
+  /// Who shares, when the room knows them as a call here.
+  final String? name;
+  final Color foreground;
+  final TextStyle? textStyle;
+
+  static const _rowHeight = 132.0;
+  static const _tileWidth = 116.0;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        Expanded(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: _gap),
+            child: SemanticId(
+              identifier: callScreenShareConferenceScreenId,
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(_tileRadius),
+                child: ColoredBox(
+                  color: foreground.withValues(alpha: 0.08),
+                  child: ParticipantVideo(
+                    camera: screen,
+                    placeholder: _ScreenWaiting(name: name, foreground: foreground, textStyle: textStyle),
+                    fit: RTCVideoViewObjectFit.RTCVideoViewObjectFitContain,
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
+        const SizedBox(height: _gap),
+        SizedBox(
+          height: _rowHeight,
+          child: ListView.separated(
+            scrollDirection: Axis.horizontal,
+            padding: const EdgeInsets.symmetric(horizontal: _gap),
+            itemCount: tiles.length,
+            separatorBuilder: (_, _) => const SizedBox(width: _gap),
+            itemBuilder: (context, index) => SizedBox(width: _tileWidth, child: tiles[index]),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+/// What the main place shows until the shared screen's first picture: who shares, and that the
+/// screen is on its way.
+class _ScreenWaiting extends StatelessWidget {
+  const _ScreenWaiting({required this.name, required this.foreground, required this.textStyle});
+
+  final String? name;
+  final Color foreground;
+  final TextStyle? textStyle;
+
+  @override
+  Widget build(BuildContext context) {
+    final name = this.name;
+    return Padding(
+      padding: const EdgeInsets.all(24),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        spacing: 12,
+        children: [
+          Icon(Icons.screen_share_outlined, size: 40, color: foreground.withValues(alpha: 0.7)),
+          if (name != null)
+            Text(
+              name,
+              textAlign: TextAlign.center,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              style: textStyle?.copyWith(color: foreground, fontWeight: FontWeight.w600),
+            ),
+          Text(
+            context.l10n.call_ConferenceFullScreen_screenWaiting,
+            textAlign: TextAlign.center,
+            style: textStyle?.copyWith(color: foreground.withValues(alpha: 0.7)),
+          ),
+        ],
+      ),
+    );
+  }
+}
 
 /// The tiles in two columns, an odd last one across the width, the rows
 /// sharing all the height there is; past what fits they keep [_minRowHeight]
@@ -584,7 +738,10 @@ class _RoundIcon extends StatelessWidget {
 
 /// The room's controls: mic, camera, speaker, add participant, More, end of
 /// the conference. No hold, transfer or calls outside the room on the bar;
-/// More holds the keypad, the camera switch and hold, disabled in a room. The
+/// More holds the keypad, the camera switch, hold, disabled in a room, and
+/// the screen share where the phone and the room allow it. While the screen
+/// is shown the camera is off and its control remembers what the person asks
+/// of it for after the share (the room's video holds the wish). The
 /// toggles take the default screen's styles (CallScreenActionsStyle), switched
 /// on through the selected state as there.
 class _ControlBar extends StatefulWidget {
@@ -665,6 +822,7 @@ class _ControlBarState extends State<_ControlBar> {
     final conference = params.conference;
     final selfMuted = conference.selfMuted;
     final cameraOn = conference.selfVideo != null;
+    final screenShare = params.roomScreenShare;
     final enabled = params.interactionsEnabled;
     final speakerOn = params.audioDevice?.type == CallAudioDeviceType.speaker;
     final textStyle = themeData.textTheme.bodyMedium;
@@ -763,6 +921,20 @@ class _ControlBarState extends State<_ControlBar> {
                 icon: Icon(Icons.pause, size: 20, color: iconColor),
                 textStyle: textStyle,
               ),
+              if (params.onConferenceScreenShare case final onScreenShare?)
+                CallPopupMenuItem<void>(
+                  identifier: callScreenShareConferenceId,
+                  onTap: () => onScreenShare(screenShare == null),
+                  text: screenShare == null
+                      ? context.l10n.call_screenShare_actionLabel_share
+                      : context.l10n.call_screenShare_actionLabel_stop,
+                  icon: Icon(
+                    screenShare == null ? Icons.screen_share_outlined : Icons.stop_screen_share_outlined,
+                    size: 20,
+                    color: iconColor,
+                  ),
+                  textStyle: textStyle,
+                ),
             ],
             child: const Icon(Icons.more_horiz),
           ),

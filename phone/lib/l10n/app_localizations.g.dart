@@ -1261,6 +1261,12 @@ abstract class AppLocalizations {
   /// **'Stop'**
   String get call_ScreenShareTile_stop;
 
+  /// In the main place of the conference full screen while a participant shares their screen and no picture of it has arrived yet: the phone of the participant sends a new picture only when their screen changes.
+  ///
+  /// In en, this message translates to:
+  /// **'Waiting for the screen'**
+  String get call_ConferenceFullScreen_screenWaiting;
+
   /// Entry of the call screen's options menu: shows the phone's screen to the other side of the call instead of the camera.
   ///
   /// In en, this message translates to:

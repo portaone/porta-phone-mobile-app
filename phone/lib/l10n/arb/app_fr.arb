@@ -777,6 +777,8 @@
   "@call_ScreenShareTile_stop": {
     "description": "Button on the screen sharing tile of the call screen; stops showing the phone's screen to the other side."
   },
+  "call_ConferenceFullScreen_screenWaiting": "En attente de l'écran",
+  "@call_ConferenceFullScreen_screenWaiting": {},
   "call_screenShare_actionLabel_share": "Partager l'écran",
   "@call_screenShare_actionLabel_share": {
     "description": "Entry of the call screen's options menu: shows the phone's screen to the other side of the call instead of the camera."

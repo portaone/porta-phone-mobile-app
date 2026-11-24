@@ -175,7 +175,10 @@ Widget buildCallScaffold(
   bool canStartAttendedTransfer = true,
   AddParticipantAvailability addParticipantAvailability = AddParticipantAvailability.hidden,
   bool canShareScreen = false,
+  ScreenShareState? screenShare,
 }) {
+  // The share as the screen reads it: from the state, as CallScreen does.
+  final shareState = CallState(activeCalls: activeCalls, conference: conference, screenShare: screenShare);
   Widget scaffold = BlocProvider<CallBloc>.value(
     value: callBloc,
     child: CallActiveScaffold(
@@ -205,6 +208,10 @@ Widget buildCallScaffold(
       canStartAttendedTransfer: canStartAttendedTransfer,
       addParticipantAvailability: addParticipantAvailability,
       canShareScreen: canShareScreen,
+      // As the screen reads it: the room's for a leg, else the call's own.
+      screenShare: shareState.screenShareOf(focusedCall.callId),
+      roomScreenShare: shareState.roomScreenShare,
+      screenShareHoldsCamera: screenShare?.target == CallScreenShareTarget(focusedCall.callId),
     ),
   );
   // Only a transfer or a call to join that asks the lists for a choice needs

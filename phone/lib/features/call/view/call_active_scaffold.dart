@@ -39,6 +39,9 @@ class CallActiveScaffold extends StatefulWidget {
     this.addParticipantAvailability = AddParticipantAvailability.hidden,
     this.voiceNoiseReductionFailed = false,
     this.canShareScreen = false,
+    this.screenShare,
+    this.roomScreenShare,
+    this.screenShareHoldsCamera = false,
   });
 
   final CallStatus callStatus;
@@ -87,6 +90,16 @@ class CallActiveScaffold extends StatefulWidget {
   /// also says whether this phone can share at all); the menu offers to start a share only then,
   /// and to stop one whenever it runs.
   final bool canShareScreen;
+
+  /// Where the share the focused call shows stands ([CallState.screenShareOf]): the call's own,
+  /// or for a leg of the room the room's.
+  final ScreenShareStatus? screenShare;
+
+  /// Where the host's share to his room stands ([CallState.roomScreenShare]).
+  final ScreenShareStatus? roomScreenShare;
+
+  /// Whether a share holds the focused call's own video sender ([CallScreenParams.screenShareHoldsCamera]).
+  final bool screenShareHoldsCamera;
 
   /// Whether the room has stood aside for a call outside it
   /// ([CallState.conferenceMustPark]).
@@ -451,8 +464,20 @@ class CallActiveScaffoldState extends State<CallActiveScaffold> {
           _callBloc.add(CallControlEvent.ended(callId, endedBy: CallkeepEndedBy.user)),
       onConferenceCameraChanged: (enabled) => _callBloc.add(CallControlEvent.conferenceCameraEnabled(enabled)),
       onConferenceCameraSwitched: () => _callBloc.add(const CallControlEvent.conferenceCameraSwitched()),
+      // The focused call is a leg wherever the room's screens show it: the bloc takes a leg's share
+      // for the room's.
+      roomScreenShare: widget.roomScreenShare,
+      screenShareHoldsCamera: widget.screenShareHoldsCamera,
+      onConferenceScreenShare: widget.canShareScreen || widget.roomScreenShare != null
+          ? (share) => _callBloc.add(
+              share
+                  ? CallControlEvent.screenShareStarted(widget.focusedCall.callId)
+                  : CallControlEvent.screenShareStopped(widget.focusedCall.callId),
+            )
+          : null,
       onConferenceFullScreen:
-          widget.conference.hasVideo && CallScreenHandsetState.roomApplies(widget.conference, widget.focusedCall)
+          (widget.conference.hasVideo || widget.roomScreenShare != null) &&
+              CallScreenHandsetState.roomApplies(widget.conference, widget.focusedCall)
           ? _openConferenceFullScreen
           : null,
       addParticipantAvailability: widget.addParticipantAvailability,
@@ -672,11 +697,11 @@ class CallActiveScaffoldState extends State<CallActiveScaffold> {
   }
 
   /// Starts showing the phone's screen in the focused call, or stops it while it is shown; `null`
-  /// where there is nothing to offer: a phone that cannot share, or a call that cannot (held, a
-  /// leg of the room, not answered) - both are [canShareScreen].
+  /// where there is nothing to offer: a phone that cannot share, or a call that cannot (held, not
+  /// answered) - both are [canShareScreen]. For a leg of the room the share is the room's.
   CallPopupMenuItem<void>? _screenShareMenuItem(Color iconColor) {
     final callId = widget.focusedCall.callId;
-    if (widget.focusedCall.screenShare != null) {
+    if (widget.screenShare != null) {
       return CallPopupMenuItem(
         identifier: callActionsScreenShareId,
         onTap: () => _callBloc.add(CallControlEvent.screenShareStopped(callId)),

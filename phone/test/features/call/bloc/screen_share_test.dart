@@ -34,7 +34,7 @@ void main() {
 
   Future<void> share(String callId) async {
     h.bloc.add(CallControlEvent.screenShareStarted(callId));
-    await h.settle(() => h.bloc.state.retrieveActiveCall(callId)?.screenShare == ScreenShareStatus.sharing);
+    await h.settle(() => h.bloc.state.screenShareOf(callId) == ScreenShareStatus.sharing);
   }
 
   Iterable<MediaStatePeerMessageRequest> mediaStates() =>
@@ -45,7 +45,7 @@ void main() {
 
     await share('a');
 
-    expect(call('a').screenShare, ScreenShareStatus.sharing);
+    expect(h.bloc.state.screenShareOf('a'), ScreenShareStatus.sharing);
     expect(peer.fakeSenders.last.track?.id, 'screen-1');
     expect(h.screen.steps, ['consent', 'start service', 'capture']);
     expect(mediaStates().last.video, isTrue);
@@ -65,9 +65,9 @@ void main() {
     await share('a');
 
     h.bloc.add(const CallControlEvent.screenShareStopped('a'));
-    await h.settle(() => call('a').screenShare == null);
+    await h.settle(() => h.bloc.state.screenShareOf('a') == null);
 
-    expect(call('a').screenShare, isNull);
+    expect(h.bloc.state.screenShareOf('a'), isNull);
     expect(peer.fakeSenders.last.track, same(reopenedCamera()));
     expect(call('a').isCameraActive, isTrue);
     expect(mediaStates().last.video, isTrue);
@@ -81,9 +81,9 @@ void main() {
     await share('a');
 
     h.screen.endOutside();
-    await h.settle(() => call('a').screenShare == null);
+    await h.settle(() => h.bloc.state.screenShareOf('a') == null);
 
-    expect(call('a').screenShare, isNull);
+    expect(h.bloc.state.screenShareOf('a'), isNull);
     expect(peer.fakeSenders.last.track, same(reopenedCamera()));
   });
 
@@ -93,7 +93,7 @@ void main() {
     h.media.cameraError = Exception('camera in use');
 
     h.bloc.add(const CallControlEvent.screenShareStopped('a'));
-    await h.settle(() => call('a').screenShare == null && h.notifications.isNotEmpty);
+    await h.settle(() => h.bloc.state.screenShareOf('a') == null && h.notifications.isNotEmpty);
 
     expect(peer.fakeSenders.last.track, isNull);
     expect(call('a').video, isFalse);
@@ -106,10 +106,10 @@ void main() {
     await share('a');
 
     await h.bloc.performSetHeld('a', true);
-    await h.settle(() => call('a').screenShare == null);
+    await h.settle(() => h.bloc.state.screenShareOf('a') == null);
 
     expect(call('a').held, isTrue);
-    expect(call('a').screenShare, isNull);
+    expect(h.bloc.state.screenShareOf('a'), isNull);
     expect(peer.fakeSenders.last.track, same(reopenedCamera()));
     expect(h.screen.serviceRunning, isFalse);
   });
@@ -131,9 +131,9 @@ void main() {
     await share('a');
 
     h.bloc.add(const CallControlEvent.merged(['a', 'b']));
-    await h.settle(() => call('a').screenShare == null);
+    await h.settle(() => h.bloc.state.screenShareOf('a') == null);
 
-    expect(call('a').screenShare, isNull);
+    expect(h.bloc.state.screenShareOf('a'), isNull);
     expect(h.screen.serviceRunning, isFalse);
     expect(peer.fakeSenders.last.track?.id, isNot('screen-1'), reason: 'the screen left before the room came');
   });
@@ -146,8 +146,8 @@ void main() {
     await h.settle(() => call('a').transfer != null);
     await pumpEventQueue();
 
-    expect(call('a').screenShare, ScreenShareStatus.sharing);
-    expect(h.bloc.state.canShareScreen('a'), isTrue);
+    expect(h.bloc.state.screenShareOf('a'), ScreenShareStatus.sharing);
+    expect(ScreenShareCoordinator.stands(h.bloc.state, const CallScreenShareTarget('a')), isTrue);
   });
 
   test('a transfer under way cannot share', () async {
@@ -171,7 +171,7 @@ void main() {
     await pumpEventQueue();
 
     expect(peer.fakeSenders.last.track?.id, 'screen-1');
-    expect(call('a').screenShare, ScreenShareStatus.sharing);
+    expect(h.bloc.state.screenShareOf('a'), ScreenShareStatus.sharing);
   });
 
   test('a refused consent changes nothing and says nothing', () async {
@@ -179,10 +179,10 @@ void main() {
     h.screen.consent = false;
 
     h.bloc.add(const CallControlEvent.screenShareStarted('a'));
-    await h.settle(() => h.screen.steps.isNotEmpty && call('a').screenShare == null);
+    await h.settle(() => h.screen.steps.isNotEmpty && h.bloc.state.screenShareOf('a') == null);
     await pumpEventQueue();
 
-    expect(call('a').screenShare, isNull);
+    expect(h.bloc.state.screenShareOf('a'), isNull);
     expect(peer.fakeSenders.last.track, same(camera));
     expect(h.screen.steps, ['consent']);
     expect(h.notifications, isEmpty);
@@ -196,7 +196,7 @@ void main() {
 
     // The person stops it; the capture under way then throws, its service taken away.
     h.bloc.add(const CallControlEvent.screenShareStopped('a'));
-    await h.settle(() => call('a').screenShare == null);
+    await h.settle(() => h.bloc.state.screenShareOf('a') == null);
     h.screen.captureError = Exception('no foreground service');
     h.screen.captureGate!.complete();
     await pumpEventQueue();
@@ -209,13 +209,13 @@ void main() {
     seedVideoCall('a');
     h.screen.consentGate = Completer<void>();
     h.bloc.add(const CallControlEvent.screenShareStarted('a'));
-    await h.settle(() => call('a').screenShare == ScreenShareStatus.starting);
+    await h.settle(() => h.bloc.state.screenShareOf('a') == ScreenShareStatus.starting);
 
     h.screen.consent = false;
     h.screen.consentGate!.complete();
-    await h.settle(() => call('a').screenShare == null);
+    await h.settle(() => h.bloc.state.screenShareOf('a') == null);
 
-    expect(call('a').screenShare, isNull);
+    expect(h.bloc.state.screenShareOf('a'), isNull);
   });
 
   test('a phone that cannot share starts nothing', () async {
@@ -231,7 +231,7 @@ void main() {
     await pumpEventQueue();
 
     expect(h.screen.steps, isEmpty);
-    expect(call('a').screenShare, isNull);
+    expect(h.bloc.state.screenShareOf('a'), isNull);
   });
 
   test('a refused service is told and leaves the camera on', () async {
@@ -239,10 +239,10 @@ void main() {
     h.screen.serviceError = Exception('mediaProjection refused');
 
     h.bloc.add(const CallControlEvent.screenShareStarted('a'));
-    await h.settle(() => h.notifications.isNotEmpty && call('a').screenShare == null);
+    await h.settle(() => h.notifications.isNotEmpty && h.bloc.state.screenShareOf('a') == null);
 
     expect(h.notifications.single, isA<ScreenShareFailedNotification>());
-    expect(call('a').screenShare, isNull);
+    expect(h.bloc.state.screenShareOf('a'), isNull);
     expect(peer.fakeSenders.last.track, same(camera));
     expect(camera.stopped, isFalse);
   });
@@ -256,21 +256,21 @@ void main() {
     await pumpEventQueue();
 
     expect(h.screen.steps, isEmpty);
-    expect(call('a').screenShare, isNull);
+    expect(h.bloc.state.screenShareOf('a'), isNull);
   });
 
   test('a hold during the consent cancels the share', () async {
     seedVideoCall('a');
     h.screen.consentGate = Completer<void>();
     h.bloc.add(const CallControlEvent.screenShareStarted('a'));
-    await h.settle(() => call('a').screenShare == ScreenShareStatus.starting);
+    await h.settle(() => h.bloc.state.screenShareOf('a') == ScreenShareStatus.starting);
 
     await h.bloc.performSetHeld('a', true);
-    await h.settle(() => call('a').screenShare == null);
+    await h.settle(() => h.bloc.state.screenShareOf('a') == null);
     h.screen.consentGate!.complete();
     await pumpEventQueue();
 
-    expect(call('a').screenShare, isNull);
+    expect(h.bloc.state.screenShareOf('a'), isNull);
     expect(h.screen.steps, ['consent']);
     expect(h.screen.serviceRunning, isFalse);
   });
@@ -282,7 +282,7 @@ void main() {
 
       expect(peer.addedTracks.single.id, 'screen-1');
       h.bloc.add(const CallControlEvent.screenShareStopped('a'));
-      await h.settle(() => call('a').screenShare == null);
+      await h.settle(() => h.bloc.state.screenShareOf('a') == null);
 
       expect(peer.fakeSenders.last.track, isNull);
       expect(call('a').video, isFalse, reason: 'the camera stays off');
@@ -297,9 +297,9 @@ void main() {
       peer.fakeTransceivers.last.negotiatedDirection = TransceiverDirection.Inactive;
 
       h.signaling.emit(const AcceptedEvent(line: 0, callId: 'a', jsep: {'type': 'answer', 'sdp': 'v=0\r\n'}));
-      await h.settle(() => call('a').screenShare == null);
+      await h.settle(() => h.bloc.state.screenShareOf('a') == null);
 
-      expect(call('a').screenShare, isNull);
+      expect(h.bloc.state.screenShareOf('a'), isNull);
       expect(h.notifications.single, isA<ScreenShareVideoRefusedNotification>());
       expect(h.screen.serviceRunning, isFalse);
     });
@@ -318,7 +318,7 @@ void main() {
       await h.settle(() => peer.remoteDescriptions.isNotEmpty);
       await pumpEventQueue();
 
-      expect(call('a').screenShare, ScreenShareStatus.sharing);
+      expect(h.bloc.state.screenShareOf('a'), ScreenShareStatus.sharing);
       expect(h.notifications, isEmpty);
     });
 
@@ -330,7 +330,7 @@ void main() {
         ..negotiatedDirection = null;
 
       h.signaling.emit(const DecliningEvent(line: 0, callId: 'a', code: 488));
-      await h.settle(() => call('a').screenShare == null);
+      await h.settle(() => h.bloc.state.screenShareOf('a') == null);
 
       expect(h.notifications.whereType<ScreenShareVideoRefusedNotification>(), hasLength(1));
     });
@@ -345,7 +345,7 @@ void main() {
       h.signaling.emit(const DecliningEvent(line: 0, callId: 'a', code: 491));
       await pumpEventQueue();
 
-      expect(call('a').screenShare, ScreenShareStatus.sharing);
+      expect(h.bloc.state.screenShareOf('a'), ScreenShareStatus.sharing);
       expect(h.notifications.whereType<ScreenShareVideoRefusedNotification>(), isEmpty);
     });
 
@@ -359,7 +359,7 @@ void main() {
       await h.settle(() => peer.remoteDescriptions.isNotEmpty);
       await pumpEventQueue();
 
-      expect(call('a').screenShare, ScreenShareStatus.sharing);
+      expect(h.bloc.state.screenShareOf('a'), ScreenShareStatus.sharing);
       expect(h.notifications, isEmpty);
     });
   });

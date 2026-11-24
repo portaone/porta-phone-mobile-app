@@ -77,7 +77,9 @@ class CallActionAvailability {
   /// the share gives the camera back as it was.
   ValueChanged<bool>? get onCameraChanged {
     if (!cameraOffered) return null;
-    if (_call.screenShare != null) return null;
+    // A screen on the call's own sender holds it; a screen in the room leaves the room's camera to
+    // the room's video, which remembers it and brings it back after the share.
+    if (params.screenShareHoldsCamera) return null;
     if (!cameraActsOnRoom) return params.onCameraChanged;
     if (focusedIsLeg && params.conference.videoDisabled) return null;
     return params.onConferenceCameraChanged;

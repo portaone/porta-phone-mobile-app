@@ -120,6 +120,7 @@ class _ParticipantVideoState extends State<ParticipantVideo> {
   /// Shows [camera]'s own track on [renderer]: a stream id alone may stand for
   /// every participant's track.
   Future<void> _show(RTCVideoRenderer renderer, ParticipantCamera camera) async {
+    _logger.info('showing track ${camera.trackId} of stream ${camera.stream.id}');
     try {
       await renderer.setSrcObject(stream: camera.stream, trackId: camera.trackId);
     } catch (error, stackTrace) {
@@ -128,6 +129,7 @@ class _ParticipantVideoState extends State<ParticipantVideo> {
   }
 
   void _onFirstFrame() {
+    if (!_hasFrame) _logger.info('first frame of track ${widget.camera?.trackId}');
     if (mounted && !_hasFrame) setState(() => _hasFrame = true);
   }
 
@@ -158,7 +160,9 @@ class _ParticipantVideoState extends State<ParticipantVideo> {
       child: Stack(
         fit: StackFit.expand,
         children: [
-          Center(child: widget.placeholder),
+          // Gone once a frame is drawn: a picture shown whole (contained) leaves the place around
+          // it open, and the placeholder would show through there.
+          if (!seen) Center(child: widget.placeholder),
           if (renderer != null)
             Opacity(
               opacity: seen ? 1 : 0,

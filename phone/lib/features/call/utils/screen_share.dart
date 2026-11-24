@@ -1,24 +1,22 @@
-// The screen share of an ordinary call: the person's consent, the foreground service Android asks
-// of a screen capture, the capture, and the call's video sender moved from the camera to the
-// screen and back. Used by CallBloc, which decides when a share may start and when it has to stop
-// and carries the steps that touch the peer connection in its mutation queue; the platform steps
-// are behind ScreenCapturer (DefaultScreenCapturer in screen_capturer.dart, built by bootstrap).
+// The screen share there is - one at a time, as the screen is one and Android runs one capture: the
+// person's consent, the foreground service Android asks of a screen capture, the capture, and the
+// destination the screen goes to (screen_share_destinations.dart: a call's video sender, or a
+// room's video). Used by CallBloc's coordinator (bloc/screen_share_coordinator.dart), which
+// decides where a share goes, when it may start and when it has to stop, and carries the steps
+// that touch a connection in the bloc's mutation queue; the platform steps are behind
+// ScreenCapturer (DefaultScreenCapturer in screen_capturer.dart, built by bootstrap).
 //
-// Steps: begin (an attempt), capture (consent, service, capture - outside the bloc's queues, the
-// consent is a system dialog), attach (the screen onto the call's video sender, the camera let
-// go), and stop, which puts the camera back and releases the capture and the service. The far
-// end's answer to the offer that gave a call video for the share is read with videoAnswer, a
-// refused one with videoOffered. Every change of where a share stands is reported to onChanged,
+// Steps: begin (an attempt for a target), capture (consent, service, capture - outside the bloc's
+// queues, the consent is a system dialog), attach (the screen handed to its destination), and
+// stop, which has the destination take the screen off and put the camera back before the capture
+// and the service are released. Every change of where the share stands is reported to onChanged,
 // which the bloc maps into its state: this is the one place a share's status is kept.
 import 'dart:async';
 
 import 'package:flutter_webrtc/flutter_webrtc.dart';
 import 'package:logging/logging.dart';
 
-import 'package:webtrit_phone/extensions/extensions.dart';
-
 import '../models/screen_share_status.dart';
-import 'user_media_builder.dart';
 
 /// Why a screen share stops; the bloc tells the person about the ones that are not their own.
 enum ScreenShareStopReason {
@@ -28,11 +26,14 @@ enum ScreenShareStopReason {
   /// It ended outside the app: the notification's Stop, the system ending the capture.
   endedOutside,
 
-  /// The call can no longer share: held, merged into a room, ending or gone.
+  /// The call or the room can no longer share: held, merged into a room, parked, ending or gone.
   callChanged,
 
   /// The far end refused the video the share made the call carry.
   videoRefused,
+
+  /// The room would not take the screen, or let it go for good.
+  roomLost,
 }
 
 /// What [ScreenShare.capture] came to.
@@ -51,40 +52,28 @@ enum ScreenShareCaptureResult {
 
 /// What [ScreenShare.attach] came to.
 enum ScreenShareAttachResult {
-  /// The screen is on the call's video sender.
+  /// The screen went to its destination.
   attached,
 
   /// The call added a video sender for it: the call is renegotiated, and the far end may still
-  /// refuse the video ([ScreenShare.videoAnswer]).
+  /// refuse the video (`CallSenderDestination.videoAnswer`).
   attachedWithNewVideo,
 
   /// The share was stopped meanwhile.
   cancelled,
 
-  /// The peer connection refused the track.
+  /// The destination refused the screen.
   failed,
-}
-
-/// Where the far end stands on the video line a share added to a call.
-enum ScreenShareVideoAnswer {
-  /// No answer covers the line yet: the answer that came was to an offer made before it.
-  pending,
-
-  /// The line sends: the screen goes out. Also for a share that waits for no answer.
-  sends,
-
-  /// The answer refused the line or left it unable to send.
-  refused,
 }
 
 /// What [ScreenShare.stop] did to a share it found.
 class ScreenShareStopped {
   const ScreenShareStopped({required this.attached, required this.cameraLost});
 
-  /// The screen had reached the call's video sender.
+  /// The screen had reached its destination.
   final bool attached;
 
-  /// The camera the call had before the share could not be opened again.
+  /// The camera the destination had before the share could not be opened again.
   final bool cameraLost;
 }
 
@@ -109,112 +98,110 @@ abstract interface class ScreenCapturer {
   Stream<void> get endedOutside;
 }
 
-/// The camera a share took off the call, to be put back by the stop.
-class _Camera {
-  _Camera(this.stream, {required this.enabled});
+/// Where the captured screen goes: it takes the screen in place of the camera and gives the camera
+/// back when the share ends.
+abstract interface class ScreenShareDestination {
+  /// Takes [screen].
+  Future<ScreenShareAttachResult> attach(MediaStream screen);
 
-  /// The call's local stream the camera was taken from.
-  final MediaStream stream;
-
-  /// Whether it was on or soft-muted.
-  final bool enabled;
+  /// Takes the screen off and puts the camera back as it was before the share; whether the camera
+  /// could not be opened again. The screen is released only after this, so a destination never
+  /// sends a released screen.
+  Future<bool> detach();
 }
 
 class _Share {
-  _Share(this.attempt);
+  _Share(this.attempt, this.target);
 
   final Object attempt;
+  final ScreenShareTarget target;
   ScreenShareStatus status = ScreenShareStatus.starting;
   bool serviceStarted = false;
   MediaStream? stream;
-  RTCRtpSender? sender;
-
-  /// What the sender carried before the screen when it was not the call's own camera.
-  MediaStreamTrack? previousTrack;
-
-  /// The call's camera, let go while the screen is out.
-  _Camera? camera;
-
-  /// The far end has not yet answered for the video sender this share added.
-  bool awaitsVideo = false;
+  ScreenShareDestination? destination;
 
   /// A stop has been asked for and not yet run.
   bool stopping = false;
 
-  MediaStreamTrack? get track => stream?.getVideoTracks().firstOrNull;
+  /// The stop runs: the share is over, though [ScreenShare.state] still says it until the camera
+  /// is back.
+  bool stopped = false;
 }
 
-/// The bookkeeping and the steps of a screen share, one call at a time: the screen is one, and
-/// Android runs one capture.
+/// The bookkeeping and the steps of the one screen share there is.
 ///
-/// It knows nothing of the call's state or of signaling. The bloc asks whether a share may start
-/// and stop, carries the peer connection steps in its queue and maps [statusOf] into the state on
-/// every [onChanged].
+/// It knows nothing of the calls, the room or signaling: the coordinator says where a share goes
+/// and builds its destination, and maps [state] into the bloc's state on every [onChanged].
 class ScreenShare {
   ScreenShare({
     required ScreenCapturer capturer,
-    required UserMediaBuilder userMedia,
-    required void Function(String callId) onEndedOutside,
-    required void Function(String callId) onChanged,
+    required void Function() onEndedOutside,
+    required void Function() onChanged,
   }) : _capturer = capturer,
-       _userMedia = userMedia,
        _onChanged = onChanged {
     _endedSubscription = capturer.endedOutside.listen((_) {
-      for (final callId in _shares.keys.toList()) {
-        onEndedOutside(callId);
-      }
+      if (_share != null) onEndedOutside();
     });
   }
 
   static final _logger = Logger('ScreenShare');
 
   final ScreenCapturer _capturer;
-  final UserMediaBuilder _userMedia;
-  final void Function(String callId) _onChanged;
+  final void Function() _onChanged;
   late final StreamSubscription<void> _endedSubscription;
-  final Map<String, _Share> _shares = {};
+  _Share? _share;
   bool _disposed = false;
 
   /// Whether this platform can share the screen at all.
   bool get isSupported => _capturer.isSupported;
 
-  /// The calls with a share, starting or running.
-  Iterable<String> get callIds => _shares.keys;
+  /// The share there is, starting or running; `null` without one.
+  ScreenShareState? get state => switch (_share) {
+    final share? => ScreenShareState(target: share.target, status: share.status),
+    null => null,
+  };
 
-  ScreenShareStatus? statusOf(String callId) => _shares[callId]?.status;
+  /// Where the share there is goes.
+  ScreenShareTarget? get target => _share?.target;
 
-  /// Starts a share of [callId] and returns its attempt, or `null` while any share runs.
-  Object? begin(String callId) {
-    if (_shares.isNotEmpty) return null;
+  /// Where the screen of the share there is went; `null` before it was attached.
+  ScreenShareDestination? get destination => _share?.destination;
+
+  /// Starts a share for [target] and returns its attempt, or `null` while a share runs.
+  Object? begin(ScreenShareTarget target) {
+    if (_share != null) return null;
     final attempt = Object();
-    _shares[callId] = _Share(attempt);
-    _changed(callId);
+    _share = _Share(attempt, target);
+    _changed();
     return attempt;
   }
 
-  /// Whether [attempt] is the share of [callId] and no stop has been asked of it.
-  bool _isLive(String callId, Object attempt) {
-    final share = _shares[callId];
+  /// Whether [attempt] is the share there is and no stop has been asked of it.
+  bool _isLive(Object attempt) {
+    final share = _share;
     return share != null && identical(share.attempt, attempt) && !share.stopping;
   }
 
-  bool _isCurrent(String callId, Object attempt) => identical(_shares[callId]?.attempt, attempt);
+  bool _isCurrent(Object attempt) {
+    final share = _share;
+    return share != null && identical(share.attempt, attempt) && !share.stopped;
+  }
 
   /// The consent, the service and the capture of [attempt]. Whatever it ends in other than
   /// [ScreenShareCaptureResult.captured] leaves no share, no service and no capture behind. A
   /// failure of an attempt stopped meanwhile is [ScreenShareCaptureResult.cancelled]: the person
   /// stopped it, or the call took it away, and nothing went wrong that they should hear of.
-  Future<ScreenShareCaptureResult> capture(String callId, Object attempt) async {
+  Future<ScreenShareCaptureResult> capture(Object attempt) async {
     final bool consent;
     try {
       consent = await _capturer.requestConsent();
     } catch (e) {
-      _logger.warning('capture: the consent of $callId failed: $e');
-      return _fail(callId, attempt);
+      _logger.warning('capture: the consent failed: $e');
+      return _fail(attempt);
     }
-    if (!_isCurrent(callId, attempt)) return ScreenShareCaptureResult.cancelled;
+    if (!_isCurrent(attempt)) return ScreenShareCaptureResult.cancelled;
     if (!consent) {
-      _forget(callId, attempt);
+      _forget(attempt);
       return ScreenShareCaptureResult.refused;
     }
 
@@ -223,12 +210,12 @@ class ScreenShare {
     try {
       await _capturer.startService();
     } catch (e) {
-      _logger.warning('capture: the screen share service of $callId was refused: $e');
+      _logger.warning('capture: the screen share service was refused: $e');
       // The start may have failed only on this side, by its timeout, with the service coming up
       // after: asked to stop, it goes once it is up.
-      return _fail(callId, attempt, stopService: true);
+      return _fail(attempt, stopService: true);
     }
-    final share = _shares[callId];
+    final share = _share;
     if (share == null || !identical(share.attempt, attempt)) {
       await _stopServiceIfUnused();
       return ScreenShareCaptureResult.cancelled;
@@ -239,10 +226,10 @@ class ScreenShare {
     try {
       stream = await _capturer.capture();
     } catch (e) {
-      _logger.warning('capture: the screen of $callId could not be captured: $e');
-      return _fail(callId, attempt, stopService: true);
+      _logger.warning('capture: the screen could not be captured: $e');
+      return _fail(attempt, stopService: true);
     }
-    if (!_isCurrent(callId, attempt)) {
+    if (!_isCurrent(attempt)) {
       // Stopped while the capture started: the stop found nothing to release yet.
       await _release(stream);
       await _stopServiceIfUnused();
@@ -254,181 +241,81 @@ class ScreenShare {
 
   /// Ends [attempt] after a step of [capture] failed: a share stopped meanwhile was cancelled, not
   /// failed - the stop itself may be what failed the step, by taking the service away from it.
-  Future<ScreenShareCaptureResult> _fail(String callId, Object attempt, {bool stopService = false}) async {
-    final live = _isLive(callId, attempt);
-    _forget(callId, attempt);
+  Future<ScreenShareCaptureResult> _fail(Object attempt, {bool stopService = false}) async {
+    final live = _isLive(attempt);
+    _forget(attempt);
     if (stopService) await _stopServiceIfUnused();
     return live ? ScreenShareCaptureResult.failed : ScreenShareCaptureResult.cancelled;
   }
 
-  /// Puts the captured screen of [attempt] on the call's video sender; without a video sender,
-  /// adds one, which renegotiates the call.
-  ///
-  /// The call's camera, on or soft-muted, is let go while the screen is out ([UserMediaBuilder.
-  /// releaseVideoTrack]): kept open it would capture for nobody - its indicator on, the battery
-  /// spent - behind the tile that stands in for its preview. [stop] opens it again.
-  Future<ScreenShareAttachResult> attach(
-    String callId,
-    Object attempt, {
-    required RTCPeerConnection peerConnection,
-    required MediaStream? localStream,
-  }) async {
-    final share = _shares[callId];
-    final track = share?.track;
-    if (share == null || !identical(share.attempt, attempt) || track == null) {
-      return ScreenShareAttachResult.cancelled;
+  /// Hands the captured screen of [attempt] to [destination].
+  Future<ScreenShareAttachResult> attach(Object attempt, ScreenShareDestination destination) async {
+    final share = _share;
+    final stream = share?.stream;
+    if (share == null || !_isLive(attempt) || stream == null) return ScreenShareAttachResult.cancelled;
+    share.destination = destination;
+    final result = await destination.attach(stream);
+    if (!_isCurrent(attempt)) return ScreenShareAttachResult.cancelled;
+    if (result == ScreenShareAttachResult.attached || result == ScreenShareAttachResult.attachedWithNewVideo) {
+      share.status = ScreenShareStatus.sharing;
+      _changed();
     }
-    try {
-      final sender = await peerConnection.videoSender();
-      if (!_isCurrent(callId, attempt)) return ScreenShareAttachResult.cancelled;
-      if (sender != null) {
-        final previous = sender.track;
-        share.sender = sender;
-        share.previousTrack = previous;
-        await sender.replaceTrack(track);
-        if (previous != null && localStream != null && _carries(localStream, previous)) {
-          share.previousTrack = null;
-          share.camera = _Camera(localStream, enabled: previous.enabled);
-          await _releaseCamera(callId, localStream);
-        }
-      } else {
-        share.sender = await peerConnection.addTrack(track, localStream ?? share.stream!);
-        share.awaitsVideo = true;
-      }
-    } catch (e) {
-      _logger.warning('attach: the screen of $callId did not go on its connection: $e');
-      return ScreenShareAttachResult.failed;
-    }
-    share.status = ScreenShareStatus.sharing;
-    _changed(callId);
-    return share.awaitsVideo ? ScreenShareAttachResult.attachedWithNewVideo : ScreenShareAttachResult.attached;
+    return result;
   }
 
-  static bool _carries(MediaStream stream, MediaStreamTrack track) =>
-      stream.getVideoTracks().any((candidate) => candidate.id == track.id);
-
-  Future<void> _releaseCamera(String callId, MediaStream localStream) async {
-    try {
-      await _userMedia.releaseVideoTrack(localStream);
-    } catch (e) {
-      _logger.warning('attach: the camera of $callId was not let go: $e');
-    }
-  }
-
-  /// Marks the share of [callId] as being stopped; `false` when there is none or a stop is
-  /// already on its way, so a stop is asked for once.
-  bool markStopping(String callId) {
-    final share = _shares[callId];
+  /// Marks the share as being stopped; `false` when there is none or a stop is already on its way,
+  /// so a stop is asked for once.
+  bool markStopping() {
+    final share = _share;
     if (share == null || share.stopping) return false;
     share.stopping = true;
     return true;
   }
 
-  /// Whether the far end has yet to answer for the video sender the share of [callId] added.
-  bool awaitsVideo(String callId) => _shares[callId]?.awaitsVideo ?? false;
-
-  /// What the far end's answers so far say about the video line the share of [callId] added.
-  ///
-  /// The answer that came may be to an offer made before the line: an offer already out when the
-  /// share added its sender (an ICE restart, a hold, a codec move) leaves the line out, and its
-  /// answer says nothing of it. Such a line has no negotiated direction yet, and the share waits
-  /// for the answer to its own offer, which the connection asks for once the earlier one is done.
-  Future<ScreenShareVideoAnswer> videoAnswer(String callId, RTCPeerConnection peerConnection) async {
-    final share = _shares[callId];
-    if (share == null || !share.awaitsVideo) return ScreenShareVideoAnswer.sends;
-    final transceiver = await _transceiverOf(share, peerConnection);
-    if (transceiver == null) return ScreenShareVideoAnswer.pending;
-    final direction = await transceiver.getCurrentDirection();
-    if (direction == null) return ScreenShareVideoAnswer.pending;
-    final sends = direction == TransceiverDirection.SendRecv || direction == TransceiverDirection.SendOnly;
-    if (sends && identical(_shares[callId], share)) share.awaitsVideo = false;
-    return sends ? ScreenShareVideoAnswer.sends : ScreenShareVideoAnswer.refused;
-  }
-
-  /// Whether the offer out now carries the video line the share of [callId] added and waits for
-  /// its answer: the line has a place (`mid`) in an offer and no negotiated direction. A refusal
-  /// of an offer without the line says nothing of the share.
-  Future<bool> videoOffered(String callId, RTCPeerConnection peerConnection) async {
-    final share = _shares[callId];
-    if (share == null || !share.awaitsVideo) return false;
-    final transceiver = await _transceiverOf(share, peerConnection);
-    if (transceiver == null || transceiver.mid.isEmpty) return false;
-    return await transceiver.getCurrentDirection() == null;
-  }
-
-  Future<RTCRtpTransceiver?> _transceiverOf(_Share share, RTCPeerConnection peerConnection) async {
-    final track = share.track;
-    if (track == null) return null;
-    final transceivers = await peerConnection.getTransceivers();
-    return transceivers.firstWhereOrNull((t) => t.sender.track?.id == track.id);
-  }
-
-  /// Stops the share of [callId]: the sender gets back what it carried before - the call's camera,
-  /// opened again with [frontCamera], or nothing - the capture is released and the service
-  /// stopped. With [attempt], only that attempt is stopped. `null` when there was no share.
-  ///
-  /// The camera is opened again only on a usable [peerConnection]: a call going away does not get
-  /// a camera back. The change is reported once the sender has its camera back, so that what the
-  /// screen shows next - the camera's preview - finds the camera there.
-  Future<ScreenShareStopped?> stop(
-    String callId, {
-    RTCPeerConnection? peerConnection,
-    Object? attempt,
-    bool? frontCamera,
-  }) async {
-    final share = _shares[callId];
-    if (share == null || (attempt != null && !identical(share.attempt, attempt))) return null;
-    _shares.remove(callId);
+  /// Stops the share: its destination takes the screen off and puts the camera back, then the
+  /// capture is released and the service stopped. With [attempt], only that attempt is stopped.
+  /// `null` when there was no share, or when it is already being stopped. No other share can begin
+  /// from the moment the stop starts;
+  /// [state] says the share is gone once its destination has put the camera back, so that what
+  /// the screen shows next - the camera's preview - finds the camera there.
+  Future<ScreenShareStopped?> stop({Object? attempt}) async {
+    final share = _share;
+    if (share == null || share.stopped || (attempt != null && !identical(share.attempt, attempt))) return null;
+    share
+      ..stopping = true
+      ..stopped = true;
     final attached = share.status == ScreenShareStatus.sharing;
     var cameraLost = false;
-    final sender = share.sender;
-    if (sender != null && peerConnection != null && peerConnection.isUsable) {
-      var back = share.previousTrack;
-      if (share.camera case final camera?) {
-        back = await _reopenCamera(callId, camera, frontCamera: frontCamera);
-        cameraLost = back == null;
-      }
+    if (share.destination case final destination?) {
       try {
-        await sender.replaceTrack(back);
+        cameraLost = await destination.detach();
       } catch (e) {
-        _logger.warning('stop: the video sender of $callId was not given back: $e');
+        _logger.warning('stop: the destination did not let the screen go: $e');
       }
     }
-    _changed(callId);
+    if (identical(_share, share)) _share = null;
+    _changed();
     final stream = share.stream;
     if (stream != null) await _release(stream);
     if (share.serviceStarted) await _stopServiceIfUnused();
     return ScreenShareStopped(attached: attached, cameraLost: cameraLost);
   }
 
-  Future<MediaStreamTrack?> _reopenCamera(String callId, _Camera camera, {bool? frontCamera}) async {
-    try {
-      final track = await _userMedia.ensureVideoTrack(camera.stream, frontCamera: frontCamera);
-      track?.enabled = camera.enabled;
-      return track;
-    } catch (e) {
-      _logger.warning('stop: the camera of $callId did not open again: $e');
-      return null;
-    }
-  }
-
-  /// Stops every share without touching a connection or telling anyone: the owner is going away.
+  /// Stops the share without telling anyone: the owner is going away.
   Future<void> dispose() async {
     _disposed = true;
     await _endedSubscription.cancel();
-    for (final callId in _shares.keys.toList()) {
-      await stop(callId);
-    }
+    await stop();
   }
 
-  void _changed(String callId) {
-    if (!_disposed) _onChanged(callId);
+  void _changed() {
+    if (!_disposed) _onChanged();
   }
 
-  void _forget(String callId, Object attempt) {
-    if (!_isCurrent(callId, attempt)) return;
-    _shares.remove(callId);
-    _changed(callId);
+  void _forget(Object attempt) {
+    if (!_isCurrent(attempt)) return;
+    _share = null;
+    _changed();
   }
 
   Future<void> _release(MediaStream stream) async {
@@ -445,11 +332,7 @@ class ScreenShare {
   /// Stops the service unless a newer share has started it again meanwhile: an attempt that was
   /// stopped while it waited must not take the service from the one that followed it.
   Future<void> _stopServiceIfUnused() async {
-    if (_shares.values.any((share) => share.serviceStarted)) return;
-    await _stopService();
-  }
-
-  Future<void> _stopService() async {
+    if (_share?.serviceStarted ?? false) return;
     try {
       await _capturer.stopService();
     } catch (e) {

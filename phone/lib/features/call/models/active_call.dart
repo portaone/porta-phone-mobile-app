@@ -10,7 +10,6 @@ import 'call_transition.dart';
 import 'ice_connection_issue.dart';
 import 'jsep_value.dart';
 import 'processing_status.dart';
-import 'screen_share_status.dart';
 import 'transfer.dart';
 
 part 'active_call.freezed.dart';
@@ -49,7 +48,6 @@ class ActiveCall with _$ActiveCall implements CallEntry {
     this.iceConnectionIssue,
     this.networkQuality,
     this.earlyMedia = false,
-    this.screenShare,
   });
 
   @override
@@ -169,11 +167,6 @@ class ActiveCall with _$ActiveCall implements CallEntry {
   /// ringing answer can still arrive afterwards and would otherwise play the
   /// bundled tone on top of the network one.
   final bool earlyMedia;
-
-  /// Where a screen share of this call stands; `null` while there is none. A mirror of the
-  /// share the bloc runs (`ScreenShare`), for the screen: the menu, the tile that stands in for
-  /// the camera preview and the camera control read it.
-  final ScreenShareStatus? screenShare;
 
   @override
   bool get isIncoming => direction == CallDirection.incoming;

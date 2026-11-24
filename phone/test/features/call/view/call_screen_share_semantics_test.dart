@@ -28,10 +28,23 @@ void main() {
     await tester.pumpAndSettle();
   }
 
-  Future<void> pumpOn(WidgetTester tester, {required ActiveCall call, bool canShareScreen = true}) async {
+  Future<void> pumpOn(
+    WidgetTester tester, {
+    required ActiveCall call,
+    bool canShareScreen = true,
+    ScreenShareStatus? sharing,
+  }) async {
     await pumpCallScaffold(
       tester,
-      buildCallScaffold(callBloc, activeCalls: [call], focusedCall: call, canShareScreen: canShareScreen),
+      buildCallScaffold(
+        callBloc,
+        activeCalls: [call],
+        focusedCall: call,
+        canShareScreen: canShareScreen,
+        screenShare: sharing == null
+            ? null
+            : ScreenShareState(target: CallScreenShareTarget(call.callId), status: sharing),
+      ),
     );
   }
 
@@ -82,8 +95,7 @@ void main() {
 
   testWidgets('while the screen is shown the entry stops it, and the camera stands aside', (tester) async {
     final semantics = tester.ensureSemantics();
-    final sharing = audio.copyWith(screenShare: ScreenShareStatus.sharing);
-    await pumpOn(tester, call: sharing, canShareScreen: true);
+    await pumpOn(tester, call: audio, canShareScreen: true, sharing: ScreenShareStatus.sharing);
 
     final camera = tester.getSemantics(find.bySemanticsIdentifier(callActionsVideoCallId));
     expect(camera.getSemanticsData().hasAction(SemanticsAction.tap), isFalse);
@@ -100,8 +112,7 @@ void main() {
 
   testWidgets('a share under way can be stopped even where a new one could not start', (tester) async {
     final semantics = tester.ensureSemantics();
-    final starting = audio.copyWith(screenShare: ScreenShareStatus.starting);
-    await pumpOn(tester, call: starting, canShareScreen: false);
+    await pumpOn(tester, call: audio, canShareScreen: false, sharing: ScreenShareStatus.starting);
 
     await openMenu(tester);
 

@@ -40,6 +40,8 @@ void main() {
   late FakeUserMediaBuilder media;
   late _Signaling signaling;
   late List<List<ConferenceVideoFeed>> reported;
+  late List<int?> presenters;
+  late int screensLost;
   late ConferenceVideoSession session;
 
   setUp(() {
@@ -47,11 +49,17 @@ void main() {
     media = FakeUserMediaBuilder();
     signaling = _Signaling();
     reported = [];
+    presenters = [];
+    screensLost = 0;
     session = ConferenceVideoSession(
       factory: factory,
       userMediaBuilder: media,
       send: signaling.send,
-      onFeedsChanged: reported.add,
+      onFeedsChanged: (feeds, presenter) {
+        reported.add(feeds);
+        presenters.add(presenter);
+      },
+      onScreenLost: () => screensLost++,
       retryDelay: Duration.zero,
     );
   });
@@ -189,6 +197,34 @@ void main() {
       expect(reported.last.single.stream, same(stream));
     });
 
+    test('a screen is reported as one, with the room\'s presenter', () async {
+      await session.subscribe();
+      await session.handleOffer(_offer);
+      factory.created.single.onTrack!(
+        RTCTrackEvent(
+          track: FakeMediaStreamTrack(kind: 'video', id: 'v1'),
+          streams: [FakeMediaStream('remote-1', tracks: const [])],
+          transceiver: _Transceiver('1'),
+        ),
+      );
+
+      await session.handleUpdated(
+        const ConferenceVideoUpdatedEvent(
+          room: 7,
+          self: 1,
+          streams: [ConferenceVideoStream(mid: '1', feed: 3, kind: ConferenceVideoKind.screen)],
+          presenter: 3,
+        ),
+      );
+
+      expect(reported.last.single.kind, ConferenceVideoKind.screen);
+      expect(reported.last.single.feed, 3);
+      expect(presenters.last, 3);
+
+      await session.handleUpdated(const ConferenceVideoUpdatedEvent(room: 7, self: 1));
+      expect(presenters.last, isNull, reason: 'nobody presents any more');
+    });
+
     test('closing the subscriber takes its streams away', () async {
       await session.subscribe();
       await session.handleOffer(_offer);
@@ -322,6 +358,179 @@ void main() {
     });
   });
 
+  group('screen', () {
+    FakeMediaStream screenStream() => FakeMediaStream(
+      'screen',
+      tracks: [FakeMediaStreamTrack(kind: 'video', id: 'screen-track')],
+    );
+
+    test('a screen shared with no camera out is published alone, named a screen', () async {
+      final shared = session.shareScreen(screenStream());
+      final peerConnection = await _created(factory);
+      expect((await shared).published, isTrue);
+
+      expect(peerConnection.addedTracks.map((track) => track.id), ['screen-track']);
+      expect(media.built, isEmpty, reason: 'no camera is opened for it');
+      expect(signaling.of<ConferenceVideoPublishRequest>().single.descriptions, const [
+        ConferenceVideoDescription(mid: '0', kind: ConferenceVideoKind.screen),
+      ]);
+      expect(session.isSharingScreen, isTrue);
+      expect(session.isPublishing, isFalse, reason: 'the camera is not wanted');
+    });
+
+    test('a screen shared over the camera takes its line, and the camera is let go', () async {
+      await session.publish();
+      final peerConnection = factory.created.single;
+      final sender = peerConnection.fakeSenders.single;
+
+      expect((await session.shareScreen(screenStream())).published, isTrue);
+
+      expect(factory.created, hasLength(1), reason: 'the same publication, renegotiated');
+      expect(sender.track?.id, 'screen-track');
+      expect(media.released, hasLength(1), reason: 'the camera captures for nobody while the screen is out');
+      expect(session.camera, isNull);
+      final publishes = signaling.of<ConferenceVideoPublishRequest>();
+      expect(publishes, hasLength(2));
+      expect(publishes.last.descriptions.single.kind, ConferenceVideoKind.screen);
+    });
+
+    test('the camera comes back on the same line once the screen stops', () async {
+      await session.publish();
+      await session.shareScreen(screenStream());
+      final sender = factory.created.single.fakeSenders.single;
+
+      expect((await session.stopScreen()).published, isTrue);
+
+      expect(factory.created, hasLength(1));
+      expect(sender.track?.kind, 'video');
+      expect(sender.track?.id, isNot('screen-track'));
+      expect(session.camera, isNotNull);
+      expect(signaling.of<ConferenceVideoPublishRequest>().last.descriptions.single.kind, ConferenceVideoKind.camera);
+      expect(session.isSharingScreen, isFalse);
+    });
+
+    test('the publication ends with the screen when the camera is not wanted', () async {
+      await session.shareScreen(screenStream());
+
+      await session.stopScreen();
+
+      expect(signaling.sent.last, isA<ConferenceVideoUnpublishRequest>());
+      expect(factory.created.single.closes, 1);
+      expect(screensLost, 0, reason: 'the owner stopped it');
+    });
+
+    test('the camera taken off while the screen is out leaves the screen and stays off after it', () async {
+      // The background takes the camera off the room; the screen is what the person shares there.
+      await session.publish();
+      await session.shareScreen(screenStream());
+
+      await session.unpublish();
+      expect(signaling.of<ConferenceVideoUnpublishRequest>(), isEmpty);
+      expect(factory.created.single.closes, 0);
+
+      await session.stopScreen();
+      expect(signaling.of<ConferenceVideoUnpublishRequest>(), hasLength(1));
+      expect(media.built, hasLength(1), reason: 'the camera is not opened again');
+    });
+
+    test('the camera asked for while the screen is out waits for it', () async {
+      await session.shareScreen(screenStream());
+
+      expect((await session.publish()).published, isFalse);
+      expect(media.built, isEmpty);
+      expect(session.isPublishing, isTrue, reason: 'still wanted');
+
+      await session.stopScreen();
+      expect(media.built, hasLength(1));
+      expect(signaling.of<ConferenceVideoPublishRequest>().last.descriptions.single.kind, ConferenceVideoKind.camera);
+    });
+
+    test('a screen the room refuses is lost, and said once', () async {
+      signaling.answers[ConferenceVideoPublishRequest] = const ConferenceRequestResult.refused('invalid_descriptions');
+
+      expect(await session.shareScreen(screenStream()), isA<CameraRefused>());
+
+      expect(screensLost, 1);
+      expect(session.isSharingScreen, isFalse);
+      expect(factory.created.single.closes, 1);
+    });
+
+    test('a failed publisher with the screen out is made again with the screen', () async {
+      await session.shareScreen(screenStream());
+
+      await session.handleFailed(ConferenceVideoPc.publisher, code: 432);
+
+      expect(factory.created, hasLength(2));
+      expect(factory.created.last.addedTracks.single.id, 'screen-track');
+      expect(signaling.of<ConferenceVideoPublishRequest>().last.descriptions.single.kind, ConferenceVideoKind.screen);
+    });
+
+    test('a stop before the queued share ran leaves the camera on the line as it was', () async {
+      await session.publish();
+      final sender = factory.created.single.fakeSenders.single;
+      final camera = sender.track;
+      final ack = Completer<void>();
+      signaling.gates[ConferenceVideoUnpublishRequest] = ack;
+
+      // The share and its stop are asked for back to back; the share runs with no screen left.
+      final shared = session.shareScreen(screenStream());
+      final stopped = session.stopScreen();
+      await shared;
+
+      expect((await stopped).published, isTrue);
+      expect(sender.track, same(camera), reason: 'the camera never left the line');
+      expect(media.built, hasLength(1), reason: 'no second camera is opened, none is leaked');
+      expect(media.released, isEmpty);
+      expect(signaling.of<ConferenceVideoPublishRequest>(), hasLength(1));
+      ack.complete();
+    });
+
+    test('a screen the room refuses over a camera keeps the camera wanted', () async {
+      await session.publish();
+      signaling.answers[ConferenceVideoPublishRequest] = const ConferenceRequestResult.refused('invalid_descriptions');
+
+      await session.shareScreen(screenStream());
+
+      expect(screensLost, 1);
+      expect(session.isPublishing, isTrue, reason: 'the owner puts the camera back');
+      signaling.answers.remove(ConferenceVideoPublishRequest);
+      expect((await session.publish()).published, isTrue);
+      expect(signaling.of<ConferenceVideoPublishRequest>().last.descriptions.single.kind, ConferenceVideoKind.camera);
+    });
+
+    test('a screen the line refuses keeps the camera published as it was', () async {
+      await session.publish();
+      final sender = factory.created.single.fakeSenders.single;
+      final camera = sender.track;
+      sender.replaceError = StateError('track refused');
+
+      expect(await session.shareScreen(screenStream()), isA<CameraUnavailable>());
+
+      expect(screensLost, 1);
+      expect(session.isPublishing, isTrue);
+      expect(session.camera, isNotNull, reason: 'the camera was not let go');
+      expect(sender.track, same(camera));
+    });
+
+    test('a signalling reconnect restarts the publication with the screen on it', () async {
+      await session.shareScreen(screenStream());
+
+      await session.reconnected();
+
+      expect(factory.created.single.offerConstraints.last, {'iceRestart': true});
+      expect(signaling.of<ConferenceVideoPublishRequest>().last.descriptions.single.kind, ConferenceVideoKind.screen);
+    });
+
+    test('leaving the video drops the screen without calling it lost', () async {
+      await session.shareScreen(screenStream());
+
+      await session.leave();
+
+      expect(session.isSharingScreen, isFalse);
+      expect(screensLost, 0);
+    });
+  });
+
   group('the session', () {
     test('leave tells the room and closes both connections', () async {
       await session.subscribe();
@@ -425,7 +634,10 @@ void main() {
         factory: factory,
         userMediaBuilder: media,
         send: signaling.send,
-        onFeedsChanged: reported.add,
+        onFeedsChanged: (feeds, presenter) {
+          reported.add(feeds);
+          presenters.add(presenter);
+        },
         retryDelay: const Duration(milliseconds: 20),
       );
       signaling.answers[ConferenceVideoSubscribeRequest] = const ConferenceRequestResult.refused('attach_failed');
@@ -606,6 +818,20 @@ void main() {
     });
   });
 
+  test('a publication offers the room Baseline H.264 only, as every phone there takes it', () async {
+    factory.offerSdp =
+        'v=0\r\nm=video 9 UDP/TLS/RTP/SAVPF 96 98\r\n'
+        'a=rtpmap:96 H264/90000\r\na=fmtp:96 packetization-mode=1;profile-level-id=640c34\r\n'
+        'a=rtpmap:98 H264/90000\r\na=fmtp:98 packetization-mode=1;profile-level-id=42e034\r\n';
+
+    await session.publish();
+
+    final sent = signaling.of<ConferenceVideoPublishRequest>().single.jsep['sdp'] as String;
+    expect(sent, isNot(contains('640c34')));
+    expect(sent, contains('m=video 9 UDP/TLS/RTP/SAVPF 98\r\n'));
+    expect(factory.created.single.localDescriptions.single.sdp, sent, reason: 'the same as set locally');
+  });
+
   group('a new subscription', () {
     String offerOfSession(String id) => 'v=0\r\no=- $id 2 IN IP4 127.0.0.1\r\nm=video 9 UDP/TLS/RTP/SAVPF 96\r\n';
 
@@ -621,6 +847,27 @@ void main() {
       await session.handleOffer({'type': 'offer', 'sdp': offerOfSession('222')});
       expect(factory.created, hasLength(2));
       expect(factory.created.first.closes, 1);
+    });
+
+    test('a publisher added to the room renegotiates the subscription, under a new session id', () async {
+      // Janus offers the update of a subscription (another participant's camera joined) with a
+      // session id of its own but the next version; a new subscription starts at version 1.
+      // Taken for a new one, the connection was closed, Janus hung the subscriber up and the
+      // host lost every picture.
+      String offer(String id, int version) =>
+          'v=0\r\no=- $id $version IN IP4 127.0.0.1\r\nm=video 9 UDP/TLS/RTP/SAVPF 96\r\n';
+      await session.subscribe();
+      await session.handleOffer({'type': 'offer', 'sdp': offer('1795615173616279', 1)});
+
+      await session.handleOffer({'type': 'offer', 'sdp': offer('1795615199167027', 2)});
+
+      expect(factory.created, hasLength(1), reason: 'answered on the same connection');
+      expect(factory.created.single.closes, 0);
+      expect(signaling.of<ConferenceVideoAnswerRequest>(), hasLength(2));
+
+      // After Janus did hang the subscriber up, Core's new subscription starts over at 1.
+      await session.handleOffer({'type': 'offer', 'sdp': offer('1795615199218463', 1)});
+      expect(factory.created, hasLength(2), reason: 'a new subscription gets a new connection');
     });
 
     test('a subscriber the room keeps failing is subscribed once more, then left', () async {
@@ -870,7 +1117,10 @@ void main() {
         factory: factory,
         userMediaBuilder: media,
         send: signaling.send,
-        onFeedsChanged: reported.add,
+        onFeedsChanged: (feeds, presenter) {
+          reported.add(feeds);
+          presenters.add(presenter);
+        },
         callsWantCamera: () => true,
       );
       media.cameraEnabled = false;

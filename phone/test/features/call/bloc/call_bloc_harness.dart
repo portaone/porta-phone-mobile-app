@@ -1036,6 +1036,9 @@ class FakeRtpSender extends Fake implements RTCRtpSender {
   @override
   Future<void> setStreams(List<MediaStream> streams) async => this.streams = List.of(streams);
 
+  /// What [replaceTrack] throws, to model a track the sender refuses; the track stays as it was.
+  Object? replaceError;
+
   @override
   MediaStreamTrack? get track => _track;
 
@@ -1043,6 +1046,7 @@ class FakeRtpSender extends Fake implements RTCRtpSender {
   Future<void> replaceTrack(MediaStreamTrack? track) async {
     replaced.add(track);
     await gate?.future;
+    if (replaceError case final error?) throw error;
     _track = track;
   }
 }

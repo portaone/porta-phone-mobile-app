@@ -59,6 +59,9 @@ class CallScreenParams {
     this.onConferenceFullScreen,
     this.onConferenceCameraChanged,
     this.onConferenceCameraSwitched,
+    this.onConferenceScreenShare,
+    this.roomScreenShare,
+    this.screenShareHoldsCamera = false,
     this.audioDevice,
     this.contactResolver,
     this.keypadShown = false,
@@ -160,6 +163,17 @@ class CallScreenParams {
 
   /// Switches the camera published to the room.
   final VoidCallback? onConferenceCameraSwitched;
+
+  /// Starts showing the phone's screen to the room (`true`) or stops it (`false`); `null` where it
+  /// cannot be started and none runs: a phone that cannot share, a room without video.
+  final ValueChanged<bool>? onConferenceScreenShare;
+
+  /// Where the host's share to his room stands ([CallState.roomScreenShare]); `null` while none.
+  final ScreenShareStatus? roomScreenShare;
+
+  /// Whether a screen share holds the focused call's own video sender: its camera control is then
+  /// the screen's to hold.
+  final bool screenShareHoldsCamera;
 
   /// Whether somebody can be called into the conversation on the screen;
   /// see [CallState.addParticipantAvailability].

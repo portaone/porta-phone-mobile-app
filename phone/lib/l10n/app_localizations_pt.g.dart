@@ -712,6 +712,9 @@ class AppLocalizationsPt extends AppLocalizations {
   String get call_ScreenShareTile_stop => 'Parar';
 
   @override
+  String get call_ConferenceFullScreen_screenWaiting => 'Aguardando a tela';
+
+  @override
   String get call_screenShare_actionLabel_share => 'Compartilhar tela';
 
   @override

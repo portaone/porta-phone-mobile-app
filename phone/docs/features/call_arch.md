@@ -249,16 +249,34 @@ The settling time is a heuristic, not a SIP deadline.
 
 ## Screen share
 
-An ordinary call - not a leg of a room - can show the phone's screen to the far end in place of the
-camera (Android). Nothing changes in the protocol: the call's own connection keeps its one video
-line, and the screen goes out on its video sender (`RTCRtpSender.replaceTrack`). The far end, an
-app or a SIP phone behind Janus and PortaSIP, receives video as it would from a camera.
+An ordinary call can show the phone's screen to the far end in place of the camera (Android).
+Nothing changes in the protocol: the call's own connection keeps its one video line, and the
+screen goes out on its video sender (`RTCRtpSender.replaceTrack`). The far end, an app or a SIP
+phone behind Janus and PortaSIP, receives video as it would from a camera. A leg of the host's
+room, and a call whose far end invited it to a room, share to the room's video instead - the
+same consent, service and capture, handed to `RoomVideo.shareScreen`; that part is in
+[call_conference.md](call_conference.md), The screen in the room.
 
-`ScreenShare` (`features/call/utils/screen_share.dart`) holds the share and its steps, and is the
-one place where a share's status is kept: it reports every change (`onChanged`), and the bloc maps
-it into `ActiveCall.screenShare` (`starting`, `sharing`) for the screen (`_ScreenShareChanged`),
-also for a change made outside the mutation queue, such as a refused consent. The bloc decides when
-a share may start and when it has to stop. The platform side is `ScreenCapturer`:
+There is one share at a time, of a call or of a room, in three parts:
+
+- `ScreenShareCoordinator` (`features/call/bloc/screen_share_coordinator.dart`) decides where a
+  share goes (`targetFor`: a `CallScreenShareTarget`, or a `RoomScreenShareTarget` for a leg of the
+  host's room and for a call an invitation came through), whether it may start (`canStart`, which
+  `CallState.canShareScreen` is) and whether it may go on (`stands`), and builds its destination.
+  The bloc asks it from its handlers and runs the steps that touch a connection in the mutation
+  queue.
+- `ScreenShare` (`features/call/utils/screen_share.dart`) holds the share and its steps - the
+  consent, the service, the capture, the destination - and is the one place where a share's
+  status is kept: it reports every change (`onChanged`), and the bloc maps it into
+  `CallState.screenShare` (target and `starting` / `sharing`) for the screen
+  (`_ScreenShareChanged`), also for a change made outside the mutation queue, such as a refused
+  consent. The screen reads it through `CallState.screenShareOf` and `roomScreenShare`.
+- The destination (`screen_share_destinations.dart`): `CallSenderDestination`, the call's own
+  sender, or `RoomScreenDestination`, the room's video. `ScreenShare.stop` has the destination
+  take the screen off and put the camera back, then releases the capture. The move of a sender
+  between the camera and the screen is `CameraScreenSwap`, shared with the room's video session.
+
+The platform side is `ScreenCapturer`:
 `DefaultScreenCapturer` (`screen_capturer.dart`) asks for the consent and captures through
 flutter_webrtc, and runs callkeep's `mediaProjection` foreground service in between, which Android
 14 demands before a capture and refuses before the consent (`AndroidCallkeepUtils.screenShare`,
@@ -270,8 +288,11 @@ old one. `ScreenCapturer.isSupported` (Android) becomes `CallState.screenShareSu
 
 - **Start** (`CallControlEvent.screenShareStarted`): only while `CallState.canShareScreen` holds -
   a phone that can share; answered, connected, not held, not on its way out, no transfer under way
-  (`Transfer.isUnderWay`: the picker being open is not one), not a leg and no room being put
-  together - and one share at a time. The consent, the service and the capture run outside the
+  (`Transfer.isUnderWay`: the picker being open is not one) and no room being put together; for a
+  leg, the room up with video and not parked - and one share at a time: while one runs no other
+  call offers to start one. The share's destination is fixed when it begins: the room for a leg
+  (one share of the room, whichever leg asked) and for an invited call, else the call's own
+  sender. The consent, the service and the capture run outside the
   queues, since the consent is a system dialog a hangup must not wait behind; only putting the
   screen on the connection is a mutation (`screenShareAttach`), which checks the call again.
 - **Video sender.** A call with a video sender (the camera on or soft-muted) gets the screen on it.
@@ -290,13 +311,16 @@ old one. `ScreenCapturer.isSupported` (Android) becomes `CallState.screenShareSu
   when it carried the line (`videoOffered`: the line has a `mid` and no direction yet).
 - **media_state.** The far end app hides a picture the call says is off, so the share announces
   `video: true` and its stop announces the camera's own state again.
-- **Camera control.** Disabled while the screen is shared, and `cameraEnabled` is ignored then: the
-  camera would fight the screen for the one sender.
+- **Camera control.** Disabled while the screen is on the call's own sender
+  (`CallScreenParams.screenShareHoldsCamera`), and `cameraEnabled` is ignored then: the camera would
+  fight the screen for the one sender. A share to a room leaves the room's camera control as it is
+  (call_conference.md, The screen in the room).
 - **Stop** (`screenShareStop`), whatever asks for it, once (`markStopping`): the person (the menu,
   the tile's Stop), the capture ending outside the app (the notification's Stop, the system's),
-  and the call no longer able to share - held, a room being put together, ending or gone - read
-  from the state in `onChange` (`_followScreenShare`), which every one of those paths passes
-  through. A merge or an add into the room stops the share inside its own mutation, before the
+  and the call no longer able to share - held, a room being put together, ending or gone, or its
+  video gone somewhere else (a leg, an invitation; for a room share the room or the invitation
+  over) - read from the state in `onChange` (`_followScreenShare`), which every one of those paths
+  passes through. A merge or an add into the room stops the share inside its own mutation, before the
   room touches the connection (`_onConferenceMutation`), whoever asked for it - the person or the
   room retrying one. The sender gets back what it carried: the call's camera, opened again as it
   was (on or soft-muted), or nothing; a camera that does not open again turns the call's video off

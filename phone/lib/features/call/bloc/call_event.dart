@@ -38,14 +38,9 @@ class _VoiceNoiseReductionFailedChanged extends CallEvent {
   List<Object?> get props => [failed];
 }
 
-/// A screen share of [callId] changed where it stands (`ScreenShare`); the state follows it.
+/// The screen share changed; the state reads it again (`ScreenShareCoordinator.state`).
 class _ScreenShareChanged extends CallEvent {
-  const _ScreenShareChanged(this.callId);
-
-  final String callId;
-
-  @override
-  List<Object?> get props => [callId];
+  const _ScreenShareChanged();
 }
 
 class _NavigatorMediaDevicesChange extends CallEvent {
@@ -1618,11 +1613,9 @@ sealed class _CallMutationEvent extends CallEvent {
   const factory _CallMutationEvent.controlSetCameraEnabled(String callId, bool enabled) =
       _CallMutationEventControlSetCameraEnabled;
 
-  // Screen share steps that touch the call's connection (see ScreenShare)
-  const factory _CallMutationEvent.screenShareAttach(String callId, Object attempt) =
-      _CallMutationEventScreenShareAttach;
-  const factory _CallMutationEvent.screenShareStop(String callId, ScreenShareStopReason reason) =
-      _CallMutationEventScreenShareStop;
+  // Screen share steps that touch a connection (see ScreenShareCoordinator)
+  const factory _CallMutationEvent.screenShareAttach(Object attempt) = _CallMutationEventScreenShareAttach;
+  const factory _CallMutationEvent.screenShareStop(ScreenShareStopReason reason) = _CallMutationEventScreenShareStop;
   const factory _CallMutationEvent.screenShareVerify(String callId) = _CallMutationEventScreenShareVerify;
   const factory _CallMutationEvent.controlBlindTransfer(String callId, {required int? line, required String number}) =
       _CallMutationEventControlBlindTransfer;
@@ -1877,21 +1870,19 @@ class _CallMutationEventControlSetCameraEnabled extends _CallMutationEvent {
 }
 
 class _CallMutationEventScreenShareAttach extends _CallMutationEvent {
-  const _CallMutationEventScreenShareAttach(this.callId, this.attempt);
-  final String callId;
+  const _CallMutationEventScreenShareAttach(this.attempt);
 
   /// The share attempt whose capture is ready; a newer one, or none, makes this a no-op.
   final Object attempt;
   @override
-  List<Object?> get props => [callId, attempt];
+  List<Object?> get props => [attempt];
 }
 
 class _CallMutationEventScreenShareStop extends _CallMutationEvent {
-  const _CallMutationEventScreenShareStop(this.callId, this.reason);
-  final String callId;
+  const _CallMutationEventScreenShareStop(this.reason);
   final ScreenShareStopReason reason;
   @override
-  List<Object?> get props => [callId, reason];
+  List<Object?> get props => [reason];
 }
 
 class _CallMutationEventScreenShareVerify extends _CallMutationEvent {
