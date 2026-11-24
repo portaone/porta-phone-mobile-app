@@ -13,9 +13,8 @@ extension FeatureAccessResolver on FeatureAccess {
     final sourceTypes = bottomMenuConfig.getTabEnabled<ContactsBottomMenuTab>()?.contactSourceTypes;
 
     final hasLocalContacts = sourceTypes?.contains(ContactSourceType.local) ?? false;
-    final isSmsFallbackEnabled = callConfig.triggerConfig.smsFallback.enabled;
 
-    return [if (!hasLocalContacts) Permission.contacts, if (!isSmsFallbackEnabled) Permission.sms];
+    return [if (!hasLocalContacts) Permission.contacts];
   }
 }
 

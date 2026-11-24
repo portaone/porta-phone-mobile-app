@@ -19,11 +19,11 @@ class AppPermissions {
   ///
   /// None of them is required to open the app: each is asked for once on the way in from a
   /// sign-in, and a missing one is reported where it is used.
-  static const _fullPermissions = [Permission.microphone, Permission.camera, Permission.contacts, Permission.sms];
+  static const _fullPermissions = [Permission.microphone, Permission.camera, Permission.contacts];
 
   /// Permissions supported by permission_handler's web implementation. Requesting
   /// or querying any other permission on web throws UnsupportedError, so on web
-  /// the requested set is restricted to these. (contacts/sms are not available on
+  /// the requested set is restricted to these. (contacts are not available on
   /// web; camera + microphone cover the call use case.)
   static const _webSupportedPermissions = [Permission.microphone, Permission.camera];
 
@@ -90,17 +90,15 @@ class AppPermissions {
   /// Whether the system may still ask for a permission the app asks for ([permissions]).
   ///
   /// Decides whether the permissions screen is shown after a sign-in. Only a permission that
-  /// reads denied counts: granted and limited (a selection of contacts) are answers, a
-  /// permanent refusal or a restriction is not asked about again, and SMS on iOS is not a
-  /// permission there at all - permission_handler reports it denied for ever, which would
-  /// bring the screen back after every sign-in. On Android a permanent refusal still reads
-  /// denied (only a request can tell), so there the screen comes once per sign-in.
+  /// reads denied counts: granted and limited (a selection of contacts) are answers, and a
+  /// permanent refusal or a restriction is not asked about again. On Android a permanent
+  /// refusal still reads denied (only a request can tell), so there the screen comes once
+  /// per sign-in.
   ///
   /// Special permissions are deliberately not part of this: they change how a call is
   /// presented, not whether the app works.
   Future<bool> get anyNotGranted async {
     for (final permission in permissions) {
-      if (PlatformInfo.isIOS && permission == Permission.sms) continue;
       if ((await permission.status).isDenied) return true;
     }
     return false;

@@ -65,28 +65,25 @@ place they go missing - prefer the melos script.
 ## Optional Android features
 
 Android has no build flavors, so an APK/AAB build needs no `--flavor` and there is only one
-variant per build type. Two features are decided at build time because their permission and
-components must be absent when they are off - deep links and the SMS call trigger. Both follow
-`dart_define.json`:
+variant per build type. One feature is decided at build time because its components must be
+absent when it is off - deep links. It follows `dart_define.json`:
 
-| Dart define (`dart_define.json`)     | Value           | Effect                                       |
-|--------------------------------------|-----------------|----------------------------------------------|
-| `WEBTRIT_APP_LINK_DOMAIN`            | non-empty       | deep-link intent filter is merged in         |
-|                                      | empty/missing   | no intent filter                             |
-| `WEBTRIT_CALL_TRIGGER_MECHANISM_SMS` | `"true"`        | `RECEIVE_SMS` and the receiver are merged in |
-|                                      | anything else   | neither is declared                          |
+| Dart define (`dart_define.json`) | Value         | Effect                               |
+|----------------------------------|---------------|--------------------------------------|
+| `WEBTRIT_APP_LINK_DOMAIN`        | non-empty     | deep-link intent filter is merged in |
+|                                  | empty/missing | no intent filter                     |
 
-Every build prints what it resolved (`Deep links: enabled, SMS call trigger: disabled`), so a
-build log is enough to tell which features the artifact carries.
+Every build prints what it resolved (`Deep links: enabled`), so a build log is enough to tell
+whether the artifact carries the feature.
 
 Checking the result does not need a full build - the merged manifest is one Gradle task. It wants
 the dart-defines the way Flutter passes them, a comma-separated list of base64-encoded `KEY=VALUE`
-pairs, and it does NOT fail when they are missing: it succeeds with both features off, which looks
+pairs, and it does NOT fail when they are missing: it succeeds with the feature off, which looks
 the same as a fragment that never merged.
 
 ```bash
 cd android
-defines="$(printf '%s' 'WEBTRIT_APP_LINK_DOMAIN=app.webtrit.com' | base64 | tr -d '\n'),$(printf '%s' 'WEBTRIT_CALL_TRIGGER_MECHANISM_SMS=true' | base64 | tr -d '\n')"
+defines="$(printf '%s' 'WEBTRIT_APP_LINK_DOMAIN=app.webtrit.com' | base64 | tr -d '\n')"
 ./gradlew :app:processReleaseManifest -Pdart-defines="$defines"
 cat ../build/app/intermediates/merged_manifests/release/processReleaseManifest/AndroidManifest.xml
 ```
