@@ -185,6 +185,20 @@ tone sounds where it arguably should not. The candidate rule is to let a 183
 seen for a call make it cautious for the rest of the setup, so a later 180
 keeps waiting instead of starting immediately.
 
+## Which calls Call Pull offers
+
+`CallPullCubit` lists the confirmed, pullable dialogs of the account's main number
+and leaves out the calls of this device; `OwnCallIds` keeps which ones they are. A
+call is left out while it is on a line of this device, ringing included. After it
+leaves the line it is left out for five more minutes - the server's dialog of a
+call outlives it - unless it has only rung here (`ActiveCall.isRingingOnly`:
+incoming, and no answer started on this device). A forked call keeps its call id on
+every device of the account, so the call that rang here and was answered on another
+device is offered as soon as the phone lets it go. A call that was ever more than
+ringing - placed here, answered here, restored as answered, or with an answer
+started here that did not go through - stays this device's own. A call the line
+state does not show (a second call without a line) is not left out.
+
 ## Resuming media after Call Pull
 
 A pulled call can be connected with sendrecv SDP while PortaSIP still plays

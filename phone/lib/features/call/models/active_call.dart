@@ -180,6 +180,18 @@ class ActiveCall with _$ActiveCall implements CallEntry {
   /// An incoming call that is still ringing - offered but not yet accepted.
   bool get isIncomingRinging => isIncoming && !wasAccepted;
 
+  /// An incoming call that has only rung on this device: not accepted, and no
+  /// answer started here - ringing, or ending without one. An answer submitted,
+  /// media set up for it or a restored answered call is not, even before the
+  /// accept arrives: the call is this device's own from then on.
+  bool get isRingingOnly => isIncomingRinging && _ringingOnlyStatuses.contains(processingStatus);
+
+  static const _ringingOnlyStatuses = {
+    CallProcessingStatus.incomingFromPush,
+    CallProcessingStatus.incomingFromOffer,
+    CallProcessingStatus.disconnecting,
+  };
+
   /// The status of this incoming call while it rings with no answer submitted, read from what the
   /// call has: its offer is here, or it is known by its push alone. Where a call returns to when an
   /// answer submitted for it did not go through.

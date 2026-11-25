@@ -2,10 +2,11 @@ import 'dart:async';
 
 import 'package:bloc/bloc.dart';
 import 'package:logging/logging.dart';
-import 'package:quiver/collection.dart';
 
 import 'package:webtrit_phone/models/models.dart';
 import 'package:webtrit_phone/repositories/repositories.dart';
+
+import 'own_call_ids.dart';
 
 final _logger = Logger('CallPullCubit');
 
@@ -21,8 +22,7 @@ class CallPullCubit extends Cubit<List<DialogInfo>> {
   final DialogInfoRepository dialogInfoRepository;
   final LinesStateRepository linesStateRepository;
   final CallPullVideoStrategy callPullVideoStrategy;
-  final _activeCallIdsTtl = Duration(minutes: 5);
-  final LruMap<String, DateTime> _activeCallIds = LruMap<String, DateTime>(maximumSize: 50);
+  final _ownCallIds = OwnCallIds();
   StreamSubscription? _userSub;
   StreamSubscription? _dialogInfoSub;
   StreamSubscription? _linesStateSub;
@@ -49,15 +49,12 @@ class CallPullCubit extends Cubit<List<DialogInfo>> {
   void _onLinesState(LinesState linesState) {
     if (isClosed) return;
     final now = DateTime.now();
-    final activeCallIds = [
-      ...linesState.mainLines.whereType<InUseLineState>().map((line) => line.callId),
-      if (linesState.guestLine is InUseLineState) (linesState.guestLine as InUseLineState).callId,
+    final inUseLines = [
+      ...linesState.mainLines.whereType<InUseLineState>(),
+      if (linesState.guestLine case final InUseLineState guestLine) guestLine,
     ];
-    for (final callId in activeCallIds) {
-      _activeCallIds[callId] = now;
-    }
-    _removeExpiredActiveCallIds(now);
-    _logger.info('Lines state updated: $linesState, activeCallIds: ${_activeCallIds.length}');
+    _ownCallIds.update(inUseLines, now);
+    _logger.info('Lines state updated: $linesState, onLine: ${_ownCallIds.onLineCount}, own: ${_ownCallIds.ownCount}');
     _computeState();
   }
 
@@ -74,34 +71,10 @@ class CallPullCubit extends Cubit<List<DialogInfo>> {
     _computeState();
   }
 
-  void _removeExpiredActiveCallIds(DateTime now) {
-    final expiredCallIds = _activeCallIds.entries
-        .where((entry) => now.difference(entry.value) > _activeCallIdsTtl)
-        .map((entry) => entry.key)
-        .toList();
-    for (final callId in expiredCallIds) {
-      _activeCallIds.remove(callId);
-    }
-  }
-
-  bool _isActiveOrRecentlyActiveCallId(String callId, DateTime now) {
-    final updatedAt = _activeCallIds[callId];
-    if (updatedAt == null) {
-      return false;
-    }
-    if (now.difference(updatedAt) > _activeCallIdsTtl) {
-      _activeCallIds.remove(callId);
-      return false;
-    }
-    return true;
-  }
-
   void _computeState() {
     final now = DateTime.now();
-    _removeExpiredActiveCallIds(now);
-
     final otherDevices = _dialogInfos
-        .where((dialog) => dialog.callId != null && !_isActiveOrRecentlyActiveCallId(dialog.callId!, now))
+        .where((dialog) => dialog.callId != null && !_ownCallIds.contains(dialog.callId!, now))
         .toList();
 
     // Show only pullable for this feature

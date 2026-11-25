@@ -7,7 +7,8 @@ sealed class LineState extends Equatable {
   List<Object?> get props => [];
 
   factory LineState.idle() => const IdleLineState();
-  factory LineState.inUse({required String callId}) => InUseLineState(callId: callId);
+  factory LineState.inUse({required String callId, required bool ringingOnly}) =>
+      InUseLineState(callId: callId, ringingOnly: ringingOnly);
 }
 
 final class IdleLineState extends LineState {
@@ -18,14 +19,19 @@ final class IdleLineState extends LineState {
 }
 
 final class InUseLineState extends LineState {
-  const InUseLineState({required this.callId});
+  const InUseLineState({required this.callId, required this.ringingOnly});
   final String callId;
 
-  @override
-  List<Object?> get props => [callId];
+  /// Whether the call has only rung on this device so far: incoming, and no
+  /// answer started here. Such a call holds the line too, while another device
+  /// of the account may answer it under the same call id.
+  final bool ringingOnly;
 
   @override
-  String toString() => 'InUseLineState{callId: $callId}';
+  List<Object?> get props => [callId, ringingOnly];
+
+  @override
+  String toString() => 'InUseLineState{callId: $callId, ringingOnly: $ringingOnly}';
 }
 
 class LinesState extends Equatable {

@@ -1743,7 +1743,45 @@ void main() {
       final state = CallState(linesCount: 0, callServiceState: kRegistered, activeCalls: [_makeCall(line: null)]);
       final result = state.toLinesState();
       expect(result.mainLines, isEmpty);
-      expect(result.guestLine, LineState.inUse(callId: 'call-1'));
+      expect(result.guestLine, LineState.inUse(callId: 'call-1', ringingOnly: false));
+    });
+  });
+
+  group('ActiveCall.isRingingOnly', () {
+    test('an incoming call that rings, from a push or an offer, has only rung', () {
+      expect(_makeCall(processingStatus: CallProcessingStatus.incomingFromPush).isRingingOnly, isTrue);
+      expect(_makeCall(processingStatus: CallProcessingStatus.incomingFromOffer).isRingingOnly, isTrue);
+    });
+
+    test('an incoming call ending with no answer started has only rung', () {
+      expect(_makeCall(processingStatus: CallProcessingStatus.disconnecting).isRingingOnly, isTrue);
+    });
+
+    test('an answer started here makes the call more than ringing, before the accept', () {
+      for (final status in [
+        CallProcessingStatus.incomingSubmittedAnswer,
+        CallProcessingStatus.incomingPerformingStarted,
+        CallProcessingStatus.incomingInitializingMedia,
+        CallProcessingStatus.incomingRestoringMedia,
+        CallProcessingStatus.incomingAnswering,
+        CallProcessingStatus.connected,
+      ]) {
+        expect(_makeCall(processingStatus: status).isRingingOnly, isFalse, reason: '$status');
+      }
+    });
+
+    test('an accepted or an outgoing call is not ringing only', () {
+      expect(
+        _makeCall(processingStatus: CallProcessingStatus.disconnecting, acceptedTime: DateTime(2026)).isRingingOnly,
+        isFalse,
+      );
+      expect(
+        _makeCall(
+          direction: CallDirection.outgoing,
+          processingStatus: CallProcessingStatus.disconnecting,
+        ).isRingingOnly,
+        isFalse,
+      );
     });
   });
 
@@ -1762,7 +1800,7 @@ void main() {
         activeCalls: [_makeCall(callId: 'c1', line: 0)],
       );
       final result = state.toLinesState();
-      expect(result.mainLines[0], LineState.inUse(callId: 'c1'));
+      expect(result.mainLines[0], LineState.inUse(callId: 'c1', ringingOnly: false));
       expect(result.mainLines[1], LineState.idle());
     });
 
@@ -1774,7 +1812,7 @@ void main() {
       );
       final result = state.toLinesState();
       expect(result.mainLines[0], LineState.idle());
-      expect(result.mainLines[1], LineState.inUse(callId: 'c1'));
+      expect(result.mainLines[1], LineState.inUse(callId: 'c1', ringingOnly: false));
     });
 
     test('all lines inUse when calls on every line', () {
@@ -1787,7 +1825,10 @@ void main() {
         ],
       );
       final result = state.toLinesState();
-      expect(result.mainLines, [LineState.inUse(callId: 'c1'), LineState.inUse(callId: 'c2')]);
+      expect(result.mainLines, [
+        LineState.inUse(callId: 'c1', ringingOnly: false),
+        LineState.inUse(callId: 'c2', ringingOnly: false),
+      ]);
     });
 
     test('guest line inUse when guest call present alongside main calls', () {
@@ -1800,9 +1841,25 @@ void main() {
         ],
       );
       final result = state.toLinesState();
-      expect(result.mainLines[0], LineState.inUse(callId: 'c1'));
+      expect(result.mainLines[0], LineState.inUse(callId: 'c1', ringingOnly: false));
       expect(result.mainLines[1], LineState.idle());
-      expect(result.guestLine, LineState.inUse(callId: 'c2'));
+      expect(result.guestLine, LineState.inUse(callId: 'c2', ringingOnly: false));
+    });
+
+    test('line marks an incoming call with no answer started here as ringing only', () {
+      final state = CallState(
+        linesCount: 2,
+        callServiceState: kRegistered,
+        activeCalls: [
+          _makeCall(callId: 'c1', line: 0, processingStatus: CallProcessingStatus.incomingFromOffer),
+          _makeCall(callId: 'c2', line: 1, processingStatus: CallProcessingStatus.incomingSubmittedAnswer),
+        ],
+      );
+      final result = state.toLinesState();
+      expect(result.mainLines, [
+        LineState.inUse(callId: 'c1', ringingOnly: true),
+        LineState.inUse(callId: 'c2', ringingOnly: false),
+      ]);
     });
 
     test('guest line idle when no guest call', () {
