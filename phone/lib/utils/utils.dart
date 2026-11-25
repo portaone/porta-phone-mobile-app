@@ -17,6 +17,7 @@ export 'expiring_cache.dart';
 export 'fixed_delay_scheduler.dart';
 export 'gravatar.dart';
 export 'ice_checker.dart';
+export 'iso_instant.dart';
 export 'jitter.dart';
 export 'link_preview.dart';
 export 'mail_to.dart';

@@ -8,17 +8,23 @@ class SipPresenceIndicator extends StatelessWidget {
     required this.presenceInfo,
     required this.dialogInfo,
     required Rect presenceRect,
+    this.registered,
   }) : _presenceRect = presenceRect;
 
   final List<PresenceInfo> presenceInfo;
   final List<DialogInfo> dialogInfo;
   final Rect _presenceRect;
 
+  /// Whether the contact's phone is registered on the PBX; decides the colour
+  /// only when [presenceInfo] is empty, that is when nobody published a
+  /// status for the contact.
+  final bool? registered;
+
   @override
   Widget build(BuildContext context) {
     final badge = LeadingAvatarStyles.of(context).presenceBadge!;
 
-    final anyAvailable = presenceInfo.anyAvailable;
+    final reachable = presenceInfo.reachable(registered: registered);
 
     // Asking not to be called outranks reachability: a contact on "do not
     // disturb" is reachable by definition - they just published something -
@@ -28,7 +34,7 @@ class SipPresenceIndicator extends StatelessWidget {
     // dialling and would paint people as busy over calls nobody answered.
     final color = switch (presenceInfo.primaryActivity) {
       PresenceActivity.busy || PresenceActivity.doNotDisturb => badge.busyColor,
-      _ => anyAvailable ? badge.availableColor : badge.unavailableColor,
+      _ => reachable ? badge.availableColor : badge.unavailableColor,
     };
 
     final activityIcon = _activityIcon(presenceInfo, dialogInfo);

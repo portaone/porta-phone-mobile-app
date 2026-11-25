@@ -3,7 +3,7 @@
 This file describes environment variables and Dart define variables used in the PortaPhone application
 configuration.
 
-Last reviewed: 2026-09-11.
+Last reviewed: 2026-11-25.
 
 ### Naming Convention
 
@@ -78,10 +78,11 @@ maintainability and enabling tools to parse configuration reliably.
   **300**). Here the fetch is the presence source, so it stays fairly fresh.
 - `WEBTRIT_APP_EXTERNAL_CONTACTS_HYBRID_PRESENCE_POLLING_INTERVAL_SECONDS` -
   Contacts poll interval in positive whole seconds when hybrid presence is on
-  (default: **1800**). Presence rides the SIP channel, so this fetch only
-  refreshes the directory and can run far less often. The shell picks between the
-  two at registration from the deployment's presence mode. Invalid values fall
-  back safely. See [contacts presence interval](../architecture/polling.md#contacts-presence-interval).
+  (default: **1800**). Published status arrives over signaling, so the list is
+  polled far less often; its registration flag still marks a contact nobody
+  publishes for, and that mark can be up to this interval old. The shell picks
+  between the two at registration from the deployment's presence mode. Invalid
+  values fall back safely. See [contacts presence interval](../architecture/polling.md#contacts-presence-interval).
 - `WEBTRIT_APP_POLLING_REACHABILITY_TTL_SECONDS` - How long a reachability probe
   result is reused before the polling service probes the check URL again, in
   positive whole seconds (default: **30**). Together with the task intervals this

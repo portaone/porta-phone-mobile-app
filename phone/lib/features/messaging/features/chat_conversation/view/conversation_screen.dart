@@ -241,7 +241,7 @@ class _ChatConversationScreenState extends State<ChatConversationScreen> {
                 username: contact.displayTitle,
                 thumbnail: contact.thumbnail,
                 thumbnailUrl: contact.thumbnailUrl,
-                badge: AvatarStatusBadge.maybe(presenceInfo: contact.presenceInfo, dialogInfo: contact.dialogInfo),
+                badge: AvatarStatusBadge.ofContact(contact),
               ),
               const SizedBox(width: 8),
               Flexible(
