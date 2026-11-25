@@ -299,6 +299,7 @@ const String contactPhoneVoiceCallId = 'contactPhoneVoiceCall';
 const String contactWatchCallId = 'contactWatchCall';
 const contactWatchCallKey = Key(contactWatchCallId);
 const String contactWatchCallLogId = 'contactWatchCallLog';
+const String contactPresenceLegendId = 'contactPresenceLegend';
 const String contactPresenceSubscriptionId = 'contactPresenceSubscription';
 const String contactPresenceSubscriptionInfoId = 'contactPresenceSubscriptionInfo';
 const String conversationsNewId = 'conversationsNew';

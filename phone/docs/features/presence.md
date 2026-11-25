@@ -92,6 +92,39 @@ and icon beside a name all give the same answer. The textual section on the
 contact screen (`presence_info_view.dart`) is the exception on purpose: it
 lists every record with its source.
 
+That section is also where the third source is named. For a contact with no
+record at all and a known `registered`, it shows one entry: "Registered" or
+"Not registered", "Updated: ... ago", and "Source: PBX registration". It says
+"registered" and not "available" deliberately: the mark in the lists reads
+a registered phone as available because that is the useful answer at a
+glance, while here the fact is given as it is - a device that will ring,
+not a person who said they are there. With any record present the
+registration is not listed; it is not what the mark was drawn from.
+
+`registered` comes from the contact list and is refreshed only when the
+list is, so a mark drawn from it can lag behind the phone. The age shown in
+the card is `Contact.updatedAt`, the time the stored contact was last
+written: a contact from the server is rewritten on every refresh of the
+list, changed or not, so that is when the flag was read. The PBX does not
+report when the phone itself registered. `updatedAt` is deliberately NOT
+part of `Contact`'s equality - it moves on every refresh, and as part of
+equality it would make every contact a new contact on every refresh of the
+contact list - so the card follows it through `ContactState.registeredAsOf`
+instead.
+
+Each published entry of the section ends with the client that published it.
+Our own clients name themselves in the record's `device` as
+`Name/Version (Device; System)` - the app sends its User-Agent, the web
+dialer `Web-dialer/<version> (<browser>; <system>)` - and
+`lib/models/presence/presence_client.dart` (`PresenceClient.parse`) turns
+that into a "Client:" line. What a third-party device puts there is shown as
+it came.
+
+The info button beside the section's title (`contactPresenceLegendId`) opens
+`PresenceLegendDialog` (`widgets/presence_legend_dialog.dart`): the order of
+the sources in words, and one real mark - drawn by `SipPresenceIndicator`
+itself - for each thing a mark can say.
+
 The sites that used to pass the registration alone - the contact pickers,
 the call log, the number CDRs, the watch rows, the chat header and the
 members of a group chat - build their badge with
@@ -111,7 +144,7 @@ by an older build names no zone and is read as the wall clock of the offset
 stored with it (`lib/mappers/json/presence_settings_mapper.dart`).
 `PresenceInfo.stateBeganAt` is the one notion of "when this status began" -
 the timestamp, cut back to the arrival when the publisher's clock runs
-ahead - used to order the records.
+ahead - used both to order the records and for the "Updated" line.
 
 ## Avatar badges: two systems plus one indicator
 
