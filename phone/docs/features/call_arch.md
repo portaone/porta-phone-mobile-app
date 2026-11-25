@@ -3,7 +3,7 @@
 `CallBloc` (`lib/features/call/bloc/call_bloc.dart`) is the central component of the entire app.
 It implements both `Bloc<CallEvent, CallState>` and `CallkeepDelegate`, making it the single point
 that bridges signaling, native call UI, WebRTC media, and the Flutter UI layer.
-Last reviewed: 2026-11-23.
+Last reviewed: 2026-11-25.
 
 The product/UX view lives in [`call_ux.md`](call_ux.md); incoming-call background scenarios with
 diagrams in [`../architecture/incoming_call_scenarios.md`](../architecture/incoming_call_scenarios.md); merging calls into a
@@ -249,7 +249,8 @@ The settling time is a heuristic, not a SIP deadline.
 
 ## Screen share
 
-An ordinary call can show the phone's screen to the far end in place of the camera (Android).
+An ordinary call can show the phone's screen to the far end in place of the camera (Android, and
+iOS in a build with the screen share extension).
 Nothing changes in the protocol: the call's own connection keeps its one video line, and the
 screen goes out on its video sender (`RTCRtpSender.replaceTrack`). The far end, an app or a SIP
 phone behind Janus and PortaSIP, receives video as it would from a camera. A leg of the host's
@@ -283,8 +284,32 @@ flutter_webrtc, and runs callkeep's `mediaProjection` foreground service in betw
 [screen-share-service.md](../../../callkeep/webtrit_callkeep_android/docs/screen-share-service.md)).
 It is built once by `bootstrap()` and handed to the bloc (`MainShellBlocs`): callkeep reports the
 end of a capture to one delegate, and a bloc made again for the same sign-in shares it with the
-old one. `ScreenCapturer.isSupported` (Android) becomes `CallState.screenShareSupported`, part of
+old one. `ScreenCapturer.isSupported` becomes `CallState.screenShareSupported`, part of
 `canShareScreen`, so the screen does not decide the platform itself.
+
+On iOS an app can record only itself, so the whole screen goes out through the broadcast upload
+extension `ios/ScreenShare`, optional per brand
+([optional_features.md](../reference/optional_features.md#screen-share)); `bootstrap()` asks
+whether this build carries it (`ScreenBroadcast.ofThisBuild`: no app group in
+`EnvironmentConfig.IOS_SCREEN_SHARE_APP_GROUP` means no, otherwise the native side says), and
+without it `isSupported` is false. With it:
+
+- `requestConsent` is true and the service steps do nothing: the system's broadcast picker is the
+  consent, and iOS has no foreground service to run.
+- `capture` calls `getDisplayMedia` with the device `broadcast`: flutter_webrtc binds a unix
+  socket in the App Group's container (`rtc_SSFD`) and shows the picker. The extension
+  (`SampleHandler`) connects to that socket, sends every screen frame as a JPEG framed with
+  `Content-Length`, `Buffer-Width`, `Buffer-Height` and `Buffer-Orientation` headers (at most 15
+  frames a second, half the screen's resolution, a frame dropped while the one before is being
+  written - the extension may use about 50 MB), and posts the Darwin notification
+  `<app group>.screenShare.started`. `ScreenBroadcastChannel` in the app relays it over
+  `com.webtrit.phone/screen_broadcast/events`, and only then does the capture return. A picker
+  dismissed sends nothing: the capture fails after 30 seconds, releasing the capture.
+- The app stopping the share stops the track, which closes the socket; the extension sees it
+  closed and finishes the broadcast. The extension posts `<app group>.screenShare.stopped`
+  whoever ended the broadcast; after the app's own stop (`stopService`) it is ignored, otherwise
+  it is `endedOutside` - the person stopped the broadcast from the status bar or Control
+  Center. flutter_webrtc itself reports neither the start nor the end of a broadcast.
 
 - **Start** (`CallControlEvent.screenShareStarted`): only while `CallState.canShareScreen` holds -
   a phone that can share; answered, connected, not held, not on its way out, no transfer under way

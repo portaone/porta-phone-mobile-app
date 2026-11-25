@@ -13,12 +13,19 @@
 		400D6E6F2D6DBAA00014E321 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 400D6E6E2D6DBAA00014E321 /* PrivacyInfo.xcprivacy */; };
 		448A2BA0286F1B6A000468C3 /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 448A2BA2286F1B6A000468C3 /* InfoPlist.strings */; };
 		481A3F6D5712D46642E67286 /* Pods_Runner.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = E093CE56CE7AC0694496E915 /* Pods_Runner.framework */; };
+		5E4E16C83918414D7D7DFF9F /* SampleUploader.swift in Sources */ = {isa = PBXBuildFile; fileRef = 14E1E79694C4DB8B2337EBC4 /* SampleUploader.swift */; };
 		74858FAF1ED2DC5600515810 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 74858FAE1ED2DC5600515810 /* AppDelegate.swift */; };
 		78A318202AECB46A00862997 /* FlutterGeneratedPluginSwiftPackage in Frameworks */ = {isa = PBXBuildFile; productRef = 78A3181F2AECB46A00862997 /* FlutterGeneratedPluginSwiftPackage */; };
+		917593F66D7962AEA5F838C1 /* SampleHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3B491449F4B1335E9F61F8E6 /* SampleHandler.swift */; };
+		91E035E96A3E99BD96B461A1 /* SocketConnection.swift in Sources */ = {isa = PBXBuildFile; fileRef = F6B5331F9977152BE1C35CD0 /* SocketConnection.swift */; };
 		97C146FC1CF9000F007C117D /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 97C146FA1CF9000F007C117D /* Main.storyboard */; };
 		97C146FE1CF9000F007C117D /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 97C146FD1CF9000F007C117D /* Assets.xcassets */; };
 		97C147011CF9000F007C117D /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 97C146FF1CF9000F007C117D /* LaunchScreen.storyboard */; };
 		A1F313DA78541C0941767BCB /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = 054047DDC3E168007766A026 /* GoogleService-Info.plist */; };
+		AD459EBADCBEBEC1F9BE61C0 /* ScreenShareBroadcast.swift in Sources */ = {isa = PBXBuildFile; fileRef = E71EE97250E2B91ED6D512A5 /* ScreenShareBroadcast.swift */; };
+		E1C65B57185EFB4F303FC47B /* ScreenBroadcastChannel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 08AD2BC37139BA7B6172DED6 /* ScreenBroadcastChannel.swift */; };
+		E30398016E100013AD6596D8 /* ScreenShareBroadcast.swift in Sources */ = {isa = PBXBuildFile; fileRef = E71EE97250E2B91ED6D512A5 /* ScreenShareBroadcast.swift */; };
+		F362081FB19ADD097A0617BA /* ScreenShare.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 8BB873378A855B8545EEB9C3 /* ScreenShare.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -28,6 +35,13 @@
 			proxyType = 1;
 			remoteGlobalIDString = 97C146ED1CF9000F007C117D;
 			remoteInfo = Runner;
+		};
+		D43D7C72E61E101D012F4DDB /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 97C146E61CF9000F007C117D /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 25A870909BDC711DCAC0DCDD;
+			remoteInfo = ScreenShare;
 		};
 /* End PBXContainerItemProxy section */
 
@@ -42,15 +56,29 @@
 			name = "Embed Frameworks";
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		AF8D9E341ECB8437FE9A4698 /* Embed Foundation Extensions */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 13;
+			files = (
+				F362081FB19ADD097A0617BA /* ScreenShare.appex in Embed Foundation Extensions */,
+			);
+			name = "Embed Foundation Extensions";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
 		054047DDC3E168007766A026 /* GoogleService-Info.plist */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.plist.xml; name = "GoogleService-Info.plist"; path = "Runner/GoogleService-Info.plist"; sourceTree = "<group>"; };
 		05D41B121BA58DA96B98C7B7 /* Pods_Runner_RunnerUITests.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_Runner_RunnerUITests.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		08AD2BC37139BA7B6172DED6 /* ScreenBroadcastChannel.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ScreenBroadcastChannel.swift; sourceTree = "<group>"; };
 		0916F6505C765B82A0B708DB /* Pods-Runner-RunnerUITests.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Runner-RunnerUITests.release.xcconfig"; path = "Target Support Files/Pods-Runner-RunnerUITests/Pods-Runner-RunnerUITests.release.xcconfig"; sourceTree = "<group>"; };
 		1498D2321E8E86230040F4C2 /* GeneratedPluginRegistrant.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = GeneratedPluginRegistrant.h; sourceTree = "<group>"; };
 		1498D2331E8E89220040F4C2 /* GeneratedPluginRegistrant.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = GeneratedPluginRegistrant.m; sourceTree = "<group>"; };
+		14E1E79694C4DB8B2337EBC4 /* SampleUploader.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = SampleUploader.swift; sourceTree = "<group>"; };
 		3B3967151E833CAA004F5970 /* AppFrameworkInfo.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = AppFrameworkInfo.plist; path = Flutter/AppFrameworkInfo.plist; sourceTree = "<group>"; };
+		3B491449F4B1335E9F61F8E6 /* SampleHandler.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = SampleHandler.swift; sourceTree = "<group>"; };
 		400D6E6E2D6DBAA00014E321 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; lastKnownFileType = text.xml; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 		402D4AD52DBE267C00E56451 /* RunnerUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = RunnerUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		448A2BA1286F1B6A000468C3 /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/InfoPlist.strings; sourceTree = "<group>"; };
@@ -61,6 +89,8 @@
 		7AFA3C8E1D35360C0083082E /* Release.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; name = Release.xcconfig; path = Flutter/Release.xcconfig; sourceTree = "<group>"; };
 		82605E64D32501FF7BA5732E /* Pods-Runner-RunnerUITests.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Runner-RunnerUITests.debug.xcconfig"; path = "Target Support Files/Pods-Runner-RunnerUITests/Pods-Runner-RunnerUITests.debug.xcconfig"; sourceTree = "<group>"; };
 		8269C06BE014AF7F488AEADD /* Pods-Runner-RunnerUITests.profile.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Runner-RunnerUITests.profile.xcconfig"; path = "Target Support Files/Pods-Runner-RunnerUITests/Pods-Runner-RunnerUITests.profile.xcconfig"; sourceTree = "<group>"; };
+		8BB873378A855B8545EEB9C3 /* ScreenShare.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = ScreenShare.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		8DC18756683C97E3E216637F /* ScreenShare.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; path = ScreenShare.xcconfig; sourceTree = "<group>"; };
 		9740EEB21CF90195004384FC /* Debug.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; name = Debug.xcconfig; path = Flutter/Debug.xcconfig; sourceTree = "<group>"; };
 		9740EEB31CF90195004384FC /* Generated.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; name = Generated.xcconfig; path = Flutter/Generated.xcconfig; sourceTree = "<group>"; };
 		97C146EE1CF9000F007C117D /* Runner.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Runner.app; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -68,10 +98,14 @@
 		97C146FD1CF9000F007C117D /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		97C147001CF9000F007C117D /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/LaunchScreen.storyboard; sourceTree = "<group>"; };
 		97C147021CF9000F007C117D /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		A5702D8AAE2FBD8E2D2665B0 /* Info.plist */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		BCF663B2E16C5FF7FD11B763 /* ScreenShare.entitlements */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.plist.entitlements; path = ScreenShare.entitlements; sourceTree = "<group>"; };
 		BE7CA5D634791927F8FD7A6C /* Pods-Runner.profile.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Runner.profile.xcconfig"; path = "Target Support Files/Pods-Runner/Pods-Runner.profile.xcconfig"; sourceTree = "<group>"; };
 		D2FBE0C17FC1BB0234FDF3F5 /* Pods-Runner.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Runner.release.xcconfig"; path = "Target Support Files/Pods-Runner/Pods-Runner.release.xcconfig"; sourceTree = "<group>"; };
 		E093CE56CE7AC0694496E915 /* Pods_Runner.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_Runner.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		E6E5DBB2DE77F4CA51EF6C40 /* Pods-Runner.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Runner.debug.xcconfig"; path = "Target Support Files/Pods-Runner/Pods-Runner.debug.xcconfig"; sourceTree = "<group>"; };
+		E71EE97250E2B91ED6D512A5 /* ScreenShareBroadcast.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ScreenShareBroadcast.swift; sourceTree = "<group>"; };
+		F6B5331F9977152BE1C35CD0 /* SocketConnection.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = SocketConnection.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
@@ -90,6 +124,13 @@
 			buildActionMask = 2147483647;
 			files = (
 				3BB8FD10CC0A3FB3B9F52662 /* Pods_Runner_RunnerUITests.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		45A6F42096BC88F190882593 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -149,6 +190,7 @@
 				42BA722D402112D09B6D0196 /* Pods */,
 				054047DDC3E168007766A026 /* GoogleService-Info.plist */,
 				62E0D6CA47198EB0ACB470DD /* Frameworks */,
+				A9F0CDD94E13B44956CD5A6C /* ScreenShare */,
 			);
 			sourceTree = "<group>";
 		};
@@ -157,6 +199,7 @@
 			children = (
 				97C146EE1CF9000F007C117D /* Runner.app */,
 				402D4AD52DBE267C00E56451 /* RunnerUITests.xctest */,
+				8BB873378A855B8545EEB9C3 /* ScreenShare.appex */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -176,6 +219,7 @@
 				74858FAD1ED2DC5600515810 /* Runner-Bridging-Header.h */,
 				448A2BA2286F1B6A000468C3 /* InfoPlist.strings */,
 				400D6E6E2D6DBAA00014E321 /* PrivacyInfo.xcprivacy */,
+				08AD2BC37139BA7B6172DED6 /* ScreenBroadcastChannel.swift */,
 			);
 			path = Runner;
 			sourceTree = "<group>";
@@ -187,9 +231,41 @@
 			name = "Supporting Files";
 			sourceTree = "<group>";
 		};
+		A9F0CDD94E13B44956CD5A6C /* ScreenShare */ = {
+			isa = PBXGroup;
+			children = (
+				3B491449F4B1335E9F61F8E6 /* SampleHandler.swift */,
+				14E1E79694C4DB8B2337EBC4 /* SampleUploader.swift */,
+				F6B5331F9977152BE1C35CD0 /* SocketConnection.swift */,
+				E71EE97250E2B91ED6D512A5 /* ScreenShareBroadcast.swift */,
+				A5702D8AAE2FBD8E2D2665B0 /* Info.plist */,
+				BCF663B2E16C5FF7FD11B763 /* ScreenShare.entitlements */,
+				8DC18756683C97E3E216637F /* ScreenShare.xcconfig */,
+			);
+			name = ScreenShare;
+			path = ScreenShare;
+			sourceTree = "<group>";
+		};
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
+		25A870909BDC711DCAC0DCDD /* ScreenShare */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = A4DF1DC0347C45ED3BFF41A8 /* Build configuration list for PBXNativeTarget "ScreenShare" */;
+			buildPhases = (
+				097615F9DC245BA60ABD0ADB /* Sources */,
+				45A6F42096BC88F190882593 /* Frameworks */,
+				8500061C6CC607A1BE5E27B1 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = ScreenShare;
+			productName = ScreenShare;
+			productReference = 8BB873378A855B8545EEB9C3 /* ScreenShare.appex */;
+			productType = "com.apple.product-type.app-extension";
+		};
 		402D4AD42DBE267C00E56451 /* RunnerUITests */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = 402D4AE02DBE267C00E56451 /* Build configuration list for PBXNativeTarget "RunnerUITests" */;
@@ -226,6 +302,7 @@
 				97C146EB1CF9000F007C117D /* Frameworks */,
 				97C146EC1CF9000F007C117D /* Resources */,
 				9705A1C41CF9048500538489 /* Embed Frameworks */,
+				AF8D9E341ECB8437FE9A4698 /* Embed Foundation Extensions */,
 				3B06AD1E1E4923F5004D2608 /* Thin Binary */,
 				7FE34FE964C106D36D6E7929 /* [CP] Embed Pods Frameworks */,
 				1E06015E186652CF447209DF /* [firebase_crashlytics] Crashlytics Upload Symbols */,
@@ -233,6 +310,7 @@
 			buildRules = (
 			);
 			dependencies = (
+				A1CD28A6C6051B9978E9FD2E /* PBXTargetDependency */,
 			);
 			name = Runner;
 			packageProductDependencies = (
@@ -251,6 +329,9 @@
 				LastUpgradeCheck = 1510;
 				ORGANIZATIONNAME = "The Chromium Authors";
 				TargetAttributes = {
+					25A870909BDC711DCAC0DCDD = {
+						CreatedOnToolsVersion = 16.0;
+					};
 					402D4AD42DBE267C00E56451 = {
 						CreatedOnToolsVersion = 16.2;
 						TestTargetID = 97C146ED1CF9000F007C117D;
@@ -279,12 +360,20 @@
 			targets = (
 				97C146ED1CF9000F007C117D /* Runner */,
 				402D4AD42DBE267C00E56451 /* RunnerUITests */,
+				25A870909BDC711DCAC0DCDD /* ScreenShare */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
 		402D4AD32DBE267C00E56451 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		8500061C6CC607A1BE5E27B1 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -495,6 +584,17 @@
 /* End PBXShellScriptBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
+		097615F9DC245BA60ABD0ADB /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				917593F66D7962AEA5F838C1 /* SampleHandler.swift in Sources */,
+				5E4E16C83918414D7D7DFF9F /* SampleUploader.swift in Sources */,
+				91E035E96A3E99BD96B461A1 /* SocketConnection.swift in Sources */,
+				E30398016E100013AD6596D8 /* ScreenShareBroadcast.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		402D4AD12DBE267C00E56451 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -508,6 +608,8 @@
 			files = (
 				74858FAF1ED2DC5600515810 /* AppDelegate.swift in Sources */,
 				1498D2341E8E89220040F4C2 /* GeneratedPluginRegistrant.m in Sources */,
+				AD459EBADCBEBEC1F9BE61C0 /* ScreenShareBroadcast.swift in Sources */,
+				E1C65B57185EFB4F303FC47B /* ScreenBroadcastChannel.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -518,6 +620,12 @@
 			isa = PBXTargetDependency;
 			target = 97C146ED1CF9000F007C117D /* Runner */;
 			targetProxy = 402D4ADB2DBE267C00E56451 /* PBXContainerItemProxy */;
+		};
+		A1CD28A6C6051B9978E9FD2E /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			name = ScreenShare;
+			target = 25A870909BDC711DCAC0DCDD /* ScreenShare */;
+			targetProxy = D43D7C72E61E101D012F4DDB /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
 
@@ -640,6 +748,33 @@
 			};
 			name = Profile;
 		};
+		2577BF7F5A0E407EF85A97CA /* Profile */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = 8DC18756683C97E3E216637F /* ScreenShare.xcconfig */;
+			buildSettings = {
+				APPLICATION_EXTENSION_API_ONLY = YES;
+				CLANG_ENABLE_OBJC_WEAK = NO;
+				CODE_SIGN_ENTITLEMENTS = ScreenShare/ScreenShare.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = Z3TG8S656A;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = ScreenShare/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.webtrit.phone.ScreenShare;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SKIP_INSTALL = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Profile;
+		};
 		402D4ADD2DBE267C00E56451 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 9740EEB21CF90195004384FC /* Debug.xcconfig */;
@@ -742,6 +877,59 @@
 				TREE_SHAKE_ICONS = false;
 			};
 			name = Profile;
+		};
+		41845D4382D57C33D157FC0F /* Release */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = 8DC18756683C97E3E216637F /* ScreenShare.xcconfig */;
+			buildSettings = {
+				APPLICATION_EXTENSION_API_ONLY = YES;
+				CLANG_ENABLE_OBJC_WEAK = NO;
+				CODE_SIGN_ENTITLEMENTS = ScreenShare/ScreenShare.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = Z3TG8S656A;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = ScreenShare/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.webtrit.phone.ScreenShare;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SKIP_INSTALL = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Release;
+		};
+		52E533C298037716ABDD1E10 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = 8DC18756683C97E3E216637F /* ScreenShare.xcconfig */;
+			buildSettings = {
+				APPLICATION_EXTENSION_API_ONLY = YES;
+				CLANG_ENABLE_OBJC_WEAK = NO;
+				CODE_SIGN_ENTITLEMENTS = ScreenShare/ScreenShare.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = Z3TG8S656A;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = ScreenShare/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.webtrit.phone.ScreenShare;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SKIP_INSTALL = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
 		};
 		97C147031CF9000F007C117D /* Debug */ = {
 			isa = XCBuildConfiguration;
@@ -961,6 +1149,16 @@
 				97C147061CF9000F007C117D /* Debug */,
 				97C147071CF9000F007C117D /* Release */,
 				249021D4217E4FDB00AE95B9 /* Profile */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		A4DF1DC0347C45ED3BFF41A8 /* Build configuration list for PBXNativeTarget "ScreenShare" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				41845D4382D57C33D157FC0F /* Release */,
+				52E533C298037716ABDD1E10 /* Debug */,
+				2577BF7F5A0E407EF85A97CA /* Profile */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;

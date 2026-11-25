@@ -20,7 +20,15 @@ platform :ios do
       keychain_password: keychain_password,
     )
 
-    install_provisioning_profile(path: ENV['IOS_PROVISIONING_PROFILE_PATH'])
+    app_profile_path = ENV['IOS_PROVISIONING_PROFILE_PATH']
+    # The screen share extension is a target of its own with its own App ID, so it cannot be
+    # signed with the app's profile. A brand without the extension (WEBTRIT_IOS_SCREEN_SHARE_APP_GROUP
+    # empty in dart_define.json) has it taken out of the project and sets no second profile.
+    screen_share_profile_path = ENV['IOS_SCREEN_SHARE_PROVISIONING_PROFILE_PATH'].to_s.strip
+    screen_share_profile_path = nil if screen_share_profile_path.empty?
+
+    install_provisioning_profile(path: app_profile_path)
+    install_provisioning_profile(path: screen_share_profile_path) if screen_share_profile_path
 
     increment_build_number(
       build_number: ENV['IOS_BUILD_NUMBER'],
@@ -42,11 +50,37 @@ platform :ios do
       teamid: ENV['IOS_TEAM_ID'],
     )
 
-    update_project_provisioning(
-      xcodeproj: "Runner.xcodeproj",
-      profile: ENV['IOS_PROVISIONING_PROFILE_PATH'],
-      target_filter: nil
-    )
+    if screen_share_profile_path
+      # target_filter is a regex matched against the target name and product type, so the names
+      # are anchored: a bare "Runner" would also match RunnerUITests.
+      update_project_provisioning(
+        xcodeproj: "Runner.xcodeproj",
+        profile: app_profile_path,
+        target_filter: /\ARunner\z/
+      )
+      update_project_provisioning(
+        xcodeproj: "Runner.xcodeproj",
+        profile: screen_share_profile_path,
+        target_filter: /\AScreenShare\z/
+      )
+    else
+      update_project_provisioning(
+        xcodeproj: "Runner.xcodeproj",
+        profile: app_profile_path,
+        target_filter: nil
+      )
+    end
+
+    export_options = {
+      signingCertificate: ENV['IOS_CODE_SIGNING_IDENTITY'],
+    }
+    if screen_share_profile_path
+      # Manual signing names a profile for every executable in the archive, keyed by bundle id;
+      # both are read from the profiles themselves, so they follow whatever bundle id the brand has.
+      export_options[:provisioningProfiles] = [app_profile_path, screen_share_profile_path].map do |path|
+        [FastlaneCore::ProvisioningProfile.bundle_id(path), FastlaneCore::ProvisioningProfile.uuid(path)]
+      end.to_h
+    end
 
     build_app(
       scheme: "Runner",
@@ -54,9 +88,7 @@ platform :ios do
       # archive_path: "build.xcarchive", # Uncomment if you want to keep the archive, for manual upload
       output_name: ENV['IOS_BUILD_FILE_NAME'],
       export_team_id: ENV['IOS_TEAM_ID'],
-      export_options: {
-        signingCertificate: ENV['IOS_CODE_SIGNING_IDENTITY'],
-      },
+      export_options: export_options,
       sdk: ENV['IOS_BUILD_SDK'].nil? ? nil : ENV['IOS_BUILD_SDK'],
     )
 

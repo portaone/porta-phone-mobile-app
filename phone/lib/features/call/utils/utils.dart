@@ -19,6 +19,7 @@ export 'pulled_call_resumer.dart';
 export 'remote_frame_probe.dart';
 export 'renegotiation_coordinator.dart';
 export 'rtp_traffic_monitor.dart';
+export 'screen_broadcast.dart';
 export 'screen_capturer.dart';
 export 'screen_share.dart';
 export 'screen_share_destinations.dart';

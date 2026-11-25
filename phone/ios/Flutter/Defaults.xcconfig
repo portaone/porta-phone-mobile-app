@@ -3,3 +3,7 @@
 // syntactically valid host - a placeholder rather than an empty value or a brand's real domain.
 WEBTRIT_APP_LINK_DOMAIN=app.example.com
 WEBTRIT_APP_NAME=PortaPhone
+// The app group of the iOS screen share extension, as phone/dart_define.json sets it for the repo's
+// own app. A brand without the extension leaves WEBTRIT_IOS_SCREEN_SHARE_APP_GROUP empty, and
+// tool/scripts/ios_optional_features.sh takes the extension and every use of this value out.
+WEBTRIT_IOS_SCREEN_SHARE_APP_GROUP=group.com.webtrit.phone

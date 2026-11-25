@@ -2,7 +2,7 @@
 
 How to build, run, sign, and ship the PortaPhone app.
 
-Last reviewed: 2026-08-11
+Last reviewed: 2026-11-26
 
 It includes melos script usage, optional feature selection, signed release builds and store uploads
 via fastlane, Flutter SDK version management, and tips for local development.
@@ -22,7 +22,10 @@ brand that does not use it must not ship its manifest components:
 
 * `WEBTRIT_APP_LINK_DOMAIN` - non-empty merges the deep-link intent filter into the manifest
 
-It is read from `dart_define.json`, the same file the app itself reads, so no build command has
+On iOS `WEBTRIT_IOS_SCREEN_SHARE_APP_GROUP` decides the screen share extension the same way;
+`tool/scripts/ios_optional_features.sh`, which both iOS build scripts run first, applies it.
+
+Both are read from `dart_define.json`, the same file the app itself reads, so no build command has
 to carry a feature name. Every build prints what it resolved:
 
 ```
@@ -67,6 +70,7 @@ builds via `build_app`, then deletes the keychain.
 |---------------------------------------------|----------------------------------------------------|
 | `IOS_CERTIFICATE_PATH`                      | Signing certificate to import                      |
 | `IOS_PROVISIONING_PROFILE_PATH`             | Provisioning profile to install and apply          |
+| `IOS_SCREEN_SHARE_PROVISIONING_PROFILE_PATH` | Optional profile of the screen share extension     |
 | `IOS_CODE_SIGNING_IDENTITY`                 | Identity for signing and `signingCertificate`      |
 | `IOS_TEAM_ID`                               | Development team / export team                     |
 | `IOS_BUILD_NAME`                             | Marketing version (`CFBundleShortVersionString`)   |
@@ -76,6 +80,15 @@ builds via `build_app`, then deletes the keychain.
 | `IOS_APP_STORE_CONNECT_API_KEY_ID`          | App Store Connect API key id (upload)              |
 | `IOS_APP_STORE_CONNECT_API_KEY_ISSUER_ID`   | App Store Connect issuer id (upload)               |
 | `IOS_APP_STORE_CONNECT_API_KEY_P8_PATH`     | Path to the `.p8` private key (upload)             |
+
+`IOS_SCREEN_SHARE_PROVISIONING_PROFILE_PATH` is for a brand with screen share on
+(`WEBTRIT_IOS_SCREEN_SHARE_APP_GROUP` set): the extension `<app bundle id>.ScreenShare` has an App
+ID of its own and cannot be signed with the app's profile. Set, the lane installs it, applies the
+app's profile only to the `Runner` target and this one only to the `ScreenShare` target, and passes
+both to the export as `provisioningProfiles`, each keyed by the bundle id read from the profile.
+Unset, the one profile goes to every target as before - right for a brand without screen share,
+whose project has no extension left to sign
+([optional_features.md](../reference/optional_features.md#screen-share)).
 
 The upload lane authenticates with an App Store Connect API key - no Apple ID password or 2FA
 session - and skips waiting for build processing.

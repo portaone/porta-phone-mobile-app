@@ -85,6 +85,19 @@ class EnvironmentConfig {
   static String get APP_LINK_DOMAIN =>
       _env.string(APP_LINK_DOMAIN__NAME, const String.fromEnvironment(APP_LINK_DOMAIN__NAME, defaultValue: '')).trim();
 
+  static const IOS_SCREEN_SHARE_APP_GROUP__NAME = 'WEBTRIT_IOS_SCREEN_SHARE_APP_GROUP';
+
+  /// The App Group the iOS app shares with its screen share extension; empty in a build without
+  /// the extension. Trimmed, as whitespace alone names no group and the build leaves the extension
+  /// out for it. Empty is enough to say the share is off; a value is not enough to say it is on,
+  /// because only the native side knows whether the extension made it into the bundle.
+  static String get IOS_SCREEN_SHARE_APP_GROUP => _env
+      .string(
+        IOS_SCREEN_SHARE_APP_GROUP__NAME,
+        const String.fromEnvironment(IOS_SCREEN_SHARE_APP_GROUP__NAME, defaultValue: ''),
+      )
+      .trim();
+
   static const APP_NAME__NAME = 'WEBTRIT_APP_NAME';
   static String get APP_NAME =>
       _env.string(APP_NAME__NAME, const String.fromEnvironment(APP_NAME__NAME, defaultValue: 'PortaPhone'));

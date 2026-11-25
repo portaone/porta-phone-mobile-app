@@ -1,0 +1,8 @@
+// Build settings of the screen share extension: the app's name, version and app group from the
+// same files Runner reads them from - the defaults, the WEBTRIT_* dart defines the Runner scheme's
+// pre-action writes into Environment.xcconfig, and Flutter's build name and number - so the
+// extension follows the brand it is built for. Not Debug/Release.xcconfig: they pull in the Pods
+// of Runner, which the extension does not link.
+#include "../Flutter/Defaults.xcconfig"
+#include? "../Flutter/Environment.xcconfig"
+#include? "../Flutter/Generated.xcconfig"

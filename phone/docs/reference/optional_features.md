@@ -3,7 +3,7 @@
 How the features whose permission or capability must not ship unused are chosen at build time,
 on both platforms.
 
-Last reviewed: 2026-11-24
+Last reviewed: 2026-11-26
 
 Some features must not merely stay switched off for a brand that does not use them - their Android
 permission and their manifest components must be **absent from the shipped app**. A permission the
@@ -111,7 +111,7 @@ the dart-define the feature already had.
 
 ## iOS
 
-One feature is optional on iOS, and it is the same one: deep links.
+Two features are optional on iOS: deep links, as on Android, and screen sharing in a call.
 
 `ios/Runner/Runner.entitlements` declares `com.apple.developer.associated-domains`, and an
 entitlement is not inert. Every provisioning profile then has to carry the matching capability, so
@@ -137,3 +137,37 @@ outside the phone; the pipeline calls the phone's own script now, the way it doe
 Not `ios/Flutter/Environment.xcconfig`, deliberately: it is gitignored and written by the Xcode
 scheme's pre-action at archive time, so it does not exist yet and would fall back to the hard-coded
 default domain.
+
+### Screen share
+
+Screen sharing on iOS needs the broadcast upload extension `ios/ScreenShare` (bundle id
+`<app bundle id>.ScreenShare`), embedded in Runner, and an App Group the two share. Both need the
+brand's Apple Developer account to carry them: the extension's App ID, the App Group on both App
+IDs, and a provisioning profile for each. A brand without them must still build and sign, so the
+extension is optional, switched by `WEBTRIT_IOS_SCREEN_SHARE_APP_GROUP`:
+
+| Dart define                          | Value           | Effect                                                   |
+|--------------------------------------|-----------------|----------------------------------------------------------|
+| `WEBTRIT_IOS_SCREEN_SHARE_APP_GROUP` | `group.<...>`   | the extension is built, embedded and signed; iOS shares  |
+|                                      | empty/missing   | no extension, no App Group, no share entry on iOS        |
+
+The repository's own `dart_define.json` sets `group.com.webtrit.phone`. The project is committed
+with the extension in, and the value reaches it as a build setting through the Runner scheme's
+pre-action, like every `WEBTRIT_*` define: the entitlements of both targets and the
+`RTCAppGroupIdentifier` key flutter_webrtc reads. With no group named,
+`tool/scripts/ios_optional_features.sh` takes out of the project Runner's dependency on the
+extension and its place in "Embed Foundation Extensions" (so it is neither built nor signed), the
+App Group entitlement of Runner, and the `RTCAppGroupIdentifier` and `RTCScreenSharingExtension`
+keys of Runner's `Info.plist`. At start the app reads the define through
+`EnvironmentConfig.IOS_SCREEN_SHARE_APP_GROUP` and, when it names a group, asks the native side
+whether the key and the extension are there (`ScreenBroadcast.ofThisBuild`), so a build without
+them offers no share. The
+script puts nothing back: a checkout it took the extension out of is restored with git before the
+feature is turned on, and the script refuses to go on until it is.
+
+With the feature on, the release build signs two targets with two profiles: the fastlane `build`
+lane takes the extension's profile from `IOS_SCREEN_SHARE_PROVISIONING_PROFILE_PATH`, next to the
+app's `IOS_PROVISIONING_PROFILE_PATH`, and applies each to its own target
+([build.md](../guides/build.md#ios)). With the feature off, that variable stays unset and the app's
+profile alone signs the build, as the extension is no longer in it.
+

@@ -4,7 +4,7 @@ The product-level view of the calling experience: what the user can do, the
 screen states and the widgets that back them. The
 implementation deep-dive lives in [`call_arch.md`](call_arch.md).
 
-Last reviewed: 2026-11-23
+Last reviewed: 2026-11-25
 
 ## What the user can do
 
@@ -12,7 +12,7 @@ Last reviewed: 2026-11-23
 - Receive an incoming call (foreground, backgrounded, or killed via push).
 - During an active call: mute, toggle camera, switch audio device (earpiece /
   speaker / Bluetooth), open the keypad (DTMF), hold/resume, transfer (blind or
-  attended), share the phone's screen (Android, an ordinary call), and hang up.
+  attended), share the phone's screen (Android, and iOS in a build with the screen share extension), and hang up.
 - Handle a second call: a new incoming call while one is active, or two calls at
   once - answer one and put the other on hold, or decline.
 
@@ -95,7 +95,9 @@ focus to follow - see
 
 ### Sharing the screen
 
-Android only. The person shows the phone's screen to the far end in place of the camera; the
+Android, and iOS in a build that carries the screen share extension (the dart define
+`WEBTRIT_IOS_SCREEN_SHARE_APP_GROUP`, [optional_features.md](../reference/optional_features.md#screen-share));
+the whole screen in both. The person shows the phone's screen to the far end in place of the camera; the
 far end, an app or a SIP phone, sees it as video. In a conference the screen goes to the room
 (see [call_conference.md](call_conference.md), The screen in the room): the host shares from
 the room's More menu or from the three-dot menu of a leg - More then carries a ring and a
@@ -108,10 +110,9 @@ under it.
   Blur", which stay for a call with the far end's video). It is offered for an answered,
   connected call that is not held, not being transferred (the transfer picker open is not a
   transfer yet) and while no room is being put together - for a leg, while the room is up and
-  has video - on Android, where the
-  state says the phone can share (`CallState.canShareScreen`). The menu is shown whenever it
-  has an entry, so an audio call on Android has the menu with "Share screen" as its one entry;
-  on iOS an audio call still has no menu.
+  has video - on a phone that can share (`CallState.canShareScreen`). The menu is shown whenever
+  it has an entry, so an audio call has the menu with "Share screen" as its one entry; on iOS
+  without the extension an audio call still has no menu.
 - **Start.** The system asks the person to let the app capture the whole screen or, from
   Android 14, one app; a refusal changes nothing. A single app the person leaves gives no new
   frames: the far end keeps its last picture until the person comes back to it. An audio call becomes a video call for the share, as when the camera is
@@ -119,13 +120,19 @@ under it.
   not accept video - screen sharing stopped". A share the system or the capture refused says
   "Screen sharing could not start". The system shows a notification "Sharing your screen" with
   its own Stop.
+  On iOS the system's broadcast picker is the consent: the person taps "Start Broadcast" and the
+  share begins after its three-second countdown; iOS marks the recording in the status bar (red),
+  where the person can also stop it. A picker dismissed says nothing to the app: after 30
+  seconds without a broadcast the share gives up with "Screen sharing could not start". A
+  broadcast started from Control Center rather than from a call ends at once with "Start screen
+  sharing from a call in the app".
 - **While sharing.** The entry reads "Stop sharing". The small camera preview window gives its
   place to a tile of the same size (`callScreenShareTileId`): the menu's colour, a screen icon,
   "Sharing screen" and a Stop in the end-call colour (`callScreenShareStopId`). The camera
   control is disabled and the camera itself is let go, its indicator off: the screen holds the
   call's video, and stopping the share opens the camera again as it was.
-- **Stop.** "Stop sharing", the tile's Stop, the notification's Stop or the system ending the
-  capture, a hold, a merge into a room or an invitation to one (the share is started again
+- **Stop.** "Stop sharing", the tile's Stop, the notification's Stop (on iOS the status bar
+  or Control Center) or the system ending the capture, a hold, a merge into a room or an invitation to one (the share is started again
   from the room), or the end of the call. The camera comes back as it was;
   if it cannot be opened again the call's video goes off with the camera error message. A call
   that became a video call for the share stays one with the camera off. A share stopped while
