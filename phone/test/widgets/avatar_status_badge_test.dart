@@ -216,6 +216,10 @@ void main() {
         tester.getSize(find.byType(SipPresenceIndicator)),
         const Size(diameter * markFactor, diameter * markFactor),
       );
+      // Named for what is known - the phone is registered - not for the
+      // conclusion the colour draws from it.
+      expect(find.bySemanticsLabel('Registered'), findsOneWidget);
+      expect(find.bySemanticsLabel('Available'), findsNothing);
     });
 
     testWidgets('an unregistered contact nobody publishes for is drawn as unavailable', (tester) async {
@@ -224,12 +228,15 @@ void main() {
       );
 
       expect(markColor(tester), unavailableColor);
+      expect(find.bySemanticsLabel('Not registered'), findsOneWidget);
+      expect(find.bySemanticsLabel('Unavailable'), findsNothing);
     });
 
     testWidgets('registration answers for an avatar that is given no presence at all', (tester) async {
       await tester.pumpWidget(wrap(const AvatarStatusBadge(registered: true), hybridPresenceSupport: true));
 
       expect(markColor(tester), availableColor);
+      expect(find.bySemanticsLabel('Registered'), findsOneWidget);
       expect(find.descendant(of: find.byType(SipPresenceIndicator), matching: find.byType(Icon)), findsNothing);
     });
 
@@ -251,6 +258,7 @@ void main() {
 
       expect(markColor(tester), busyColor);
       expect(find.bySemanticsLabel('Do not disturb'), findsOneWidget);
+      expect(find.bySemanticsLabel('Registered'), findsNothing);
     });
 
     test('no contact, no badge', () {
@@ -328,6 +336,76 @@ void main() {
         find.descendant(of: find.byType(SipPresenceIndicator), matching: find.byIcon(Icons.phone_in_talk_rounded)),
         findsOneWidget,
       );
+    });
+  });
+
+  group('the mark shows how much is known', () {
+    Finder inMark(Finder what) => find.descendant(of: find.byType(SipPresenceIndicator), matching: what);
+
+    testWidgets('a published available carries a tick', (tester) async {
+      await tester.pumpWidget(
+        wrap(AvatarStatusBadge(presenceInfo: [presence(available: true)]), hybridPresenceSupport: true),
+      );
+
+      expect(inMark(find.byIcon(Icons.check_rounded)), findsOneWidget);
+    });
+
+    testWidgets('a published unavailable carries a cross', (tester) async {
+      await tester.pumpWidget(
+        wrap(AvatarStatusBadge(presenceInfo: [presence(available: false)]), hybridPresenceSupport: true),
+      );
+
+      expect(inMark(find.byIcon(Icons.close_rounded)), findsOneWidget);
+    });
+
+    testWidgets('a published activity keeps its own glyph instead', (tester) async {
+      await tester.pumpWidget(
+        wrap(
+          AvatarStatusBadge(
+            presenceInfo: [
+              presence(available: true, activities: const [PresenceActivity.vacation]),
+            ],
+          ),
+          hybridPresenceSupport: true,
+        ),
+      );
+
+      expect(inMark(find.byType(Icon)), findsOneWidget);
+      expect(inMark(find.byIcon(Icons.check_rounded)), findsNothing);
+    });
+
+    testWidgets('a registered phone is the colour alone', (tester) async {
+      // Less is known, so less is drawn: nobody said "available", the
+      // contact list said "registered".
+      await tester.pumpWidget(
+        wrap(const AvatarStatusBadge(registered: true, presenceInfo: []), hybridPresenceSupport: true),
+      );
+
+      expect(markColor(tester), availableColor);
+      expect(inMark(find.byType(Icon)), findsNothing);
+      expect(tester.widget<Container>(inMark(find.byType(Container))).child, isNull);
+    });
+
+    testWidgets('a phone that is not registered is the other colour alone, with nothing inside', (tester) async {
+      await tester.pumpWidget(
+        wrap(const AvatarStatusBadge(registered: false, presenceInfo: []), hybridPresenceSupport: true),
+      );
+
+      expect(markColor(tester), unavailableColor);
+      expect(inMark(find.byType(Icon)), findsNothing);
+      // A solid disc: nothing is cut out of it or laid over it.
+      expect(tester.widget<Container>(inMark(find.byType(Container))).child, isNull);
+    });
+
+    testWidgets('a call seen on a phone that is not registered is still drawn as a call', (tester) async {
+      await tester.pumpWidget(
+        wrap(
+          AvatarStatusBadge(registered: false, presenceInfo: const [], dialogInfo: [dialog(DialogState.confirmed)]),
+          hybridPresenceSupport: true,
+        ),
+      );
+
+      expect(inMark(find.byIcon(Icons.phone_in_talk_rounded)), findsOneWidget);
     });
   });
 

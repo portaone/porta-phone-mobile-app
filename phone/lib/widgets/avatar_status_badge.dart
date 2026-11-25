@@ -166,6 +166,14 @@ class AvatarStatusBadge extends StatelessWidget {
     final activity = presenceInfo.primaryActivity;
     if (activity != null) return activity.l10n(l10n);
 
+    // Nothing published: the mark is drawn from the registration of the
+    // phone, and it is named for that fact rather than for the conclusion its
+    // colour draws. A bare mark and a ticked one look different, so they must
+    // not be read out as the same thing.
+    if (presenceInfo.isEmpty && registered != null) {
+      return registered ? l10n.presence_badge_state_registered : l10n.presence_badge_state_unregistered;
+    }
+
     return presenceInfo.reachable(registered: registered)
         ? l10n.presence_badge_state_available
         : l10n.presence_badge_state_unavailable;

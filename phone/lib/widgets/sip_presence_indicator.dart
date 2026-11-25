@@ -37,7 +37,14 @@ class SipPresenceIndicator extends StatelessWidget {
       _ => reachable ? badge.availableColor : badge.unavailableColor,
     };
 
-    final activityIcon = _activityIcon(presenceInfo, dialogInfo);
+    // The mark shows how much is known. A status somebody published always
+    // carries a glyph - the activity's own, or a tick or a cross for a plain
+    // one. When only the registration of the phone is known there is none:
+    // nobody said "available", the contact list said "registered".
+    final published = presenceInfo.isNotEmpty;
+    final glyph =
+        _activityIcon(presenceInfo, dialogInfo) ??
+        (published ? (reachable ? Icons.check_rounded : Icons.close_rounded) : null);
 
     // The glyph sits inside the mark rather than on top of it: an icon laid
     // over the dot cuts into its outline and the mark reads as smaller and
@@ -53,10 +60,10 @@ class SipPresenceIndicator extends StatelessWidget {
         color: color,
         border: Border.all(color: Theme.of(context).scaffoldBackgroundColor, width: side * 0.1),
       ),
-      child: activityIcon == null
+      child: glyph == null
           ? null
           : Center(
-              child: Icon(activityIcon, color: badge.iconColor, size: side * 0.55),
+              child: Icon(glyph, color: badge.iconColor, size: side * 0.55),
             ),
     );
   }
