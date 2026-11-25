@@ -2478,13 +2478,64 @@ class AppLocalizationsTh extends AppLocalizations {
   }
 
   @override
-  String get presence_infoView_source_direct => 'โดยตรง';
+  String get presence_infoView_source_direct => 'แอปถึงแอป (โดยตรง)';
 
   @override
-  String get presence_infoView_source_sip => 'sip';
+  String get presence_infoView_source_registration => 'การลงทะเบียนกับ PBX';
 
   @override
-  String get presence_infoView_source_sipAndDirect => 'sip และ direct';
+  String get presence_infoView_source_sip => 'สถานะ SIP';
+
+  @override
+  String get presence_infoView_source_sipAndDirect => 'สถานะ SIP และแอปถึงแอป';
+
+  @override
+  String get presence_infoView_legendButton => 'เครื่องหมายสถานะหมายถึงอะไร';
+
+  @override
+  String get presence_legendDialog_title => 'วิธีอ่านสถานะ';
+
+  @override
+  String get presence_legendDialog_sourcesTitle => 'สถานะมาจากไหน';
+
+  @override
+  String get presence_legendDialog_sourceDirect =>
+      'แอปถึงแอป (โดยตรง): สิ่งที่ผู้ติดต่อตั้งไว้ในแอปนี้หรือในเวอร์ชันเว็บ';
+
+  @override
+  String get presence_legendDialog_sourceSip =>
+      'สถานะ SIP: สิ่งที่โทรศัพท์ตั้งโต๊ะหรือแอป SIP อื่นเผยแพร่ แสดงสำหรับผู้ติดต่อที่คุณติดตาม';
+
+  @override
+  String get presence_legendDialog_sourceRegistration =>
+      'การลงทะเบียนกับ PBX: โทรศัพท์ของผู้ติดต่อเชื่อมต่ออยู่หรือไม่ ใช้เมื่อไม่มีการเผยแพร่สถานะ';
+
+  @override
+  String get presence_legendDialog_sourcesNote => 'แสดงแหล่งแรกที่มีข้อมูล หากมีหลายอุปกรณ์ จะใช้สถานะที่ตั้งล่าสุด';
+
+  @override
+  String get presence_legendDialog_marksTitle => 'เครื่องหมายหมายถึงอะไร';
+
+  @override
+  String get presence_legendDialog_markAvailable => 'สถานะที่เผยแพร่: พร้อมใช้งาน';
+
+  @override
+  String get presence_legendDialog_markUnavailable => 'สถานะที่เผยแพร่: ไม่พร้อมใช้งาน';
+
+  @override
+  String get presence_legendDialog_markActivity => 'สถานะที่เผยแพร่พร้อมกิจกรรม เช่น ไม่อยู่';
+
+  @override
+  String get presence_legendDialog_markDoNotDisturb => 'ห้ามรบกวนหรือไม่ว่าง';
+
+  @override
+  String get presence_legendDialog_markOnCall => 'กำลังสนทนา';
+
+  @override
+  String get presence_legendDialog_markRegistered => 'ไม่มีการเผยแพร่สถานะ โทรศัพท์ลงทะเบียนแล้ว';
+
+  @override
+  String get presence_legendDialog_markUnregistered => 'ไม่มีการเผยแพร่สถานะ โทรศัพท์ไม่ได้ลงทะเบียน';
 
   @override
   String get presence_preset_absent_name => 'ไม่อยู่';

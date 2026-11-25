@@ -110,6 +110,45 @@ void main() {
     });
   });
 
+  group('presence section of the contact card', () {
+    testWidgets('names the registration for a contact nobody publishes a status for', (tester) async {
+      // The mark in the lists is drawn from registration for such a contact;
+      // the card is where the user can see what it was drawn from.
+      await harness.pump(
+        tester,
+        contact: buildContact(registered: true, updatedAt: DateTime(2026, 11, 25, 12)),
+        presenceViaSip: true,
+      );
+
+      expect(find.byType(PresenceInfoView), findsOneWidget);
+      expect(find.text('Registered'), findsOneWidget);
+      expect(find.text('Updated:'), findsOneWidget);
+      expect(find.text('Source: PBX registration'), findsOneWidget);
+    });
+
+    testWidgets('is absent when nothing is known about the contact', (tester) async {
+      await harness.pump(tester, contact: buildContact(), presenceViaSip: true);
+
+      expect(find.byType(PresenceInfoView), findsNothing);
+    });
+
+    testWidgets('is absent for a contact of the phone book, whose registration means nothing', (tester) async {
+      await harness.pump(
+        tester,
+        contact: buildContact(registered: true, sourceType: ContactSourceType.local),
+        presenceViaSip: true,
+      );
+
+      expect(find.byType(PresenceInfoView), findsNothing);
+    });
+
+    testWidgets('is absent where the backend has no presence support', (tester) async {
+      await harness.pump(tester, contact: buildContact(registered: true));
+
+      expect(find.byType(PresenceInfoView), findsNothing);
+    });
+  });
+
   group('options of the contact card', () {
     testWidgets('are hidden while the backend offers no subscription', (tester) async {
       await harness.pump(tester, contact: buildContact());

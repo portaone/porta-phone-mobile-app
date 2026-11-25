@@ -1075,9 +1075,35 @@ extension AppLocalizationsExtension on AppLocalizations {
       'presence_infoView_title' => presence_infoView_title,
       'presence_infoView_updated' => presence_infoView_updated,
       'presence_infoView_source_direct' => presence_infoView_source_direct,
+      'presence_infoView_source_registration' =>
+        presence_infoView_source_registration,
       'presence_infoView_source_sip' => presence_infoView_source_sip,
       'presence_infoView_source_sipAndDirect' =>
         presence_infoView_source_sipAndDirect,
+      'presence_infoView_legendButton' => presence_infoView_legendButton,
+      'presence_legendDialog_title' => presence_legendDialog_title,
+      'presence_legendDialog_sourcesTitle' =>
+        presence_legendDialog_sourcesTitle,
+      'presence_legendDialog_sourceDirect' =>
+        presence_legendDialog_sourceDirect,
+      'presence_legendDialog_sourceSip' => presence_legendDialog_sourceSip,
+      'presence_legendDialog_sourceRegistration' =>
+        presence_legendDialog_sourceRegistration,
+      'presence_legendDialog_sourcesNote' => presence_legendDialog_sourcesNote,
+      'presence_legendDialog_marksTitle' => presence_legendDialog_marksTitle,
+      'presence_legendDialog_markAvailable' =>
+        presence_legendDialog_markAvailable,
+      'presence_legendDialog_markUnavailable' =>
+        presence_legendDialog_markUnavailable,
+      'presence_legendDialog_markActivity' =>
+        presence_legendDialog_markActivity,
+      'presence_legendDialog_markDoNotDisturb' =>
+        presence_legendDialog_markDoNotDisturb,
+      'presence_legendDialog_markOnCall' => presence_legendDialog_markOnCall,
+      'presence_legendDialog_markRegistered' =>
+        presence_legendDialog_markRegistered,
+      'presence_legendDialog_markUnregistered' =>
+        presence_legendDialog_markUnregistered,
       'presence_preset_absent_name' => presence_preset_absent_name,
       'presence_preset_absent_note' => presence_preset_absent_note,
       'presence_preset_appointment_name' => presence_preset_appointment_name,

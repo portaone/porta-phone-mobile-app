@@ -37,6 +37,7 @@ class Contact extends Equatable {
     this.presenceInfo = const [],
     this.dialogInfo = const [],
     this.sipSubscriptions = const [],
+    this.updatedAt,
   });
 
   final ContactId id;
@@ -64,6 +65,19 @@ class Contact extends Equatable {
   final List<PresenceInfo> presenceInfo;
   final List<DialogInfo> dialogInfo;
   final List<SipSubscription> sipSubscriptions;
+
+  /// When the stored record of this contact was last written.
+  ///
+  /// A contact from the server is rewritten on every refresh of the contact
+  /// list, changed or not, so for it this is how old [registered] is: the
+  /// flag is a snapshot taken then, not a live signal.
+  ///
+  /// Deliberately not one of [props]. It moves on every refresh, so as part
+  /// of equality it would make every contact a different contact on every
+  /// refresh of the contact list: a contact picked into a `Set` would stop
+  /// being found in it, and every list would be rebuilt with nothing changed. Whoever needs to
+  /// follow it reads it apart from the contact, as the contact card does.
+  final DateTime? updatedAt;
 
   /// Computed getter for contact's PBX network `extension`.
   late final String? extension = phones.firstWhereOrNull((element) => element.label == kContactExtLabel)?.number;

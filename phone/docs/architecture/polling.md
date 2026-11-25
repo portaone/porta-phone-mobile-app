@@ -724,9 +724,9 @@ flag `AvatarStatusBadge` reads:
 - **hybrid presence on** - published status (direct and SIP presence) arrives over
   signaling as it changes, so the list is polled less often. Default interval
   **1800s** (`WEBTRIT_APP_EXTERNAL_CONTACTS_HYBRID_PRESENCE_POLLING_INTERVAL_SECONDS`).
-  Its registration flag is still the last source of the status mark
-  ([which source answers](../features/presence.md#which-source-answers)),
-  so a mark drawn from it can be up to one interval old.
+  Its registration flag is still the last source of the status mark and the
+  contact card ([which source answers](../features/presence.md#which-source-answers)),
+  so a mark drawn from it can be up to one interval old; the card shows its age.
 - **hybrid presence off** - the contacts payload's registration status is the
   presence source, so the fetch stays fairly fresh. Default interval **300s**
   (`WEBTRIT_APP_EXTERNAL_CONTACTS_REPOSITORY_POLLING_INTERVAL_SECONDS`).

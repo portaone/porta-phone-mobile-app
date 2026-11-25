@@ -324,7 +324,7 @@ class EnvironmentConfig {
 
   /// Contacts poll when hybrid presence is on: published status (direct and SIP presence)
   /// arrives over signaling as it changes, so this fetch runs much less often. Its
-  /// registration flag is still the last source of the status mark,
+  /// registration flag is still the last source of the status mark and the contact card,
   /// so a mark drawn from it can be up to this interval old. A non-positive build value
   /// falls back to 1800 seconds for the same reason as above.
   static const EXTERNAL_CONTACTS_HYBRID_PRESENCE_POLLING_INTERVAL_SECONDS__NAME =

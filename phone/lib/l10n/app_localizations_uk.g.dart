@@ -2525,13 +2525,65 @@ class AppLocalizationsUk extends AppLocalizations {
   }
 
   @override
-  String get presence_infoView_source_direct => 'напряму';
+  String get presence_infoView_source_direct => 'між застосунками (напряму)';
 
   @override
-  String get presence_infoView_source_sip => 'sip';
+  String get presence_infoView_source_registration => 'реєстрація на АТС';
 
   @override
-  String get presence_infoView_source_sipAndDirect => 'sip і напряму';
+  String get presence_infoView_source_sip => 'SIP-присутність';
+
+  @override
+  String get presence_infoView_source_sipAndDirect => 'SIP-присутність і між застосунками';
+
+  @override
+  String get presence_infoView_legendButton => 'Що означають позначки статусу';
+
+  @override
+  String get presence_legendDialog_title => 'Як читати статус';
+
+  @override
+  String get presence_legendDialog_sourcesTitle => 'Звідки береться статус';
+
+  @override
+  String get presence_legendDialog_sourceDirect =>
+      'Між застосунками (напряму): те, що контакт встановив у цьому застосунку або в його вебверсії.';
+
+  @override
+  String get presence_legendDialog_sourceSip =>
+      'SIP-присутність: те, що публікує настільний телефон або інший SIP-застосунок. Показується для контактів, на які ви підписані.';
+
+  @override
+  String get presence_legendDialog_sourceRegistration =>
+      'Реєстрація на АТС: чи підключений телефон контакту. Використовується, коли статус не опубліковано.';
+
+  @override
+  String get presence_legendDialog_sourcesNote =>
+      'Показується перше джерело, якому щось відомо. Якщо пристроїв кілька, діє статус, встановлений останнім.';
+
+  @override
+  String get presence_legendDialog_marksTitle => 'Що означають позначки';
+
+  @override
+  String get presence_legendDialog_markAvailable => 'Опублікований статус: доступний';
+
+  @override
+  String get presence_legendDialog_markUnavailable => 'Опублікований статус: недоступний';
+
+  @override
+  String get presence_legendDialog_markActivity => 'Опублікований статус з активністю, наприклад «відійшов»';
+
+  @override
+  String get presence_legendDialog_markDoNotDisturb => 'Не турбувати або зайнятий';
+
+  @override
+  String get presence_legendDialog_markOnCall => 'Розмовляє';
+
+  @override
+  String get presence_legendDialog_markRegistered => 'Статус не опубліковано, телефон зареєстровано';
+
+  @override
+  String get presence_legendDialog_markUnregistered => 'Статус не опубліковано, телефон не зареєстровано';
 
   @override
   String get presence_preset_absent_name => 'Відсутній';
