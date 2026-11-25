@@ -25,13 +25,42 @@ class AvatarStatusBadge extends StatelessWidget {
     return AvatarStatusBadge(registered: registered, presenceInfo: presenceInfo, dialogInfo: dialogInfo);
   }
 
-  /// SIP registration state feeding the legacy dot; `null` means the state
-  /// is unknown, and without hybrid presence support no badge is shown.
+  /// The badge of [contact], from everything the contact carries: registration,
+  /// presence and calls.
+  ///
+  /// The sites that used to pass the registration alone - the contact pickers,
+  /// the call log, the number CDRs, the watch rows, the chat header and the
+  /// members of a group chat - build their badge here, as a site that did so
+  /// showed a registered phone as reachable while its owner had published do
+  /// not disturb.
+  ///
+  /// Null when nothing is known that the badge would draw - no registration, no
+  /// presence, no established call - so that the avatar mounts no badge.
+  static AvatarStatusBadge? ofContact(Contact? contact) {
+    if (contact == null) return null;
+
+    // The same test the badge draws by: a phone that is only ringing is not a
+    // call it shows, and a badge mounted for it alone would be empty.
+    final nothingKnown =
+        contact.registered == null && contact.presenceInfo.isEmpty && contact.dialogInfo.established == null;
+    if (nothingKnown) return null;
+
+    return AvatarStatusBadge(
+      registered: contact.registered,
+      presenceInfo: contact.presenceInfo,
+      dialogInfo: contact.dialogInfo,
+    );
+  }
+
+  /// SIP registration state, as the contact list reports it; `null` means it
+  /// is unknown. Without hybrid presence support it feeds the legacy dot.
+  /// With it, it is the last source asked: it decides the mark only for a
+  /// contact nobody published a status for.
   final bool? registered;
 
-  /// Presence states feeding the hybrid indicator; `null` means presence is
-  /// not tracked for this contact, and with hybrid presence support no badge
-  /// is shown.
+  /// Presence states feeding the hybrid indicator. Empty or `null` means
+  /// nothing was published about the contact - then [registered] answers, and
+  /// if that is unknown too, no mark is shown.
   final List<PresenceInfo>? presenceInfo;
 
   /// BLF dialog states of the contact; an established call among them marks
@@ -50,22 +79,37 @@ class AvatarStatusBadge extends StatelessWidget {
         final size = constraints.biggest.shortestSide;
 
         if (presenceParams.hybridPresenceSupport) {
-          final presenceInfo = this.presenceInfo;
-          if (presenceInfo == null) return const SizedBox.shrink();
-
+          // The sources answer in order, and the first that knows something
+          // wins: what the contact's own app published, then what the PBX
+          // holds for the number, then whether their phone is registered. The
+          // last one is drawn exactly like the others, so a row does not
+          // change shape depending on which of them answered.
+          final presenceInfo = (this.presenceInfo ?? const <PresenceInfo>[]).leadingSource;
           final dialogInfo = this.dialogInfo ?? const <DialogInfo>[];
+          final registered = this.registered;
+
+          // Nothing published, no call reported, registration unknown. A mark
+          // here could only say "unavailable", which nobody has said.
+          final nothingKnown = presenceInfo.isEmpty && dialogInfo.established == null && registered == null;
+          if (nothingKnown) return const SizedBox.shrink();
+
           final rect = BadgeLayout.onCircleEdgeSquare(size: size, sizeFactor: style.presenceBadge!.sizeFactor!);
           return Semantics(
             // A colour and a glyph say nothing out loud, so the state is
             // named here: it merges into the row's label and is read right
             // after the contact's name.
-            label: _presenceLabel(context, presenceInfo, dialogInfo),
+            label: _presenceLabel(context, presenceInfo, dialogInfo, registered),
             child: Stack(
               clipBehavior: Clip.none,
               children: [
                 Positioned.fromRect(
                   rect: rect,
-                  child: SipPresenceIndicator(presenceInfo: presenceInfo, dialogInfo: dialogInfo, presenceRect: rect),
+                  child: SipPresenceIndicator(
+                    presenceInfo: presenceInfo,
+                    dialogInfo: dialogInfo,
+                    presenceRect: rect,
+                    registered: registered,
+                  ),
                 ),
               ],
             ),
@@ -110,14 +154,21 @@ class AvatarStatusBadge extends StatelessWidget {
   ///
   /// This follows the GLYPH, not the colour: an established call is spoken
   /// even though it deliberately leaves the colour alone.
-  String _presenceLabel(BuildContext context, List<PresenceInfo> presenceInfo, List<DialogInfo> dialogInfo) {
+  String _presenceLabel(
+    BuildContext context,
+    List<PresenceInfo> presenceInfo,
+    List<DialogInfo> dialogInfo,
+    bool? registered,
+  ) {
     final l10n = context.l10n;
     if (dialogInfo.established != null) return l10n.presence_badge_state_onCall;
 
     final activity = presenceInfo.primaryActivity;
     if (activity != null) return activity.l10n(l10n);
 
-    return presenceInfo.anyAvailable ? l10n.presence_badge_state_available : l10n.presence_badge_state_unavailable;
+    return presenceInfo.reachable(registered: registered)
+        ? l10n.presence_badge_state_available
+        : l10n.presence_badge_state_unavailable;
   }
 }
 
