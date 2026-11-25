@@ -179,11 +179,22 @@ says nothing.
   not, nor does the `onThePhone` activity, because Core publishes that one
   from the moment of dialling and it would paint people as busy over calls
   nobody answered;
-- an optional activity glyph INSIDE the disc, in `iconColor`. Icon choice:
-  `dialogInfo.established != null` -> `phone_in_talk`, else the icon for
-  `presenceInfo.primaryActivity`. A dialog that is merely ringing does NOT
-  light it - `early` is the most common state in production, and an
-  unfiltered list showed contacts as talking from the first ring;
+- a glyph INSIDE the disc, in `iconColor`, whenever the status was
+  PUBLISHED. Icon choice: `dialogInfo.established != null` ->
+  `phone_in_talk`, else the icon for `presenceInfo.primaryActivity`, else a
+  tick for a plain available and a cross for a plain unavailable. A dialog
+  that is merely ringing does NOT light it - `early` is the most common
+  state in production, and an unfiltered list showed contacts as talking
+  from the first ring;
+- NO glyph when only the registration of the phone is known. The mark
+  shows how much is known: a status somebody published carries a glyph, a
+  registration carries the colour alone, so the two are told apart at a
+  glance without a second colour. The two registration marks are plain
+  discs, green for a registered phone and grey for one that is not. The
+  spoken label follows the same split:
+  "Registered" / "Not registered" for a registration mark, "Available" /
+  "Unavailable" for a published status. The web dialer draws and names
+  them the same way;
 - the ring around the disc (`Theme.scaffoldBackgroundColor`, which can
   mismatch on surfaces that are not the scaffold background) and the glyph
   are a SHARE of the mark - 0.1 and 0.55 of its side. They have to be:
@@ -298,7 +309,9 @@ periodic send is driven from `CallBloc`.
 generation renders under `hybridPresenceSupport`, the default 0.2/0.5 sizes,
 the legacy dot colors, the mark's centre sitting on the avatar's edge with
 the glyph inside it, the order of the sources (direct over SIP, registration
-when nothing is published, no mark when nothing is known), and the no-data
+when nothing is published, no mark when nothing is known), what the mark
+draws for each level of knowledge (tick or cross for a published plain
+status, a bare disc for a registration), and the no-data
 cases (`AvatarStatusBadge.maybe` and `AvatarStatusBadge.ofContact`
 returning `null`, the latter also for a phone that is only ringing).
 `test/mappers/presence_signaling_mapper_test.dart` and
