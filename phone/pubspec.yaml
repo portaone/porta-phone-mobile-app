@@ -35,7 +35,7 @@ version: 0.0.0+0
 # Where:
 #   - <Major>, <Minor>, <Patch>: non-negative integers, decided by the developer
 # app_version represents tasks and fixed bugs, which is different from the build version that is specific to each client
-app_version: 1.21.0+0
+app_version: 1.21.0+1
 
 environment:
   sdk: ^3.13.0
@@ -180,7 +180,7 @@ dependencies:
     git:
       url: https://github.com/portaone/porta-flutter-plugins.git
       path: packages/flutter_webrtc_noise_suppression
-      ref: flutter_webrtc_noise_suppression-v0.1.0
+      ref: flutter_webrtc_noise_suppression-v0.1.1
 
 dev_dependencies:
   # Reached directly by the hub replay tests, which drive the Android hub and the
