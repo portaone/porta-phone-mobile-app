@@ -27,7 +27,7 @@ class WatchContactAvatar extends StatelessWidget {
       username: name ?? contact?.displayTitle,
       thumbnail: contact?.thumbnail,
       thumbnailUrl: contact?.thumbnailUrl,
-      badge: AvatarStatusBadge.maybe(registered: contact?.registered),
+      badge: AvatarStatusBadge.ofContact(contact),
       radius: radius,
     );
   }

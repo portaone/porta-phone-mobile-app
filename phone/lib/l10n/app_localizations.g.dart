@@ -4525,20 +4525,116 @@ abstract class AppLocalizations {
   /// No description provided for @presence_infoView_source_direct.
   ///
   /// In en, this message translates to:
-  /// **'direct'**
+  /// **'app to app (direct)'**
   String get presence_infoView_source_direct;
+
+  /// No description provided for @presence_infoView_source_registration.
+  ///
+  /// In en, this message translates to:
+  /// **'PBX registration'**
+  String get presence_infoView_source_registration;
 
   /// No description provided for @presence_infoView_source_sip.
   ///
   /// In en, this message translates to:
-  /// **'sip'**
+  /// **'SIP presence'**
   String get presence_infoView_source_sip;
 
   /// No description provided for @presence_infoView_source_sipAndDirect.
   ///
   /// In en, this message translates to:
-  /// **'sip and direct'**
+  /// **'SIP presence and app to app'**
   String get presence_infoView_source_sipAndDirect;
+
+  /// No description provided for @presence_infoView_legendButton.
+  ///
+  /// In en, this message translates to:
+  /// **'What the status marks mean'**
+  String get presence_infoView_legendButton;
+
+  /// No description provided for @presence_legendDialog_title.
+  ///
+  /// In en, this message translates to:
+  /// **'How to read the status'**
+  String get presence_legendDialog_title;
+
+  /// No description provided for @presence_legendDialog_sourcesTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Where the status comes from'**
+  String get presence_legendDialog_sourcesTitle;
+
+  /// No description provided for @presence_legendDialog_sourceDirect.
+  ///
+  /// In en, this message translates to:
+  /// **'App to app (direct): what the contact set in this app or in its web version.'**
+  String get presence_legendDialog_sourceDirect;
+
+  /// No description provided for @presence_legendDialog_sourceSip.
+  ///
+  /// In en, this message translates to:
+  /// **'SIP presence: what a desk phone or another SIP app publishes. Shown for contacts you are subscribed to.'**
+  String get presence_legendDialog_sourceSip;
+
+  /// No description provided for @presence_legendDialog_sourceRegistration.
+  ///
+  /// In en, this message translates to:
+  /// **'PBX registration: whether the contact\'s phone is connected. Used when no status was published.'**
+  String get presence_legendDialog_sourceRegistration;
+
+  /// No description provided for @presence_legendDialog_sourcesNote.
+  ///
+  /// In en, this message translates to:
+  /// **'The first source that knows something is shown. With several devices, the status set last wins.'**
+  String get presence_legendDialog_sourcesNote;
+
+  /// No description provided for @presence_legendDialog_marksTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'What the marks mean'**
+  String get presence_legendDialog_marksTitle;
+
+  /// No description provided for @presence_legendDialog_markAvailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Published status: available'**
+  String get presence_legendDialog_markAvailable;
+
+  /// No description provided for @presence_legendDialog_markUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Published status: unavailable'**
+  String get presence_legendDialog_markUnavailable;
+
+  /// No description provided for @presence_legendDialog_markActivity.
+  ///
+  /// In en, this message translates to:
+  /// **'Published status with an activity, such as away'**
+  String get presence_legendDialog_markActivity;
+
+  /// No description provided for @presence_legendDialog_markDoNotDisturb.
+  ///
+  /// In en, this message translates to:
+  /// **'Do not disturb or busy'**
+  String get presence_legendDialog_markDoNotDisturb;
+
+  /// No description provided for @presence_legendDialog_markOnCall.
+  ///
+  /// In en, this message translates to:
+  /// **'On a call'**
+  String get presence_legendDialog_markOnCall;
+
+  /// No description provided for @presence_legendDialog_markRegistered.
+  ///
+  /// In en, this message translates to:
+  /// **'No status published, the phone is registered'**
+  String get presence_legendDialog_markRegistered;
+
+  /// No description provided for @presence_legendDialog_markUnregistered.
+  ///
+  /// In en, this message translates to:
+  /// **'No status published, the phone is not registered'**
+  String get presence_legendDialog_markUnregistered;
 
   /// No description provided for @presence_preset_absent_name.
   ///

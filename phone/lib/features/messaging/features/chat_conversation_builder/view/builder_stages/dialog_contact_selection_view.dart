@@ -65,7 +65,7 @@ class DialogContactSelectionView extends StatelessWidget {
                     username: contact.displayTitle,
                     thumbnail: contact.thumbnail,
                     thumbnailUrl: contact.thumbnailUrl,
-                    badge: AvatarStatusBadge.maybe(registered: contact.registered),
+                    badge: AvatarStatusBadge.ofContact(contact),
                     radius: 24,
                   ),
                   title: Text(contact.displayTitle),

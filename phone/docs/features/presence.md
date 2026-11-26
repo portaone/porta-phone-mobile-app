@@ -3,7 +3,7 @@
 How the app learns other users' presence (available / activities / on a call)
 and where it shows it, most visibly as the status badge on contact avatars.
 
-Last reviewed: 2026-08-25
+Last reviewed: 2026-11-25
 
 ## State model
 
@@ -11,9 +11,11 @@ Last reviewed: 2026-08-25
   (bool), free-text `note`, emoji `statusIcon`, `activities`, `device`,
   `source` (`sip` | `direct`). A contact maps to a LIST of these - one per
   device/source - so all read sites go through the
-  `PresenceInfoListExtension` helpers: `anyAvailable`, `primary`
-  (on-the-phone wins, then most recent available with activities, and so on),
-  `primaryActivity`, `primaryNote`, `primaryStatusIcon`.
+  `PresenceInfoListExtension` helpers: `leadingSource` (the records of the
+  first source that has any, see "Which source answers"), `primary`
+  (among those: a record on the phone, else the one whose state began
+  last), `primaryActivity`, `primaryNote`, `primaryStatusIcon`, and
+  `reachable(registered:)`.
 - `lib/models/presence/presence_activity.dart` - `PresenceActivity`: 12
   values (`away`, `busy`, `doNotDisturb`, `sleeping`, `permanentAbsence`,
   `onThePhone`, `meal`, `meeting`, `appointment`, `vacation`, `travel`,
@@ -42,8 +44,107 @@ persisted locally, then joined onto contacts:
    `presenceInfo` + `dialogInfo` onto each contact, so tiles simply read
    `contact.presenceInfo` / `contact.dialogInfo`.
 
-Independently of the hybrid path, a contact record still carries the legacy
-`registered: bool?` flag, which feeds the older badge (next section).
+A contact record also carries `registered: bool?`, the SIP registration
+state from the contact list. It feeds the older badge where the server has
+no presence support, and with presence support it is the last source asked
+(next section).
+
+## Which source answers
+
+Three sources can say something about a contact, and they are asked in a
+fixed order; the first that knows something wins:
+
+1. **Direct presence** - what the contact's own app or web dialer published
+   through Core (`source: direct`). First-hand, so it is never overruled.
+2. **SIP presence** - what the PBX holds for the number (`source: sip`),
+   present only for a number the user subscribed to and only while some
+   device publishes for it. For somebody who also has a direct record it is
+   at best an echo of it, so it is not read at all then.
+3. **Registration** - `contact.registered`. Most desk phones and softphones
+   take calls without ever publishing a status; for them this is the only
+   thing known, and "registered" is drawn as available.
+
+With none of the three, and no established call reported, no mark is drawn:
+"unavailable" would be a claim nobody made.
+
+Inside one source a person can have several records, one per device, each
+repeating what was last set on that device. The record whose state began
+LAST describes the contact - colour, glyph, label, note and icon all come
+from it - so a status set a minute ago on the laptop is not hidden by the
+phone still saying "available". The order is by `timestamp`, the
+publisher's time of the change, which Core keeps through re-announcements
+and across its own restarts; `arrivalTime` places a record that has no
+timestamp and settles a tie. The one exception is a record that is on the
+phone: it wins whenever it began, because a call is a fact about the
+person rather than a status they chose. The web dialer follows the same
+rule, so the two clients show the same thing for the same records.
+
+Two rules follow from the order. A published `closed` is NOT second-guessed
+by registration: a device that said so meant it. And a PBX answers a
+subscription to a number nobody publishes for with a bare `closed` tuple,
+which reads as "unavailable" and means "nothing known"; Core does not pass
+that one on, so such a number has no SIP record and reaches step 3. An app
+talking to a Core that still passes it on shows that contact as unavailable.
+
+The order lives in `PresenceInfoListExtension` (`leadingSource`, and through
+it `primary` and `reachable`), so the mark, the spoken label and the note
+and icon beside a name all give the same answer. The textual section on the
+contact screen (`presence_info_view.dart`) is the exception on purpose: it
+lists every record with its source.
+
+That section is also where the third source is named. For a contact with no
+record at all and a known `registered`, it shows one entry: "Registered" or
+"Not registered", "Updated: ... ago", and "Source: PBX registration". It says
+"registered" and not "available" deliberately: the mark in the lists reads
+a registered phone as available because that is the useful answer at a
+glance, while here the fact is given as it is - a device that will ring,
+not a person who said they are there. With any record present the
+registration is not listed; it is not what the mark was drawn from.
+
+`registered` comes from the contact list and is refreshed only when the
+list is, so a mark drawn from it can lag behind the phone. The age shown in
+the card is `Contact.updatedAt`, the time the stored contact was last
+written: a contact from the server is rewritten on every refresh of the
+list, changed or not, so that is when the flag was read. The PBX does not
+report when the phone itself registered. `updatedAt` is deliberately NOT
+part of `Contact`'s equality - it moves on every refresh, and as part of
+equality it would make every contact a new contact on every refresh of the
+contact list - so the card follows it through `ContactState.registeredAsOf`
+instead.
+
+Each published entry of the section ends with the client that published it.
+Our own clients name themselves in the record's `device` as
+`Name/Version (Device; System)` - the app sends its User-Agent, the web
+dialer `Web-dialer/<version> (<browser>; <system>)` - and
+`lib/models/presence/presence_client.dart` (`PresenceClient.parse`) turns
+that into a "Client:" line. What a third-party device puts there is shown as
+it came.
+
+The info button beside the section's title (`contactPresenceLegendId`) opens
+`PresenceLegendDialog` (`widgets/presence_legend_dialog.dart`): the order of
+the sources in words, and one real mark - drawn by `SipPresenceIndicator`
+itself - for each thing a mark can say.
+
+The sites that used to pass the registration alone - the contact pickers,
+the call log, the number CDRs, the watch rows, the chat header and the
+members of a group chat - build their badge with
+`AvatarStatusBadge.ofContact`, which hands it all three sources and the
+contact's calls; passing the registration alone drew a registered phone as
+reachable while its owner had published do not disturb. The other sites
+still call `AvatarStatusBadge.maybe(...)` with the contact's fields; which
+ones, and the gap they leave, is under "Where the badge appears".
+
+Times: `PresenceInfo.arrivalTime` is Core's stamp, taken from the event as
+it is. A publisher's `timestamp` that names no zone is its wall clock and
+is turned into an instant with the record's `timeOffsetMin`
+(`lib/mappers/signaling/presence_info_mapper.dart`); the app itself
+publishes its time in UTC, and keeps its own status in the preferences in
+UTC too, so a change of the phone's zone does not move it. A status stored
+by an older build names no zone and is read as the wall clock of the offset
+stored with it (`lib/mappers/json/presence_settings_mapper.dart`).
+`PresenceInfo.stateBeganAt` is the one notion of "when this status began" -
+the timestamp, cut back to the arrival when the publisher's clock runs
+ahead - used both to order the records and for the "Updated" line.
 
 ## Avatar badges: two systems plus one indicator
 
@@ -51,8 +152,9 @@ Independently of the hybrid path, a contact record still carries the legacy
 presence: it exposes a `badge` slot that receives the whole avatar square.
 The status badge is a separate widget,
 `lib/widgets/avatar_status_badge.dart` (`AvatarStatusBadge`) - call sites
-build it via `AvatarStatusBadge.maybe(...)`, which returns `null` (no badge
-mounted) when there is no status data at all. The badge sizes and anchors
+build it via `AvatarStatusBadge.ofContact(contact)` or
+`AvatarStatusBadge.maybe(...)`, which return `null` (no badge mounted) when
+there is nothing to show. The badge sizes and anchors
 itself via `lib/utils/badge_layout.dart` as an
 `avatar diameter * sizeFactor` square, and decides which bottom-right badge
 renders by `PresenceViewParams.hybridPresenceSupport` - the two are
@@ -62,7 +164,7 @@ mutually exclusive. The top-left smart-contact indicator is still drawn by
 | Overlay | Widget | Placement | Default sizeFactor | Shown when |
 |---|---|---|---|---|
 | Registered dot (legacy) | `_RegisteredDot` (avatar_status_badge.dart) | bottom-right, inside the box | 0.2 | hybrid presence OFF and `registered != null` |
-| Presence mark | `lib/widgets/sip_presence_indicator.dart` | centre ON the avatar's edge (`BadgeLayout.onCircleEdgeSquare`) | 0.5 | hybrid presence ON and `presenceInfo != null` |
+| Presence mark | `lib/widgets/sip_presence_indicator.dart` | centre ON the avatar's edge (`BadgeLayout.onCircleEdgeSquare`) | 0.5 | hybrid presence ON and something is known: a presence record, an established call, or `registered != null` |
 | Smart-contact indicator | `_smartIndicator` (leading_avatar.dart) | top-left | 0.4 | `smart: true` (unrelated to presence) |
 
 The default avatar radius is 20 (diameter 40), so the presence mark is 20 dp
@@ -101,19 +203,31 @@ says nothing.
 `SipPresenceIndicator` renders:
 
 - a colored disc - three colors: a `primaryActivity` of `busy` or
-  `doNotDisturb` picks `busyColor`, otherwise `presenceInfo.anyAvailable`
-  picks `availableColor` and everything else `unavailableColor`. Asking not
+  `doNotDisturb` picks `busyColor`, otherwise
+  `presenceInfo.reachable(registered:)` picks `availableColor` and
+  everything else `unavailableColor`. Asking not
   to be called outranks reachability - a contact on "do not disturb" IS
   reachable, they just published something, and the point of the state is to
   stop the call. Only a PUBLISHED activity reaches the color: BLF state does
   not, nor does the `onThePhone` activity, because Core publishes that one
   from the moment of dialling and it would paint people as busy over calls
   nobody answered;
-- an optional activity glyph INSIDE the disc, in `iconColor`. Icon choice:
-  `dialogInfo.established != null` -> `phone_in_talk`, else the icon for
-  `presenceInfo.primaryActivity`. A dialog that is merely ringing does NOT
-  light it - `early` is the most common state in production, and an
-  unfiltered list showed contacts as talking from the first ring;
+- a glyph INSIDE the disc, in `iconColor`, whenever the status was
+  PUBLISHED. Icon choice: `dialogInfo.established != null` ->
+  `phone_in_talk`, else the icon for `presenceInfo.primaryActivity`, else a
+  tick for a plain available and a cross for a plain unavailable. A dialog
+  that is merely ringing does NOT light it - `early` is the most common
+  state in production, and an unfiltered list showed contacts as talking
+  from the first ring;
+- NO glyph when only the registration of the phone is known. The mark
+  shows how much is known: a status somebody published carries a glyph, a
+  registration carries the colour alone, so the two are told apart at a
+  glance without a second colour. The two registration marks are plain
+  discs, green for a registered phone and grey for one that is not. The
+  spoken label follows the same split:
+  "Registered" / "Not registered" for a registration mark, "Available" /
+  "Unavailable" for a published status. The web dialer draws and names
+  them the same way;
 - the ring around the disc (`Theme.scaffoldBackgroundColor`, which can
   mismatch on surfaces that are not the scaffold background) and the glyph
   are a SHARE of the mark - 0.1 and 0.55 of its side. They have to be:
@@ -168,17 +282,28 @@ The legacy dot resolves its colors from `RegisteredStatusStyles`
 
 ## Where the badge appears
 
-Passed `presenceInfo`/`dialogInfo` (hybrid badge):
+Built from the whole contact with `AvatarStatusBadge.ofContact`: number
+CDRs, the call log, the SMS and chat contact pickers, the chat header, the
+members of a group chat and the watch rows. Without hybrid presence they
+show the legacy dot; with it the presence mark, from all three sources.
+
+Passed `registered`/`presenceInfo`/`dialogInfo` one by one through
+`AvatarStatusBadge.maybe(...)`:
 
 - contacts list and search: `lib/features/contacts/widgets/contact_tile.dart`
   via `contact_tile_adapter.dart`;
 - favorites: `lib/features/favorites/widgets/favorite_tile.dart`;
 - recents: `lib/features/recents/widgets/recent_tile.dart`; CDRs:
   `lib/features/cdrs/widgets/cdr_tile.dart`;
-- chats: conversation list tile, conversation header, message avatars, chat
-  details;
-- the presence settings screen previews `SipPresenceIndicator` directly at a
-  fixed 16x16.
+- chats: conversation list tile, chat details, and message avatars, which
+  pass no `dialogInfo`.
+
+Favorites and recents are mapped without dialogs
+(`lib/mappers/drift/favorites_mapper.dart`, `recents_mapper.dart`), so
+their badge, like that of a message avatar, cannot show a call.
+
+The presence settings screen previews `SipPresenceIndicator` directly at a
+fixed 16x16.
 
 No badge by design:
 
@@ -187,9 +312,6 @@ No badge by design:
   there as a textual section (`widgets/presence_info_view.dart`) instead;
 - the in-call header (`lib/features/call/widgets/call_remote_avatar.dart`
   deliberately renders without badges).
-
-Legacy-dot-only sites (screens that pass just `registered`): number CDRs,
-call log, SMS tiles, contact pickers.
 
 ## Enablement and gating
 
@@ -219,8 +341,17 @@ periodic send is driven from `CallBloc`.
 `test/widgets/avatar_status_badge_test.dart` pins the badge contract: which
 generation renders under `hybridPresenceSupport`, the default 0.2/0.5 sizes,
 the legacy dot colors, the mark's centre sitting on the avatar's edge with
-the glyph inside it, and the no-data cases (including
-`AvatarStatusBadge.maybe` returning `null`).
+the glyph inside it, the order of the sources (direct over SIP, registration
+when nothing is published, no mark when nothing is known), what the mark
+draws for each level of knowledge (tick or cross for a published plain
+status, a bare disc for a registration), and the no-data
+cases (`AvatarStatusBadge.maybe` and `AvatarStatusBadge.ofContact`
+returning `null`, the latter also for a phone that is only ringing).
+`test/mappers/presence_signaling_mapper_test.dart` and
+`test/mappers/presence_settings_mapper_test.dart` pin the times: a zoneless
+time read as its publisher's wall clock, and the app's own status kept and
+published as an instant.
+`test/models/presence_info_test.dart` pins the same order in the model.
 `test/theme/leading_avatar_style_defaults_test.dart` pins that a theme is
 read as overrides only - what it leaves out comes from the app values.
 `test/widgets/leading_avatar_test.dart` covers name-derived avatar colors

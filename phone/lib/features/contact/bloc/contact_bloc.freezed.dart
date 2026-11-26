@@ -27,20 +27,20 @@ $ContactStateCopyWith<ContactState> get copyWith => _$ContactStateCopyWithImpl<C
 @override
 bool operator ==(Object other) {
   final _this = this as ContactState;
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is ContactState&&(identical(other.contact, _this.contact) || other.contact == _this.contact)&&(identical(other.deleted, _this.deleted) || other.deleted == _this.deleted)&&const DeepCollectionEquality().equals(other.presenceInfo, _this.presenceInfo));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is ContactState&&(identical(other.contact, _this.contact) || other.contact == _this.contact)&&(identical(other.registeredAsOf, _this.registeredAsOf) || other.registeredAsOf == _this.registeredAsOf)&&(identical(other.deleted, _this.deleted) || other.deleted == _this.deleted)&&const DeepCollectionEquality().equals(other.presenceInfo, _this.presenceInfo));
 }
 
 
 @override
 int get hashCode {
   final _this = this as ContactState;
-  return Object.hash(runtimeType,_this.contact,_this.deleted,const DeepCollectionEquality().hash(_this.presenceInfo));
+  return Object.hash(runtimeType,_this.contact,_this.registeredAsOf,_this.deleted,const DeepCollectionEquality().hash(_this.presenceInfo));
 }
 
 @override
 String toString() {
   final _this = this as ContactState;
-  return 'ContactState(contact: ${_this.contact}, deleted: ${_this.deleted}, presenceInfo: ${_this.presenceInfo})';
+  return 'ContactState(contact: ${_this.contact}, registeredAsOf: ${_this.registeredAsOf}, deleted: ${_this.deleted}, presenceInfo: ${_this.presenceInfo})';
 }
 
 
@@ -51,7 +51,7 @@ abstract mixin class $ContactStateCopyWith<$Res>  {
   factory $ContactStateCopyWith(ContactState value, $Res Function(ContactState) _then) = _$ContactStateCopyWithImpl;
 @useResult
 $Res call({
- Contact? contact, bool deleted, List<PresenceInfo> presenceInfo
+ Contact? contact, DateTime? registeredAsOf, bool deleted, List<PresenceInfo> presenceInfo
 });
 
 
@@ -68,10 +68,11 @@ class _$ContactStateCopyWithImpl<$Res>
 
 /// Create a copy of ContactState
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? contact = freezed,Object? deleted = null,Object? presenceInfo = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? contact = freezed,Object? registeredAsOf = freezed,Object? deleted = null,Object? presenceInfo = null,}) {
   return _then(ContactState(
 contact: freezed == contact ? _self.contact : contact // ignore: cast_nullable_to_non_nullable
-as Contact?,deleted: null == deleted ? _self.deleted : deleted // ignore: cast_nullable_to_non_nullable
+as Contact?,registeredAsOf: freezed == registeredAsOf ? _self.registeredAsOf : registeredAsOf // ignore: cast_nullable_to_non_nullable
+as DateTime?,deleted: null == deleted ? _self.deleted : deleted // ignore: cast_nullable_to_non_nullable
 as bool,presenceInfo: null == presenceInfo ? _self.presenceInfo : presenceInfo // ignore: cast_nullable_to_non_nullable
 as List<PresenceInfo>,
   ));

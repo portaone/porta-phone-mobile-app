@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:webtrit_phone/app/constants.dart';
 import 'package:webtrit_phone/models/models.dart';
+import 'package:webtrit_phone/utils/iso_instant.dart';
 
 class PresenceSettingsJsonMapper {
   static String toJson(PresenceSettings data) => jsonEncode(toMap(data));
@@ -15,7 +16,10 @@ class PresenceSettingsJsonMapper {
       'statusIcon': data.statusIcon,
       'device': data.device,
       'timeOffsetMin': data.timeOffsetMin,
-      'timestamp': data.timestamp.toIso8601String(),
+      // An instant, not the wall clock of the phone: the phone can be in
+      // another zone by the time this is read back, and a wall clock with no
+      // zone would then be taken for a different moment.
+      'timestamp': data.timestamp.toUtc().toIso8601String(),
       'activity': switch (data.activity) {
         PresenceActivity.away => kPresenceActivityKeyAway,
         PresenceActivity.busy => kPresenceActivityKeyBusy,
@@ -36,13 +40,19 @@ class PresenceSettingsJsonMapper {
   }
 
   static PresenceSettings fromMap(Map<String, dynamic> map) {
+    final timeOffsetMin = map['timeOffsetMin'] as int;
+    final timestamp = map['timestamp'] as String;
+
     return PresenceSettings(
       available: map['available'] as bool,
       note: map['note'] as String,
       statusIcon: map['statusIcon'] as String?,
       device: map['device'] as String,
-      timeOffsetMin: map['timeOffsetMin'] as int,
-      timestamp: DateTime.parse(map['timestamp'] as String),
+      timeOffsetMin: timeOffsetMin,
+      // Older builds stored the wall clock of the phone with no zone; the
+      // offset stored with it is the zone it was read in. An unreadable value
+      // fails as it always has, with the parser's own error.
+      timestamp: parseIsoInstant(timestamp, wallClockOffsetMin: timeOffsetMin) ?? DateTime.parse(timestamp),
       activity: switch (map['activity']) {
         kPresenceActivityKeyAway => PresenceActivity.away,
         kPresenceActivityKeyBusy => PresenceActivity.busy,

@@ -98,6 +98,7 @@ class _ContactScreenState extends State<ContactScreen> {
     final l10n = context.l10n;
     final presenceParams = PresenceViewParams.of(context);
     final purpose = context.pickPurpose;
+    final registeredAsOf = context.select<ContactBloc, DateTime?>((bloc) => bloc.state.registeredAsOf);
 
     final contactSourceId = contact.sourceId;
     final contactSmsNumbers = contact.smsNumbers;
@@ -111,10 +112,13 @@ class _ContactScreenState extends State<ContactScreen> {
     bool canSendSmsTo(String number, List<String> userSmsNumbers) =>
         widget.enableTileSms && userSmsNumbers.isNotEmpty && contactSmsNumbers.contains(number);
 
+    // Something to say about the contact: a published status, or, for the
+    // many phones that never publish one, at least whether theirs is
+    // registered - which is what their mark in the lists is drawn from.
     final showPresenceInfo =
         presenceParams.hybridPresenceSupport &&
         contact.sourceType == ContactSourceType.external &&
-        presenseInfo.isNotEmpty;
+        (presenseInfo.isNotEmpty || contact.registered != null);
 
     final showDialogsInfo =
         presenceParams.hybridPresenceSupport &&
@@ -214,7 +218,12 @@ class _ContactScreenState extends State<ContactScreen> {
                     ),
                   if (showPresenceInfo) ...[
                     const Divider(),
-                    PresenceInfoView(presenceInfo: presenseInfo, timeFormat: appTime.hourMinuteFormat(locale)),
+                    PresenceInfoView(
+                      presenceInfo: presenseInfo,
+                      registered: contact.registered,
+                      registeredAsOf: registeredAsOf,
+                      timeFormat: appTime.hourMinuteFormat(locale),
+                    ),
                   ],
                   if (showDialogsInfo) ...[
                     const Divider(),

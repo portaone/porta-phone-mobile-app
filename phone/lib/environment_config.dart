@@ -322,10 +322,11 @@ class EnvironmentConfig {
     );
   }
 
-  /// Contacts poll when hybrid presence is on: presence rides the SIP channel and the
-  /// badge ignores the contacts payload, so this fetch only refreshes the directory
-  /// (names/numbers, which change rarely) and can run much less often. A non-positive
-  /// build value falls back to 1800 seconds for the same reason as above.
+  /// Contacts poll when hybrid presence is on: published status (direct and SIP presence)
+  /// arrives over signaling as it changes, so this fetch runs much less often. Its
+  /// registration flag is still the last source of the status mark and the contact card,
+  /// so a mark drawn from it can be up to this interval old. A non-positive build value
+  /// falls back to 1800 seconds for the same reason as above.
   static const EXTERNAL_CONTACTS_HYBRID_PRESENCE_POLLING_INTERVAL_SECONDS__NAME =
       'WEBTRIT_APP_EXTERNAL_CONTACTS_HYBRID_PRESENCE_POLLING_INTERVAL_SECONDS';
   static int get EXTERNAL_CONTACTS_HYBRID_PRESENCE_POLLING_INTERVAL_SECONDS {
@@ -341,8 +342,9 @@ class EnvironmentConfig {
   }
 
   /// Resolves the contacts polling interval for the deployment's presence mode.
-  /// With hybrid presence the contacts payload's registration status is unused, so the
-  /// directory can be polled slowly; without it the poll is the presence source.
+  /// With hybrid presence published status comes over signaling, so the list is polled
+  /// slowly and a mark drawn from its registration flag can lag by up to the interval;
+  /// without it the poll is the presence source.
   static int externalContactsPollingSeconds({required bool hybridPresence}) => hybridPresence
       ? EXTERNAL_CONTACTS_HYBRID_PRESENCE_POLLING_INTERVAL_SECONDS
       : EXTERNAL_CONTACTS_REPOSITORY_POLLING_INTERVAL_SECONDS;

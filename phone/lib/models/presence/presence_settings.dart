@@ -18,7 +18,12 @@ class PresenceSettings extends Equatable {
   final String note;
   final String? statusIcon;
   final String device;
+
+  /// Minutes east of UTC of the zone the phone was in when the status was set.
   final int timeOffsetMin;
+
+  /// When the status was set. What the app sets and stores is in UTC; a local
+  /// time is read as the wall clock of [timeOffsetMin].
   final DateTime timestamp;
   final PresenceActivity? activity;
   final bool dndMode;
@@ -28,78 +33,84 @@ class PresenceSettings extends Equatable {
   }
 
   factory PresenceSettings.blank({required String device}) {
+    final setAt = _now();
     return PresenceSettings(
       available: true,
       note: '',
       statusIcon: null,
       device: device,
-      timeOffsetMin: _timeOffsetMin,
-      timestamp: _timestamp,
+      timeOffsetMin: setAt.timeOffsetMin,
+      timestamp: setAt.timestamp,
       activity: null,
       dndMode: false,
     );
   }
 
   PresenceSettings copyWithAvailable(bool available) {
+    final setAt = _now();
     return PresenceSettings(
       available: available,
       note: note,
       statusIcon: statusIcon,
       device: device,
-      timeOffsetMin: _timeOffsetMin,
-      timestamp: _timestamp,
+      timeOffsetMin: setAt.timeOffsetMin,
+      timestamp: setAt.timestamp,
       activity: activity,
       dndMode: dndMode,
     );
   }
 
   PresenceSettings copyWithNote(String note) {
+    final setAt = _now();
     return PresenceSettings(
       available: available,
       note: note,
       statusIcon: statusIcon,
       device: device,
-      timeOffsetMin: _timeOffsetMin,
-      timestamp: _timestamp,
+      timeOffsetMin: setAt.timeOffsetMin,
+      timestamp: setAt.timestamp,
       activity: activity,
       dndMode: dndMode,
     );
   }
 
   PresenceSettings copyWithStatusIcon(String? statusIcon) {
+    final setAt = _now();
     return PresenceSettings(
       available: available,
       note: note,
       statusIcon: statusIcon,
       device: device,
-      timeOffsetMin: _timeOffsetMin,
-      timestamp: _timestamp,
+      timeOffsetMin: setAt.timeOffsetMin,
+      timestamp: setAt.timestamp,
       activity: activity,
       dndMode: dndMode,
     );
   }
 
   PresenceSettings copyWithActivity(PresenceActivity? activity) {
+    final setAt = _now();
     return PresenceSettings(
       available: available,
       note: note,
       statusIcon: statusIcon,
       device: device,
-      timeOffsetMin: _timeOffsetMin,
-      timestamp: _timestamp,
+      timeOffsetMin: setAt.timeOffsetMin,
+      timestamp: setAt.timestamp,
       activity: activity,
       dndMode: dndMode,
     );
   }
 
   PresenceSettings copyWithDndMode(bool dndMode) {
+    final setAt = _now();
     return PresenceSettings(
       available: available,
       note: note,
       statusIcon: statusIcon,
       device: device,
-      timeOffsetMin: _timeOffsetMin,
-      timestamp: _timestamp,
+      timeOffsetMin: setAt.timeOffsetMin,
+      timestamp: setAt.timestamp,
       activity: activity,
       dndMode: dndMode,
     );
@@ -114,7 +125,15 @@ class PresenceSettings extends Equatable {
         'timeOffsetMin: $timeOffsetMin, timestamp: $timestamp, activity: $activity, dndMode: $dndMode}';
   }
 
-  static int get _timeOffsetMin => DateTime.now().timeZoneOffset.inMinutes;
-
-  static DateTime get _timestamp => DateTime.now();
+  /// The moment a status is set and the offset of the zone the phone is in at
+  /// that moment, from one reading of the clock.
+  ///
+  /// Taken apart, the two could straddle a change of zone and no longer
+  /// describe each other. The moment is kept in UTC: a local time is turned
+  /// into its fields by the zone in force when they are first read, which need
+  /// not be the zone the offset was taken in.
+  static ({DateTime timestamp, int timeOffsetMin}) _now() {
+    final now = DateTime.now();
+    return (timestamp: now.toUtc(), timeOffsetMin: now.timeZoneOffset.inMinutes);
+  }
 }

@@ -2518,13 +2518,65 @@ class AppLocalizationsIt extends AppLocalizations {
   }
 
   @override
-  String get presence_infoView_source_direct => 'diretto';
+  String get presence_infoView_source_direct => 'da app ad app (diretto)';
 
   @override
-  String get presence_infoView_source_sip => 'sip';
+  String get presence_infoView_source_registration => 'registrazione sul PBX';
 
   @override
-  String get presence_infoView_source_sipAndDirect => 'sip e diretto';
+  String get presence_infoView_source_sip => 'presenza SIP';
+
+  @override
+  String get presence_infoView_source_sipAndDirect => 'presenza SIP e da app ad app';
+
+  @override
+  String get presence_infoView_legendButton => 'Cosa significano i simboli di stato';
+
+  @override
+  String get presence_legendDialog_title => 'Come leggere lo stato';
+
+  @override
+  String get presence_legendDialog_sourcesTitle => 'Da dove viene lo stato';
+
+  @override
+  String get presence_legendDialog_sourceDirect =>
+      'Da app ad app (diretto): ciò che il contatto ha impostato in questa app o nella sua versione web.';
+
+  @override
+  String get presence_legendDialog_sourceSip =>
+      'Presenza SIP: ciò che pubblica un telefono fisso o un\'altra app SIP. Mostrata per i contatti a cui sei iscritto.';
+
+  @override
+  String get presence_legendDialog_sourceRegistration =>
+      'Registrazione sul PBX: se il telefono del contatto è connesso. Usata quando nessuno stato è stato pubblicato.';
+
+  @override
+  String get presence_legendDialog_sourcesNote =>
+      'Viene mostrata la prima fonte che sa qualcosa. Con più dispositivi vale lo stato impostato per ultimo.';
+
+  @override
+  String get presence_legendDialog_marksTitle => 'Cosa significano i simboli';
+
+  @override
+  String get presence_legendDialog_markAvailable => 'Stato pubblicato: disponibile';
+
+  @override
+  String get presence_legendDialog_markUnavailable => 'Stato pubblicato: non disponibile';
+
+  @override
+  String get presence_legendDialog_markActivity => 'Stato pubblicato con un\'attività, ad esempio assente';
+
+  @override
+  String get presence_legendDialog_markDoNotDisturb => 'Non disturbare o occupato';
+
+  @override
+  String get presence_legendDialog_markOnCall => 'In chiamata';
+
+  @override
+  String get presence_legendDialog_markRegistered => 'Nessuno stato pubblicato, il telefono è registrato';
+
+  @override
+  String get presence_legendDialog_markUnregistered => 'Nessuno stato pubblicato, il telefono non è registrato';
 
   @override
   String get presence_preset_absent_name => 'Assente';

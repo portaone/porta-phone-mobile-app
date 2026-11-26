@@ -1,7 +1,7 @@
 # Background polling
 
 `PollingService` coordinates periodic, lifecycle-triggered, and manual refreshes without overlapping work for the same registration.
-Last reviewed: 2026-09-11.
+Last reviewed: 2026-11-25.
 
 ## Scope and current status
 
@@ -721,10 +721,12 @@ The base interval is chosen once at registration from the deployment's presence
 mode (`FeatureAccess.sipPresenceConfig.hybridPresenceSupport`), which is the same
 flag `AvatarStatusBadge` reads:
 
-- **hybrid presence on** - the badge takes registration state from the SIP presence
-  channel and ignores the contacts payload, so this fetch only refreshes the
-  directory (names and numbers, which change rarely). Default interval **1800s**
-  (`WEBTRIT_APP_EXTERNAL_CONTACTS_HYBRID_PRESENCE_POLLING_INTERVAL_SECONDS`).
+- **hybrid presence on** - published status (direct and SIP presence) arrives over
+  signaling as it changes, so the list is polled less often. Default interval
+  **1800s** (`WEBTRIT_APP_EXTERNAL_CONTACTS_HYBRID_PRESENCE_POLLING_INTERVAL_SECONDS`).
+  Its registration flag is still the last source of the status mark and the
+  contact card ([which source answers](../features/presence.md#which-source-answers)),
+  so a mark drawn from it can be up to one interval old; the card shows its age.
 - **hybrid presence off** - the contacts payload's registration status is the
   presence source, so the fetch stays fairly fresh. Default interval **300s**
   (`WEBTRIT_APP_EXTERNAL_CONTACTS_REPOSITORY_POLLING_INTERVAL_SECONDS`).

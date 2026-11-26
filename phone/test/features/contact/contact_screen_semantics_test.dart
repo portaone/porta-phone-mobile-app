@@ -294,13 +294,40 @@ void main() {
     });
   });
 
+  testWidgets('the explanation of the status opens through its node and can be left', (tester) async {
+    final handle = tester.ensureSemantics();
+
+    await harness.pump(tester, contact: buildContact(registered: true), presenceViaSip: true);
+
+    expectTapTargetSemantics(
+      tester,
+      find.bySemanticsIdentifier(contactPresenceLegendId),
+      label: 'What the status marks mean',
+      identifier: contactPresenceLegendId,
+    );
+
+    await tapViaSemantics(tester, find.bySemanticsIdentifier(contactPresenceLegendId));
+    await tester.pumpAndSettle();
+
+    expect(find.text('How to read the status'), findsOneWidget);
+    await expectLater(tester, meetsGuideline(labeledTapTargetGuideline));
+
+    await tapViaSemantics(tester, find.widgetWithText(TextButton, 'Ok'));
+    await tester.pumpAndSettle();
+    expect(find.text('How to read the status'), findsNothing);
+
+    handle.dispose();
+  });
+
   testWidgets('nothing on the card offers a press without saying what it is', (tester) async {
     final handle = tester.ensureSemantics();
     harness.withUserSmsNumbers(['2002']);
 
     await harness.pump(
       tester,
-      contact: buildContact(numbers: twoNumbers, emails: const [email, secondEmail]),
+      // Registered, so that the presence section and its info button are on
+      // the card and are checked with the rest.
+      contact: buildContact(numbers: twoNumbers, emails: const [email, secondEmail], registered: true),
       dialogsViaSip: true,
       presenceViaSip: true,
     );

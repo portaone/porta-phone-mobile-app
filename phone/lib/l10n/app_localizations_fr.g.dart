@@ -2525,13 +2525,65 @@ class AppLocalizationsFr extends AppLocalizations {
   }
 
   @override
-  String get presence_infoView_source_direct => 'direct';
+  String get presence_infoView_source_direct => 'd\'application à application (direct)';
 
   @override
-  String get presence_infoView_source_sip => 'sip';
+  String get presence_infoView_source_registration => 'enregistrement sur le PBX';
 
   @override
-  String get presence_infoView_source_sipAndDirect => 'sip et direct';
+  String get presence_infoView_source_sip => 'présence SIP';
+
+  @override
+  String get presence_infoView_source_sipAndDirect => 'présence SIP et d\'application à application';
+
+  @override
+  String get presence_infoView_legendButton => 'Signification des marques de statut';
+
+  @override
+  String get presence_legendDialog_title => 'Comment lire le statut';
+
+  @override
+  String get presence_legendDialog_sourcesTitle => 'D\'où vient le statut';
+
+  @override
+  String get presence_legendDialog_sourceDirect =>
+      'D\'application à application (direct) : ce que le contact a défini dans cette application ou dans sa version web.';
+
+  @override
+  String get presence_legendDialog_sourceSip =>
+      'Présence SIP : ce que publie un téléphone de bureau ou une autre application SIP. Affichée pour les contacts auxquels vous êtes abonné.';
+
+  @override
+  String get presence_legendDialog_sourceRegistration =>
+      'Enregistrement sur le PBX : si le téléphone du contact est connecté. Utilisé quand aucun statut n\'a été publié.';
+
+  @override
+  String get presence_legendDialog_sourcesNote =>
+      'La première source qui sait quelque chose est affichée. Avec plusieurs appareils, le statut défini en dernier l\'emporte.';
+
+  @override
+  String get presence_legendDialog_marksTitle => 'Signification des marques';
+
+  @override
+  String get presence_legendDialog_markAvailable => 'Statut publié : disponible';
+
+  @override
+  String get presence_legendDialog_markUnavailable => 'Statut publié : indisponible';
+
+  @override
+  String get presence_legendDialog_markActivity => 'Statut publié avec une activité, par exemple absent';
+
+  @override
+  String get presence_legendDialog_markDoNotDisturb => 'Ne pas déranger ou occupé';
+
+  @override
+  String get presence_legendDialog_markOnCall => 'En appel';
+
+  @override
+  String get presence_legendDialog_markRegistered => 'Aucun statut publié, le téléphone est enregistré';
+
+  @override
+  String get presence_legendDialog_markUnregistered => 'Aucun statut publié, le téléphone n\'est pas enregistré';
 
   @override
   String get presence_preset_absent_name => 'Absent';

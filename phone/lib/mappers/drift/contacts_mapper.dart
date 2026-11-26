@@ -43,6 +43,7 @@ mixin ContactsDriftMapper on PresenceInfoDriftMapper, DialogInfoDriftMapper {
       presenceInfo: contactPresenceInfosFromDrift(presenceInfo).toList(),
       dialogInfo: contactDialogInfosFromDrift(dialogInfo).toList(),
       sipSubscriptions: contactSipSubscriptionsFromDrift(sipSubscriptions).toList(),
+      updatedAt: contactData.updatedAt,
     );
   }
 

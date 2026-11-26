@@ -44,12 +44,18 @@ Contact buildContact({
   List<ContactEmail> emails = const [],
   List<SipSubscription> sipSubscriptions = const [],
   ContactSourceType sourceType = ContactSourceType.external,
+  bool? registered,
+  DateTime? updatedAt,
+  List<PresenceInfo> presenceInfo = const [],
 }) {
   return Contact(
     id: 1,
     sourceType: sourceType,
     kind: ContactKind.visible,
     sourceId: 'user-1',
+    registered: registered,
+    updatedAt: updatedAt,
+    presenceInfo: presenceInfo,
     userRegistered: true,
     isCurrentUser: false,
     firstName: 'Anna',
@@ -113,7 +119,11 @@ class ContactScreenHarness {
     bool enableTileEmail = true,
     bool enableTileTransfer = false,
   }) async {
-    whenListen(contactBloc, const Stream<ContactState>.empty(), initialState: ContactState(contact: contact));
+    whenListen(
+      contactBloc,
+      const Stream<ContactState>.empty(),
+      initialState: ContactState(contact: contact, registeredAsOf: contact.updatedAt),
+    );
 
     await tester.pumpWidget(
       StackRouterScope(
