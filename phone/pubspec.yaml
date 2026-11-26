@@ -180,7 +180,7 @@ dependencies:
     git:
       url: https://github.com/portaone/porta-flutter-plugins.git
       path: packages/flutter_webrtc_noise_suppression
-      ref: flutter_webrtc_noise_suppression-v0.1.0
+      ref: flutter_webrtc_noise_suppression-v0.1.1
 
 dev_dependencies:
   # Reached directly by the hub replay tests, which drive the Android hub and the
