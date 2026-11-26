@@ -472,7 +472,8 @@ melos:
       description: >
         Build and sign the iOS ipa via ios/fastlane. Reads IOS_CERTIFICATE_PATH,
         IOS_PROVISIONING_PROFILE_PATH, IOS_CODE_SIGNING_IDENTITY, IOS_TEAM_ID, IOS_BUILD_NAME,
-        IOS_BUILD_NUMBER, IOS_BUILD_FILE_NAME from the environment.
+        IOS_BUILD_NUMBER, IOS_BUILD_FILE_NAME from the environment, and
+        IOS_SCREEN_SHARE_PROVISIONING_PROFILE_PATH when the screen share extension is built.
       steps:
         - fastlane:install
         - cd ios && fastlane ios build

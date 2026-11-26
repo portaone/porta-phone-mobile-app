@@ -89,6 +89,8 @@ class CallPopupMenuItem<T> extends PopupMenuEntry<T> {
     required this.text,
     this.subtitle,
     required this.icon,
+    this.hint,
+    this.accent,
   });
 
   final T? value;
@@ -109,6 +111,14 @@ class CallPopupMenuItem<T> extends PopupMenuEntry<T> {
 
   final Widget icon;
 
+  /// The entry's name in this colour, a little bolder: an entry that stands out from the rest,
+  /// as the Stop of a screen the others see. Given here, as the menu's own text style decides
+  /// the rest of the look.
+  final Color? accent;
+
+  /// Said on a long press: why a disabled entry cannot be chosen.
+  final String? hint;
+
   /// The entries size themselves; the menu is asked to reserve nothing.
   @override
   double get height => 0;
@@ -123,6 +133,13 @@ class CallPopupMenuItem<T> extends PopupMenuEntry<T> {
 class _CallPopupMenuItemState<T> extends State<CallPopupMenuItem<T>> {
   @override
   Widget build(BuildContext context) {
+    final hint = widget.hint;
+    final item = _item();
+    if (hint == null) return item;
+    return Tooltip(message: hint, triggerMode: TooltipTriggerMode.longPress, child: item);
+  }
+
+  Widget _item() {
     return MergeSemantics(
       child: Semantics(
         // A node of its own: an identifier absorbed from a merged child is
@@ -142,7 +159,12 @@ class _CallPopupMenuItemState<T> extends State<CallPopupMenuItem<T>> {
               Flexible(
                 child: Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 4),
-                  child: _CallPopupMenuItemText(text: widget.text, subtitle: widget.subtitle),
+                  child: widget.accent == null
+                      ? _CallPopupMenuItemText(text: widget.text, subtitle: widget.subtitle)
+                      : DefaultTextStyle.merge(
+                          style: TextStyle(color: widget.accent, fontWeight: FontWeight.w600),
+                          child: _CallPopupMenuItemText(text: widget.text, subtitle: widget.subtitle),
+                        ),
                 ),
               ),
             ],

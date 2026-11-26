@@ -16,8 +16,9 @@ class InvitedConferenceVideo {
   /// The line of the call through which this client takes part.
   final int line;
 
-  /// The cameras this client receives, by feed: the host is 1, the far end
-  /// of the host's line N is N + 2.
+  /// The video this client receives, by feed: the host is 1, the far end of
+  /// the host's line N is N + 2. A participant who shares a screen is here by
+  /// the screen, in place of the camera it stands in for.
   final Map<int, ParticipantCamera> feeds;
 
   /// This client's camera in the room; `null` while it is not published.

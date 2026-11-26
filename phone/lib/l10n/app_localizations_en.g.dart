@@ -472,6 +472,28 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String call_ConferenceFullScreen_title(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Conference · $count participants',
+      one: 'Conference · $count participant',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String call_ConferenceFullScreen_sharing(String name) {
+    return '$name is sharing the screen';
+  }
+
+  @override
+  String get call_ConferenceFullScreen_holdUnavailable => 'Hold is not available in a conference';
+
+  @override
+  String get call_ConferenceFullScreen_showLarge => 'Show large';
+
+  @override
   String call_SemanticsLabel_conferenceParticipantMenu(String name) {
     return 'More for $name';
   }
@@ -700,6 +722,21 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get call_SystemErrorDialog_title => 'System Error';
+
+  @override
+  String get call_ScreenShareTile_title => 'Sharing screen';
+
+  @override
+  String get call_ScreenShareTile_stop => 'Stop';
+
+  @override
+  String get call_ConferenceFullScreen_screenWaiting => 'Waiting for the screen';
+
+  @override
+  String get call_screenShare_actionLabel_share => 'Share screen';
+
+  @override
+  String get call_screenShare_actionLabel_stop => 'Stop sharing';
 
   @override
   String get call_ThumbnailAvatar_currentlyNoActiveCall => 'Currently, there is no active call';
@@ -2151,6 +2188,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get notifications_messageSnackBarAction_callVideoDowngraded => 'Settings';
 
   @override
+  String get notifications_messageSnackBar_screenShareFailed => 'Screen sharing could not start';
+
+  @override
+  String get notifications_messageSnackBar_screenShareVideoRefused =>
+      'The other side does not accept video - screen sharing stopped';
+
+  @override
   String get notifications_messageSnackBar_conferenceFailed => 'The conference could not be set up';
 
   @override
@@ -2158,6 +2202,15 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get notifications_messageSnackBar_conferenceEnded => 'The conference has ended, the calls continue';
+
+  @override
+  String get notifications_messageSnackBar_conferenceRoomFull =>
+      'Video unavailable: the conference has reached its participant limit';
+
+  @override
+  String notifications_messageSnackBar_conferenceRoomFullLimit(int limit) {
+    return 'Video unavailable: the conference has reached its participant limit ($limit)';
+  }
 
   @override
   String get notifications_errorSnackBar_activeLineBlindTransferWarning =>

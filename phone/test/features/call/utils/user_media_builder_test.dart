@@ -45,7 +45,11 @@ class _TestMediaStreamFactory {
         videoTracks.add(track);
       }
     });
-    when(() => stream.removeTrack(any())).thenAnswer((_) async {});
+    when(() => stream.removeTrack(any())).thenAnswer((invocation) async {
+      final track = invocation.positionalArguments.first as MediaStreamTrack;
+      audioTracks.remove(track);
+      videoTracks.remove(track);
+    });
     when(() => stream.dispose()).thenAnswer((_) async {});
 
     streams.add(stream);
@@ -237,7 +241,11 @@ void main() {
             videoTracks.add(track);
           }
         });
-        when(() => stream.removeTrack(any())).thenAnswer((_) async {});
+        when(() => stream.removeTrack(any())).thenAnswer((invocation) async {
+          final track = invocation.positionalArguments.first as MediaStreamTrack;
+          audioTracks.remove(track);
+          videoTracks.remove(track);
+        });
         when(() => stream.dispose()).thenAnswer((_) async {
           if (currentIndex != 1) return;
           events.add('release_dispose_start');
@@ -307,6 +315,45 @@ void main() {
 
       expect(audioRequests, 1);
       expect(videoRequests, 1);
+    });
+
+    test('releaseVideoTrack stops a camera only this stream held, and ensureVideoTrack opens it again', () async {
+      final subject = builder();
+      final localStream = await subject.build(video: true);
+
+      await subject.releaseVideoTrack(localStream);
+
+      verify(() => localStreamFactory.streams.single.removeTrack(videoTrack)).called(1);
+      verify(() => videoTrack.stop()).called(1);
+      verifyNever(() => audioTrack.stop());
+      expect(localStream.getVideoTracks(), isEmpty);
+      expect(localStream.getAudioTracks(), hasLength(1));
+
+      await subject.ensureVideoTrack(localStream);
+
+      final videoRequests = capturedConstraints.where((it) => it['audio'] == false && it['video'] != false).length;
+      expect(videoRequests, 2);
+      expect(localStream.getVideoTracks(), hasLength(1));
+    });
+
+    test('releaseVideoTrack leaves running a camera another stream holds', () async {
+      final subject = builder();
+      final first = await subject.build(video: true);
+      await subject.build(video: true);
+
+      await subject.releaseVideoTrack(first);
+
+      expect(first.getVideoTracks(), isEmpty);
+      verifyNever(() => videoTrack.stop());
+    });
+
+    test('releaseVideoTrack of a stream without a camera does nothing', () async {
+      final subject = builder();
+      final localStream = await subject.build(video: false);
+
+      await subject.releaseVideoTrack(localStream);
+
+      verifyNever(() => localStreamFactory.streams.single.removeTrack(any()));
     });
   });
 

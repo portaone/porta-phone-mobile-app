@@ -71,4 +71,14 @@ void main() {
     expect(video, contains('video'));
     expect(other, isNot(contains('answer_failed')));
   });
+
+  testWidgets('a full room names its limit when the room said it, and reads as a sentence without it', (tester) async {
+    await pumpContext(tester);
+
+    final withLimit = const ConferenceRoomFullNotification(limit: 2).l10n(context);
+    final withoutLimit = const ConferenceRoomFullNotification().l10n(context);
+
+    expect(withLimit, 'Video unavailable: the conference has reached its participant limit (2)');
+    expect(withoutLimit, 'Video unavailable: the conference has reached its participant limit');
+  });
 }

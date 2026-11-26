@@ -18,7 +18,9 @@ final _logger = Logger('ParticipantVideo');
 /// The renderer is this widget's own: made when a [camera] arrives, given the
 /// camera's own track, released when the camera goes or the widget does. The
 /// caller gives the shape: it fills what it is given. [identifier] names the
-/// camera for a case only while it is seen.
+/// camera for a case only while it is seen. [onAspectChanged] hears the
+/// picture's proportions once its first frame is drawn and whenever they
+/// change after it.
 class ParticipantVideo extends StatefulWidget {
   const ParticipantVideo({
     super.key,
@@ -27,6 +29,7 @@ class ParticipantVideo extends StatefulWidget {
     this.fit = RTCVideoViewObjectFit.RTCVideoViewObjectFitCover,
     this.mirror = false,
     this.identifier,
+    this.onAspectChanged,
   });
 
   /// The camera; `null` shows the placeholder alone.
@@ -45,6 +48,11 @@ class ParticipantVideo extends StatefulWidget {
   /// The automation id of the camera, while it is seen.
   final String? identifier;
 
+  /// The picture's width over its height, turned as it is shown: told once
+  /// the first frame is drawn and again when the size or the turn of the
+  /// frames changes - a phone turned, a share started.
+  final ValueChanged<double>? onAspectChanged;
+
   @override
   State<ParticipantVideo> createState() => _ParticipantVideoState();
 }
@@ -53,6 +61,7 @@ class _ParticipantVideoState extends State<ParticipantVideo> {
   RTCVideoRenderer? _renderer;
   bool _opening = false;
   bool _hasFrame = false;
+  double? _aspect;
 
   @override
   void initState() {
@@ -113,6 +122,7 @@ class _ParticipantVideoState extends State<ParticipantVideo> {
       return;
     }
     renderer.onFirstFrameRendered = _onFirstFrame;
+    renderer.onResize = _onResize;
     setState(() => _renderer = renderer);
     await _show(renderer, camera);
   }
@@ -120,6 +130,7 @@ class _ParticipantVideoState extends State<ParticipantVideo> {
   /// Shows [camera]'s own track on [renderer]: a stream id alone may stand for
   /// every participant's track.
   Future<void> _show(RTCVideoRenderer renderer, ParticipantCamera camera) async {
+    _logger.info('showing track ${camera.trackId} of stream ${camera.stream.id}');
     try {
       await renderer.setSrcObject(stream: camera.stream, trackId: camera.trackId);
     } catch (error, stackTrace) {
@@ -128,18 +139,41 @@ class _ParticipantVideoState extends State<ParticipantVideo> {
   }
 
   void _onFirstFrame() {
+    if (!_hasFrame) _logger.info('first frame of track ${widget.camera?.trackId}');
     if (mounted && !_hasFrame) setState(() => _hasFrame = true);
+    _tellAspect();
+  }
+
+  void _onResize() {
+    if (_hasFrame) _tellAspect();
+  }
+
+  /// Tells the picture's proportions when the renderer knows its size and they are new.
+  void _tellAspect() {
+    final value = _renderer?.value;
+    if (!mounted || value == null || value.width <= 0 || value.height <= 0) return;
+    final aspect = value.aspectRatio;
+    if (aspect == _aspect) return;
+    _aspect = aspect;
+    // A black picture is told apart here: a camera seeing darkness sends frames of a size, a
+    // renderer given nothing decodes none.
+    _logger.info(
+      'track ${widget.camera?.trackId}: frames ${value.width.toInt()}x${value.height.toInt()}, turned ${value.rotation}',
+    );
+    widget.onAspectChanged?.call(aspect);
   }
 
   void _close() {
     final renderer = _renderer;
     _renderer = null;
     _hasFrame = false;
+    _aspect = null;
     if (renderer != null) _release(renderer);
   }
 
   void _release(RTCVideoRenderer renderer) {
     renderer.onFirstFrameRendered = null;
+    renderer.onResize = null;
     unawaited(
       renderer.dispose().catchError(
         (Object error, StackTrace stackTrace) =>
@@ -158,7 +192,9 @@ class _ParticipantVideoState extends State<ParticipantVideo> {
       child: Stack(
         fit: StackFit.expand,
         children: [
-          Center(child: widget.placeholder),
+          // Gone once a frame is drawn: a picture shown whole (contained) leaves the place around
+          // it open, and the placeholder would show through there.
+          if (!seen) Center(child: widget.placeholder),
           if (renderer != null)
             Opacity(
               opacity: seen ? 1 : 0,

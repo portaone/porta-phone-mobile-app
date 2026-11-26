@@ -35,6 +35,9 @@ maintainability and enabling tools to parse configuration reliably.
 
 - `WEBTRIT_APP_NAME` – The application name (_default: **PortaPhone**_).
 - `WEBTRIT_APP_LINK_DOMAIN` – Used to configure Android App Links and iOS Universal Links.
+- `WEBTRIT_IOS_SCREEN_SHARE_APP_GROUP` – iOS only: the App Group of the screen share extension;
+  empty or absent leaves the extension out and screen sharing off on iOS
+  ([optional features](optional_features.md#ios)).
 - `WEBTRIT_APP_DEMO_CORE_URL` – Demo core URL (_default: **http://localhost:4000**_).
 - `WEBTRIT_APP_DATABASE_LOG_STATEMENTS` – Enables logging of database queries (
   _default: **false**_).

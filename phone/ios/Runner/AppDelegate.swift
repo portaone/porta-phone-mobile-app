@@ -4,6 +4,8 @@ import flutter_local_notifications
 
 @main
 @objc class AppDelegate: FlutterAppDelegate, FlutterImplicitEngineDelegate {
+  private var screenBroadcast: ScreenBroadcastChannel?
+
   override func application(
     _ application: UIApplication,
     didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?
@@ -25,5 +27,6 @@ import flutter_local_notifications
 
   func didInitializeImplicitFlutterEngine(_ engineBridge: FlutterImplicitEngineBridge) {
     GeneratedPluginRegistrant.register(with: engineBridge.pluginRegistry)
+    screenBroadcast = ScreenBroadcastChannel(messenger: engineBridge.applicationRegistrar.messenger())
   }
 }

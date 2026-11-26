@@ -29,7 +29,12 @@ import 'package:webtrit_phone/push_notification/push_notifications.dart';
 import 'package:webtrit_phone/features/system_notifications/services/services.dart';
 
 import 'package:webtrit_phone/features/call/call.dart'
-    show onPushNotificationSyncCallback, onSignalingBackgroundCallEvent;
+    show
+        DefaultScreenCapturer,
+        ScreenBroadcast,
+        ScreenCapturer,
+        onPushNotificationSyncCallback,
+        onSignalingBackgroundCallEvent;
 
 import 'app/app_dependencies.dart';
 import 'app/firebase_integration.dart';
@@ -296,6 +301,10 @@ Future<AppDependencies> _bootstrap({
   // are process-wide singletons behind their factory constructors.
   deps.share(Callkeep());
   deps.share(CallkeepConnections());
+  // The screen capture of a call: one for the process, as callkeep reports the end of a capture
+  // to one delegate; every call bloc of the shell shares it. On iOS it shares only in a build that
+  // carries the screen share extension, which the native side is asked about here.
+  deps.share<ScreenCapturer>(DefaultScreenCapturer(broadcast: await ScreenBroadcast.ofThisBuild()));
   deps.share(firebase.analytics);
 
   // Final side-effect initializations that rely on the components above

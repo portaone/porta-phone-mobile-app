@@ -128,6 +128,19 @@ Implemented by: `BackgroundPushNotificationIsolateBootstrapApi`
 
 ---
 
+### `PHostScreenShareApi`
+
+Implemented by: `ScreenShareApi` (registered with the activity's engine)
+
+| Method                      | Description                                                                                             |
+|-----------------------------|---------------------------------------------------------------------------------------------------------|
+| `startScreenShareService()` | Start `ScreenShareService` and wait until it is in the foreground (`mediaProjection`); fails if refused |
+| `stopScreenShareService()`  | Stop `ScreenShareService`; nothing when it does not run, after its promotion when on its way            |
+
+See [screen-share-service.md](screen-share-service.md).
+
+---
+
 ## Flutter APIs (Dart implements, Kotlin calls)
 
 ### `PDelegateFlutterApi`
@@ -163,6 +176,14 @@ communicator keep a `SupervisorJob` scope on `Dispatchers.Main.immediate` for th
 
 `continueStartCallIntent` and `didReset` exist on the shared `CallkeepDelegate` but are
 iOS-only: Android has no source for either, so they are absent from this API.
+
+### `PDelegateScreenShareFlutterApi`
+
+Relayed to `CallkeepScreenShareDelegate` (`AndroidCallkeepUtils.screenShare.setDelegate`).
+
+| Method                | Description                                                                                                 |
+|-----------------------|-------------------------------------------------------------------------------------------------------------|
+| `didEndScreenShare()` | The capture ended outside the app: the notification's Stop or the system's; the service has stopped already |
 
 ---
 

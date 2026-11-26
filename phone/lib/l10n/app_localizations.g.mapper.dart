@@ -177,6 +177,10 @@ extension AppLocalizationsExtension on AppLocalizations {
       'call_ConferencePanel_end' => call_ConferencePanel_end,
       'call_ConferenceFullScreen_switchCamera' =>
         call_ConferenceFullScreen_switchCamera,
+      'call_ConferenceFullScreen_holdUnavailable' =>
+        call_ConferenceFullScreen_holdUnavailable,
+      'call_ConferenceFullScreen_showLarge' =>
+        call_ConferenceFullScreen_showLarge,
       'call_SemanticsLabel_conferenceFullScreen' =>
         call_SemanticsLabel_conferenceFullScreen,
       'call_SemanticsLabel_conferenceEnd' => call_SemanticsLabel_conferenceEnd,
@@ -249,6 +253,13 @@ extension AppLocalizationsExtension on AppLocalizations {
         call_SystemErrorDialog_description,
       'callStatus_serviceUnavailable' => callStatus_serviceUnavailable,
       'call_SystemErrorDialog_title' => call_SystemErrorDialog_title,
+      'call_ScreenShareTile_title' => call_ScreenShareTile_title,
+      'call_ScreenShareTile_stop' => call_ScreenShareTile_stop,
+      'call_ConferenceFullScreen_screenWaiting' =>
+        call_ConferenceFullScreen_screenWaiting,
+      'call_screenShare_actionLabel_share' =>
+        call_screenShare_actionLabel_share,
+      'call_screenShare_actionLabel_stop' => call_screenShare_actionLabel_stop,
       'call_ThumbnailAvatar_currentlyNoActiveCall' =>
         call_ThumbnailAvatar_currentlyNoActiveCall,
       'call_videoBackground_actionLabel_disableBlur' =>
@@ -927,12 +938,18 @@ extension AppLocalizationsExtension on AppLocalizations {
         notifications_messageSnackBar_callVideoDowngraded,
       'notifications_messageSnackBarAction_callVideoDowngraded' =>
         notifications_messageSnackBarAction_callVideoDowngraded,
+      'notifications_messageSnackBar_screenShareFailed' =>
+        notifications_messageSnackBar_screenShareFailed,
+      'notifications_messageSnackBar_screenShareVideoRefused' =>
+        notifications_messageSnackBar_screenShareVideoRefused,
       'notifications_messageSnackBar_conferenceFailed' =>
         notifications_messageSnackBar_conferenceFailed,
       'notifications_messageSnackBar_conferenceVideoLeg' =>
         notifications_messageSnackBar_conferenceVideoLeg,
       'notifications_messageSnackBar_conferenceEnded' =>
         notifications_messageSnackBar_conferenceEnded,
+      'notifications_messageSnackBar_conferenceRoomFull' =>
+        notifications_messageSnackBar_conferenceRoomFull,
       'notifications_errorSnackBar_activeLineBlindTransferWarning' =>
         notifications_errorSnackBar_activeLineBlindTransferWarning,
       'notifications_errorSnackBar_blindTransferFailed' =>
@@ -2225,6 +2242,18 @@ extension AppLocalizationsExtension on AppLocalizations {
           'call_ConferenceFullScreen_participantLeft requires 1 arguments',
         ),
       },
+      'call_ConferenceFullScreen_title' => switch (args) {
+        [final int count] => call_ConferenceFullScreen_title(count),
+        _ => throw ArgumentError(
+          'call_ConferenceFullScreen_title requires 1 arguments',
+        ),
+      },
+      'call_ConferenceFullScreen_sharing' => switch (args) {
+        [final String name] => call_ConferenceFullScreen_sharing(name),
+        _ => throw ArgumentError(
+          'call_ConferenceFullScreen_sharing requires 1 arguments',
+        ),
+      },
       'call_SemanticsLabel_conferenceParticipantMenu' => switch (args) {
         [final String name] => call_SemanticsLabel_conferenceParticipantMenu(
           name,
@@ -2475,6 +2504,13 @@ extension AppLocalizationsExtension on AppLocalizations {
         [final int count] => messaging_Watch_nextMembers(count),
         _ => throw ArgumentError(
           'messaging_Watch_nextMembers requires 1 arguments',
+        ),
+      },
+      'notifications_messageSnackBar_conferenceRoomFullLimit' => switch (args) {
+        [final int limit] =>
+          notifications_messageSnackBar_conferenceRoomFullLimit(limit),
+        _ => throw ArgumentError(
+          'notifications_messageSnackBar_conferenceRoomFullLimit requires 1 arguments',
         ),
       },
       'notifications_errorSnackBar_signalingDisconnectWithCodeName' =>

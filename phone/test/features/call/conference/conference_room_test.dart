@@ -469,6 +469,36 @@ void main() {
       expect(signaling.requests, isEmpty);
     });
 
+    test('a camera the full room refuses is told to the host once, and not asked for again', () async {
+      await merged();
+      await room.takeStep(steps.whereType<AnswerTakenStep>().single, write);
+      await room.video.setCamera(true);
+      await pumpEventQueue();
+      expect(signaling.requests.whereType<ConferenceVideoPublishRequest>(), hasLength(1));
+
+      await room.video.onEvent(
+        const ConferenceVideoFailedEvent(
+          pc: ConferenceVideoPc.publisher,
+          reason: 'Maximum number of active publishers (2) already reached',
+          code: 432,
+        ),
+      );
+      await pumpEventQueue();
+
+      expect(notifications.whereType<RoomFullNotice>().map((notice) => notice.limit), [
+        2,
+      ], reason: 'the host learns why his camera is not in the room');
+      expect(signaling.requests.whereType<ConferenceVideoPublishRequest>(), hasLength(1), reason: 'no retry');
+
+      await room.video.setCamera(true);
+      await pumpEventQueue();
+      expect(
+        signaling.requests.whereType<ConferenceVideoPublishRequest>(),
+        hasLength(2),
+        reason: 'the camera button tries again, as someone may have left',
+      );
+    });
+
     test('an invitation through a call joins the video, and is in the state at once', () async {
       await room.video.onEvent(const ConferenceVideoInviteEvent(room: 9, line: 1));
       await pumpEventQueue();

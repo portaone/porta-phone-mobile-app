@@ -27,20 +27,20 @@ $ConferenceStateCopyWith<ConferenceState> get copyWith => _$ConferenceStateCopyW
 @override
 bool operator ==(Object other) {
   final _this = this as ConferenceState;
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is ConferenceState&&(identical(other.room, _this.room) || other.room == _this.room)&&(identical(other.phase, _this.phase) || other.phase == _this.phase)&&const DeepCollectionEquality().equals(other.legs, _this.legs)&&const DeepCollectionEquality().equals(other.participants, _this.participants)&&(identical(other.selfMuted, _this.selfMuted) || other.selfMuted == _this.selfMuted)&&const DeepCollectionEquality().equals(other.videoFeeds, _this.videoFeeds)&&(identical(other.selfVideo, _this.selfVideo) || other.selfVideo == _this.selfVideo)&&(identical(other.videoDisabled, _this.videoDisabled) || other.videoDisabled == _this.videoDisabled));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is ConferenceState&&(identical(other.room, _this.room) || other.room == _this.room)&&(identical(other.phase, _this.phase) || other.phase == _this.phase)&&const DeepCollectionEquality().equals(other.legs, _this.legs)&&const DeepCollectionEquality().equals(other.participants, _this.participants)&&(identical(other.selfMuted, _this.selfMuted) || other.selfMuted == _this.selfMuted)&&const DeepCollectionEquality().equals(other.videoFeeds, _this.videoFeeds)&&(identical(other.selfVideo, _this.selfVideo) || other.selfVideo == _this.selfVideo)&&(identical(other.videoDisabled, _this.videoDisabled) || other.videoDisabled == _this.videoDisabled)&&const DeepCollectionEquality().equals(other.screens, _this.screens)&&(identical(other.presenter, _this.presenter) || other.presenter == _this.presenter)&&(identical(other.speaker, _this.speaker) || other.speaker == _this.speaker));
 }
 
 
 @override
 int get hashCode {
   final _this = this as ConferenceState;
-  return Object.hash(runtimeType,_this.room,_this.phase,const DeepCollectionEquality().hash(_this.legs),const DeepCollectionEquality().hash(_this.participants),_this.selfMuted,const DeepCollectionEquality().hash(_this.videoFeeds),_this.selfVideo,_this.videoDisabled);
+  return Object.hash(runtimeType,_this.room,_this.phase,const DeepCollectionEquality().hash(_this.legs),const DeepCollectionEquality().hash(_this.participants),_this.selfMuted,const DeepCollectionEquality().hash(_this.videoFeeds),_this.selfVideo,_this.videoDisabled,const DeepCollectionEquality().hash(_this.screens),_this.presenter,_this.speaker);
 }
 
 @override
 String toString() {
   final _this = this as ConferenceState;
-  return 'ConferenceState(room: ${_this.room}, phase: ${_this.phase}, legs: ${_this.legs}, participants: ${_this.participants}, selfMuted: ${_this.selfMuted}, videoFeeds: ${_this.videoFeeds}, selfVideo: ${_this.selfVideo}, videoDisabled: ${_this.videoDisabled})';
+  return 'ConferenceState(room: ${_this.room}, phase: ${_this.phase}, legs: ${_this.legs}, participants: ${_this.participants}, selfMuted: ${_this.selfMuted}, videoFeeds: ${_this.videoFeeds}, selfVideo: ${_this.selfVideo}, videoDisabled: ${_this.videoDisabled}, screens: ${_this.screens}, presenter: ${_this.presenter}, speaker: ${_this.speaker})';
 }
 
 
@@ -51,7 +51,7 @@ abstract mixin class $ConferenceStateCopyWith<$Res>  {
   factory $ConferenceStateCopyWith(ConferenceState value, $Res Function(ConferenceState) _then) = _$ConferenceStateCopyWithImpl;
 @useResult
 $Res call({
- int? room, ConferencePhase phase, Map<String, int> legs, List<ConferenceParticipant> participants, bool selfMuted, Map<int, ParticipantCamera> videoFeeds, MediaStream? selfVideo, bool videoDisabled
+ int? room, ConferencePhase phase, Map<String, int> legs, List<ConferenceParticipant> participants, bool selfMuted, Map<int, ParticipantCamera> videoFeeds, MediaStream? selfVideo, bool videoDisabled, Map<int, ParticipantCamera> screens, int? presenter, int? speaker
 });
 
 
@@ -68,7 +68,7 @@ class _$ConferenceStateCopyWithImpl<$Res>
 
 /// Create a copy of ConferenceState
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? room = freezed,Object? phase = null,Object? legs = null,Object? participants = null,Object? selfMuted = null,Object? videoFeeds = null,Object? selfVideo = freezed,Object? videoDisabled = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? room = freezed,Object? phase = null,Object? legs = null,Object? participants = null,Object? selfMuted = null,Object? videoFeeds = null,Object? selfVideo = freezed,Object? videoDisabled = null,Object? screens = null,Object? presenter = freezed,Object? speaker = freezed,}) {
   return _then(ConferenceState(
 room: freezed == room ? _self.room : room // ignore: cast_nullable_to_non_nullable
 as int?,phase: null == phase ? _self.phase : phase // ignore: cast_nullable_to_non_nullable
@@ -78,7 +78,10 @@ as List<ConferenceParticipant>,selfMuted: null == selfMuted ? _self.selfMuted : 
 as bool,videoFeeds: null == videoFeeds ? _self.videoFeeds : videoFeeds // ignore: cast_nullable_to_non_nullable
 as Map<int, ParticipantCamera>,selfVideo: freezed == selfVideo ? _self.selfVideo : selfVideo // ignore: cast_nullable_to_non_nullable
 as MediaStream?,videoDisabled: null == videoDisabled ? _self.videoDisabled : videoDisabled // ignore: cast_nullable_to_non_nullable
-as bool,
+as bool,screens: null == screens ? _self.screens : screens // ignore: cast_nullable_to_non_nullable
+as Map<int, ParticipantCamera>,presenter: freezed == presenter ? _self.presenter : presenter // ignore: cast_nullable_to_non_nullable
+as int?,speaker: freezed == speaker ? _self.speaker : speaker // ignore: cast_nullable_to_non_nullable
+as int?,
   ));
 }
 

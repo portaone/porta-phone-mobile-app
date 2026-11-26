@@ -512,6 +512,32 @@
       }
     }
   },
+  "call_ConferenceFullScreen_title": "{count, plural, one{Conference · {count} participant} other{Conference · {count} participants}}",
+  "@call_ConferenceFullScreen_title": {
+    "description": "Title of the conference full screen; the count is everyone in the room, this client included.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "call_ConferenceFullScreen_sharing": "{name} is sharing the screen",
+  "@call_ConferenceFullScreen_sharing": {
+    "description": "Above the shared screen on the conference full screen: who shares it.",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "call_ConferenceFullScreen_holdUnavailable": "Hold is not available in a conference",
+  "@call_ConferenceFullScreen_holdUnavailable": {
+    "description": "Hint on a long press of Hold in the conference full screen menu: a leg of the room cannot be held."
+  },
+  "call_ConferenceFullScreen_showLarge": "Show large",
+  "@call_ConferenceFullScreen_showLarge": {
+    "description": "Entry of a participant's menu on the conference full screen: shows the participant alone, large."
+  },
   "call_SemanticsLabel_conferenceParticipantMenu": "More for {name}",
   "@call_SemanticsLabel_conferenceParticipantMenu": {
     "description": "Name of the menu of one conference participant that holds ending their call.",
@@ -767,6 +793,26 @@
   "@call_SystemErrorDialog_description": {},
   "call_SystemErrorDialog_title": "System Error",
   "@call_SystemErrorDialog_title": {},
+  "call_ScreenShareTile_title": "Sharing screen",
+  "@call_ScreenShareTile_title": {
+    "description": "On the small tile that replaces the own camera preview while the phone's screen is shown to the other side of the call."
+  },
+  "call_ScreenShareTile_stop": "Stop",
+  "@call_ScreenShareTile_stop": {
+    "description": "Button on the screen sharing tile of the call screen; stops showing the phone's screen to the other side."
+  },
+  "call_ConferenceFullScreen_screenWaiting": "Waiting for the screen",
+  "@call_ConferenceFullScreen_screenWaiting": {
+    "description": "In the main place of the conference full screen while a participant shares their screen and no picture of it has arrived yet: the phone of the participant sends a new picture only when their screen changes."
+  },
+  "call_screenShare_actionLabel_share": "Share screen",
+  "@call_screenShare_actionLabel_share": {
+    "description": "Entry of the call screen's options menu: shows the phone's screen to the other side of the call instead of the camera."
+  },
+  "call_screenShare_actionLabel_stop": "Stop sharing",
+  "@call_screenShare_actionLabel_stop": {
+    "description": "Entry of the call screen's options menu while the phone's screen is shown: stops showing it and gives the call its camera back if it was on."
+  },
   "call_ThumbnailAvatar_currentlyNoActiveCall": "Currently, there is no active call",
   "@call_ThumbnailAvatar_currentlyNoActiveCall": {},
   "call_videoBackground_actionLabel_disableBlur": "Disable Blur",
@@ -2141,6 +2187,14 @@
   },
   "notifications_messageSnackBarAction_callVideoDowngraded": "Settings",
   "@notifications_messageSnackBarAction_callVideoDowngraded": {},
+  "notifications_messageSnackBar_screenShareFailed": "Screen sharing could not start",
+  "@notifications_messageSnackBar_screenShareFailed": {
+    "description": "Shown when sharing the phone's screen in a call did not start (the system refused it or the capture failed); the call goes on as before."
+  },
+  "notifications_messageSnackBar_screenShareVideoRefused": "The other side does not accept video - screen sharing stopped",
+  "@notifications_messageSnackBar_screenShareVideoRefused": {
+    "description": "Shown when the other side of an audio call did not accept video, so sharing the phone's screen stopped; the call goes on as an audio call."
+  },
   "notifications_messageSnackBar_conferenceFailed": "The conference could not be set up",
   "@notifications_messageSnackBar_conferenceFailed": {
     "description": "Shown when a conference that was being set up failed; the merged calls go on as separate calls."
@@ -2152,6 +2206,19 @@
   "notifications_messageSnackBar_conferenceEnded": "The conference has ended, the calls continue",
   "@notifications_messageSnackBar_conferenceEnded": {
     "description": "Shown when the server ends a conference while its calls are still up; they go on as separate calls."
+  },
+  "notifications_messageSnackBar_conferenceRoomFull": "Video unavailable: the conference has reached its participant limit",
+  "@notifications_messageSnackBar_conferenceRoomFull": {
+    "description": "Shown when the conference's video room is full and the user's camera or shared screen could not join it; the user stays in the conference by voice. Used when the server does not say how many the room takes."
+  },
+  "notifications_messageSnackBar_conferenceRoomFullLimit": "Video unavailable: the conference has reached its participant limit ({limit})",
+  "@notifications_messageSnackBar_conferenceRoomFullLimit": {
+    "description": "Shown when the conference's video room is full and the user's camera or shared screen could not join it; the user stays in the conference by voice. {limit} is how many participants with video the room takes.",
+    "placeholders": {
+      "limit": {
+        "type": "int"
+      }
+    }
   },
   "notifications_errorSnackBar_activeLineBlindTransferWarning": "You are already on the line with the recipient you are trying to blind transfer to",
   "@notifications_errorSnackBar_activeLineBlindTransferWarning": {

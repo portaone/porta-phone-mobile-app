@@ -132,6 +132,34 @@ final class CallMediaTrackSetupErrorNotification extends MessageNotification {
   SnackBarAction? action(BuildContext context) => null;
 }
 
+/// The screen share of a call did not start: the system refused the foreground service a capture
+/// needs, the capture failed or the call's connection did not take it. The call goes on as it was.
+final class ScreenShareFailedNotification extends MessageNotification {
+  const ScreenShareFailedNotification();
+
+  @override
+  String l10n(BuildContext context) {
+    return context.l10n.notifications_messageSnackBar_screenShareFailed;
+  }
+
+  @override
+  SnackBarAction? action(BuildContext context) => null;
+}
+
+/// The far end refused the video a screen share made an audio call carry, so the share stopped;
+/// the call goes on without it.
+final class ScreenShareVideoRefusedNotification extends MessageNotification {
+  const ScreenShareVideoRefusedNotification();
+
+  @override
+  String l10n(BuildContext context) {
+    return context.l10n.notifications_messageSnackBar_screenShareVideoRefused;
+  }
+
+  @override
+  SnackBarAction? action(BuildContext context) => null;
+}
+
 @Deprecated.instantiate('will be removed, (see [app/notifications/models/notification.dart] for details)')
 final class CallSdpConfigurationErrorNotification extends ErrorNotification {
   CallSdpConfigurationErrorNotification();
@@ -363,6 +391,25 @@ final class ConferenceFailedNotification extends MessageNotification {
   }
 
   static const _videoNotSupported = 'video_not_supported';
+}
+
+/// The room's video has no place for this client's camera or screen: it
+/// takes as many participants with video as it was made for, [limit] when
+/// the room said how many. The person stays in the conference by voice.
+final class ConferenceRoomFullNotification extends MessageNotification {
+  const ConferenceRoomFullNotification({this.limit});
+
+  final int? limit;
+
+  @override
+  String l10n(BuildContext context) {
+    final limit = this.limit;
+    if (limit == null) return context.l10n.notifications_messageSnackBar_conferenceRoomFull;
+    return context.l10n.notifications_messageSnackBar_conferenceRoomFullLimit(limit);
+  }
+
+  @override
+  String? get identifier => notificationConferenceRoomFullId;
 }
 
 /// The room ended on the server's side while calls were still up; they go

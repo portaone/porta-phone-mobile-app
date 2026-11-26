@@ -126,8 +126,18 @@ const String callActionsTransferMenuAddParticipantId = 'callActionsTransferMenuA
 const String callActionsTransferMenuCancelInviteId = 'callActionsTransferMenuCancelInvite';
 const String callFrontCameraPreviewId = 'callFrontCameraPreview';
 const callFrontCameraPreviewKey = Key(callFrontCameraPreviewId);
+
+/// The frame round the host's camera preview while his room shows him as speaking.
+const String callFrontCameraPreviewSpeakingId = 'callFrontCameraPreviewSpeaking';
 const String callActiveThumbnailId = 'callActiveThumbnail';
 const String callControlsToggleId = 'callControlsToggle';
+
+/// The toolbar menu's entry that starts or stops showing the phone's screen in the call.
+const String callActionsScreenShareId = 'callActionsScreenShare';
+
+/// The tile that stands in for the camera preview while the screen is shown, and its Stop.
+const String callScreenShareTileId = 'callScreenShareTile';
+const String callScreenShareStopId = 'callScreenShareStop';
 const String callRowId = 'callRow';
 
 /// The state of a row of the list of calls: exactly one of the three is a
@@ -151,16 +161,49 @@ const String conferenceTileId = 'conferenceTile';
 const String conferenceTileMuteId = 'conferenceTileMute';
 const String conferenceTileMenuId = 'conferenceTileMenu';
 const String conferenceTileEndId = 'conferenceTileEnd';
+
+/// The entry of a participant's tile menu on the conference full screen that shows him large.
+const String conferenceTileOpenId = 'conferenceTileOpen';
+
+/// The three dots at the top right corner of a participant's tile on the conference full screen:
+/// they open the same menu as the tile.
+const String conferenceTileMoreId = 'conferenceTileMore';
+
+/// The sign on a participant's tile that his microphone is off for the room.
+const String conferenceTileMutedId = 'conferenceTileMuted';
+
+/// The frame round a participant's tile on the conference full screen while the room shows him as
+/// speaking - a big tile, a thumbnail or his shared screen; numbered as his tile.
+const String conferenceTileSpeakingId = 'conferenceTileSpeaking';
 const String conferenceParticipantMenuId = 'conferenceParticipantMenu';
-const String conferenceSelfTileSwitchId = 'conferenceSelfTileSwitch';
+
+/// A participant's row of the room's panel on the call screen: a tap opens the room in full screen
+/// (back into the room while it stands aside for a call outside it).
+const String conferenceParticipantRowId = 'conferenceParticipantRow';
+
+/// The frame round a participant's row of the room's panel while the room shows him as speaking;
+/// numbered as his row.
+const String conferenceParticipantSpeakingId = 'conferenceParticipantSpeaking';
 const String conferenceFullScreenCameraId = 'conferenceFullScreenCamera';
 const String conferenceFullScreenSpeakerId = 'conferenceFullScreenSpeaker';
 const String conferenceFullScreenMoreId = 'conferenceFullScreenMore';
 const String conferenceFullScreenKeypadId = 'conferenceFullScreenKeypad';
 const String conferenceFullScreenSwitchCameraId = 'conferenceFullScreenSwitchCamera';
 const String conferenceFullScreenHoldId = 'conferenceFullScreenHold';
+
+/// The room's More entry that starts or stops showing the phone's screen to the room.
+const String callScreenShareConferenceId = 'callScreenShareConference';
+
+/// The screen a participant shares in the room, in the main place of the room's tiles.
+const String callScreenShareConferenceScreenId = 'callScreenShareConferenceScreen';
+
+/// The line above that screen saying who shares it.
+const String callScreenShareConferenceLabelId = 'callScreenShareConferenceLabel';
+
+/// The badge on the room's More control while the host shares his screen to the room.
+const String callScreenShareConferenceBadgeId = 'callScreenShareConferenceBadge';
+const String callActionsScreenShareBadgeId = 'callActionsScreenShareBadge';
 const String conferenceParticipantPageId = 'conferenceParticipantPage';
-const String conferenceSelfTileId = 'conferenceSelfTile';
 const String conferenceFullScreenMicId = 'conferenceFullScreenMic';
 const String conferenceFullScreenAddId = 'conferenceFullScreenAdd';
 const String conferenceFullScreenEndId = 'conferenceFullScreenEnd';
@@ -266,6 +309,11 @@ const String appSnackBarId = 'appSnackBar';
 /// to take it over - declined; it carries this id instead of [appSnackBarId],
 /// so a flow can tell it from any other message.
 const String notificationLinkedCallDeclinedId = 'notificationLinkedCallDeclined';
+
+/// The snack bar saying that the conference's video room is full and this
+/// client's camera or screen did not get in; it carries this id instead of
+/// [appSnackBarId], so a flow can tell it from any other message.
+const String notificationConferenceRoomFullId = 'notificationConferenceRoomFull';
 const String actionPadTransferId = 'actionPadTransfer';
 const String actionPadVoiceCallId = 'actionPadVoiceCall';
 const String callActionsAcceptId = 'callActionsAccept';

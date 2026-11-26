@@ -492,6 +492,29 @@ class AppLocalizationsUk extends AppLocalizations {
   }
 
   @override
+  String call_ConferenceFullScreen_title(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Конференція · $count учасників',
+      few: 'Конференція · $count учасники',
+      one: 'Конференція · $count учасник',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String call_ConferenceFullScreen_sharing(String name) {
+    return '$name показує екран';
+  }
+
+  @override
+  String get call_ConferenceFullScreen_holdUnavailable => 'Утримання недоступне в конференції';
+
+  @override
+  String get call_ConferenceFullScreen_showLarge => 'Показати великим';
+
+  @override
   String call_SemanticsLabel_conferenceParticipantMenu(String name) {
     return 'Ще для $name';
   }
@@ -722,6 +745,21 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get call_SystemErrorDialog_title => 'Системна помилка';
+
+  @override
+  String get call_ScreenShareTile_title => 'Показ екрана';
+
+  @override
+  String get call_ScreenShareTile_stop => 'Зупинити';
+
+  @override
+  String get call_ConferenceFullScreen_screenWaiting => 'Очікування екрана';
+
+  @override
+  String get call_screenShare_actionLabel_share => 'Показати екран';
+
+  @override
+  String get call_screenShare_actionLabel_stop => 'Зупинити показ';
 
   @override
   String get call_ThumbnailAvatar_currentlyNoActiveCall => 'Зараз немає активних дзвінків';
@@ -2182,6 +2220,13 @@ class AppLocalizationsUk extends AppLocalizations {
   String get notifications_messageSnackBarAction_callVideoDowngraded => 'Налаштування';
 
   @override
+  String get notifications_messageSnackBar_screenShareFailed => 'Не вдалося почати показ екрана';
+
+  @override
+  String get notifications_messageSnackBar_screenShareVideoRefused =>
+      'Співрозмовник не приймає відео - показ екрана зупинено';
+
+  @override
   String get notifications_messageSnackBar_conferenceFailed => 'Не вдалося створити конференцію';
 
   @override
@@ -2189,6 +2234,15 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get notifications_messageSnackBar_conferenceEnded => 'Конференцію завершено, дзвінки тривають';
+
+  @override
+  String get notifications_messageSnackBar_conferenceRoomFull =>
+      'Відео недоступне: конференція досягла ліміту учасників';
+
+  @override
+  String notifications_messageSnackBar_conferenceRoomFullLimit(int limit) {
+    return 'Відео недоступне: конференція досягла ліміту учасників ($limit)';
+  }
 
   @override
   String get notifications_errorSnackBar_activeLineBlindTransferWarning =>

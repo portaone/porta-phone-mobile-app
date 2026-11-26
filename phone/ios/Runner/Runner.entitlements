@@ -8,5 +8,9 @@
 	<array>
 		<string>applinks:$(WEBTRIT_APP_LINK_DOMAIN)</string>
 	</array>
+	<key>com.apple.security.application-groups</key>
+	<array>
+		<string>$(WEBTRIT_IOS_SCREEN_SHARE_APP_GROUP)</string>
+	</array>
 </dict>
 </plist>

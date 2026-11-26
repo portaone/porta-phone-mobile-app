@@ -2861,3 +2861,98 @@ class PHostActivityControlApi {
     return pigeonVar_replyValue! as bool;
   }
 }
+
+class PHostScreenShareApi {
+  /// Constructor for [PHostScreenShareApi]. The [binaryMessenger] named argument is
+  /// available for dependency injection. If it is left null, the default
+  /// BinaryMessenger will be used which routes to the host platform.
+  PHostScreenShareApi({
+      BinaryMessenger? binaryMessenger,
+      String messageChannelSuffix = '',
+      })
+      : pigeonVar_binaryMessenger = binaryMessenger,
+        pigeonVar_messageChannelSuffix = messageChannelSuffix.isNotEmpty ? '.$messageChannelSuffix' : '';
+
+  final BinaryMessenger? pigeonVar_binaryMessenger;
+  static const MessageCodec<Object?> pigeonChannelCodec = _PigeonCodec();
+
+  final String pigeonVar_messageChannelSuffix;
+
+
+  /// Puts the screen share service in the foreground with the `mediaProjection` type.
+  ///
+  /// Android 14 lets an app capture the screen only while such a service runs, and starts one
+  /// only after the person has granted the capture: call it between the consent and the capture.
+  /// Completes once the service is in the foreground; fails when the system refused it.
+  Future<void> startScreenShareService() async {
+    final pigeonVar_channelName = 'dev.flutter.pigeon.webtrit_callkeep_android.PHostScreenShareApi.startScreenShareService$pigeonVar_messageChannelSuffix';
+    final pigeonVar_channel = BasicMessageChannel<Object?>(
+      pigeonVar_channelName,
+      pigeonChannelCodec,
+      binaryMessenger: pigeonVar_binaryMessenger,
+    );
+    final Future<Object?> pigeonVar_sendFuture = pigeonVar_channel.send(null);
+    final pigeonVar_replyList = await pigeonVar_sendFuture as List<Object?>?;
+
+    _extractReplyValueOrThrow(
+        pigeonVar_replyList,
+        pigeonVar_channelName,
+        isNullValid: true,
+    )
+    ;
+  }
+
+  /// Takes the screen share service out of the foreground and stops it. Nothing when it does not run.
+  Future<void> stopScreenShareService() async {
+    final pigeonVar_channelName = 'dev.flutter.pigeon.webtrit_callkeep_android.PHostScreenShareApi.stopScreenShareService$pigeonVar_messageChannelSuffix';
+    final pigeonVar_channel = BasicMessageChannel<Object?>(
+      pigeonVar_channelName,
+      pigeonChannelCodec,
+      binaryMessenger: pigeonVar_binaryMessenger,
+    );
+    final Future<Object?> pigeonVar_sendFuture = pigeonVar_channel.send(null);
+    final pigeonVar_replyList = await pigeonVar_sendFuture as List<Object?>?;
+
+    _extractReplyValueOrThrow(
+        pigeonVar_replyList,
+        pigeonVar_channelName,
+        isNullValid: true,
+    )
+    ;
+  }
+}
+
+abstract class PDelegateScreenShareFlutterApi {
+  static const MessageCodec<Object?> pigeonChannelCodec = _PigeonCodec();
+
+  /// The screen share ended outside the app: the Stop action of its notification, or the system
+  /// ending the capture. The service has stopped already.
+  void didEndScreenShare();
+
+  static void setUp(PDelegateScreenShareFlutterApi? api, {
+    BinaryMessenger? binaryMessenger,
+    String messageChannelSuffix = '',
+  })
+{
+    messageChannelSuffix = messageChannelSuffix.isNotEmpty ? '.$messageChannelSuffix' : '';
+    {
+      final pigeonVar_channel = BasicMessageChannel<Object?>(
+          'dev.flutter.pigeon.webtrit_callkeep_android.PDelegateScreenShareFlutterApi.didEndScreenShare$messageChannelSuffix', pigeonChannelCodec,
+          binaryMessenger: binaryMessenger);
+      if (api == null) {
+        pigeonVar_channel.setMessageHandler(null);
+      } else {
+        pigeonVar_channel.setMessageHandler((Object? message) async {
+          try {
+            api.didEndScreenShare();
+            return wrapResponse(empty: true);
+          } on PlatformException catch (e) {
+            return wrapResponse(error: e);
+          }          catch (e) {
+            return wrapResponse(error: PlatformException(code: 'error', message: e.toString()));
+          }
+        });
+      }
+    }
+  }
+}

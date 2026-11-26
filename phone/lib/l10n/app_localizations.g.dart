@@ -841,6 +841,30 @@ abstract class AppLocalizations {
   /// **'{name} left the conference'**
   String call_ConferenceFullScreen_participantLeft(String name);
 
+  /// Title of the conference full screen; the count is everyone in the room, this client included.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, one{Conference · {count} participant} other{Conference · {count} participants}}'**
+  String call_ConferenceFullScreen_title(int count);
+
+  /// Above the shared screen on the conference full screen: who shares it.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} is sharing the screen'**
+  String call_ConferenceFullScreen_sharing(String name);
+
+  /// Hint on a long press of Hold in the conference full screen menu: a leg of the room cannot be held.
+  ///
+  /// In en, this message translates to:
+  /// **'Hold is not available in a conference'**
+  String get call_ConferenceFullScreen_holdUnavailable;
+
+  /// Entry of a participant's menu on the conference full screen: shows the participant alone, large.
+  ///
+  /// In en, this message translates to:
+  /// **'Show large'**
+  String get call_ConferenceFullScreen_showLarge;
+
   /// Name of the menu of one conference participant that holds ending their call.
   ///
   /// In en, this message translates to:
@@ -1248,6 +1272,36 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'System Error'**
   String get call_SystemErrorDialog_title;
+
+  /// On the small tile that replaces the own camera preview while the phone's screen is shown to the other side of the call.
+  ///
+  /// In en, this message translates to:
+  /// **'Sharing screen'**
+  String get call_ScreenShareTile_title;
+
+  /// Button on the screen sharing tile of the call screen; stops showing the phone's screen to the other side.
+  ///
+  /// In en, this message translates to:
+  /// **'Stop'**
+  String get call_ScreenShareTile_stop;
+
+  /// In the main place of the conference full screen while a participant shares their screen and no picture of it has arrived yet: the phone of the participant sends a new picture only when their screen changes.
+  ///
+  /// In en, this message translates to:
+  /// **'Waiting for the screen'**
+  String get call_ConferenceFullScreen_screenWaiting;
+
+  /// Entry of the call screen's options menu: shows the phone's screen to the other side of the call instead of the camera.
+  ///
+  /// In en, this message translates to:
+  /// **'Share screen'**
+  String get call_screenShare_actionLabel_share;
+
+  /// Entry of the call screen's options menu while the phone's screen is shown: stops showing it and gives the call its camera back if it was on.
+  ///
+  /// In en, this message translates to:
+  /// **'Stop sharing'**
+  String get call_screenShare_actionLabel_stop;
 
   /// No description provided for @call_ThumbnailAvatar_currentlyNoActiveCall.
   ///
@@ -3910,6 +3964,18 @@ abstract class AppLocalizations {
   /// **'Settings'**
   String get notifications_messageSnackBarAction_callVideoDowngraded;
 
+  /// Shown when sharing the phone's screen in a call did not start (the system refused it or the capture failed); the call goes on as before.
+  ///
+  /// In en, this message translates to:
+  /// **'Screen sharing could not start'**
+  String get notifications_messageSnackBar_screenShareFailed;
+
+  /// Shown when the other side of an audio call did not accept video, so sharing the phone's screen stopped; the call goes on as an audio call.
+  ///
+  /// In en, this message translates to:
+  /// **'The other side does not accept video - screen sharing stopped'**
+  String get notifications_messageSnackBar_screenShareVideoRefused;
+
   /// Shown when a conference that was being set up failed; the merged calls go on as separate calls.
   ///
   /// In en, this message translates to:
@@ -3927,6 +3993,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'The conference has ended, the calls continue'**
   String get notifications_messageSnackBar_conferenceEnded;
+
+  /// Shown when the conference's video room is full and the user's camera or shared screen could not join it; the user stays in the conference by voice. Used when the server does not say how many the room takes.
+  ///
+  /// In en, this message translates to:
+  /// **'Video unavailable: the conference has reached its participant limit'**
+  String get notifications_messageSnackBar_conferenceRoomFull;
+
+  /// Shown when the conference's video room is full and the user's camera or shared screen could not join it; the user stays in the conference by voice. {limit} is how many participants with video the room takes.
+  ///
+  /// In en, this message translates to:
+  /// **'Video unavailable: the conference has reached its participant limit ({limit})'**
+  String notifications_messageSnackBar_conferenceRoomFullLimit(int limit);
 
   /// Shown in a notification or snackbar when a user tries to perform a blind transfer to a recipient they are already on the line with. Condition: the active call is with the same recipient as the blind transfer target.
   ///

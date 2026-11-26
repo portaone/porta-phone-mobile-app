@@ -19,6 +19,8 @@ class CallState with DiagnosticableTreeMixin, _$CallState {
     this.voiceNoiseReductionFailed = false,
     this.conferenceVideo = false,
     this.invitedVideo,
+    this.screenShareSupported = false,
+    this.screenShare,
   });
 
   final CallServiceState callServiceState;
@@ -75,6 +77,13 @@ class CallState with DiagnosticableTreeMixin, _$CallState {
   /// a video call can then be merged like an audio one.
   final bool conferenceVideo;
 
+  /// Whether this phone can show its screen in a call (Android; see `ScreenCapturer.isSupported`).
+  final bool screenShareSupported;
+
+  /// The one screen share there is - where it goes and where it stands - as `ScreenShare` keeps
+  /// it; `null` without one. Read through [screenShareOf] and [roomScreenShare].
+  final ScreenShareState? screenShare;
+
   /// Whether a video call may join the room: the server's rooms carry video
   /// and the room here, if there is one, was not refused its own.
   bool get roomTakesVideo => conferenceVideo && !conference.videoDisabled;
@@ -128,6 +137,27 @@ class CallState with DiagnosticableTreeMixin, _$CallState {
   /// exactly the calls outside it that qualify.
   bool canAdd({required bool isConferenceEnabled}) =>
       isConferenceEnabled && conference.phase == ConferencePhase.active && mergeableCallIds.isNotEmpty;
+
+  /// Whether a screen share can start from [callId] now: see [ScreenShareCoordinator.canStart],
+  /// which also says where it goes - the room's video for a leg of the room, the call's own
+  /// sender otherwise.
+  bool canShareScreen(String callId) => ScreenShareCoordinator.canStart(this, callId);
+
+  /// Whether the video of [callId] goes to somebody else's room this client was invited to: a
+  /// share of that call goes there, as the call's own video is not used by the room.
+  bool isInvitedToRoom(String callId) {
+    final line = invitedVideo?.line;
+    return line != null && retrieveActiveCall(callId)?.line == line;
+  }
+
+  /// Where the screen share that [callId] shows stands ([ScreenShareCoordinator.statusShownFor]).
+  ScreenShareStatus? screenShareOf(String callId) => ScreenShareCoordinator.statusShownFor(this, callId);
+
+  /// Where the host's share to his room stands; `null` while he shares none there.
+  ScreenShareStatus? get roomScreenShare => switch (screenShare) {
+    ScreenShareState(target: RoomScreenShareTarget(hosted: true), :final status) => status,
+    _ => null,
+  };
 
   /// The main lines no call is on, in [lines] order.
   Iterable<int> _idleLinesAmong(Iterable<int> lines) =>

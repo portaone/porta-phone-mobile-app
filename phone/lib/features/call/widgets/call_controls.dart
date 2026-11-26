@@ -14,6 +14,7 @@ import 'call_controls_landscape.dart';
 import 'call_controls_portrait.dart';
 import 'call_toolbar_status.dart';
 import 'popup_menu.dart';
+import 'screen_share_mark.dart';
 
 /// Everything the call screen presents and dispatches, bundled once: the calls
 /// on screen, the display state around them, and the intent callbacks the
@@ -59,6 +60,9 @@ class CallScreenParams {
     this.onConferenceFullScreen,
     this.onConferenceCameraChanged,
     this.onConferenceCameraSwitched,
+    this.onConferenceScreenShare,
+    this.roomScreenShare,
+    this.screenShareHoldsCamera = false,
     this.audioDevice,
     this.contactResolver,
     this.keypadShown = false,
@@ -161,6 +165,17 @@ class CallScreenParams {
   /// Switches the camera published to the room.
   final VoidCallback? onConferenceCameraSwitched;
 
+  /// Starts showing the phone's screen to the room (`true`) or stops it (`false`); `null` where it
+  /// cannot be started and none runs: a phone that cannot share, a room without video.
+  final ValueChanged<bool>? onConferenceScreenShare;
+
+  /// Where the host's share to his room stands ([CallState.roomScreenShare]); `null` while none.
+  final ScreenShareStatus? roomScreenShare;
+
+  /// Whether a screen share holds the focused call's own video sender: its camera control is then
+  /// the screen's to hold.
+  final bool screenShareHoldsCamera;
+
   /// Whether somebody can be called into the conversation on the screen;
   /// see [CallState.addParticipantAvailability].
   final AddParticipantAvailability addParticipantAvailability;
@@ -238,8 +253,10 @@ class CallControls extends StatelessWidget {
 
   final CallStatus callStatus;
 
-  /// The view options offered in the toolbar; they belong to the screen, which
-  /// owns how the video is fitted and what is behind it.
+  /// The options offered in the toolbar menu; they belong to the screen, which
+  /// owns how the video is fitted and what is behind it, and decides which
+  /// apply. The menu is there only while it has an item: the picture's options
+  /// while the far end's video is, the screen share where a call can share.
   final List<PopupMenuEntry<void>> popupMenuItems;
 
   final CallScreenParams params;
@@ -268,11 +285,14 @@ class CallControls extends StatelessWidget {
             style: style?.callInfo,
           ),
           actions: [
-            if (activeCalls.shouldAutoCompact)
-              SemanticAction.button(
-                label: context.l10n.call_settings_additional_options,
-                identifier: callActionsOptionsId,
-                child: CallPopupMenuButton<void>(items: popupMenuItems, child: const Icon(Icons.more_vert)),
+            if (popupMenuItems.isNotEmpty)
+              _optionsMarkedFor(
+                params.roomScreenShare,
+                SemanticAction.button(
+                  label: context.l10n.call_settings_additional_options,
+                  identifier: callActionsOptionsId,
+                  child: CallPopupMenuButton<void>(items: popupMenuItems, child: const Icon(Icons.more_vert)),
+                ),
               ),
           ],
         ),
@@ -287,3 +307,9 @@ class CallControls extends StatelessWidget {
     );
   }
 }
+
+/// The options menu, marked while the host shares to his room: the menu holds the share's Stop.
+/// The mark goes around the merged control, not inside it: a node of its own inside would take the
+/// control's id and bounds with it.
+Widget _optionsMarkedFor(ScreenShareStatus? roomScreenShare, Widget options) =>
+    roomScreenShare == null ? options : ScreenShareMark(identifier: callActionsScreenShareBadgeId, child: options);

@@ -3,7 +3,7 @@
 `CallBloc` (`lib/features/call/bloc/call_bloc.dart`) is the central component of the entire app.
 It implements both `Bloc<CallEvent, CallState>` and `CallkeepDelegate`, making it the single point
 that bridges signaling, native call UI, WebRTC media, and the Flutter UI layer.
-Last reviewed: 2026-10-28.
+Last reviewed: 2026-11-25.
 
 The product/UX view lives in [`call_ux.md`](call_ux.md); incoming-call background scenarios with
 diagrams in [`../architecture/incoming_call_scenarios.md`](../architecture/incoming_call_scenarios.md); merging calls into a
@@ -246,6 +246,121 @@ the pull resume can be removed.
   the answer.
 
 The settling time is a heuristic, not a SIP deadline.
+
+## Screen share
+
+An ordinary call can show the phone's screen to the far end in place of the camera (Android, and
+iOS in a build with the screen share extension).
+Nothing changes in the protocol: the call's own connection keeps its one video line, and the
+screen goes out on its video sender (`RTCRtpSender.replaceTrack`). The far end, an app or a SIP
+phone behind Janus and PortaSIP, receives video as it would from a camera. A leg of the host's
+room, and a call whose far end invited it to a room, share to the room's video instead - the
+same consent, service and capture, handed to `RoomVideo.shareScreen`; that part is in
+[call_conference.md](call_conference.md), The screen in the room.
+
+There is one share at a time, of a call or of a room, in three parts:
+
+- `ScreenShareCoordinator` (`features/call/bloc/screen_share_coordinator.dart`) decides where a
+  share goes (`targetFor`: a `CallScreenShareTarget`, or a `RoomScreenShareTarget` for a leg of the
+  host's room and for a call an invitation came through), whether it may start (`canStart`, which
+  `CallState.canShareScreen` is) and whether it may go on (`stands`), and builds its destination.
+  The bloc asks it from its handlers and runs the steps that touch a connection in the mutation
+  queue.
+- `ScreenShare` (`features/call/utils/screen_share.dart`) holds the share and its steps - the
+  consent, the service, the capture, the destination - and is the one place where a share's
+  status is kept: it reports every change (`onChanged`), and the bloc maps it into
+  `CallState.screenShare` (target and `starting` / `sharing`) for the screen
+  (`_ScreenShareChanged`), also for a change made outside the mutation queue, such as a refused
+  consent. The screen reads it through `CallState.screenShareOf` and `roomScreenShare`.
+- The destination (`screen_share_destinations.dart`): `CallSenderDestination`, the call's own
+  sender, or `RoomScreenDestination`, the room's video. `ScreenShare.stop` has the destination
+  take the screen off and put the camera back, then releases the capture. The move of a sender
+  between the camera and the screen is `CameraScreenSwap`, shared with the room's video session.
+
+The platform side is `ScreenCapturer`:
+`DefaultScreenCapturer` (`screen_capturer.dart`) asks for the consent and captures through
+flutter_webrtc, and runs callkeep's `mediaProjection` foreground service in between, which Android
+14 demands before a capture and refuses before the consent (`AndroidCallkeepUtils.screenShare`,
+[screen-share-service.md](../../../callkeep/webtrit_callkeep_android/docs/screen-share-service.md)).
+It is built once by `bootstrap()` and handed to the bloc (`MainShellBlocs`): callkeep reports the
+end of a capture to one delegate, and a bloc made again for the same sign-in shares it with the
+old one. `ScreenCapturer.isSupported` becomes `CallState.screenShareSupported`, part of
+`canShareScreen`, so the screen does not decide the platform itself.
+
+On iOS an app can record only itself, so the whole screen goes out through the broadcast upload
+extension `ios/ScreenShare`, optional per brand
+([optional_features.md](../reference/optional_features.md#screen-share)); `bootstrap()` asks
+whether this build carries it (`ScreenBroadcast.ofThisBuild`: no app group in
+`EnvironmentConfig.IOS_SCREEN_SHARE_APP_GROUP` means no, otherwise the native side says), and
+without it `isSupported` is false. With it:
+
+- `requestConsent` is true and the service steps do nothing: the system's broadcast picker is the
+  consent, and iOS has no foreground service to run.
+- `capture` calls `getDisplayMedia` with the device `broadcast`: flutter_webrtc binds a unix
+  socket in the App Group's container (`rtc_SSFD`) and shows the picker. The extension
+  (`SampleHandler`) connects to that socket, sends every screen frame as a JPEG framed with
+  `Content-Length`, `Buffer-Width`, `Buffer-Height` and `Buffer-Orientation` headers (at most 15
+  frames a second, half the screen's resolution, a frame dropped while the one before is being
+  written - the extension may use about 50 MB), and posts the Darwin notification
+  `<app group>.screenShare.started`. `ScreenBroadcastChannel` in the app relays it over
+  `com.webtrit.phone/screen_broadcast/events`, and only then does the capture return. A picker
+  dismissed sends nothing: the capture fails after 30 seconds, releasing the capture.
+- The app stopping the share stops the track, which closes the socket; the extension sees it
+  closed and finishes the broadcast. The extension posts `<app group>.screenShare.stopped`
+  whoever ended the broadcast; after the app's own stop (`stopService`) it is ignored, otherwise
+  it is `endedOutside` - the person stopped the broadcast from the status bar or Control
+  Center. flutter_webrtc itself reports neither the start nor the end of a broadcast.
+
+- **Start** (`CallControlEvent.screenShareStarted`): only while `CallState.canShareScreen` holds -
+  a phone that can share; answered, connected, not held, not on its way out, no transfer under way
+  (`Transfer.isUnderWay`: the picker being open is not one) and no room being put together; for a
+  leg, the room up with video and not parked - and one share at a time: while one runs no other
+  call offers to start one. The share's destination is fixed when it begins: the room for a leg
+  (one share of the room, whichever leg asked) and for an invited call, else the call's own
+  sender. The consent, the service and the capture run outside the
+  queues, since the consent is a system dialog a hangup must not wait behind; only putting the
+  screen on the connection is a mutation (`screenShareAttach`), which checks the call again.
+- **Video sender.** A call with a video sender (the camera on or soft-muted) gets the screen on it.
+  The call's camera is let go meanwhile (`UserMediaBuilder.releaseVideoTrack`): kept open it would
+  capture for nobody, its indicator on, behind the tile standing in for its preview; the camera
+  stops unless another call or the room still holds it. A track on the sender that is not the
+  call's own camera is kept as it is. A call without a video sender - an audio call - gets one
+  added for the screen, which renegotiates the call through `onRenegotiationNeeded`, the way a
+  camera turned on in an audio call does; `ActiveCall.video` (the camera intent) stays as it was.
+- **The far end's answer.** `screenShareVerify` runs on each answer while the share waits for one,
+  and reads the negotiated direction of the line the share added (`ScreenShare.videoAnswer`): a
+  line refused or inactive stops the share and the person is told
+  (`ScreenShareVideoRefusedNotification`). An answer to an offer made before the line - one already
+  out when the share added its sender - leaves the line with no negotiated direction and decides
+  nothing; the share waits for the answer to its own offer. A declined offer stops the share only
+  when it carried the line (`videoOffered`: the line has a `mid` and no direction yet).
+- **media_state.** The far end app hides a picture the call says is off, so the share announces
+  `video: true` and its stop announces the camera's own state again.
+- **Camera control.** Disabled while the screen is on the call's own sender
+  (`CallScreenParams.screenShareHoldsCamera`), and `cameraEnabled` is ignored then: the camera would
+  fight the screen for the one sender. A share to a room leaves the room's camera control as it is
+  (call_conference.md, The screen in the room).
+- **Stop** (`screenShareStop`), whatever asks for it, once (`markStopping`): the person (the menu,
+  the tile's Stop), the capture ending outside the app (the notification's Stop, the system's),
+  and the call no longer able to share - held, a room being put together, ending or gone, or its
+  video gone somewhere else (a leg, an invitation; for a room share the room or the invitation
+  over) - read from the state in `onChange` (`_followScreenShare`), which every one of those paths
+  passes through. A merge or an add into the room stops the share inside its own mutation, before the
+  room touches the connection (`_onConferenceMutation`), whoever asked for it - the person or the
+  room retrying one. The sender gets back what it carried: the call's camera, opened again as it
+  was (on or soft-muted), or nothing; a camera that does not open again turns the call's video off
+  and is told (`CallUserMediaErrorNotification`). A call going away gets no camera back. A call
+  that became a video call for the share stays one, with its camera off and its video sender
+  empty; `videoSender()` finds that empty sender again for the camera and for the far end's
+  re-INVITE with video (`PeerConnectionPolicyApplier`), so no second video line is added. The
+  capture is released and the service stopped. A refused consent changes nothing and says
+  nothing; a service or capture that failed is told (`ScreenShareFailedNotification`), unless the
+  share was stopped meanwhile - its stop takes the service away, and the capture under way fails
+  for it. The service is stopped after a failed start too: the start may have timed out on the
+  app's side with the service still coming up, and callkeep then stops it once it is up.
+
+What the unit tests cannot show: the consent dialog, the system's refusal of the service, the
+system stopping the projection, the capture itself, and how a far end renders the screen.
 
 ## Isolates
 

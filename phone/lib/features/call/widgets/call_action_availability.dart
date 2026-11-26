@@ -71,8 +71,15 @@ class CallActionAvailability {
 
   /// Turns the camera on or off - the room's where it acts on the room; null
   /// where video calls are off, and for a room the server gave no video.
+  ///
+  /// Disabled while the focused call shows the phone's screen: the screen holds
+  /// the call's one video sender, and the camera would fight it for it. Stopping
+  /// the share gives the camera back as it was.
   ValueChanged<bool>? get onCameraChanged {
     if (!cameraOffered) return null;
+    // A screen on the call's own sender holds it; a screen in the room leaves the room's camera to
+    // the room's video, which remembers it and brings it back after the share.
+    if (params.screenShareHoldsCamera) return null;
     if (!cameraActsOnRoom) return params.onCameraChanged;
     if (focusedIsLeg && params.conference.videoDisabled) return null;
     return params.onConferenceCameraChanged;

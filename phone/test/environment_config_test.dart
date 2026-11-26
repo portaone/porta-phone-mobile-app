@@ -356,5 +356,19 @@ void main() {
       EnvironmentConfig.applyOverrides({name: '   '});
       expect(EnvironmentConfig.APP_LINK_DOMAIN, isEmpty);
     });
+
+    test('IOS_SCREEN_SHARE_APP_GROUP is trimmed; whitespace alone means no extension', () {
+      const name = EnvironmentConfig.IOS_SCREEN_SHARE_APP_GROUP__NAME;
+      expect(name, 'WEBTRIT_IOS_SCREEN_SHARE_APP_GROUP');
+
+      // No define in a test run, so the build value is empty: the share is off.
+      expect(EnvironmentConfig.IOS_SCREEN_SHARE_APP_GROUP, isEmpty);
+
+      EnvironmentConfig.applyOverrides({name: ' group.com.example.app '});
+      expect(EnvironmentConfig.IOS_SCREEN_SHARE_APP_GROUP, 'group.com.example.app');
+
+      EnvironmentConfig.applyOverrides({name: '   '});
+      expect(EnvironmentConfig.IOS_SCREEN_SHARE_APP_GROUP, isEmpty);
+    });
   });
 }

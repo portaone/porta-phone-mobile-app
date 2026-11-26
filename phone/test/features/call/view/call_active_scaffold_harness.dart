@@ -89,7 +89,7 @@ ActiveCall makeCall({
 /// either way. [framesArrive] false is a far side that announces video but
 /// never delivers a frame worth showing: no track, so no probe ever succeeds.
 class VideoCall extends ActiveCall {
-  VideoCall({this.cameraOn = true, this.framesArrive = true, super.held})
+  VideoCall({this.cameraOn = true, this.framesArrive = true, super.held, super.remoteCameraEnabled})
     : _remoteStream = framesArrive ? _UnprobableRemoteStream() : null,
       super(
         callId: 'video',
@@ -174,7 +174,11 @@ Widget buildCallScaffold(
   DestinationPickingCubit? picking,
   bool canStartAttendedTransfer = true,
   AddParticipantAvailability addParticipantAvailability = AddParticipantAvailability.hidden,
+  bool canShareScreen = false,
+  ScreenShareState? screenShare,
 }) {
+  // The share as the screen reads it: from the state, as CallScreen does.
+  final shareState = CallState(activeCalls: activeCalls, conference: conference, screenShare: screenShare);
   Widget scaffold = BlocProvider<CallBloc>.value(
     value: callBloc,
     child: CallActiveScaffold(
@@ -203,6 +207,11 @@ Widget buildCallScaffold(
           ).handOverFor(focusedCall.callId),
       canStartAttendedTransfer: canStartAttendedTransfer,
       addParticipantAvailability: addParticipantAvailability,
+      canShareScreen: canShareScreen,
+      // As the screen reads it: the room's for a leg, else the call's own.
+      screenShare: shareState.screenShareOf(focusedCall.callId),
+      roomScreenShare: shareState.roomScreenShare,
+      screenShareHoldsCamera: screenShare?.target == CallScreenShareTarget(focusedCall.callId),
     ),
   );
   // Only a transfer or a call to join that asks the lists for a choice needs

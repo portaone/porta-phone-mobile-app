@@ -201,6 +201,22 @@ final class RoomEndedNotice extends ConferenceNotice {
   const RoomEndedNotice();
 }
 
+/// The room would not take this client's shared screen, or let it go for
+/// good: the share has nowhere to go and is to be stopped.
+final class ScreenShareLostNotice extends ConferenceNotice {
+  const ScreenShareLostNotice();
+}
+
+/// The room's video has no place for this client's camera or screen: it
+/// takes as many publishers as it was made for. The person stays in the room
+/// by voice.
+final class RoomFullNotice extends ConferenceNotice {
+  const RoomFullNotice(this.limit);
+
+  /// How many the room takes, when the room said; `null` when it did not.
+  final int? limit;
+}
+
 /// A continuation of the room's own that takes its turn in the owner's
 /// queue: the owner hands it back to [ConferenceRoom.takeStep]. An owner that
 /// is closing drops it, as it drops a [ConferenceCommand].
@@ -252,12 +268,24 @@ final class AnswerFailedStep extends ConferenceStep {
   final ConferenceRequestResult? result;
 }
 
-/// The cameras the room's video sends changed.
+/// The cameras and screens the room's video sends changed, or its presenter.
 final class VideoFeedsChangedStep extends ConferenceStep {
-  const VideoFeedsChangedStep(this.feeds);
+  const VideoFeedsChangedStep(this.feeds, {this.presenter});
 
   /// Every feed the video session receives now.
   final List<ConferenceVideoFeed> feeds;
+
+  /// Whoever shares a screen, as the room says; `null` while nobody does.
+  final int? presenter;
+}
+
+/// The participant the room shows as speaking changed: the room's word for
+/// whoever started talking last, held against flicker (`SpeakerHold`).
+final class SpeakerChangedStep extends ConferenceStep {
+  const SpeakerChangedStep(this.speaker);
+
+  /// The speaker's feed; `null` while nobody has spoken or the video is left.
+  final int? speaker;
 }
 
 /// The server refused the room's video with `video_disabled`.

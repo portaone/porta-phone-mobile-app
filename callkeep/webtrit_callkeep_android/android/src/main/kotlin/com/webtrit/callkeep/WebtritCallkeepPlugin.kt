@@ -48,6 +48,10 @@ class WebtritCallkeepPlugin :
 
     private var permissionsApi: PermissionsApi? = null
 
+    // The screen share is started from the call screen and its end must reach the engine that
+    // shows it, so it lives with the activity like ActivityControlApi.
+    private var screenShareApi: ScreenShareApi? = null
+
     // The BinaryMessenger that belongs to the Activity's Flutter engine, captured
     // synchronously in onAttachedToActivity BEFORE bindForegroundService() runs.
     //
@@ -124,6 +128,12 @@ class WebtritCallkeepPlugin :
             PHostActivityControlApi.setUp(messenger, it)
         }
 
+        screenShareApi?.dispose()
+        screenShareApi =
+            ScreenShareApi(binding.activity.applicationContext, PDelegateScreenShareFlutterApi(messenger)).also {
+                PHostScreenShareApi.setUp(messenger, it)
+            }
+
         permissionsApi?.let {
             binding.addRequestPermissionsResultListener(it)
         }
@@ -154,6 +164,9 @@ class WebtritCallkeepPlugin :
         activityPluginBinding?.activity?.let { unbindAndStopForegroundService(it) }
         PHostApi.setUp(messenger, null)
         PHostActivityControlApi.setUp(messenger, null)
+        PHostScreenShareApi.setUp(messenger, null)
+        screenShareApi?.dispose()
+        screenShareApi = null
 
         foregroundService = null
         serviceConnection = null

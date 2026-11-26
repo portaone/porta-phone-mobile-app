@@ -24,10 +24,10 @@ icon), so the ringing, silent and standalone variants stay in sync.
 
 **File**: `kotlin/com/webtrit/callkeep/managers/NotificationChannelManager.kt`
 
-Registers the four notification channels (and deletes the legacy
+Registers the five notification channels (and deletes the legacy
 `NOTIFICATION_ACTIVE_CALL_CHANNEL_ID` channel left behind by older versions). Called from
-`ForegroundService.setUp()` on the Telecom path and from `StandaloneCallService` on the
-standalone path.
+`ForegroundService.setUp()` on the Telecom path, from `StandaloneCallService` on the
+standalone path and from `ScreenShareService` when a screen share starts.
 
 | Channel ID                                 | Importance | Description                                                              |
 |--------------------------------------------|------------|--------------------------------------------------------------------------|
@@ -35,6 +35,7 @@ standalone path.
 | `ACTIVE_CALL_SERVICE_NOTIFICATION_CHANNEL` | `LOW`      | Persistent silent notification for active calls                          |
 | `FOREGROUND_CALL_NOTIFICATION_CHANNEL_ID`  | `LOW`      | Standalone-service placeholder notification (see the standalone section) |
 | `QUEUED_CALL_NOTIFICATION_CHANNEL`         | `LOW`      | A call waiting in the core's queue while another incoming call rings     |
+| `SCREEN_SHARE_NOTIFICATION_CHANNEL`        | `LOW`      | The screen shown in a call, with its Stop (screen-share-service.md)      |
 
 ---
 

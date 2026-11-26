@@ -8,7 +8,9 @@
 // video does: when to join (the host once in the room, an invited far end on
 // conference_video_invite), when to make it again (a session that came back,
 // a rejoin), what the camera does in the background, and what a publication
-// that was given up says. It reads the room and the calls through the
+// that was given up says. A screen the owner captured goes to the room in the
+// camera's place (shareScreen); it stays out in the background, where the
+// camera does not - the person shares what they look at elsewhere. It reads the room and the calls through the
 // functions it is given and raises the room's own steps, commands and
 // notices; it writes nothing of the owner's state itself.
 import 'dart:async';
@@ -49,6 +51,19 @@ abstract interface class RoomVideoControls {
   /// The signalling session came back.
   void onSessionBack();
 
+  /// Whether the room's video can take a shared screen now: this client is
+  /// in a room's video - its own or one it was invited to - that has video.
+  bool get takesScreen;
+
+  /// Shares [screen] in the room in place of the camera. A share the room
+  /// will not take comes back as a [ScreenShareLostNotice].
+  void shareScreen(MediaStream screen);
+
+  /// Takes the shared screen off the room; the camera comes back when it is
+  /// still wanted. Completes once the room has let the screen go, so that the
+  /// capture can be released after it.
+  Future<void> stopScreenShare();
+
   /// The handshake of a session that came back kept the room standing.
   void onRoomKept();
 
@@ -82,8 +97,12 @@ class RoomVideo implements RoomVideoControls {
       factory: factory,
       userMediaBuilder: userMediaBuilder,
       send: _sendRequest,
-      onFeedsChanged: (feeds) => _onStep(VideoFeedsChangedStep(feeds)),
+      onFeedsChanged: (feeds, presenter) => _onStep(VideoFeedsChangedStep(feeds, presenter: presenter)),
       callsWantCamera: _callsWantCamera,
+      callsFrontCamera: _callsFrontCamera,
+      onScreenLost: _screenLost,
+      onSpeakerChanged: (speaker) => _onStep(SpeakerChangedStep(speaker)),
+      onRoomFull: _roomFull,
     );
   }
 
@@ -157,7 +176,11 @@ class RoomVideo implements RoomVideoControls {
       ConferenceVideoPublisherAnswerEvent(:final jsep) => _session.handlePublisherAnswer(jsep),
       ConferenceVideoIceTrickleEvent(:final pc?, :final candidate) => _session.handleRemoteCandidate(pc, candidate),
       final ConferenceVideoUpdatedEvent updated => _session.handleUpdated(updated),
-      ConferenceVideoFailedEvent(:final pc?, :final code) => _session.handleFailed(pc, code: code),
+      ConferenceVideoFailedEvent(:final pc?, :final code, :final reason) => _session.handleFailed(
+        pc,
+        code: code,
+        reason: reason,
+      ),
       ConferenceVideoFailedEvent(:final request?, :final reason) => _session.handleRefused(request, reason: reason),
       _ => Future<void>.value(),
     };
@@ -169,14 +192,18 @@ class RoomVideo implements RoomVideoControls {
   /// The camera is opened once and shared, so the calls of the room that send
   /// video turn theirs on and off with it: their video is not forwarded in the
   /// room, and a call left alone when the room is gone goes on as the camera
-  /// was. A call without a camera is not given one.
+  /// was. A participant sees the host by the video of its call with him, so a
+  /// leg of the host's own room that is a voice call is given the camera when
+  /// it is turned on - its call renegotiated with video, as a call's camera
+  /// button does; a far end that refuses the video stays a voice call.
+  ///
+  /// While the host shares his screen the legs carry it, and a camera turned
+  /// on then reaches them after the share ([stopScreenShare]).
   @override
   Future<void> setCamera(bool enabled) async {
     if (!_enabled || !_inVideo || _conference().videoDisabled) return;
     final inVideo = _callsInVideo.toList();
-    for (final call in inVideo) {
-      if (call.video != enabled && call.hasLocalVideoTrack) _onCommand(SetLegCameraCommand(call.callId, enabled));
-    }
+    if (!enabled || !_session.isSharingScreen) _setLegsCamera(enabled);
     if (!enabled) {
       // The track the legs just turned off is the one camera every call
       // shares: a video call outside the room that has its camera on keeps
@@ -191,6 +218,65 @@ class RoomVideo implements RoomVideoControls {
       _publish();
     } else if (!enabled) {
       unawaited(_session.unpublish().catchError(_failed('unpublish')));
+    }
+  }
+
+  @override
+  bool get takesScreen => _enabled && _inVideo && !_conference().videoDisabled;
+
+  /// Not awaited: the session runs its own queue, and a signalling round trip
+  /// must not hold the owner's queue. What the room refuses comes back
+  /// through the session's `onScreenLost`.
+  @override
+  void shareScreen(MediaStream screen) {
+    if (!takesScreen) {
+      _onNotice(const ScreenShareLostNotice());
+      return;
+    }
+    unawaited(
+      _session.shareScreen(screen).then<void>((_) {}).catchError((Object error, StackTrace stackTrace) {
+        _reportFailure('shareScreen', error, stackTrace);
+        _onNotice(const ScreenShareLostNotice());
+      }),
+    );
+  }
+
+  /// The room would not take the screen: the share is to stop, and the camera
+  /// the screen stood in for comes back when the person still wants it.
+  void _screenLost() {
+    _onNotice(const ScreenShareLostNotice());
+    if (_inVideo && _plan.cameraWanted && !_plan.cameraPaused) _publish();
+  }
+
+  /// The room has no place for this client's camera or screen: the person
+  /// is told, and the camera is taken for unwanted so that its control shows
+  /// what is and a screen given up does not bring it back into a full room.
+  /// The audio is the mixer's and stays.
+  void _roomFull(int? limit) {
+    if (_disposed) return;
+    _plan.setCamera(false, inBackground: _inBackground);
+    _onNotice(RoomFullNotice(limit));
+  }
+
+  @override
+  Future<void> stopScreenShare() async {
+    if (!_session.isSharingScreen) return;
+    try {
+      _published(await _session.stopScreen());
+    } catch (error, stackTrace) {
+      _reportFailure('stopScreen', error, stackTrace);
+    }
+    // A camera turned on while the screen was out reaches the legs now.
+    if (_plan.cameraWanted && !_plan.cameraPaused) _setLegsCamera(true);
+  }
+
+  /// Turns the camera of the calls in the room's video on or off with the room's.
+  void _setLegsCamera(bool enabled) {
+    final conference = _conference();
+    for (final call in _callsInVideo) {
+      if (call.video == enabled) continue;
+      final upgrade = enabled && conference.isLeg(call.callId);
+      if (call.hasLocalVideoTrack || upgrade) _onCommand(SetLegCameraCommand(call.callId, enabled));
     }
   }
 
@@ -250,7 +336,7 @@ class RoomVideo implements RoomVideoControls {
   /// a rejoin the video is remade over the new signalling session.
   void start({required bool rejoined}) {
     if (!_enabled || _conference().videoDisabled) return;
-    if (rejoined && (_session.isSubscribed || _session.isPublishing)) {
+    if (rejoined && (_session.isSubscribed || _session.isPublishing || _session.isSharingScreen)) {
       _remake('the host is back in the room');
       return;
     }
@@ -307,6 +393,9 @@ class RoomVideo implements RoomVideoControls {
   /// stays on only for a call whose own camera the user has on.
   bool _callsWantCamera() => _calls().any((call) => call.video && call.hasLocalVideoTrack);
 
+  /// Which camera the calls in the room's video show: a camera switch in the room tells them.
+  bool? _callsFrontCamera() => _callsInVideo.firstWhereOrNull((call) => call.frontCamera != null)?.frontCamera;
+
   /// Takes part in the video of the room the far end of [line] hosts: this
   /// client's camera goes to it when that call is a video call, and everyone
   /// else's comes back (protocol section 19). Ignored without a call there, or
@@ -331,7 +420,7 @@ class RoomVideo implements RoomVideoControls {
   /// subscription from scratch, the publisher with an ICE restart.
   void _remake(String why) {
     if (!_enabled) return;
-    if (!_session.isSubscribed && !_session.isPublishing) return;
+    if (!_session.isSubscribed && !_session.isPublishing && !_session.isSharingScreen) return;
     _logger.info('_remake: $why');
     unawaited(_session.reconnected().catchError(_failed('reconnected')));
   }

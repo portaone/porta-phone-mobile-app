@@ -47,6 +47,9 @@ class ThumbnailFrame extends StatelessWidget {
   /// Whether the frame sits on a raised surface with its own shadow.
   final bool raised;
 
+  /// The corners of the window.
+  static const radius = 8.0;
+
   /// What fills the window: the video or, while there is none to show, what
   /// stands in for it. It is clipped to the rounded shape and stretched to the
   /// whole frame, so it is normally a [Stack] rather than a single child.
@@ -63,7 +66,7 @@ class ThumbnailFrame extends StatelessWidget {
       behavior: HitTestBehavior.opaque,
       onTap: onTap,
       child: ClipRRect(
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: BorderRadius.circular(radius),
         child: ExcludeSemantics(child: child),
       ),
     );

@@ -15,6 +15,10 @@ abstract class UserMediaBuilder {
 
   Future<MediaStreamTrack?> ensureVideoTrack(MediaStream stream, {bool? frontCamera});
 
+  /// Takes the camera off [stream], which keeps its microphone; the camera stops once nothing
+  /// else holds it. [ensureVideoTrack] puts one on again.
+  Future<void> releaseVideoTrack(MediaStream stream);
+
   Future<void> release(MediaStream stream);
 }
 
@@ -120,6 +124,19 @@ class DefaultUserMediaBuilder implements UserMediaBuilder {
         await _releaseVideoTrack(videoTrack.id);
         throw UserMediaError(e.toString());
       }
+    });
+  }
+
+  @override
+  Future<void> releaseVideoTrack(MediaStream stream) async {
+    await _poolMutations.run(() async {
+      final lease = _borrowedStreams[stream.id];
+      final trackId = lease?.videoTrackId;
+      if (lease == null || trackId == null) return;
+      final pooled = _videoTrack;
+      if (pooled != null && pooled.track.id == trackId) await stream.removeTrack(pooled.track);
+      lease.videoTrackId = null;
+      await _releaseVideoTrack(trackId);
     });
   }
 

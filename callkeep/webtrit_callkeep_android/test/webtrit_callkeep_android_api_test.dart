@@ -587,6 +587,67 @@ void main() {
       expect(report, isEmpty);
     });
   });
+
+  // ---------------------------------------------------------------------------
+  // PHostScreenShareApi / PDelegateScreenShareFlutterApi
+  // ---------------------------------------------------------------------------
+
+  group('WebtritCallkeepAndroid - screen share', () {
+    test('startScreenShareService and stopScreenShareService reach the host', () async {
+      final calls = <String>[];
+      for (final name in ['startScreenShareService', 'stopScreenShareService']) {
+        TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger.setMockMessageHandler(
+          '$_prefix.PHostScreenShareApi.$name',
+          (message) async {
+            calls.add(name);
+            return const StandardMessageCodec().encodeMessage([null]);
+          },
+        );
+      }
+
+      await WebtritCallkeepPlatform.instance.startScreenShareService();
+      await WebtritCallkeepPlatform.instance.stopScreenShareService();
+
+      expect(calls, ['startScreenShareService', 'stopScreenShareService']);
+    });
+
+    test('a service the system refused fails the start', () async {
+      TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger.setMockMessageHandler(
+        '$_prefix.PHostScreenShareApi.startScreenShareService',
+        (message) async => const StandardMessageCodec().encodeMessage(['SecurityException', 'refused', null]),
+      );
+
+      await expectLater(WebtritCallkeepPlatform.instance.startScreenShareService(), throwsA(isA<PlatformException>()));
+    });
+
+    test('the end of the share outside the app reaches the delegate until it is cleared', () async {
+      final delegate = _ScreenShareDelegate();
+      WebtritCallkeepPlatform.instance.setScreenShareDelegate(delegate);
+
+      await _sendFromHost('$_prefix.PDelegateScreenShareFlutterApi.didEndScreenShare');
+      expect(delegate.ended, 1);
+
+      WebtritCallkeepPlatform.instance.setScreenShareDelegate(null);
+      await _sendFromHost('$_prefix.PDelegateScreenShareFlutterApi.didEndScreenShare');
+      expect(delegate.ended, 1);
+    });
+  });
+}
+
+/// Sends a message on [channel] as the host would, as a Flutter API call with no arguments.
+Future<void> _sendFromHost(String channel) {
+  return TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger.handlePlatformMessage(
+    channel,
+    PDelegateScreenShareFlutterApi.pigeonChannelCodec.encodeMessage(null),
+    (_) {},
+  );
+}
+
+class _ScreenShareDelegate implements CallkeepScreenShareDelegate {
+  int ended = 0;
+
+  @override
+  void didEndScreenShare() => ended++;
 }
 
 class _NoopDelegate implements CallkeepDelegate {

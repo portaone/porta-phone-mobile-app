@@ -13,6 +13,7 @@
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_PHONE_CALL" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MICROPHONE" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_CAMERA" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MEDIA_PROJECTION" />
 
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
 
@@ -111,6 +112,18 @@
             android:foregroundServiceType="phoneCall|microphone|camera" />
 
         <service android:name=".services.services.foreground.ForegroundService" />
+
+        <!--
+          Runs while the app shows the phone's screen to the other side of a call. Since
+          Android 14 a screen capture needs a running foreground service of the mediaProjection
+          type, which the system starts only after the person has granted the capture; the app
+          starts this one between the consent and the capture. Main process: the capture runs
+          there.
+        -->
+        <service
+            android:name=".services.services.screen_share.ScreenShareService"
+            android:exported="false"
+            android:foregroundServiceType="mediaProjection" />
 
         <!--
           Invisible trampoline behind the Answer action of the incoming-call notification.

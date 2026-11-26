@@ -462,6 +462,23 @@ class AppLocalizationsTh extends AppLocalizations {
   }
 
   @override
+  String call_ConferenceFullScreen_title(int count) {
+    String _temp0 = intl.Intl.pluralLogic(count, locale: localeName, other: 'การประชุมสาย · ผู้เข้าร่วม $count คน');
+    return '$_temp0';
+  }
+
+  @override
+  String call_ConferenceFullScreen_sharing(String name) {
+    return '$name กำลังแชร์หน้าจอ';
+  }
+
+  @override
+  String get call_ConferenceFullScreen_holdUnavailable => 'พักสายไม่ได้ในการประชุมสาย';
+
+  @override
+  String get call_ConferenceFullScreen_showLarge => 'แสดงขนาดใหญ่';
+
+  @override
   String call_SemanticsLabel_conferenceParticipantMenu(String name) {
     return 'เพิ่มเติมสำหรับ $name';
   }
@@ -689,6 +706,21 @@ class AppLocalizationsTh extends AppLocalizations {
 
   @override
   String get call_SystemErrorDialog_title => 'ข้อผิดพลาดของระบบ';
+
+  @override
+  String get call_ScreenShareTile_title => 'กำลังแชร์หน้าจอ';
+
+  @override
+  String get call_ScreenShareTile_stop => 'หยุด';
+
+  @override
+  String get call_ConferenceFullScreen_screenWaiting => 'กำลังรอหน้าจอ';
+
+  @override
+  String get call_screenShare_actionLabel_share => 'แชร์หน้าจอ';
+
+  @override
+  String get call_screenShare_actionLabel_stop => 'หยุดแชร์';
 
   @override
   String get call_ThumbnailAvatar_currentlyNoActiveCall => 'ขณะนี้ไม่มีสายที่ใช้งานอยู่';
@@ -2138,6 +2170,12 @@ class AppLocalizationsTh extends AppLocalizations {
   String get notifications_messageSnackBarAction_callVideoDowngraded => 'การตั้งค่า';
 
   @override
+  String get notifications_messageSnackBar_screenShareFailed => 'ไม่สามารถเริ่มแชร์หน้าจอได้';
+
+  @override
+  String get notifications_messageSnackBar_screenShareVideoRefused => 'ปลายสายไม่รับวิดีโอ - หยุดแชร์หน้าจอแล้ว';
+
+  @override
   String get notifications_messageSnackBar_conferenceFailed => 'ไม่สามารถตั้งค่าการประชุมสายได้';
 
   @override
@@ -2145,6 +2183,15 @@ class AppLocalizationsTh extends AppLocalizations {
 
   @override
   String get notifications_messageSnackBar_conferenceEnded => 'การประชุมสายสิ้นสุดแล้ว สายยังคงดำเนินต่อ';
+
+  @override
+  String get notifications_messageSnackBar_conferenceRoomFull =>
+      'ไม่สามารถใช้วิดีโอได้: การประชุมสายมีผู้เข้าร่วมครบจำนวนสูงสุดแล้ว';
+
+  @override
+  String notifications_messageSnackBar_conferenceRoomFullLimit(int limit) {
+    return 'ไม่สามารถใช้วิดีโอได้: การประชุมสายมีผู้เข้าร่วมครบจำนวนสูงสุดแล้ว ($limit)';
+  }
 
   @override
   String get notifications_errorSnackBar_activeLineBlindTransferWarning =>

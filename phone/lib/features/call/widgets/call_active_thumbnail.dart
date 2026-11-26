@@ -69,7 +69,11 @@ class _CallActiveThumbnailState extends State<CallActiveThumbnail> {
   Widget build(BuildContext context) {
     // Hide video when held to avoid showing frozen/last frames, and also when the
     // frame analyser hasn't confirmed renderable content yet (black/empty guard).
-    final displayStream = widget.activeCall.held == false && _remoteFrameProbe.renderable;
+    // Not while the far end says it sends no picture: a stopped one would freeze on its last frame.
+    final displayStream =
+        widget.activeCall.held == false &&
+        widget.activeCall.remoteCameraEnabled != false &&
+        _remoteFrameProbe.renderable;
 
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;

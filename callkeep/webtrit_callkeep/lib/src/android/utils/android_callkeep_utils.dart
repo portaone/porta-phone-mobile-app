@@ -1,5 +1,6 @@
 import 'activity_control.dart';
 import 'callkeep_diagnostics.dart';
+import 'callkeep_screen_share.dart';
 
 /// Provides access to various Android Callkeep **utilities and helpers**.
 ///
@@ -17,4 +18,8 @@ abstract class AndroidCallkeepUtils {
   /// Use this to generate diagnostic reports containing device state,
   /// service status, and recent call failures.
   static final diagnostics = CallkeepDiagnostics();
+
+  /// Runs the foreground service a screen capture needs during a call (Android 14 asks for
+  /// one of the `mediaProjection` type) and says when the capture ended outside the app.
+  static final screenShare = CallkeepScreenShare();
 }

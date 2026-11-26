@@ -512,6 +512,26 @@
       }
     }
   },
+  "call_ConferenceFullScreen_title": "{count, plural, one{Conférence · {count} participant} other{Conférence · {count} participants}}",
+  "@call_ConferenceFullScreen_title": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "call_ConferenceFullScreen_sharing": "{name} partage son écran",
+  "@call_ConferenceFullScreen_sharing": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "call_ConferenceFullScreen_holdUnavailable": "La mise en attente n'est pas disponible dans une conférence",
+  "@call_ConferenceFullScreen_holdUnavailable": {},
+  "call_ConferenceFullScreen_showLarge": "Afficher en grand",
+  "@call_ConferenceFullScreen_showLarge": {},
   "call_SemanticsLabel_conferenceParticipantMenu": "Plus pour {name}",
   "@call_SemanticsLabel_conferenceParticipantMenu": {
     "description": "Name of the menu of one conference participant that holds ending their call.",
@@ -769,6 +789,24 @@
   "@call_SystemErrorDialog_description": {},
   "call_SystemErrorDialog_title": "Erreur système",
   "@call_SystemErrorDialog_title": {},
+  "call_ScreenShareTile_title": "Partage d'écran",
+  "@call_ScreenShareTile_title": {
+    "description": "On the small tile that replaces the own camera preview while the phone's screen is shown to the other side of the call."
+  },
+  "call_ScreenShareTile_stop": "Arrêter",
+  "@call_ScreenShareTile_stop": {
+    "description": "Button on the screen sharing tile of the call screen; stops showing the phone's screen to the other side."
+  },
+  "call_ConferenceFullScreen_screenWaiting": "En attente de l'écran",
+  "@call_ConferenceFullScreen_screenWaiting": {},
+  "call_screenShare_actionLabel_share": "Partager l'écran",
+  "@call_screenShare_actionLabel_share": {
+    "description": "Entry of the call screen's options menu: shows the phone's screen to the other side of the call instead of the camera."
+  },
+  "call_screenShare_actionLabel_stop": "Arrêter le partage",
+  "@call_screenShare_actionLabel_stop": {
+    "description": "Entry of the call screen's options menu while the phone's screen is shown: stops showing it and gives the call its camera back if it was on."
+  },
   "call_ThumbnailAvatar_currentlyNoActiveCall": "Il n'y a actuellement aucun appel en cours",
   "@call_ThumbnailAvatar_currentlyNoActiveCall": {},
   "call_videoBackground_actionLabel_disableBlur": "Désactiver le flou",
@@ -2074,6 +2112,14 @@
   },
   "notifications_messageSnackBarAction_callVideoDowngraded": "Paramètres",
   "@notifications_messageSnackBarAction_callVideoDowngraded": {},
+  "notifications_messageSnackBar_screenShareFailed": "Impossible de démarrer le partage d'écran",
+  "@notifications_messageSnackBar_screenShareFailed": {
+    "description": "Shown when sharing the phone's screen in a call did not start (the system refused it or the capture failed); the call goes on as before."
+  },
+  "notifications_messageSnackBar_screenShareVideoRefused": "Votre correspondant n'accepte pas la vidéo - partage d'écran arrêté",
+  "@notifications_messageSnackBar_screenShareVideoRefused": {
+    "description": "Shown when the other side of an audio call did not accept video, so sharing the phone's screen stopped; the call goes on as an audio call."
+  },
   "notifications_messageSnackBar_conferenceFailed": "La conférence n'a pas pu être établie",
   "@notifications_messageSnackBar_conferenceFailed": {
     "description": "Shown when a conference that was being set up failed; the merged calls go on as separate calls."
@@ -2085,6 +2131,19 @@
   "notifications_messageSnackBar_conferenceEnded": "La conférence est terminée, les appels continuent",
   "@notifications_messageSnackBar_conferenceEnded": {
     "description": "Shown when the server ends a conference while its calls are still up; they go on as separate calls."
+  },
+  "notifications_messageSnackBar_conferenceRoomFull": "Vidéo indisponible : la conférence a atteint sa limite de participants",
+  "@notifications_messageSnackBar_conferenceRoomFull": {
+    "description": "Shown when the conference's video room is full and the user's camera or shared screen could not join it; the user stays in the conference by voice. Used when the server does not say how many the room takes."
+  },
+  "notifications_messageSnackBar_conferenceRoomFullLimit": "Vidéo indisponible : la conférence a atteint sa limite de participants ({limit})",
+  "@notifications_messageSnackBar_conferenceRoomFullLimit": {
+    "description": "Shown when the conference's video room is full and the user's camera or shared screen could not join it; the user stays in the conference by voice. {limit} is how many participants with video the room takes.",
+    "placeholders": {
+      "limit": {
+        "type": "int"
+      }
+    }
   },
   "notifications_errorSnackBar_activeLineBlindTransferWarning": "Vous êtes déjà en ligne avec le destinataire du transfert aveugle",
   "@notifications_errorSnackBar_activeLineBlindTransferWarning": {

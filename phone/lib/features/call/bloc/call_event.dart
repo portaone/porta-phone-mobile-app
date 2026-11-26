@@ -38,6 +38,11 @@ class _VoiceNoiseReductionFailedChanged extends CallEvent {
   List<Object?> get props => [failed];
 }
 
+/// The screen share changed; the state reads it again (`ScreenShareCoordinator.state`).
+class _ScreenShareChanged extends CallEvent {
+  const _ScreenShareChanged();
+}
+
 class _NavigatorMediaDevicesChange extends CallEvent {
   const _NavigatorMediaDevicesChange();
 }
@@ -814,6 +819,12 @@ sealed class CallControlEvent extends CallEvent {
 
   const factory CallControlEvent.cameraEnabled(String callId, bool enabled) = _CallControlEventCameraEnabled;
 
+  /// Shows the phone's screen to the far end of [callId] in place of the camera (Android).
+  const factory CallControlEvent.screenShareStarted(String callId) = _CallControlEventScreenShareStarted;
+
+  /// Stops the screen share of [callId] and gives the call its camera back, if it had it on.
+  const factory CallControlEvent.screenShareStopped(String callId) = _CallControlEventScreenShareStopped;
+
   const factory CallControlEvent.audioDeviceSet(String callId, CallAudioDevice device) =
       _CallControlEventAudioDeviceSet;
 
@@ -1033,6 +1044,24 @@ class _CallControlEventCameraEnabled extends CallControlEvent {
 
   @override
   List<Object?> get props => [callId, enabled];
+}
+
+class _CallControlEventScreenShareStarted extends CallControlEvent {
+  const _CallControlEventScreenShareStarted(this.callId);
+
+  final String callId;
+
+  @override
+  List<Object?> get props => [callId];
+}
+
+class _CallControlEventScreenShareStopped extends CallControlEvent {
+  const _CallControlEventScreenShareStopped(this.callId);
+
+  final String callId;
+
+  @override
+  List<Object?> get props => [callId];
 }
 
 class _CallControlEventAudioDeviceSet extends CallControlEvent {
@@ -1583,6 +1612,11 @@ sealed class _CallMutationEvent extends CallEvent {
   const factory _CallMutationEvent.controlSwitchCamera(String callId) = _CallMutationEventControlSwitchCamera;
   const factory _CallMutationEvent.controlSetCameraEnabled(String callId, bool enabled) =
       _CallMutationEventControlSetCameraEnabled;
+
+  // Screen share steps that touch a connection (see ScreenShareCoordinator)
+  const factory _CallMutationEvent.screenShareAttach(Object attempt) = _CallMutationEventScreenShareAttach;
+  const factory _CallMutationEvent.screenShareStop(ScreenShareStopReason reason) = _CallMutationEventScreenShareStop;
+  const factory _CallMutationEvent.screenShareVerify(String callId) = _CallMutationEventScreenShareVerify;
   const factory _CallMutationEvent.controlBlindTransfer(String callId, {required int? line, required String number}) =
       _CallMutationEventControlBlindTransfer;
   const factory _CallMutationEvent.controlAttendedTransfer({
@@ -1833,6 +1867,29 @@ class _CallMutationEventControlSetCameraEnabled extends _CallMutationEvent {
   final bool enabled;
   @override
   List<Object?> get props => [callId, enabled];
+}
+
+class _CallMutationEventScreenShareAttach extends _CallMutationEvent {
+  const _CallMutationEventScreenShareAttach(this.attempt);
+
+  /// The share attempt whose capture is ready; a newer one, or none, makes this a no-op.
+  final Object attempt;
+  @override
+  List<Object?> get props => [attempt];
+}
+
+class _CallMutationEventScreenShareStop extends _CallMutationEvent {
+  const _CallMutationEventScreenShareStop(this.reason);
+  final ScreenShareStopReason reason;
+  @override
+  List<Object?> get props => [reason];
+}
+
+class _CallMutationEventScreenShareVerify extends _CallMutationEvent {
+  const _CallMutationEventScreenShareVerify(this.callId);
+  final String callId;
+  @override
+  List<Object?> get props => [callId];
 }
 
 class _CallMutationEventControlBlindTransfer extends _CallMutationEvent {

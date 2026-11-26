@@ -70,6 +70,10 @@
 	<string>Contacts you share are shown in the app, so you can call them and see who is calling.</string>
 	<key>NSMicrophoneUsageDescription</key>
 	<string>This app requires permission to access the microphone to make audio calls</string>
+	<key>RTCAppGroupIdentifier</key>
+	<string>$(WEBTRIT_IOS_SCREEN_SHARE_APP_GROUP)</string>
+	<key>RTCScreenSharingExtension</key>
+	<string>$(PRODUCT_BUNDLE_IDENTIFIER).ScreenShare</string>
 	<key>UIApplicationSceneManifest</key>
 	<dict>
 		<key>UIApplicationSupportsMultipleScenes</key>

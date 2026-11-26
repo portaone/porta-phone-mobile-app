@@ -7,9 +7,13 @@ import 'package:signaling/signaling.dart';
 
 import 'package:webtrit_phone/extensions/rtc_peer_connection_extension.dart';
 import 'package:webtrit_phone/features/call/models/conference_request_result.dart';
+import 'package:webtrit_phone/features/call/utils/camera_screen_swap.dart';
 import 'package:webtrit_phone/features/call/utils/peer_connection_factory.dart';
 import 'package:webtrit_phone/features/call/utils/user_media_builder.dart';
 import 'package:webtrit_phone/utils/serial_queue.dart';
+
+import 'room_video_codecs.dart';
+import 'speaker_hold.dart';
 
 final _logger = Logger('ConferenceVideoSession');
 
@@ -18,8 +22,10 @@ final _logger = Logger('ConferenceVideoSession');
 typedef ConferenceVideoSend = Future<ConferenceRequestResult> Function(Request request);
 
 /// Told whenever the video this client receives changes: a stream arrived or
-/// went, or the room said which participant a stream belongs to.
-typedef ConferenceVideoFeedsChanged = void Function(List<ConferenceVideoFeed> feeds);
+/// went, or the room said which participant a stream belongs to or who
+/// presents. [presenter] is the room's word for whoever shares a screen, the
+/// latest of them when several do; `null` while nobody does.
+typedef ConferenceVideoFeedsChanged = void Function(List<ConferenceVideoFeed> feeds, int? presenter);
 
 /// One video stream of one participant, as this client receives it.
 class ConferenceVideoFeed {
@@ -40,7 +46,7 @@ class ConferenceVideoFeed {
   final String trackId;
 }
 
-/// What became of one publication of the camera.
+/// What became of one publication of the camera or of the shared screen.
 sealed class CameraPublication {
   const CameraPublication();
 
@@ -84,10 +90,18 @@ final class CameraNotPublished extends CameraPublication {
 ///   connection, except the first one after a subscribe and one that comes
 ///   while the connection is spent - Core sends that one unasked after Janus
 ///   hung the subscriber up, for a new connection.
-/// - The **publisher** sends this client's camera. This class offers, Core
-///   answers; the first publish joins the room, a later one renegotiates the
-///   same publication (an ICE restart). It carries no audio: audio stays in
-///   the mixer.
+/// - The **publisher** sends this client's camera, or the screen it shares in
+///   the camera's place. This class offers, Core answers; the first publish
+///   joins the room, a later one renegotiates the same publication (an ICE
+///   restart, the screen put on or taken off). It carries no audio: audio
+///   stays in the mixer.
+///
+/// The screen goes out on the camera's own line while it is shared, named
+/// `screen` for Core (protocol `descriptions`): the room then calls this
+/// client its presenter, and the SIP phones of the room get the screen. The
+/// camera is let go for that time, as in a call, and comes back after it when
+/// it is still wanted. The screen's stream belongs to the owner, which
+/// captured it; this class only sends it.
 ///
 /// It knows the protocol and nothing of the bloc: requests go out through
 /// [send], and the owner hands in the events that concern it. Candidates a
@@ -105,10 +119,17 @@ class ConferenceVideoSession {
     required ConferenceVideoSend send,
     required this.onFeedsChanged,
     this.callsWantCamera,
+    this.callsFrontCamera,
+    this.onScreenLost,
+    // Told the feed to show as speaking whenever it changes: the room's
+    // `speaker`, held against flicker by [SpeakerHold].
+    void Function(int? speaker)? onSpeakerChanged,
+    this.onRoomFull,
     this.retryDelay = const Duration(seconds: 2),
   }) : _factory = factory,
        _userMediaBuilder = userMediaBuilder,
-       _send = send;
+       _send = send,
+       _speaker = SpeakerHold(onChanged: onSpeakerChanged ?? (_) {});
 
   final PeerConnectionFactory _factory;
   final UserMediaBuilder _userMediaBuilder;
@@ -119,6 +140,23 @@ class ConferenceVideoSession {
   /// the room lets the track go: they may have changed their mind while the
   /// room held it. Without it the track goes back as the room found it.
   final bool Function()? callsWantCamera;
+
+  /// Which camera the calls that share the camera track show - the front one when `true`;
+  /// `null` when none says. Asked when the camera opens again after a shared screen: the
+  /// room's track was let go then, and a camera opened without a facing is the platform's
+  /// default one - the rear camera on an iPhone.
+  final bool? Function()? callsFrontCamera;
+
+  /// The room would not take the shared screen, or let it go for good: the
+  /// owner's share has nowhere to go. Not said when the owner stopped it or
+  /// left the video.
+  final void Function()? onScreenLost;
+
+  /// The room has no place for one more publication (`code` 432): it takes
+  /// as many publishers as it was made for and no more. [limit] is that
+  /// number when the room's reason names it. Said before the publication is
+  /// given up, so that the owner can take the camera for unwanted first.
+  final void Function(int? limit)? onRoomFull;
 
   /// How long a request the room could not take yet (`attach_failed`) waits
   /// before it is asked again.
@@ -138,8 +176,16 @@ class ConferenceVideoSession {
   bool _cameraWasEnabled = true;
 
   /// Whether this client means to publish its camera, kept across a failed or
-  /// restarted publisher so that it can be put back.
+  /// restarted publisher so that it can be put back. Kept while the screen is
+  /// shared, too: the camera comes back after it.
   bool _publishing = false;
+
+  /// The screen this client shares in the camera's place; `null` while it
+  /// shares none. Owned by whoever captured it, never released here.
+  MediaStream? _screen;
+
+  /// The publisher's one video sender, which carries the camera or the screen.
+  RTCRtpSender? _sender;
 
   /// Which camera the owner asked for, kept for a publication made again.
   bool? _frontCamera;
@@ -155,8 +201,12 @@ class ConferenceVideoSession {
   final Set<Timer> _pendingRetries = {};
 
   /// The session id of the subscriber's remote description (the `o=` line):
-  /// a new one is a new subscription, for a new connection.
+  /// a new one is a new subscription, for a new connection - unless its
+  /// version goes on from the last ([_subscriberVersion]), as Janus's update does.
   String? _subscriberSession;
+
+  /// The version (`o=` line) of the subscriber's last offer.
+  int? _subscriberVersion;
 
   /// Remote tracks by the `mid` of their m-line on the subscriber connection.
   final Map<String, MediaStream> _streamsByMid = {};
@@ -167,7 +217,16 @@ class ConferenceVideoSession {
   /// What the room last said each `mid` carries.
   List<ConferenceVideoStream> _roomStreams = const [];
 
-  /// The camera stream being published, for the owner's own tile.
+  /// The room's presenter as it last said; see [ConferenceVideoFeedsChanged].
+  int? _presenter;
+
+  /// Whoever the room says started talking last, held against flicker
+  /// ([SpeakerHold]): its owner hears the feed to show as speaking, `null`
+  /// while nobody has spoken or the video is left.
+  final SpeakerHold _speaker;
+
+  /// The camera stream being published, for the owner's own tile; `null`
+  /// while the screen is shared in its place.
   MediaStream? get camera => _camera;
 
   /// The camera track being published; the same track a video call of this
@@ -190,6 +249,12 @@ class ConferenceVideoSession {
 
   /// Whether the camera is published or on its way to it.
   bool get isPublishing => _publishing;
+
+  /// Whether the screen is shared, or on its way to the room.
+  bool get isSharingScreen => _screen != null;
+
+  /// Whether anything is published or on its way: the camera or the screen.
+  bool get _wantsPublisher => _publishing || _screen != null;
 
   /// Whether a subscription is up or asked for. Set and cleared as the owner
   /// asks, ahead of the queue, so that what is asked next sees it.
@@ -240,11 +305,22 @@ class ConferenceVideoSession {
       }
       final sdp = jsep['sdp'] as String?;
       final session = _sdpSession(sdp);
+      final version = _sdpVersion(sdp);
       var peerConnection = _subscriber.peerConnection;
       // A new subscription - the one Core offers unasked after Janus hung the
       // subscriber up - comes with a new session id, and its connection state
-      // tells only later.
-      final newSubscription = session != null && _subscriberSession != null && session != _subscriberSession;
+      // tells only later. Janus gives the update of a subscription (a
+      // publisher added to the room) a new session id too, but the next
+      // version: that one is answered on the same connection, as a new one
+      // starts over.
+      final lastVersion = _subscriberVersion;
+      final renegotiation = version != null && lastVersion != null && version > lastVersion;
+      final newSubscription =
+          session != null && _subscriberSession != null && session != _subscriberSession && !renegotiation;
+      _logger.info(
+        'handleOffer: session $session version $version '
+        '(${newSubscription ? 'a new subscription' : 'on the same connection'})',
+      );
       // The offer of a restart this client asked for is answered on the same
       // connection even if its ICE has failed: the restart is the remedy.
       final restartOffer =
@@ -270,6 +346,7 @@ class ConferenceVideoSession {
       await peerConnection.setRemoteDescription(RTCSessionDescription(sdp, jsep['type'] as String?));
       _subscriber.remoteDescribed = true;
       _subscriberSession = session;
+      _subscriberVersion = version;
       await _feedRemoteCandidates(_subscriber);
       final answer = await peerConnection.createAnswer({});
       await peerConnection.setLocalDescription(answer);
@@ -339,6 +416,9 @@ class ConferenceVideoSession {
 
   Future<CameraPublication> _publish() async {
     if (!_publishing) return const CameraNotPublished();
+    // The screen holds the line: the camera is wanted, and comes back with
+    // [stopScreen].
+    if (_screen != null) return const CameraNotPublished();
     final existing = _publisher.peerConnection;
     if (existing != null && existing.isUsable) return _offer(existing, iceRestart: false, firstOffer: false);
     if (existing != null) {
@@ -364,7 +444,7 @@ class ConferenceVideoSession {
 
   Future<CameraPublication> _restartPublisher() async {
     final peerConnection = _publisher.peerConnection;
-    if (!_publishing || peerConnection == null) return const CameraNotPublished();
+    if (!_wantsPublisher || peerConnection == null) return const CameraNotPublished();
     return _offer(peerConnection, iceRestart: true, firstOffer: false);
   }
 
@@ -379,14 +459,21 @@ class ConferenceVideoSession {
     final RTCSessionDescription offer;
     final List<ConferenceVideoDescription> descriptions;
     try {
-      offer = await peerConnection.createOffer({if (iceRestart) 'iceRestart': true});
+      // A restart is asked of the connection itself: flutter_webrtc on Android
+      // ignores an `iceRestart` offer constraint, and the offer then kept the
+      // old ICE credentials - Janus took it as a plain renegotiation and the
+      // publication stayed without media after a network change.
+      if (iceRestart) await peerConnection.restartIce();
+      final made = await peerConnection.createOffer({});
+      // H.264 the room's other phones can take: see room_video_codecs.dart.
+      offer = RTCSessionDescription(made.sdp == null ? null : withBaselineH264Only(made.sdp!), made.type);
       await peerConnection.setLocalDescription(offer);
       _publisher.offerPending = true;
-      descriptions = await _cameraDescriptions(peerConnection);
+      descriptions = await _descriptions(peerConnection);
     } catch (e) {
       _logger.warning('publish: the offer could not be made', e);
       if (firstOffer) {
-        _publishing = false;
+        _giveUpPublication();
         await _closeSide(_publisher);
       }
       return const CameraNotPublished();
@@ -409,7 +496,7 @@ class ConferenceVideoSession {
           // Core may hold a publication this client no longer backs: undone
           // first, so that it is not left behind.
           await _send(ConferenceVideoUnpublishRequest(transaction: _transaction()));
-          _publishing = false;
+          _giveUpPublication();
           await _closeSide(_publisher);
         }
         return const CameraNotPublished();
@@ -432,12 +519,29 @@ class ConferenceVideoSession {
   /// `attach_failed` publishes again a little later, anything else leaves the
   /// camera unpublished. Runs on the queue, the publisher already closed.
   void _onPublisherRefused(String? reason) {
-    if (!_publishing) return;
+    if (!_wantsPublisher) return;
     if (_isRetryable(reason) && ++_publisherFailures <= _retries) {
-      _retryLater(_publish);
+      _retryLater(_publishWanted);
       return;
     }
-    _publishing = false;
+    _giveUpPublication();
+  }
+
+  /// Publishes what is wanted now, from a new connection or on the one there
+  /// is: the screen while it is shared, else the camera.
+  Future<CameraPublication> _publishWanted() => _screen != null ? _shareScreen() : _publish();
+
+  /// The room will not take the publication. A shared screen that is given
+  /// up is said to the owner, whose share it was, and the camera stays wanted
+  /// as it was: the owner puts it back ([publish]) when the person still wants
+  /// it. A camera given up is not wanted any more.
+  void _giveUpPublication() {
+    if (_screen == null) {
+      _publishing = false;
+      return;
+    }
+    _screen = null;
+    onScreenLost?.call();
   }
 
   /// Applies a `conference_video_publisher_answer`.
@@ -465,13 +569,102 @@ class ConferenceVideoSession {
   /// Stops sending the camera: `conference_video_unpublish` first, then the
   /// connection is closed - in that order, so that the room does not report
   /// the closed connection as a failure.
+  ///
+  /// While the screen is shared the camera is not on the line, and the
+  /// publication goes on: only the wish for the camera is dropped, so that it
+  /// does not come back after the screen.
   Future<void> unpublish() {
     _publishing = false;
     _publisherFailures = 0;
     return _operations.run(() async {
-      if (_publisher.peerConnection == null) return;
+      if (_publisher.peerConnection == null || _screen != null) return;
       await _send(ConferenceVideoUnpublishRequest(transaction: _transaction()));
       await _closeSide(_publisher);
+    });
+  }
+
+  /// Shares [screen] in the room in place of the camera: on the publisher's
+  /// line, renegotiated, when one is published - the camera let go - or from
+  /// a new publication. Says what became of it; a share the room will not
+  /// take is also told to [onScreenLost].
+  Future<CameraPublication> shareScreen(MediaStream screen) {
+    _screen = screen;
+    _publisherFailures = 0;
+    return _operations.run(_shareScreen);
+  }
+
+  Future<CameraPublication> _shareScreen() async {
+    final screen = _screen;
+    if (screen == null) return const CameraNotPublished();
+    final track = screen.getVideoTracks().firstOrNull;
+    if (track == null) {
+      _logger.warning('shareScreen: the screen has no video track');
+      _giveUpPublication();
+      return const CameraUnavailable();
+    }
+    final existing = _publisher.peerConnection;
+    final sender = _sender;
+    if (existing != null && existing.isUsable && sender != null) {
+      try {
+        await CameraScreenSwap.toScreen(sender, track, letCameraGo: _releaseCamera);
+      } catch (e) {
+        // The camera is still on the line, published as it was.
+        _logger.warning('shareScreen: the screen did not go on the line', e);
+        _giveUpPublication();
+        return const CameraUnavailable();
+      }
+      return _offer(existing, iceRestart: false, firstOffer: false);
+    }
+    if (existing != null) await _send(ConferenceVideoUnpublishRequest(transaction: _transaction()));
+    await _closeSide(_publisher);
+    RTCPeerConnection? peerConnection;
+    try {
+      peerConnection = await _factory.create();
+      await _wirePublisher(peerConnection, screen);
+    } catch (e) {
+      _logger.warning('shareScreen: the connection could not be opened', e);
+      _publisher.peerConnection = peerConnection;
+      await _closeSide(_publisher);
+      _giveUpPublication();
+      return const CameraUnavailable();
+    }
+    return _offer(peerConnection, iceRestart: false, firstOffer: true);
+  }
+
+  /// Takes the shared screen off: the camera comes back on the same line when
+  /// it is still wanted, else the publication ends. Says what became of the
+  /// camera.
+  Future<CameraPublication> stopScreen() {
+    if (_screen == null) return Future.value(const CameraNotPublished());
+    _screen = null;
+    _publisherFailures = 0;
+    return _operations.run(() async {
+      final peerConnection = _publisher.peerConnection;
+      if (peerConnection == null) return _publish();
+      // The screen never reached the line - a stop asked for before the share
+      // ran - and the camera is still on it, published as it was.
+      if (_camera != null) return const CameraPublished();
+      final sender = _sender;
+      if (!_publishing || !peerConnection.isUsable || sender == null) {
+        await _send(ConferenceVideoUnpublishRequest(transaction: _transaction()));
+        await _closeSide(_publisher);
+        return _publish();
+      }
+      final camera = await CameraScreenSwap.toCamera(
+        sender,
+        // Facing the way it showed before the screen, the front camera where nothing says.
+        openCamera: () async =>
+            (await _openCamera(frontCamera: callsFrontCamera?.call() ?? _frontCamera ?? true)).getVideoTracks().first,
+      );
+      if (camera == null) {
+        _logger.warning('stopScreen: the camera could not be opened again');
+        _publishing = false;
+        await _send(ConferenceVideoUnpublishRequest(transaction: _transaction()));
+        await _closeSide(_publisher);
+        return const CameraUnavailable();
+      }
+      _reportFeeds();
+      return _offer(peerConnection, iceRestart: false, firstOffer: false);
     });
   }
 
@@ -498,9 +691,11 @@ class ConferenceVideoSession {
 
   /// The room dropped the connection [pc] names (`conference_video_failed`).
   /// Core has let go of that handle, so the connection is closed and made
-  /// again once in a row - a room that fails it again (the 100 publishers of
-  /// `code` 432 among the reasons) leaves that connection gone.
-  Future<void> handleFailed(ConferenceVideoPc pc, {int? code}) {
+  /// again once in a row - a room that fails it again leaves that connection
+  /// gone. A publisher refused for a full room (`code` 432) is not made
+  /// again: the room would refuse it the same way until someone leaves, so
+  /// the owner is told ([onRoomFull]) and the publication is given up.
+  Future<void> handleFailed(ConferenceVideoPc pc, {int? code, String? reason}) {
     return _operations.run(() async {
       switch (pc) {
         case ConferenceVideoPc.subscriber:
@@ -516,13 +711,19 @@ class ConferenceVideoSession {
           await _subscribe();
         case ConferenceVideoPc.publisher:
           await _closeSide(_publisher);
-          if (!_publishing) return;
-          if (++_publisherFailures > _retries) {
-            _logger.warning('handleFailed: the room refused the camera again (code $code), left unpublished');
-            _publishing = false;
+          if (!_wantsPublisher) return;
+          if (code == roomFullCode) {
+            _logger.warning('handleFailed: the room is full ($reason), left unpublished');
+            onRoomFull?.call(publisherLimit(reason));
+            _giveUpPublication();
             return;
           }
-          await _publish();
+          if (++_publisherFailures > _retries) {
+            _logger.warning('handleFailed: the room refused the publisher again (code $code), left unpublished');
+            _giveUpPublication();
+            return;
+          }
+          await _publishWanted();
       }
     });
   }
@@ -578,8 +779,14 @@ class ConferenceVideoSession {
   /// and an offer still being taken when the list arrives would otherwise
   /// drop the names the list has just given.
   Future<void> handleUpdated(ConferenceVideoUpdatedEvent event) => _operations.run(() async {
+    _logger.info(
+      'handleUpdated: ${event.streams.map((s) => '${s.mid}=${s.feed}/${s.kind.name}').join(' ')}, '
+      'presenter ${event.presenter}, speaker ${event.speaker}',
+    );
     _roomStreams = event.streams;
+    _presenter = event.presenter;
     _reportFeeds();
+    _speaker.heard(event.speaker);
   });
 
   /// The signalling session came back: events sent while it was down are
@@ -588,15 +795,15 @@ class ConferenceVideoSession {
   /// again, where the session went before it was.
   Future<void> reconnected() async {
     if (_subscriber.requested) await subscribe();
-    if (_publishing) {
-      await _operations.run(() => _publisher.peerConnection == null ? _publish() : _restartPublisher());
+    if (_wantsPublisher) {
+      await _operations.run(() => _publisher.peerConnection == null ? _publishWanted() : _restartPublisher());
     }
   }
 
   /// Stops publishing and receiving (`conference_video_leave`) and closes both
   /// connections. The participant stays in the audio conference.
   Future<void> leave() {
-    final wasActive = _subscriber.requested || _publishing;
+    final wasActive = _subscriber.requested || _wantsPublisher;
     _stopWanting();
     return _operations.run(() async {
       if (wasActive) await _send(ConferenceVideoLeaveRequest(transaction: _transaction()));
@@ -615,6 +822,7 @@ class ConferenceVideoSession {
   /// behind it - a retry, a resubscribe - finds nothing to make again.
   void _stopWanting() {
     _publishing = false;
+    _screen = null;
     _subscriber.requested = false;
     for (final timer in _pendingRetries) {
       timer.cancel();
@@ -626,6 +834,8 @@ class ConferenceVideoSession {
     await _closeSide(_subscriber);
     await _closeSide(_publisher);
     _roomStreams = const [];
+    _presenter = null;
+    _speaker.clear();
     _publisherFailures = 0;
     _subscriberFailures = 0;
   }
@@ -651,6 +861,19 @@ class ConferenceVideoSession {
     );
   }
 
+  /// The `code` of a publication the room has no place for: VideoRoom's
+  /// "maximum number of publishers reached".
+  static const roomFullCode = 432;
+
+  /// The number of publishers a full room takes, as its [reason] names it -
+  /// VideoRoom says "Maximum number of active publishers (100) already
+  /// reached"; `null` when the reason names none.
+  static int? publisherLimit(String? reason) {
+    if (reason == null) return null;
+    final match = RegExp(r'publishers \((\d+)\)').firstMatch(reason);
+    return match == null ? null : int.tryParse(match.group(1)!);
+  }
+
   static bool _isRetryable(String? reason) =>
       reason == 'not_subscribed' || (reason != null && reason.startsWith('attach_failed'));
 
@@ -662,6 +885,7 @@ class ConferenceVideoSession {
       final mid = event.transceiver?.mid;
       final stream = event.streams.isEmpty ? null : event.streams.first;
       if (mid == null || stream == null || event.track.kind != 'video') return;
+      _logger.info('onTrack: mid $mid, track ${event.track.id}');
       _streamsByMid[mid] = stream;
       _tracksByMid[mid] = event.track.id ?? '';
       _reportFeeds();
@@ -680,22 +904,7 @@ class ConferenceVideoSession {
   Future<RTCPeerConnection> _openPublisher({bool? frontCamera}) async {
     final peerConnection = await _factory.create();
     try {
-      final camera = await _userMediaBuilder.build(video: true, frontCamera: frontCamera);
-      _camera = camera;
-      final videoTracks = camera.getVideoTracks();
-      if (videoTracks.isEmpty) throw StateError('no camera track');
-      // The track is shared with the calls that send video; one of them may
-      // have it turned off, and the room was asked for the camera. It goes
-      // back as it was when the room lets it go.
-      _cameraWasEnabled = videoTracks.first.enabled;
-      videoTracks.first.enabled = true;
-      // Video only: the microphone in this stream belongs to the mixer.
-      await peerConnection.addTrack(videoTracks.first, camera);
-      for (final transceiver in await peerConnection.getTransceivers()) {
-        await transceiver.setDirection(TransceiverDirection.SendOnly);
-      }
-      _wire(_publisher, peerConnection);
-      _publisher.peerConnection = peerConnection;
+      await _wirePublisher(peerConnection, await _openCamera(frontCamera: frontCamera));
       _reportFeeds();
       return peerConnection;
     } catch (e) {
@@ -705,14 +914,41 @@ class ConferenceVideoSession {
     }
   }
 
-  /// The camera's m-line, named for Core; read after the local description,
-  /// when the transceivers have their `mid`.
-  Future<List<ConferenceVideoDescription>> _cameraDescriptions(RTCPeerConnection peerConnection) async {
+  /// Opens the camera for the room and holds it as [_camera].
+  Future<MediaStream> _openCamera({bool? frontCamera}) async {
+    final camera = await _userMediaBuilder.build(video: true, frontCamera: frontCamera);
+    _camera = camera;
+    final videoTracks = camera.getVideoTracks();
+    if (videoTracks.isEmpty) throw StateError('no camera track');
+    // The track is shared with the calls that send video; one of them may
+    // have it turned off, and the room was asked for the camera. It goes
+    // back as it was when the room lets it go.
+    _cameraWasEnabled = videoTracks.first.enabled;
+    videoTracks.first.enabled = true;
+    return camera;
+  }
+
+  /// Makes [peerConnection] the publisher, sending the video of [stream]
+  /// alone: the microphone in a camera stream belongs to the mixer.
+  Future<void> _wirePublisher(RTCPeerConnection peerConnection, MediaStream stream) async {
+    _sender = await peerConnection.addTrack(stream.getVideoTracks().first, stream);
+    for (final transceiver in await peerConnection.getTransceivers()) {
+      await transceiver.setDirection(TransceiverDirection.SendOnly);
+    }
+    _wire(_publisher, peerConnection);
+    _publisher.peerConnection = peerConnection;
+  }
+
+  /// The publisher's m-line, named for Core: the screen while it is shared,
+  /// else the camera. Read after the local description, when the
+  /// transceivers have their `mid`.
+  Future<List<ConferenceVideoDescription>> _descriptions(RTCPeerConnection peerConnection) async {
+    final kind = _screen != null ? ConferenceVideoKind.screen : ConferenceVideoKind.camera;
     final descriptions = <ConferenceVideoDescription>[];
     for (final transceiver in await peerConnection.getTransceivers()) {
       final mid = transceiver.mid;
       if (mid.isEmpty) continue;
-      descriptions.add(ConferenceVideoDescription(mid: mid, kind: ConferenceVideoKind.camera));
+      descriptions.add(ConferenceVideoDescription(mid: mid, kind: kind));
     }
     return descriptions;
   }
@@ -792,6 +1028,7 @@ class ConferenceVideoSession {
     side.reset();
     if (side.pc == ConferenceVideoPc.subscriber) {
       _subscriberSession = null;
+      _subscriberVersion = null;
       final hadStreams = _streamsByMid.isNotEmpty;
       _streamsByMid.clear();
       _tracksByMid.clear();
@@ -810,21 +1047,25 @@ class ConferenceVideoSession {
       }
     }
     if (side.pc == ConferenceVideoPc.publisher) {
-      final camera = _camera;
-      _camera = null;
-      if (camera != null) {
-        // The shared track goes back as the calls want it now, or as the
-        // room found it where nobody says.
-        final enabled = callsWantCamera?.call() ?? _cameraWasEnabled;
-        if (!enabled) camera.getVideoTracks().firstOrNull?.enabled = false;
-        _cameraWasEnabled = true;
-        _reportFeeds();
-        try {
-          await _userMediaBuilder.release(camera);
-        } catch (e) {
-          _logger.warning('releasing the camera failed', e);
-        }
-      }
+      _sender = null;
+      await _releaseCamera();
+    }
+  }
+
+  /// Lets the room's camera go: the shared track goes back as the calls want
+  /// it now, or as the room found it where nobody says.
+  Future<void> _releaseCamera() async {
+    final camera = _camera;
+    _camera = null;
+    if (camera == null) return;
+    final enabled = callsWantCamera?.call() ?? _cameraWasEnabled;
+    if (!enabled) camera.getVideoTracks().firstOrNull?.enabled = false;
+    _cameraWasEnabled = true;
+    _reportFeeds();
+    try {
+      await _userMediaBuilder.release(camera);
+    } catch (e) {
+      _logger.warning('releasing the camera failed', e);
     }
   }
 
@@ -845,7 +1086,7 @@ class ConferenceVideoSession {
         ),
       );
     }
-    onFeedsChanged(List.unmodifiable(feeds));
+    onFeedsChanged(List.unmodifiable(feeds), _presenter);
   }
 
   _Side _side(ConferenceVideoPc pc) => switch (pc) {
@@ -854,6 +1095,13 @@ class ConferenceVideoSession {
   };
 
   static String _transaction() => WebtritSignalingClient.generateTransactionId();
+
+  /// The session version of an SDP's `o=` line, `null` without one.
+  static int? _sdpVersion(String? sdp) {
+    if (sdp == null) return null;
+    final match = RegExp(r'^o=\S+ \S+ (\d+) ', multiLine: true).firstMatch(sdp);
+    return match == null ? null : int.tryParse(match.group(1)!);
+  }
 
   /// The session id of an SDP's `o=` line, `null` without one.
   static String? _sdpSession(String? sdp) {

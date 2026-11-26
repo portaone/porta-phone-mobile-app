@@ -641,3 +641,29 @@ abstract class PHostActivityControlApi {
   @async
   bool isDeviceLocked();
 }
+
+// ------------------------------------------------------------------------------------------------
+// Android Screen Share section
+// ------------------------------------------------------------------------------------------------
+
+@HostApi()
+abstract class PHostScreenShareApi {
+  /// Puts the screen share service in the foreground with the `mediaProjection` type.
+  ///
+  /// Android 14 lets an app capture the screen only while such a service runs, and starts one
+  /// only after the person has granted the capture: call it between the consent and the capture.
+  /// Completes once the service is in the foreground; fails when the system refused it.
+  @async
+  void startScreenShareService();
+
+  /// Takes the screen share service out of the foreground and stops it. Nothing when it does not run.
+  @async
+  void stopScreenShareService();
+}
+
+@FlutterApi()
+abstract class PDelegateScreenShareFlutterApi {
+  /// The screen share ended outside the app: the Stop action of its notification, or the system
+  /// ending the capture. The service has stopped already.
+  void didEndScreenShare();
+}

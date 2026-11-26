@@ -1,6 +1,12 @@
 import 'package:material_ui/material_ui.dart';
+import 'package:flutter/rendering.dart';
 
 import 'draggable_thumbnail.dart';
+
+/// Where the floating thumbnail is on the screen, in global coordinates, while one is shown;
+/// `null` while none is. What sits under it - the three dots of the room's tiles - steps aside
+/// rather than be covered, while the window itself keeps where it was put.
+final ValueNotifier<Rect?> floatingThumbnailArea = ValueNotifier<Rect?>(null);
 
 /// Manages the lifecycle and state of a draggable thumbnail overlay.
 ///
@@ -60,6 +66,7 @@ class ThumbnailOverlayManager {
       entry.remove();
       _entry = null;
       _contentNotifier.value = null;
+      floatingThumbnailArea.value = null;
     }
   }
 
@@ -98,9 +105,45 @@ class _ThumbnailOverlayContent extends StatelessWidget {
           stickyPadding: stickyPadding,
           initialOffset: initialOffset,
           onOffsetUpdate: onOffsetUpdate,
-          child: content,
+          child: _AreaReporter(child: content),
         );
       },
     );
+  }
+}
+
+/// Tells [floatingThumbnailArea] where its child is painted, after the frame that moved it.
+class _AreaReporter extends SingleChildRenderObjectWidget {
+  const _AreaReporter({required super.child});
+
+  @override
+  RenderObject createRenderObject(BuildContext context) => _RenderAreaReporter();
+}
+
+class _RenderAreaReporter extends RenderProxyBox {
+  Rect? _told;
+
+  @override
+  void paint(PaintingContext context, Offset offset) {
+    super.paint(context, offset);
+    final area = localToGlobal(Offset.zero) & size;
+    if (area == _told) return;
+    _told = area;
+    // Not while painting: the listeners rebuild.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (attached && _told == area) floatingThumbnailArea.value = area;
+    });
+  }
+
+  @override
+  void detach() {
+    final told = _told;
+    _told = null;
+    super.detach();
+    if (told != null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (floatingThumbnailArea.value == told) floatingThumbnailArea.value = null;
+      });
+    }
   }
 }

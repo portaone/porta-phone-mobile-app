@@ -43,4 +43,8 @@ class Transfer with _$Transfer {
       InviteToAttendedTransfer;
 
   const Transfer._();
+
+  /// Whether the transfer has gone past the picker: submitted to the server or answered by it.
+  /// While the person only picks where to transfer, the call goes on as it was.
+  bool get isUnderWay => this is! BlindTransferInitiated;
 }

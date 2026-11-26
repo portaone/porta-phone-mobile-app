@@ -475,6 +475,28 @@ class AppLocalizationsIt extends AppLocalizations {
   }
 
   @override
+  String call_ConferenceFullScreen_title(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Conferenza · $count partecipanti',
+      one: 'Conferenza · $count partecipante',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String call_ConferenceFullScreen_sharing(String name) {
+    return '$name sta condividendo lo schermo';
+  }
+
+  @override
+  String get call_ConferenceFullScreen_holdUnavailable => 'L\'attesa non è disponibile in una conferenza';
+
+  @override
+  String get call_ConferenceFullScreen_showLarge => 'Mostra in grande';
+
+  @override
   String call_SemanticsLabel_conferenceParticipantMenu(String name) {
     return 'Altro per $name';
   }
@@ -705,6 +727,21 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get call_SystemErrorDialog_title => 'Errore di sistema';
+
+  @override
+  String get call_ScreenShareTile_title => 'Condivisione schermo';
+
+  @override
+  String get call_ScreenShareTile_stop => 'Interrompi';
+
+  @override
+  String get call_ConferenceFullScreen_screenWaiting => 'In attesa dello schermo';
+
+  @override
+  String get call_screenShare_actionLabel_share => 'Condividi schermo';
+
+  @override
+  String get call_screenShare_actionLabel_stop => 'Interrompi condivisione';
 
   @override
   String get call_ThumbnailAvatar_currentlyNoActiveCall => 'Actualmente, no hay ninguna llamada activa';
@@ -2170,6 +2207,13 @@ class AppLocalizationsIt extends AppLocalizations {
   String get notifications_messageSnackBarAction_callVideoDowngraded => 'Impostazioni';
 
   @override
+  String get notifications_messageSnackBar_screenShareFailed => 'Impossibile avviare la condivisione dello schermo';
+
+  @override
+  String get notifications_messageSnackBar_screenShareVideoRefused =>
+      'L\'altra parte non accetta il video - condivisione dello schermo interrotta';
+
+  @override
   String get notifications_messageSnackBar_conferenceFailed => 'Impossibile avviare la conferenza';
 
   @override
@@ -2177,6 +2221,15 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get notifications_messageSnackBar_conferenceEnded => 'La conferenza è terminata, le chiamate continuano';
+
+  @override
+  String get notifications_messageSnackBar_conferenceRoomFull =>
+      'Video non disponibile: la conferenza ha raggiunto il limite di partecipanti';
+
+  @override
+  String notifications_messageSnackBar_conferenceRoomFullLimit(int limit) {
+    return 'Video non disponibile: la conferenza ha raggiunto il limite di partecipanti ($limit)';
+  }
 
   @override
   String get notifications_errorSnackBar_activeLineBlindTransferWarning =>
