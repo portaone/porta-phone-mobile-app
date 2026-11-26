@@ -4,6 +4,7 @@ import 'package:auto_route/auto_route.dart';
 
 import 'package:signaling/signaling.dart';
 
+import 'package:webtrit_phone/app/keys.dart';
 import 'package:webtrit_phone/app/notifications/models/notification.dart';
 import 'package:webtrit_phone/features/call/extensions/extensions.dart';
 import 'package:webtrit_phone/app/notifications/models/error_field.dart';
@@ -326,6 +327,9 @@ final class LinkedCallFailedNotification extends MessageNotification {
     LinkedCallFailure.declined => context.l10n.notifications_errorSnackBar_attendedTransferDeclined,
     _ => context.l10n.notifications_errorSnackBar_attendedTransferUnanswered,
   };
+
+  @override
+  String? get identifier => failure == LinkedCallFailure.declined ? notificationLinkedCallDeclinedId : null;
 }
 
 /// The server refused to build the room, or to add a call to it.

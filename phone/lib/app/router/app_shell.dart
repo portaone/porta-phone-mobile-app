@@ -8,6 +8,7 @@ import 'package:logging/logging.dart';
 import 'package:provider/provider.dart';
 import 'package:webtrit_callkeep/webtrit_callkeep.dart';
 
+import 'package:webtrit_phone/app/keys.dart';
 import 'package:webtrit_phone/app/notifications/notifications.dart';
 import 'package:webtrit_phone/data/data.dart';
 import 'package:webtrit_phone/extensions/extensions.dart';
@@ -89,12 +90,14 @@ class AppShell extends StatelessWidget {
           notification.l10n(context),
           action: notification.action(context),
           persist: notification.persist,
+          identifier: notification.identifier ?? appSnackBarId,
         );
       case SuccessNotification():
         context.showSuccessSnackBar(
           notification.l10n(context),
           action: notification.action(context),
           persist: notification.persist,
+          identifier: notification.identifier ?? appSnackBarId,
         );
     }
   }

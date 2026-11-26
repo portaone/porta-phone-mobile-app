@@ -40,6 +40,11 @@ sealed class Notification {
   /// a confirmation - which goes away like the confirmations around it.
   bool? get persist => null;
 
+  /// The id the bar of this notification is found by. Null leaves it the id
+  /// every bar shares; a notification a flow must tell from the others names
+  /// its own.
+  String? get identifier => null;
+
   List<NotificationScope> scopes() => NotificationScope.values;
 
   /// The ways this notification may be delivered; the presenter picks one by whether the app

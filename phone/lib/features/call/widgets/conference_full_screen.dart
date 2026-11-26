@@ -220,16 +220,22 @@ class _ConferenceFullScreenState extends State<ConferenceFullScreen> {
                   left: 24,
                   right: 24,
                   bottom: 12,
-                  child: Semantics(
-                    liveRegion: true,
-                    child: DecoratedBox(
-                      decoration: BoxDecoration(color: colors.inverseSurface, borderRadius: BorderRadius.circular(12)),
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-                        child: Text(
-                          notice,
-                          textAlign: TextAlign.center,
-                          style: themeData.textTheme.bodyMedium?.copyWith(color: colors.onInverseSurface),
+                  child: SemanticId(
+                    identifier: conferenceFullScreenNoticeId,
+                    child: Semantics(
+                      liveRegion: true,
+                      child: DecoratedBox(
+                        decoration: BoxDecoration(
+                          color: colors.inverseSurface,
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                          child: Text(
+                            notice,
+                            textAlign: TextAlign.center,
+                            style: themeData.textTheme.bodyMedium?.copyWith(color: colors.onInverseSurface),
+                          ),
                         ),
                       ),
                     ),

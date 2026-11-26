@@ -177,8 +177,17 @@ void main() {
     expect(byId(conferenceParticipantPageId), findsNothing);
     expect(fullScreenShown(), isTrue, reason: 'two are still in the room');
     expect(find.text('Carol Young left the conference'), findsOneWidget);
+    expect(
+      tester.getSemantics(find.bySemanticsIdentifier(conferenceFullScreenNoticeId)),
+      isSemantics(
+        identifier: conferenceFullScreenNoticeId,
+        label: 'Carol Young left the conference',
+        isLiveRegion: true,
+      ),
+    );
     await tester.pump(const Duration(seconds: 4));
     expect(find.text('Carol Young left the conference'), findsNothing, reason: 'the notice is short');
+    expect(find.bySemanticsIdentifier(conferenceFullScreenNoticeId), findsNothing);
 
     semantics.dispose();
     await teardownCallScaffold(tester);

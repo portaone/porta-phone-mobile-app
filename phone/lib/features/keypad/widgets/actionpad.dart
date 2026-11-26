@@ -3,6 +3,7 @@ import 'dart:math';
 import 'package:material_ui/material_ui.dart';
 
 import 'package:webtrit_phone/app/keys.dart';
+import 'package:webtrit_phone/features/messaging/widgets/messaging_popup_menu_item.dart';
 import 'package:webtrit_phone/l10n/l10n.dart';
 import 'package:webtrit_phone/widgets/widgets.dart';
 
@@ -79,7 +80,13 @@ class Actionpad extends StatelessWidget {
                 itemBuilder: (context) {
                   return [
                     if (onVideoCallPressed != null)
-                      PopupMenuItem(onTap: onVideoCallPressed, child: Text(context.l10n.numberActions_videoCall)),
+                      // The entry that stands in for the video button; see
+                      // MessagingPopupMenuItem for why a plain id would not reach the device.
+                      MessagingPopupMenuItem(
+                        identifier: actionPadOverflowVideoCallId,
+                        onTap: onVideoCallPressed,
+                        child: Text(context.l10n.numberActions_videoCall),
+                      ),
                     if (onTransferPressed != null)
                       PopupMenuItem(onTap: onTransferPressed, child: Text(context.l10n.numberActions_transfer)),
                     if (callNumbers.length > 1)
