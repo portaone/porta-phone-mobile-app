@@ -225,6 +225,27 @@ void main() {
       expect(presenters.last, isNull, reason: 'nobody presents any more');
     });
 
+    test('the room\'s speaker is told, and goes when the video is left', () async {
+      final speakers = <int?>[];
+      final speaking = ConferenceVideoSession(
+        factory: factory,
+        userMediaBuilder: media,
+        send: signaling.send,
+        onFeedsChanged: (_, _) {},
+        onSpeakerChanged: speakers.add,
+        retryDelay: Duration.zero,
+      );
+      await speaking.subscribe();
+
+      await speaking.handleUpdated(const ConferenceVideoUpdatedEvent(room: 7, self: 1, speaker: 3));
+      // Silence does not clear it: the next list without a change says the same speaker.
+      await speaking.handleUpdated(const ConferenceVideoUpdatedEvent(room: 7, self: 1, speaker: 3));
+      expect(speakers, [3]);
+
+      await speaking.teardown();
+      expect(speakers, [3, null], reason: 'nobody speaks in a room left');
+    });
+
     test('closing the subscriber takes its streams away', () async {
       await session.subscribe();
       await session.handleOffer(_offer);

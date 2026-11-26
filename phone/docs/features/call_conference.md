@@ -142,6 +142,7 @@ in it.
 | `legs` | this client's own record: the calls it put in, by call id, with the line each is on |
 | `participants` | the server's list as last sent; the host is never in it |
 | `selfMuted` | whether the host's microphone is off towards the room |
+| `speaker` | the feed the room shows as speaking, held 1 s against flicker ("Full screen"); `null` while nobody has spoken |
 
 `legs` and `participants` are deliberately two fields. `legs` is what this
 client asked for and is filled from the merge's acknowledgement, before any
@@ -961,6 +962,20 @@ over a tile's dots (it starts at the top right, over the first tile), the dots s
 left, under the mic-off sign when it is there (`floatingThumbnailArea`, which the window's
 overlay keeps); the window stays where it was put. The host's own camera is not a tile: it is
 the camera window over the participants.
+
+Whoever the room shows as speaking has a border in the theme's accent (the colour of the share's
+ring on More) round what already shows him, and nothing moves for it: 3 dp round his big tile,
+thumbnail or shared screen (`conferenceTileSpeaking<N>`, numbered as his tile), 2 dp round his
+row of the panel (`conferenceParticipantSpeaking<N>`, numbered as his row), and 3 dp round the
+host's own camera window while the room shows the host (`callFrontCameraPreviewSpeakingId`;
+the camera off, there is no window and no border). The border takes no taps: the tile, the row
+and the window under it work as they did (`widgets/speaking_frame.dart`). Who speaks is the
+room's `speaker` of `conference_video_updated` - whoever started talking last, the host being
+feed 1 and the far end of line N feed N + 2; silence does not clear it - kept as
+`ConferenceState.speaker`. `SpeakerHold` (`conference/speaker_hold.dart`) holds each change for
+1 s: a new speaker within that second shows at its end, and only if the room still names him then,
+so two people cutting into each other do not make the border blink. Leaving the video clears it
+at once. An invited far end shows no speaker: it shows no room of its own.
 
 The bar holds the mic, the camera, the speaker, More and the end. More holds Add participant
 first (`conferenceFullScreenAdd`, opening the same lists as the default screen's), then the

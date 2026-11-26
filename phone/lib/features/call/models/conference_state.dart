@@ -46,6 +46,7 @@ class ConferenceState with _$ConferenceState {
     this.videoDisabled = false,
     this.screens = const {},
     this.presenter,
+    this.speaker,
   });
 
   /// The room the server assigned, from the conference offer; `null` before it.
@@ -83,6 +84,22 @@ class ConferenceState with _$ConferenceState {
   /// latest of them when several do; `null` while nobody does. It may be this
   /// client itself, whose own screen it does not receive.
   final int? presenter;
+
+  /// The feed the room shows as speaking: whoever started talking last, held
+  /// for a moment after each change so that the highlight does not flicker;
+  /// silence does not clear it. `null` while nobody has spoken. It may be the
+  /// host himself ([hostFeed]).
+  final int? speaker;
+
+  /// The host's own feed in his room: the far ends of his lines come after it
+  /// ([videoOfLine]).
+  static const hostFeed = 1;
+
+  /// Whether the room shows the host himself as speaking.
+  bool get hostSpeaks => speaker == hostFeed;
+
+  /// Whether the room shows the far end of [line] as speaking.
+  bool speaks(int line) => speaker == line + 2;
 
   /// The feed whose screen goes in the main place: the presenter's, or another
   /// one received while the presenter's is not - his own, or not arrived yet.

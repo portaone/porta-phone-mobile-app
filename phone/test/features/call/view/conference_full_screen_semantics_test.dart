@@ -623,6 +623,43 @@ void main() {
     semantics.dispose();
     await teardownCallScaffold(tester);
   });
+
+  testWidgets('the speaker\'s tile has the border, and nothing moves for it', (tester) async {
+    final semantics = tester.ensureSemantics();
+    await openFullScreen(tester);
+    final big = tester.getRect(find.bySemanticsIdentifier(numberedId(conferenceTileId, 0)));
+    final thumbnail = tester.getRect(find.bySemanticsIdentifier(numberedId(conferenceTileId, 1)));
+    expect(find.bySemanticsIdentifier(RegExp('^$conferenceTileSpeakingId')), findsNothing);
+    await teardownCallScaffold(tester);
+
+    // Boris, on line 1, is feed 3.
+    await openFullScreen(tester, conference: room.copyWith(speaker: 3));
+
+    final frame = find.bySemanticsIdentifier(numberedId(conferenceTileSpeakingId, 1));
+    expect(frame, findsOneWidget);
+    expect(tester.getRect(frame), thumbnail, reason: 'the border lies over the thumbnail itself');
+    expect(find.bySemanticsIdentifier(numberedId(conferenceTileSpeakingId, 0)), findsNothing);
+    expect(tester.getRect(find.bySemanticsIdentifier(numberedId(conferenceTileId, 0))), big);
+    expect(tester.getRect(find.bySemanticsIdentifier(numberedId(conferenceTileId, 1))), thumbnail);
+    expect(
+      find.bySemanticsIdentifier(numberedId(conferenceTileId, 1)),
+      findsOneWidget,
+      reason: 'the tile keeps its own node, its menu as it was',
+    );
+
+    semantics.dispose();
+    await teardownCallScaffold(tester);
+  });
+
+  testWidgets('the host speaking marks no participant\'s tile', (tester) async {
+    final semantics = tester.ensureSemantics();
+    await openFullScreen(tester, conference: room.copyWith(speaker: ConferenceState.hostFeed));
+
+    expect(find.bySemanticsIdentifier(RegExp('^$conferenceTileSpeakingId')), findsNothing);
+
+    semantics.dispose();
+    await teardownCallScaffold(tester);
+  });
 }
 
 /// A camera the room sends, as far as a renderer asks of it.

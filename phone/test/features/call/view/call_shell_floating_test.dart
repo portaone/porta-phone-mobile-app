@@ -42,6 +42,37 @@ void main() {
     expect(CallShell.roomFrontCamera(withCamera), isTrue, reason: 'the front one, where no leg says');
   });
 
+  test('the room\'s camera carries the speaking border while the room shows the host as speaking', () {
+    final calls = [call('a', video: true), call('b', line: 1)];
+    final camera = room.copyWith(selfVideo: _Stream());
+
+    expect(CallShell.hostSpeaking(CallState(activeCalls: calls, conference: camera)), isFalse);
+    expect(
+      CallShell.hostSpeaking(CallState(activeCalls: calls, conference: camera.copyWith(speaker: 3))),
+      isFalse,
+      reason: 'a participant speaks, not the host',
+    );
+    expect(
+      CallShell.hostSpeaking(
+        CallState(
+          activeCalls: calls,
+          conference: camera.copyWith(speaker: ConferenceState.hostFeed),
+        ),
+      ),
+      isTrue,
+    );
+    expect(
+      CallShell.hostSpeaking(
+        CallState(
+          activeCalls: [call('c', line: 2)],
+          conference: camera.copyWith(speaker: ConferenceState.hostFeed),
+        ),
+      ),
+      isFalse,
+      reason: 'a call outside the room shows its own camera',
+    );
+  });
+
   test('a participant invited to a room floats its camera there while it is published', () {
     // A voice call: the call itself sends no video, the camera goes to the host's room only.
     final calls = [call('a')];

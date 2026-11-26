@@ -161,6 +161,7 @@ class ConferenceRoom {
     AnswerFailedStep(:final attempt, :final result) => _answerFailed(attempt: attempt, result: result, write: write),
     RejoinRepliedStep(:final attempt, :final result) => _rejoinReplied(attempt: attempt, result: result),
     VideoFeedsChangedStep(:final feeds, :final presenter) => _videoFeedsChanged(feeds, presenter, write),
+    SpeakerChangedStep(:final speaker) => _speakerChanged(speaker, write),
     VideoDisabledStep() => _videoDisabled(write),
     CameraSwitchedStep(:final frontCamera, :final trackId) => _cameraSwitched(frontCamera, trackId, write),
   };
@@ -1076,6 +1077,14 @@ class ConferenceRoom {
         ),
       ),
     );
+  }
+
+  /// The room shows another participant as speaking: kept with the room the
+  /// host holds. An invitation shows no room of its own, and so no speaker.
+  Future<void> _speakerChanged(int? speaker, ConferenceWrite write) async {
+    final conference = _calls.conference;
+    if (!conference.isPresent || conference.speaker == speaker) return;
+    write(ConferenceUpdate(conference: conference.copyWith(speaker: speaker)));
   }
 
   /// The room has no video at all (`video_disabled`): nothing more is asked

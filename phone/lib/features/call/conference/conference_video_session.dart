@@ -13,6 +13,7 @@ import 'package:webtrit_phone/features/call/utils/user_media_builder.dart';
 import 'package:webtrit_phone/utils/serial_queue.dart';
 
 import 'room_video_codecs.dart';
+import 'speaker_hold.dart';
 
 final _logger = Logger('ConferenceVideoSession');
 
@@ -120,10 +121,14 @@ class ConferenceVideoSession {
     this.callsWantCamera,
     this.callsFrontCamera,
     this.onScreenLost,
+    // Told the feed to show as speaking whenever it changes: the room's
+    // `speaker`, held against flicker by [SpeakerHold].
+    void Function(int? speaker)? onSpeakerChanged,
     this.retryDelay = const Duration(seconds: 2),
   }) : _factory = factory,
        _userMediaBuilder = userMediaBuilder,
-       _send = send;
+       _send = send,
+       _speaker = SpeakerHold(onChanged: onSpeakerChanged ?? (_) {});
 
   final PeerConnectionFactory _factory;
   final UserMediaBuilder _userMediaBuilder;
@@ -207,6 +212,11 @@ class ConferenceVideoSession {
 
   /// The room's presenter as it last said; see [ConferenceVideoFeedsChanged].
   int? _presenter;
+
+  /// Whoever the room says started talking last, held against flicker
+  /// ([SpeakerHold]): its owner hears the feed to show as speaking, `null`
+  /// while nobody has spoken or the video is left.
+  final SpeakerHold _speaker;
 
   /// The camera stream being published, for the owner's own tile; `null`
   /// while the screen is shared in its place.
@@ -756,11 +766,12 @@ class ConferenceVideoSession {
   Future<void> handleUpdated(ConferenceVideoUpdatedEvent event) => _operations.run(() async {
     _logger.info(
       'handleUpdated: ${event.streams.map((s) => '${s.mid}=${s.feed}/${s.kind.name}').join(' ')}, '
-      'presenter ${event.presenter}',
+      'presenter ${event.presenter}, speaker ${event.speaker}',
     );
     _roomStreams = event.streams;
     _presenter = event.presenter;
     _reportFeeds();
+    _speaker.heard(event.speaker);
   });
 
   /// The signalling session came back: events sent while it was down are
@@ -809,6 +820,7 @@ class ConferenceVideoSession {
     await _closeSide(_publisher);
     _roomStreams = const [];
     _presenter = null;
+    _speaker.clear();
     _publisherFailures = 0;
     _subscriberFailures = 0;
   }

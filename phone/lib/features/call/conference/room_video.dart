@@ -101,6 +101,7 @@ class RoomVideo implements RoomVideoControls {
       callsWantCamera: _callsWantCamera,
       callsFrontCamera: _callsFrontCamera,
       onScreenLost: _screenLost,
+      onSpeakerChanged: (speaker) => _onStep(SpeakerChangedStep(speaker)),
     );
   }
 

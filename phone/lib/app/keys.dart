@@ -126,6 +126,9 @@ const String callActionsTransferMenuAddParticipantId = 'callActionsTransferMenuA
 const String callActionsTransferMenuCancelInviteId = 'callActionsTransferMenuCancelInvite';
 const String callFrontCameraPreviewId = 'callFrontCameraPreview';
 const callFrontCameraPreviewKey = Key(callFrontCameraPreviewId);
+
+/// The frame round the host's camera preview while his room shows him as speaking.
+const String callFrontCameraPreviewSpeakingId = 'callFrontCameraPreviewSpeaking';
 const String callActiveThumbnailId = 'callActiveThumbnail';
 const String callControlsToggleId = 'callControlsToggle';
 
@@ -168,11 +171,19 @@ const String conferenceTileMoreId = 'conferenceTileMore';
 
 /// The sign on a participant's tile that his microphone is off for the room.
 const String conferenceTileMutedId = 'conferenceTileMuted';
+
+/// The frame round a participant's tile on the conference full screen while the room shows him as
+/// speaking - a big tile, a thumbnail or his shared screen; numbered as his tile.
+const String conferenceTileSpeakingId = 'conferenceTileSpeaking';
 const String conferenceParticipantMenuId = 'conferenceParticipantMenu';
 
 /// A participant's row of the room's panel on the call screen: a tap opens the room in full screen
 /// (back into the room while it stands aside for a call outside it).
 const String conferenceParticipantRowId = 'conferenceParticipantRow';
+
+/// The frame round a participant's row of the room's panel while the room shows him as speaking;
+/// numbered as his row.
+const String conferenceParticipantSpeakingId = 'conferenceParticipantSpeaking';
 const String conferenceFullScreenCameraId = 'conferenceFullScreenCamera';
 const String conferenceFullScreenSpeakerId = 'conferenceFullScreenSpeaker';
 const String conferenceFullScreenMoreId = 'conferenceFullScreenMore';

@@ -12,6 +12,7 @@ import 'call_action_button.dart';
 import 'call_row_frame.dart';
 import 'conference_participant_camera.dart';
 import 'popup_menu.dart';
+import 'speaking_frame.dart';
 
 /// The conference room: who is in it, who is muted for everyone, and the way
 /// out of it.
@@ -110,6 +111,7 @@ class ConferencePanel extends StatelessWidget {
             // participant to appear in a list of its own.
             ready: conference.isReady(leg.key),
             muted: conference.participantMuted(leg.key),
+            speaking: conference.speaks(leg.value),
             // In use, a row is the big way into the tiles; standing aside, the way back into the room.
             onTap: opensFullScreen
                 ? onFullScreen
@@ -143,6 +145,7 @@ class _ParticipantRow extends StatelessWidget {
     required this.camera,
     required this.ready,
     required this.muted,
+    required this.speaking,
     required this.onTap,
     this.tapHint,
     required this.dimmed,
@@ -165,6 +168,10 @@ class _ParticipantRow extends StatelessWidget {
   final ParticipantCamera? camera;
   final bool ready;
   final bool muted;
+
+  /// Whether the room shows the participant as speaking: a thin border in the theme's accent round
+  /// the row, and nothing else of it changes.
+  final bool speaking;
   final VoidCallback? onTap;
 
   /// What a tap on the row does, for a screen reader, where its name alone does not say.
@@ -198,7 +205,7 @@ class _ParticipantRow extends StatelessWidget {
         : context.l10n.call_ConferencePanel_participantStatus;
 
     final onTap = this.onTap;
-    final frame = CallRowFrame(
+    final row = CallRowFrame(
       name: name,
       onTap: onTap,
       // The picture of whoever this leg is with, the same as a roster row -
@@ -251,6 +258,22 @@ class _ParticipantRow extends StatelessWidget {
             ],
           ),
         ),
+      ],
+    );
+    // Always in the stack, so that the row keeps its state when the border comes and goes; the border
+    // over the row's own shape, which CallRowFrame insets by 16 and 6 dp in its box.
+    final frame = Stack(
+      children: [
+        row,
+        if (speaking)
+          Positioned.fill(
+            child: SpeakingFrame(
+              identifier: numberedId(conferenceParticipantSpeakingId, index),
+              radius: 16,
+              width: 2,
+              margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+            ),
+          ),
       ],
     );
     if (onTap == null) return frame;

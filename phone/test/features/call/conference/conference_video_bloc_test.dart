@@ -580,6 +580,19 @@ void main() {
       expect(conference.videoOfLine(1), isNull, reason: 'a screen is not the participant\'s camera');
       expect(conference.hasVideo, isTrue);
     });
+
+    test('whoever the room says speaks reaches the state', () async {
+      await _roomUp(h);
+      h.signaling.emit(const ConferenceVideoOfferEvent(jsep: _videoOffer));
+      await pumpEventQueue();
+
+      h.signaling.emit(const ConferenceVideoUpdatedEvent(room: 7, self: 1, speaker: 3));
+      await pumpEventQueue();
+
+      expect(h.bloc.state.conference.speaker, 3);
+      expect(h.bloc.state.conference.speaks(1), isTrue, reason: 'the far end of line 1 is feed 3');
+      expect(h.bloc.state.conference.hostSpeaks, isFalse);
+    });
   });
 
   group('an invited far end', () {

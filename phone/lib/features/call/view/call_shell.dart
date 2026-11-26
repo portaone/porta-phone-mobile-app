@@ -6,6 +6,7 @@ import 'package:flutter_webrtc/flutter_webrtc.dart';
 
 import 'package:webtrit_callkeep/webtrit_callkeep.dart';
 
+import 'package:webtrit_phone/app/keys.dart';
 import 'package:webtrit_phone/app/router/app_router.dart';
 import 'package:webtrit_phone/features/orientations/orientations.dart';
 import 'package:webtrit_phone/l10n/l10n.dart';
@@ -66,6 +67,14 @@ class CallShell extends StatefulWidget {
   static MediaStream? cameraOf(CallState state, ActiveCall call) => state.conference.isLeg(call.callId)
       ? state.conference.selfVideo
       : _invitedCamera(state, call) ?? call.localStream;
+
+  /// Whether the camera preview carries the speaking border: the focused call is a leg of the
+  /// host's room and the room shows the host as speaking. The preview is the only place he sees
+  /// himself in.
+  static bool hostSpeaking(CallState state) =>
+      state.activeCalls.isNotEmpty &&
+      state.conference.isLeg(state.activeCalls.current.callId) &&
+      state.conference.hostSpeaks;
 
   /// Whether the room's camera is the front one: the way the legs that share it show; the front
   /// one, as it is published first, where none says.
@@ -334,6 +343,7 @@ class _CallShellState extends State<CallShell> {
             current.activeCalls.isEmpty ||
             previous.activeCalls.current != current.activeCalls.current ||
             previous.conference.selfVideo != current.conference.selfVideo ||
+            previous.conference.speaker != current.conference.speaker ||
             previous.invitedVideo?.selfVideo != current.invitedVideo?.selfVideo,
         builder: (context, state) {
           if (state.activeCalls.isEmpty) {
@@ -347,7 +357,7 @@ class _CallShellState extends State<CallShell> {
           // The camera of a room - the host's own, or the one this call was invited to: switched there.
           final inRoom = stream != activeCall.localStream;
 
-          return LocalCameraPreviewThumbnail(
+          final preview = LocalCameraPreviewThumbnail(
             orientation: orientation,
             frontCamera: hostedRoom
                 ? CallShell.roomFrontCamera(state)
@@ -360,6 +370,17 @@ class _CallShellState extends State<CallShell> {
                 : activeCall.frontCamera == null
                 ? null
                 : () => callBloc.add(CallControlEvent.cameraSwitched(activeCall.callId)),
+          );
+          // The host sees himself only here: while his room shows him as speaking, the border is on
+          // this window. Always in the stack, so that the preview keeps its renderer when it comes and goes.
+          return Stack(
+            children: [
+              preview,
+              if (CallShell.hostSpeaking(state))
+                const Positioned.fill(
+                  child: SpeakingFrame(identifier: callFrontCameraPreviewSpeakingId, radius: ThumbnailFrame.radius),
+                ),
+            ],
           );
         },
       ),

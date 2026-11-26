@@ -7,3 +7,4 @@ export 'room_codecs.dart';
 export 'conference_video_session.dart';
 export 'conference_camera_plan.dart';
 export 'room_video.dart';
+export 'speaker_hold.dart';

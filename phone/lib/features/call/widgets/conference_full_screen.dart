@@ -8,7 +8,9 @@
 // thumbnail in a row under it. The host is no tile: what goes out from him -
 // the room's camera, or the tile of his share with its Stop - is the call
 // screen's one floating window (CallShell), over this page as over the
-// default screen, where he left it.
+// default screen, where he left it. Whoever the room shows as speaking has a
+// border in the theme's accent round his tile, thumbnail or shared screen
+// (speaking_frame.dart); the layout does not follow it.
 //
 // Two pages of the call screen's routes on a phone
 // (view/conference_full_screen_pages.dart): the tiles, opened by the control
@@ -41,6 +43,7 @@ import 'conference_participant_camera.dart';
 import 'conference_tile_grid.dart';
 import 'popup_menu.dart';
 import 'screen_share_mark.dart';
+import 'speaking_frame.dart';
 import 'thumbnail_overlay_manager.dart';
 
 class ConferenceFullScreen extends StatefulWidget {
@@ -162,6 +165,7 @@ class _ConferenceFullScreenState extends State<ConferenceFullScreen> {
       sendsVideo: conference.videoOfLine(leg.value) != null,
       muted: conference.participantMuted(leg.key),
       ready: conference.isReady(leg.key),
+      speaking: conference.speaks(leg.value),
     );
 
     Widget tileOf(_OpenParticipant participant, {required _TileShape shape}) => _ParticipantMenu(
@@ -170,6 +174,7 @@ class _ConferenceFullScreenState extends State<ConferenceFullScreen> {
       params: params,
       onOpened: shape == _TileShape.page ? null : () => widget.onParticipantOpened(participant.callId),
       look: look,
+      radius: shape == _TileShape.thumbnail ? _Thumbnail.radius : _tileRadius,
       child: shape == _TileShape.thumbnail
           ? _Thumbnail(participant: participant, params: params, look: look)
           : _BigTile(
@@ -231,6 +236,7 @@ class _ConferenceFullScreenState extends State<ConferenceFullScreen> {
                   look: look,
                   // The screen is the large picture already.
                   onOpened: null,
+                  radius: _tileRadius,
                   child: Stack(
                     fit: StackFit.expand,
                     children: [
@@ -565,6 +571,7 @@ class _OpenParticipant {
     required this.sendsVideo,
     required this.muted,
     required this.ready,
+    required this.speaking,
   });
 
   final int index;
@@ -576,6 +583,9 @@ class _OpenParticipant {
   final bool sendsVideo;
   final bool muted;
   final bool ready;
+
+  /// Whether the room shows him as speaking.
+  final bool speaking;
 
   String get name => call?.nameOrNumber ?? callId;
 
@@ -589,6 +599,7 @@ class _OpenParticipant {
     sendsVideo: false,
     muted: muted,
     ready: false,
+    speaking: false,
   );
 }
 
@@ -596,7 +607,8 @@ class _OpenParticipant {
 /// his own page), mute or unmute him for everyone (once the room has him), end
 /// his call. The tile is a tap target named for the menu, and so are the three
 /// dots at its top right corner, which say the menu is there; the entries carry
-/// the ids the corner controls of the tile had.
+/// the ids the corner controls of the tile had. While the room shows him as speaking, a border in the
+/// theme's accent lies round the tile (SpeakingFrame), and nothing else moves.
 class _ParticipantMenu extends StatefulWidget {
   const _ParticipantMenu({
     super.key,
@@ -604,12 +616,16 @@ class _ParticipantMenu extends StatefulWidget {
     required this.params,
     required this.look,
     required this.onOpened,
+    required this.radius,
     required this.child,
   });
 
   final _OpenParticipant participant;
   final CallScreenParams params;
   final _Look look;
+
+  /// The corners of the tile, for the speaking border round it.
+  final double radius;
 
   /// Shows the participant large; `null` on his own page.
   final VoidCallback? onOpened;
@@ -709,6 +725,11 @@ class _ParticipantMenuState extends State<_ParticipantMenu> {
       fit: StackFit.expand,
       children: [
         tile,
+        // Beside the tile's node too, so that it keeps an id of its own; over the picture, under the dots.
+        if (participant.speaking)
+          Positioned.fill(
+            child: SpeakingFrame(identifier: numberedId(conferenceTileSpeakingId, index), radius: widget.radius),
+          ),
         if (_dotsCovered)
           // Clear of the muted sign at the top left (8 + 28 dp), under it.
           Positioned(top: muted ? 36 : 0, left: 0, child: dots)
@@ -905,6 +926,9 @@ class _Thumbnail extends StatelessWidget {
   static const width = 112.0;
   static const rowHeight = 132.0;
 
+  /// The corners of the card.
+  static const radius = 12.0;
+
   /// The avatar's size on a card without video.
   static const avatarSize = 44.0;
 
@@ -912,7 +936,7 @@ class _Thumbnail extends StatelessWidget {
   Widget build(BuildContext context) {
     final call = participant.call;
     return ClipRRect(
-      borderRadius: BorderRadius.circular(12),
+      borderRadius: BorderRadius.circular(radius),
       child: ColoredBox(
         color: look.tileGround,
         child: Stack(

@@ -269,6 +269,15 @@ final class VideoFeedsChangedStep extends ConferenceStep {
   final int? presenter;
 }
 
+/// The participant the room shows as speaking changed: the room's word for
+/// whoever started talking last, held against flicker (`SpeakerHold`).
+final class SpeakerChangedStep extends ConferenceStep {
+  const SpeakerChangedStep(this.speaker);
+
+  /// The speaker's feed; `null` while nobody has spoken or the video is left.
+  final int? speaker;
+}
+
 /// The server refused the room's video with `video_disabled`.
 final class VideoDisabledStep extends ConferenceStep {
   const VideoDisabledStep();

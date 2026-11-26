@@ -539,6 +539,31 @@ void main() {
       await tester.pumpWidget(const SizedBox());
     });
 
+    testWidgets('the speaker\'s row has a thin border, and the row stays as it was', (tester) async {
+      final semantics = tester.ensureSemantics();
+      await tester.pumpWidget(subject(fullScreen: true));
+      final row = tester.getRect(find.bySemanticsIdentifier(numberedId(conferenceParticipantRowId, 1)));
+      expect(find.bySemanticsIdentifier(RegExp('^$conferenceParticipantSpeakingId')), findsNothing);
+
+      // Boris, on line 1, is feed 3.
+      await tester.pumpWidget(subject(fullScreen: true, conference: _room().copyWith(speaker: 3)));
+
+      final frame = find.bySemanticsIdentifier(numberedId(conferenceParticipantSpeakingId, 1));
+      expect(frame, findsOneWidget);
+      expect(find.bySemanticsIdentifier(numberedId(conferenceParticipantSpeakingId, 0)), findsNothing);
+      expect(tester.getRect(find.bySemanticsIdentifier(numberedId(conferenceParticipantRowId, 1))), row);
+      expect(
+        tester.getRect(frame),
+        Rect.fromLTRB(row.left + 16, row.top + 6, row.right - 16, row.bottom - 6),
+        reason: 'on the row\'s own shape',
+      );
+
+      await tester.tap(frame, warnIfMissed: false);
+      expect(fullScreens, 1, reason: 'a tap goes through the border to the row');
+
+      semantics.dispose();
+    });
+
     testWidgets('a long call does not push the controls off a narrow row', (tester) async {
       // Past an hour the duration grows to HH:MM:SS; beside two tap targets
       // on a small screen at a large text scale there was nowhere to put it.
