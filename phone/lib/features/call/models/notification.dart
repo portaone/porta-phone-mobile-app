@@ -393,6 +393,25 @@ final class ConferenceFailedNotification extends MessageNotification {
   static const _videoNotSupported = 'video_not_supported';
 }
 
+/// The room's video has no place for this client's camera or screen: it
+/// takes as many participants with video as it was made for, [limit] when
+/// the room said how many. The person stays in the conference by voice.
+final class ConferenceRoomFullNotification extends MessageNotification {
+  const ConferenceRoomFullNotification({this.limit});
+
+  final int? limit;
+
+  @override
+  String l10n(BuildContext context) {
+    final limit = this.limit;
+    if (limit == null) return context.l10n.notifications_messageSnackBar_conferenceRoomFull;
+    return context.l10n.notifications_messageSnackBar_conferenceRoomFullLimit(limit);
+  }
+
+  @override
+  String? get identifier => notificationConferenceRoomFullId;
+}
+
 /// The room ended on the server's side while calls were still up; they go
 /// on as ordinary calls.
 final class ConferenceEndedNotification extends MessageNotification {

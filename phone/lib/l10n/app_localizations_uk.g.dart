@@ -2236,6 +2236,15 @@ class AppLocalizationsUk extends AppLocalizations {
   String get notifications_messageSnackBar_conferenceEnded => 'Конференцію завершено, дзвінки тривають';
 
   @override
+  String get notifications_messageSnackBar_conferenceRoomFull =>
+      'Відео недоступне: конференція досягла ліміту учасників';
+
+  @override
+  String notifications_messageSnackBar_conferenceRoomFullLimit(int limit) {
+    return 'Відео недоступне: конференція досягла ліміту учасників ($limit)';
+  }
+
+  @override
   String get notifications_errorSnackBar_activeLineBlindTransferWarning =>
       'Ви вже на лінії з одержувачем, до якого намагаєтеся здійснити безумовний переказ';
 

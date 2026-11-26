@@ -124,6 +124,7 @@ class ConferenceVideoSession {
     // Told the feed to show as speaking whenever it changes: the room's
     // `speaker`, held against flicker by [SpeakerHold].
     void Function(int? speaker)? onSpeakerChanged,
+    this.onRoomFull,
     this.retryDelay = const Duration(seconds: 2),
   }) : _factory = factory,
        _userMediaBuilder = userMediaBuilder,
@@ -150,6 +151,12 @@ class ConferenceVideoSession {
   /// owner's share has nowhere to go. Not said when the owner stopped it or
   /// left the video.
   final void Function()? onScreenLost;
+
+  /// The room has no place for one more publication (`code` 432): it takes
+  /// as many publishers as it was made for and no more. [limit] is that
+  /// number when the room's reason names it. Said before the publication is
+  /// given up, so that the owner can take the camera for unwanted first.
+  final void Function(int? limit)? onRoomFull;
 
   /// How long a request the room could not take yet (`attach_failed`) waits
   /// before it is asked again.
@@ -684,9 +691,11 @@ class ConferenceVideoSession {
 
   /// The room dropped the connection [pc] names (`conference_video_failed`).
   /// Core has let go of that handle, so the connection is closed and made
-  /// again once in a row - a room that fails it again (the 100 publishers of
-  /// `code` 432 among the reasons) leaves that connection gone.
-  Future<void> handleFailed(ConferenceVideoPc pc, {int? code}) {
+  /// again once in a row - a room that fails it again leaves that connection
+  /// gone. A publisher refused for a full room (`code` 432) is not made
+  /// again: the room would refuse it the same way until someone leaves, so
+  /// the owner is told ([onRoomFull]) and the publication is given up.
+  Future<void> handleFailed(ConferenceVideoPc pc, {int? code, String? reason}) {
     return _operations.run(() async {
       switch (pc) {
         case ConferenceVideoPc.subscriber:
@@ -703,6 +712,12 @@ class ConferenceVideoSession {
         case ConferenceVideoPc.publisher:
           await _closeSide(_publisher);
           if (!_wantsPublisher) return;
+          if (code == roomFullCode) {
+            _logger.warning('handleFailed: the room is full ($reason), left unpublished');
+            onRoomFull?.call(publisherLimit(reason));
+            _giveUpPublication();
+            return;
+          }
           if (++_publisherFailures > _retries) {
             _logger.warning('handleFailed: the room refused the publisher again (code $code), left unpublished');
             _giveUpPublication();
@@ -844,6 +859,19 @@ class ConferenceVideoSession {
         _logger.warning('a queued operation failed', e);
       }),
     );
+  }
+
+  /// The `code` of a publication the room has no place for: VideoRoom's
+  /// "maximum number of publishers reached".
+  static const roomFullCode = 432;
+
+  /// The number of publishers a full room takes, as its [reason] names it -
+  /// VideoRoom says "Maximum number of active publishers (100) already
+  /// reached"; `null` when the reason names none.
+  static int? publisherLimit(String? reason) {
+    if (reason == null) return null;
+    final match = RegExp(r'publishers \((\d+)\)').firstMatch(reason);
+    return match == null ? null : int.tryParse(match.group(1)!);
   }
 
   static bool _isRetryable(String? reason) =>

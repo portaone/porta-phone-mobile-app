@@ -207,6 +207,16 @@ final class ScreenShareLostNotice extends ConferenceNotice {
   const ScreenShareLostNotice();
 }
 
+/// The room's video has no place for this client's camera or screen: it
+/// takes as many publishers as it was made for. The person stays in the room
+/// by voice.
+final class RoomFullNotice extends ConferenceNotice {
+  const RoomFullNotice(this.limit);
+
+  /// How many the room takes, when the room said; `null` when it did not.
+  final int? limit;
+}
+
 /// A continuation of the room's own that takes its turn in the owner's
 /// queue: the owner hands it back to [ConferenceRoom.takeStep]. An owner that
 /// is closing drops it, as it drops a [ConferenceCommand].

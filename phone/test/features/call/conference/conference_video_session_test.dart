@@ -42,6 +42,7 @@ void main() {
   late List<List<ConferenceVideoFeed>> reported;
   late List<int?> presenters;
   late int screensLost;
+  late List<int?> roomFull;
   late ConferenceVideoSession session;
 
   setUp(() {
@@ -51,6 +52,7 @@ void main() {
     reported = [];
     presenters = [];
     screensLost = 0;
+    roomFull = [];
     session = ConferenceVideoSession(
       factory: factory,
       userMediaBuilder: media,
@@ -60,6 +62,7 @@ void main() {
         presenters.add(presenter);
       },
       onScreenLost: () => screensLost++,
+      onRoomFull: roomFull.add,
       retryDelay: Duration.zero,
     );
   });
@@ -360,14 +363,50 @@ void main() {
     test('a failed publisher is published once more, then left unpublished', () async {
       await session.publish();
 
-      await session.handleFailed(ConferenceVideoPc.publisher, code: 432);
+      await session.handleFailed(ConferenceVideoPc.publisher, code: 500);
       expect(factory.created, hasLength(2), reason: 'one retry on a new connection');
       expect(session.isPublishing, isTrue);
 
-      await session.handleFailed(ConferenceVideoPc.publisher, code: 432);
+      await session.handleFailed(ConferenceVideoPc.publisher, code: 500);
       expect(factory.created, hasLength(2), reason: 'the room refused again');
       expect(session.isPublishing, isFalse);
       expect(media.released, hasLength(2), reason: 'every camera taken is given back');
+      expect(roomFull, isEmpty, reason: 'a failure that is not a full room says nothing of one');
+    });
+
+    test('a publisher refused by a full room is given up at once, and the room\'s limit said', () async {
+      await session.publish();
+
+      await session.handleFailed(
+        ConferenceVideoPc.publisher,
+        code: 432,
+        reason: 'Maximum number of active publishers (2) already reached',
+      );
+
+      expect(factory.created, hasLength(1), reason: 'the full room would refuse a retry the same way');
+      expect(factory.created.single.closes, 1);
+      expect(session.isPublishing, isFalse);
+      expect(session.camera, isNull, reason: 'the own tile shows no camera that is not in the room');
+      expect(media.released, hasLength(1));
+      expect(roomFull, [2]);
+    });
+
+    test('a full room whose reason names no number is said without one', () async {
+      await session.publish();
+
+      await session.handleFailed(ConferenceVideoPc.publisher, code: 432, reason: 'full');
+
+      expect(roomFull, [null]);
+      expect(session.isPublishing, isFalse);
+    });
+
+    test('a full room after the camera was taken off says nothing', () async {
+      await session.publish();
+      await session.unpublish();
+
+      await session.handleFailed(ConferenceVideoPc.publisher, code: 432);
+
+      expect(roomFull, isEmpty);
     });
 
     test('an answer resets the retries', () async {
@@ -482,11 +521,35 @@ void main() {
     test('a failed publisher with the screen out is made again with the screen', () async {
       await session.shareScreen(screenStream());
 
-      await session.handleFailed(ConferenceVideoPc.publisher, code: 432);
+      await session.handleFailed(ConferenceVideoPc.publisher, code: 500);
 
       expect(factory.created, hasLength(2));
       expect(factory.created.last.addedTracks.single.id, 'screen-track');
       expect(signaling.of<ConferenceVideoPublishRequest>().last.descriptions.single.kind, ConferenceVideoKind.screen);
+    });
+
+    test('a screen a full room refuses is lost, after the room is said full', () async {
+      final order = <String>[];
+      session = ConferenceVideoSession(
+        factory: factory,
+        userMediaBuilder: media,
+        send: signaling.send,
+        onFeedsChanged: (_, _) {},
+        onScreenLost: () => order.add('lost'),
+        onRoomFull: (limit) => order.add('full $limit'),
+        retryDelay: Duration.zero,
+      );
+      await session.shareScreen(screenStream());
+
+      await session.handleFailed(
+        ConferenceVideoPc.publisher,
+        code: 432,
+        reason: 'Maximum number of active publishers (2) already reached',
+      );
+
+      expect(order, ['full 2', 'lost'], reason: 'the owner drops the camera before a lost screen could bring it back');
+      expect(factory.created, hasLength(1));
+      expect(session.isSharingScreen, isFalse);
     });
 
     test('a stop before the queued share ran leaves the camera on the line as it was', () async {
@@ -553,6 +616,13 @@ void main() {
       expect(session.isSharingScreen, isFalse);
       expect(screensLost, 0);
     });
+  });
+
+  test('the limit of a full room is read from the room\'s reason', () {
+    expect(ConferenceVideoSession.publisherLimit('Maximum number of active publishers (100) already reached'), 100);
+    expect(ConferenceVideoSession.publisherLimit('Maximum number of publishers (3) reached'), 3);
+    expect(ConferenceVideoSession.publisherLimit('Maximum number of active publishers already reached'), isNull);
+    expect(ConferenceVideoSession.publisherLimit(null), isNull);
   });
 
   group('the session', () {

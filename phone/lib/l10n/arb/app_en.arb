@@ -2207,6 +2207,19 @@
   "@notifications_messageSnackBar_conferenceEnded": {
     "description": "Shown when the server ends a conference while its calls are still up; they go on as separate calls."
   },
+  "notifications_messageSnackBar_conferenceRoomFull": "Video unavailable: the conference has reached its participant limit",
+  "@notifications_messageSnackBar_conferenceRoomFull": {
+    "description": "Shown when the conference's video room is full and the user's camera or shared screen could not join it; the user stays in the conference by voice. Used when the server does not say how many the room takes."
+  },
+  "notifications_messageSnackBar_conferenceRoomFullLimit": "Video unavailable: the conference has reached its participant limit ({limit})",
+  "@notifications_messageSnackBar_conferenceRoomFullLimit": {
+    "description": "Shown when the conference's video room is full and the user's camera or shared screen could not join it; the user stays in the conference by voice. {limit} is how many participants with video the room takes.",
+    "placeholders": {
+      "limit": {
+        "type": "int"
+      }
+    }
+  },
   "notifications_errorSnackBar_activeLineBlindTransferWarning": "You are already on the line with the recipient you are trying to blind transfer to",
   "@notifications_errorSnackBar_activeLineBlindTransferWarning": {
     "description": "Shown in a notification or snackbar when a user tries to perform a blind transfer to a recipient they are already on the line with. Condition: the active call is with the same recipient as the blind transfer target."

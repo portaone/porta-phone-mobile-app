@@ -727,7 +727,13 @@ the bloc has no part of the video of its own (see "In the room" below).
 - An invited far end's own controller acknowledges every answer, so an acknowledged
   answer does not reset the subscriber's retry: a connected subscriber does.
 - `conference_video_failed` closes that connection; it is made again once in a row and
-  then left gone (the room's 100 publishers, `code` 432, among the reasons).
+  then left gone. A publisher refused for a full room (`code` 432: VideoRoom takes as
+  many publishers as Core made the room for, 100) is not made again - the room would
+  refuse it the same way until someone leaves: the session says so (`onRoomFull`, with
+  the number when the room's reason names it, "Maximum number of active publishers (N)
+  already reached") and gives the publication up, the camera and a shared screen alike.
+  Core sends the failure only to the client whose publication it was; nobody else hears
+  of it.
 - A refusal says what to do (protocol section 10): `not_subscribed` subscribes again,
   `attach_failed` asks again once after a short delay, anything else
   (`not_in_conference`, `video_disabled`, ...) ends that connection - a publication
@@ -768,7 +774,15 @@ vocabulary of its own: the cameras received and the refusal of the room's video 
 steps (`VideoFeedsChangedStep`, `VideoDisabledStep`, `CameraSwitchedStep`), which the
 room writes as a `ConferenceUpdate`, the camera of a leg as `SetLegCameraCommand`, a
 camera that could not be opened as `CameraUnavailableNotice`, a shared screen the room
-would not take as `ScreenShareLostNotice`.
+would not take as `ScreenShareLostNotice`, a room with no place for one more camera or
+screen as `RoomFullNotice` - the camera taken for unwanted first, so that a screen
+given up does not bring it back into the full room. The bloc words it as
+`ConferenceRoomFullNotification`, a snack bar with its own id
+(`notificationConferenceRoomFullId`): "Video unavailable: the conference has reached its
+participant limit (N)", without the number when the room gave none. The person stays in
+the room by voice; the camera button tries again when pressed, as someone may have left.
+The audio mixer has no limit of its own, so nothing is said before a participant is
+added.
 
 The bloc hands the room's video, through `ConferenceRoom.video` (`RoomVideoControls`),
 only what concerns it: the video events of the signalling (`onEvent`, recognised by

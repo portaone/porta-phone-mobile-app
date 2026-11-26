@@ -219,6 +219,28 @@ void main() {
       expect(sent<ConferenceVideoPublishRequest>(), hasLength(asked), reason: 'the camera is not wanted any more');
     });
 
+    test('a camera the full room refuses is said to the host with the room\'s limit, and not retried', () async {
+      await _roomUp(h, videoLeg: true);
+      expect(sent<ConferenceVideoPublishRequest>(), hasLength(1));
+
+      h.signaling.emit(
+        const ConferenceVideoFailedEvent(
+          pc: ConferenceVideoPc.publisher,
+          reason: 'Maximum number of active publishers (2) already reached',
+          code: 432,
+        ),
+      );
+      await pumpEventQueue();
+
+      expect(h.notifications.whereType<ConferenceRoomFullNotification>().map((n) => n.limit), [2]);
+      expect(sent<ConferenceVideoPublishRequest>(), hasLength(1), reason: 'a full room is not asked again');
+      expect(h.bloc.state.conference.selfVideo, isNull, reason: 'the camera control shows it off');
+      h.bloc.didChangeAppLifecycleState(AppLifecycleState.paused);
+      h.bloc.didChangeAppLifecycleState(AppLifecycleState.resumed);
+      await pumpEventQueue();
+      expect(sent<ConferenceVideoPublishRequest>(), hasLength(1), reason: 'the camera is not wanted any more');
+    });
+
     test('a camera that cannot be opened is said to the user', () async {
       await h.close();
       h = _harness(media: _NoCamera());
@@ -608,6 +630,24 @@ void main() {
       expect(sent<ConferenceVideoSubscribeRequest>(), hasLength(1));
       expect(sent<ConferenceVideoPublishRequest>(), isEmpty);
       expect(h.bloc.state.invitedVideo?.line, 0, reason: 'the camera control of that call is the room\'s from here');
+    });
+
+    test('a camera the host\'s full room refuses is said to the participant too', () async {
+      await invited();
+      expect(sent<ConferenceVideoPublishRequest>(), hasLength(1));
+
+      h.signaling.emit(
+        const ConferenceVideoFailedEvent(
+          pc: ConferenceVideoPc.publisher,
+          reason: 'Maximum number of active publishers (2) already reached',
+          code: 432,
+        ),
+      );
+      await pumpEventQueue();
+
+      expect(h.notifications.whereType<ConferenceRoomFullNotification>().map((n) => n.limit), [2]);
+      expect(sent<ConferenceVideoPublishRequest>(), hasLength(1));
+      expect(h.bloc.state.invitedVideo?.line, 0, reason: 'the participant stays in the room by voice');
     });
 
     test('a camera turned off stays off after the background', () async {

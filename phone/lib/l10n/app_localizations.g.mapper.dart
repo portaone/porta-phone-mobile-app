@@ -948,6 +948,8 @@ extension AppLocalizationsExtension on AppLocalizations {
         notifications_messageSnackBar_conferenceVideoLeg,
       'notifications_messageSnackBar_conferenceEnded' =>
         notifications_messageSnackBar_conferenceEnded,
+      'notifications_messageSnackBar_conferenceRoomFull' =>
+        notifications_messageSnackBar_conferenceRoomFull,
       'notifications_errorSnackBar_activeLineBlindTransferWarning' =>
         notifications_errorSnackBar_activeLineBlindTransferWarning,
       'notifications_errorSnackBar_blindTransferFailed' =>
@@ -2502,6 +2504,13 @@ extension AppLocalizationsExtension on AppLocalizations {
         [final int count] => messaging_Watch_nextMembers(count),
         _ => throw ArgumentError(
           'messaging_Watch_nextMembers requires 1 arguments',
+        ),
+      },
+      'notifications_messageSnackBar_conferenceRoomFullLimit' => switch (args) {
+        [final int limit] =>
+          notifications_messageSnackBar_conferenceRoomFullLimit(limit),
+        _ => throw ArgumentError(
+          'notifications_messageSnackBar_conferenceRoomFullLimit requires 1 arguments',
         ),
       },
       'notifications_errorSnackBar_signalingDisconnectWithCodeName' =>

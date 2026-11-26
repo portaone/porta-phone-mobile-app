@@ -2604,6 +2604,7 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
           RoomFailedNotice(:final reason) => ConferenceFailedNotification(reason: reason),
           RoomEndedNotice() => const ConferenceEndedNotification(),
           CameraUnavailableNotice() => const CallUserMediaErrorNotification(),
+          RoomFullNotice(:final limit) => ConferenceRoomFullNotification(limit: limit),
           // Said by the stop, which this asks for.
           ScreenShareLostNotice() => null,
         }

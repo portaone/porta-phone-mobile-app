@@ -2218,6 +2218,15 @@ class AppLocalizationsPt extends AppLocalizations {
   String get notifications_messageSnackBar_conferenceEnded => 'A conferência terminou, as chamadas continuam';
 
   @override
+  String get notifications_messageSnackBar_conferenceRoomFull =>
+      'Vídeo indisponível: a conferência atingiu o limite de participantes';
+
+  @override
+  String notifications_messageSnackBar_conferenceRoomFullLimit(int limit) {
+    return 'Vídeo indisponível: a conferência atingiu o limite de participantes ($limit)';
+  }
+
+  @override
   String get notifications_errorSnackBar_activeLineBlindTransferWarning =>
       'Você já está na linha com o destinatário para o qual está tentando fazer a transferência direta';
 

@@ -102,6 +102,7 @@ class RoomVideo implements RoomVideoControls {
       callsFrontCamera: _callsFrontCamera,
       onScreenLost: _screenLost,
       onSpeakerChanged: (speaker) => _onStep(SpeakerChangedStep(speaker)),
+      onRoomFull: _roomFull,
     );
   }
 
@@ -175,7 +176,11 @@ class RoomVideo implements RoomVideoControls {
       ConferenceVideoPublisherAnswerEvent(:final jsep) => _session.handlePublisherAnswer(jsep),
       ConferenceVideoIceTrickleEvent(:final pc?, :final candidate) => _session.handleRemoteCandidate(pc, candidate),
       final ConferenceVideoUpdatedEvent updated => _session.handleUpdated(updated),
-      ConferenceVideoFailedEvent(:final pc?, :final code) => _session.handleFailed(pc, code: code),
+      ConferenceVideoFailedEvent(:final pc?, :final code, :final reason) => _session.handleFailed(
+        pc,
+        code: code,
+        reason: reason,
+      ),
       ConferenceVideoFailedEvent(:final request?, :final reason) => _session.handleRefused(request, reason: reason),
       _ => Future<void>.value(),
     };
@@ -241,6 +246,16 @@ class RoomVideo implements RoomVideoControls {
   void _screenLost() {
     _onNotice(const ScreenShareLostNotice());
     if (_inVideo && _plan.cameraWanted && !_plan.cameraPaused) _publish();
+  }
+
+  /// The room has no place for this client's camera or screen: the person
+  /// is told, and the camera is taken for unwanted so that its control shows
+  /// what is and a screen given up does not bring it back into a full room.
+  /// The audio is the mixer's and stays.
+  void _roomFull(int? limit) {
+    if (_disposed) return;
+    _plan.setCamera(false, inBackground: _inBackground);
+    _onNotice(RoomFullNotice(limit));
   }
 
   @override

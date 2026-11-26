@@ -3994,6 +3994,18 @@ abstract class AppLocalizations {
   /// **'The conference has ended, the calls continue'**
   String get notifications_messageSnackBar_conferenceEnded;
 
+  /// Shown when the conference's video room is full and the user's camera or shared screen could not join it; the user stays in the conference by voice. Used when the server does not say how many the room takes.
+  ///
+  /// In en, this message translates to:
+  /// **'Video unavailable: the conference has reached its participant limit'**
+  String get notifications_messageSnackBar_conferenceRoomFull;
+
+  /// Shown when the conference's video room is full and the user's camera or shared screen could not join it; the user stays in the conference by voice. {limit} is how many participants with video the room takes.
+  ///
+  /// In en, this message translates to:
+  /// **'Video unavailable: the conference has reached its participant limit ({limit})'**
+  String notifications_messageSnackBar_conferenceRoomFullLimit(int limit);
+
   /// Shown in a notification or snackbar when a user tries to perform a blind transfer to a recipient they are already on the line with. Condition: the active call is with the same recipient as the blind transfer target.
   ///
   /// In en, this message translates to:

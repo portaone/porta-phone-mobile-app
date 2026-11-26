@@ -309,6 +309,11 @@ const String appSnackBarId = 'appSnackBar';
 /// to take it over - declined; it carries this id instead of [appSnackBarId],
 /// so a flow can tell it from any other message.
 const String notificationLinkedCallDeclinedId = 'notificationLinkedCallDeclined';
+
+/// The snack bar saying that the conference's video room is full and this
+/// client's camera or screen did not get in; it carries this id instead of
+/// [appSnackBarId], so a flow can tell it from any other message.
+const String notificationConferenceRoomFullId = 'notificationConferenceRoomFull';
 const String actionPadTransferId = 'actionPadTransfer';
 const String actionPadVoiceCallId = 'actionPadVoiceCall';
 const String callActionsAcceptId = 'callActionsAccept';

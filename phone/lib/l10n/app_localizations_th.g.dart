@@ -2185,6 +2185,15 @@ class AppLocalizationsTh extends AppLocalizations {
   String get notifications_messageSnackBar_conferenceEnded => 'การประชุมสายสิ้นสุดแล้ว สายยังคงดำเนินต่อ';
 
   @override
+  String get notifications_messageSnackBar_conferenceRoomFull =>
+      'ไม่สามารถใช้วิดีโอได้: การประชุมสายมีผู้เข้าร่วมครบจำนวนสูงสุดแล้ว';
+
+  @override
+  String notifications_messageSnackBar_conferenceRoomFullLimit(int limit) {
+    return 'ไม่สามารถใช้วิดีโอได้: การประชุมสายมีผู้เข้าร่วมครบจำนวนสูงสุดแล้ว ($limit)';
+  }
+
+  @override
   String get notifications_errorSnackBar_activeLineBlindTransferWarning =>
       'คุณกำลังอยู่ในสายกับผู้รับที่คุณพยายามโอนสายแบบไม่รอรับอยู่แล้ว';
 

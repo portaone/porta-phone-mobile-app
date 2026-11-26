@@ -59,6 +59,36 @@ void main() {
     handle.dispose();
   });
 
+  testWidgets('the full room bar carries its own id, so a flow finds it whatever its wording', (tester) async {
+    final handle = tester.ensureSemantics();
+    const notification = ConferenceRoomFullNotification(limit: 2);
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: Builder(
+            builder: (context) => ElevatedButton(
+              onPressed: () => context.showSnackBar('Room full', identifier: notification.identifier!),
+              child: const Text('show'),
+            ),
+          ),
+        ),
+      ),
+    );
+
+    await tester.tap(find.text('show'));
+    await tester.pump();
+
+    expect(notification.identifier, notificationConferenceRoomFullId);
+    expect(
+      tester.getSemantics(find.bySemanticsIdentifier(notificationConferenceRoomFullId)),
+      isSemantics(identifier: notificationConferenceRoomFullId, label: 'Room full'),
+    );
+    expect(find.bySemanticsIdentifier(appSnackBarId), findsNothing);
+
+    handle.dispose();
+  });
+
   test('only the decline of a linked call names its own bar', () {
     expect(const LinkedCallFailedNotification(LinkedCallFailure.declined).identifier, notificationLinkedCallDeclinedId);
     expect(const LinkedCallFailedNotification(LinkedCallFailure.unanswered).identifier, isNull);
