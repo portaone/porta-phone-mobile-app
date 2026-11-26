@@ -324,11 +324,14 @@ void main() {
 
     test('an ICE restart renegotiates the same publication', () async {
       await session.publish();
+      expect(factory.created.single.iceRestarts, 0, reason: 'a first publication restarts nothing');
 
       expect(await session.restartPublisher(), isA<CameraPublished>());
 
       expect(factory.created, hasLength(1));
-      expect(factory.created.single.offerConstraints.last, {'iceRestart': true});
+      // Asked of the connection: an `iceRestart` offer constraint is ignored on Android.
+      expect(factory.created.single.iceRestarts, 1);
+      expect(factory.created.single.offerConstraints, everyElement(isNot(containsPair('iceRestart', true))));
       expect(signaling.of<ConferenceVideoPublishRequest>(), hasLength(2));
       expect(signaling.of<ConferenceVideoPublishRequest>().last.descriptions, isNotEmpty);
     });
@@ -517,7 +520,7 @@ void main() {
 
       await session.reconnected();
 
-      expect(factory.created.single.offerConstraints.last, {'iceRestart': true});
+      expect(factory.created.single.iceRestarts, 1);
       expect(signaling.of<ConferenceVideoPublishRequest>().last.descriptions.single.kind, ConferenceVideoKind.screen);
     });
 
@@ -567,7 +570,7 @@ void main() {
       expect(factory.created.first.closes, 1, reason: 'the old subscriber goes, the next offer gets a new one');
       final publishes = signaling.of<ConferenceVideoPublishRequest>();
       expect(publishes, hasLength(2));
-      expect(factory.created[1].offerConstraints.last, {'iceRestart': true});
+      expect(factory.created[1].iceRestarts, 1);
     });
 
     test('a refused publication of an invited far end closes the publisher for good', () async {

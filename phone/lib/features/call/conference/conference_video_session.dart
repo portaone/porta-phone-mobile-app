@@ -442,7 +442,12 @@ class ConferenceVideoSession {
     final RTCSessionDescription offer;
     final List<ConferenceVideoDescription> descriptions;
     try {
-      final made = await peerConnection.createOffer({if (iceRestart) 'iceRestart': true});
+      // A restart is asked of the connection itself: flutter_webrtc on Android
+      // ignores an `iceRestart` offer constraint, and the offer then kept the
+      // old ICE credentials - Janus took it as a plain renegotiation and the
+      // publication stayed without media after a network change.
+      if (iceRestart) await peerConnection.restartIce();
+      final made = await peerConnection.createOffer({});
       // H.264 the room's other phones can take: see room_video_codecs.dart.
       offer = RTCSessionDescription(made.sdp == null ? null : withBaselineH264Only(made.sdp!), made.type);
       await peerConnection.setLocalDescription(offer);
