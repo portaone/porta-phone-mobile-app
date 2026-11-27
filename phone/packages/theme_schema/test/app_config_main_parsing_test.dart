@@ -20,7 +20,7 @@ void main() {
       expect(config.mainConfig.bottomMenu.cacheSelectedTab, isTrue);
 
       final tabs = config.mainConfig.bottomMenu.tabs;
-      expect(tabs, hasLength(7));
+      expect(tabs, hasLength(9));
 
       // variants in order
       expect(tabs[0], isA<FavoritesTabScheme>());
@@ -28,8 +28,10 @@ void main() {
       expect(tabs[2], isA<ContactsTabScheme>());
       expect(tabs[3], isA<KeypadTabScheme>());
       expect(tabs[4], isA<MessagingTabScheme>());
-      expect(tabs[5], isA<EmbeddedTabScheme>());
-      expect(tabs[6], isA<EmbeddedTabScheme>());
+      expect(tabs[5], isA<VoicemailTabScheme>());
+      expect(tabs[6], isA<CallCenterTabScheme>());
+      expect(tabs[7], isA<EmbeddedTabScheme>());
+      expect(tabs[8], isA<EmbeddedTabScheme>());
 
       // Favorites
       final favorites = tabs[0] as FavoritesTabScheme;
@@ -47,6 +49,7 @@ void main() {
       expect(recents.titleL10n, 'main_BottomNavigationBarItemLabel_recents');
       expect(recents.icon, '0xe03a');
       expect(recents.supportsCallHistory, isTrue);
+      expect(recents.layout, RecentsLayoutScheme.tabbed);
 
       // Contacts
       final contacts = tabs[2] as ContactsTabScheme;
@@ -74,8 +77,22 @@ void main() {
       expect(messaging.titleL10n, 'main_BottomNavigationBarItemLabel_chats');
       expect(messaging.icon, '0xe155');
 
+      // Voicemail and call center: listed so the default shows every section,
+      // off so it draws the same bar as before they were listed.
+      final voicemail = tabs[5] as VoicemailTabScheme;
+      expect(voicemail.enabled, isFalse);
+      expect(voicemail.initial, isFalse);
+      expect(voicemail.titleL10n, 'main_BottomNavigationBarItemLabel_voicemail');
+      expect(voicemail.icon, '0xe6c1');
+
+      final callCenter = tabs[6] as CallCenterTabScheme;
+      expect(callCenter.enabled, isFalse);
+      expect(callCenter.initial, isFalse);
+      expect(callCenter.titleL10n, 'main_BottomNavigationBarItemLabel_callCenter');
+      expect(callCenter.icon, '0xf0ee');
+
       // Embedded #1
-      final embedded = tabs[5] as EmbeddedTabScheme;
+      final embedded = tabs[7] as EmbeddedTabScheme;
       expect(embedded.enabled, isFalse);
       expect(embedded.initial, isFalse);
       expect(embedded.titleL10n, 'main_BottomNavigationBarItemLabel_embedded');
@@ -83,7 +100,7 @@ void main() {
       expect(embedded.embeddedResourceId, 'example_embedded_payload_data');
 
       // Embedded #2
-      final embeddedSpa = tabs[6] as EmbeddedTabScheme;
+      final embeddedSpa = tabs[8] as EmbeddedTabScheme;
       expect(embeddedSpa.enabled, isFalse);
       expect(embeddedSpa.initial, isFalse);
       expect(embeddedSpa.titleL10n, 'main_BottomNavigationBarItemLabel_embedded_spa_example');
@@ -94,7 +111,7 @@ void main() {
     test('loginConfig [modeSelect screen] & settingsConfig basic fields parsed', () {
       final config = AppConfig.fromJson(json);
 
-      expect(config.loginConfig.modeSelect.greetingL10n, 'WebTrit');
+      expect(config.loginConfig.modeSelect.greetingL10n, 'PortaPhone');
       expect(config.loginConfig.modeSelect.actions, isNotEmpty);
       expect(config.loginConfig.modeSelect.actions.first.enabled, isTrue);
       expect(config.loginConfig.modeSelect.actions.first.type, 'login');
