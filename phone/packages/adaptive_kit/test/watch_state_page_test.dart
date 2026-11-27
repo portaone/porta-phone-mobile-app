@@ -87,6 +87,68 @@ void main() {
         );
       });
 
+      testWidgets('on $preset a header stays where the list has it, empty, failed or loading', (tester) async {
+        preset.apply(tester);
+        var taps = 0;
+        Widget chip() => TextButton(key: const Key('chip'), onPressed: () => taps++, child: const Text('All'));
+
+        await pumpCollectingOverflows(
+          tester,
+          wrap(
+            WatchScrollList.builder(
+              title: 'Voicemail',
+              header: [chip()],
+              itemCount: 3,
+              itemBuilder: (context, index) => WatchListTile(title: 'Row $index'),
+            ),
+          ),
+        );
+        final onList = tester.getRect(find.byKey(const Key('chip')));
+        final titleOnList = tester.getRect(find.text('Voicemail'));
+
+        final pages = {
+          'empty with an edge button': WatchStatePage(
+            title: 'Voicemail',
+            header: [chip()],
+            icon: const Icon(Icons.voicemail, key: Key('icon')),
+            message: 'No saved',
+            hint: 'Two lines of a hint that wrap',
+            action: WatchAction(label: 'Refresh', onPressed: () {}),
+          ),
+          'failed without one': WatchStatePage(
+            title: 'Voicemail',
+            header: [chip()],
+            icon: const Icon(Icons.error_outline, key: Key('icon')),
+            message: 'Failed',
+          ),
+          'loading': WatchStatePage.loading(title: 'Voicemail', header: [chip()], progressLabel: 'Loading'),
+        };
+        for (final MapEntry(key: name, value: page) in pages.entries) {
+          expect(await pumpCollectingOverflows(tester, wrap(page)), isEmpty, reason: name);
+          final header = tester.getRect(find.byKey(const Key('chip')));
+          expect(header, rectMoreOrLessEquals(onList, epsilon: 0.5), reason: name);
+          // The title is centred text: its line, not its box, has to match.
+          final title = tester.getRect(find.text('Voicemail'));
+          expect(title.top, moreOrLessEquals(titleOnList.top, epsilon: 0.5), reason: name);
+          expect(title.center.dx, moreOrLessEquals(titleOnList.center.dx, epsilon: 0.5), reason: name);
+          // Under a header the state is its message, without the icon.
+          expect(find.byKey(const Key('icon')), findsNothing, reason: name);
+          final state = switch (name) {
+            'loading' => find.byType(CircularProgressIndicator),
+            'failed without one' => find.text('Failed'),
+            _ => find.text('No saved'),
+          };
+          expect(header.bottom, lessThanOrEqualTo(tester.getRect(state).top), reason: name);
+          final edge = find.byType(WatchEdgeButton);
+          if (edge.evaluate().isNotEmpty) {
+            expect(header.bottom, lessThanOrEqualTo(tester.getRect(edge).top), reason: name);
+          }
+        }
+
+        await tester.tap(find.byKey(const Key('chip')));
+        expect(taps, 1);
+      });
+
       testWidgets('on $preset the loading state is a spinner with its hint and no action', (tester) async {
         preset.apply(tester);
         expect(

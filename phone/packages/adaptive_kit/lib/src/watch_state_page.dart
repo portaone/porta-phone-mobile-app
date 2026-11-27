@@ -21,6 +21,12 @@ import 'watch_title.dart';
 /// [WatchStatePage.loading] is the section on its way: a spinner in the middle,
 /// an optional [hint] under it ("Connecting..."), no action.
 ///
+/// A section whose list has a [header] - the chip that picks which list it
+/// shows - keeps it where the list has it: right under the title, at the
+/// list's top padding, with the state in the room under it, without the icon.
+/// The chip is the control people tap again and again, so it does not move
+/// when the list it shows turns out empty.
+///
 /// The state is a live region: when a section's loading page is replaced by
 /// what came of it, a screen reader says the new state without the person
 /// moving to it. The middle scrolls when it does not fit and fades into the
@@ -30,6 +36,7 @@ class WatchStatePage extends StatelessWidget {
     super.key,
     required String this.message,
     this.title,
+    this.header = const [],
     this.footer = const [],
     this.icon,
     this.hint,
@@ -40,6 +47,7 @@ class WatchStatePage extends StatelessWidget {
     super.key,
     required String this.progressLabel,
     this.title,
+    this.header = const [],
     this.footer = const [],
     this.hint,
   }) : icon = null,
@@ -49,6 +57,11 @@ class WatchStatePage extends StatelessWidget {
   /// The section's name, at the top of the face.
   final String? title;
 
+  /// What the section's list has between its title and its rows - the chip
+  /// that shows another of its lists - laid out as the list lays it out, so
+  /// it stays in place while the list empties, loads or fails.
+  final List<Widget> header;
+
   /// What the section keeps beside its state - the chip that shows another
   /// of its lists - so the state is not a dead end: under the state in the
   /// middle, scrolling with it, so the state itself is what a small face
@@ -56,7 +69,8 @@ class WatchStatePage extends StatelessWidget {
   final List<Widget> footer;
 
   /// Drawn at the icon size of the state (smaller on a small face) in the
-  /// face's muted colour, unless it sets its own; decoration only, never read out.
+  /// face's muted colour, unless it sets its own; decoration only, never read
+  /// out. Not drawn under a [header].
   final Widget? icon;
 
   /// What the state is, in one or two lines; null only on [WatchStatePage.loading].
@@ -83,6 +97,9 @@ class WatchStatePage extends StatelessWidget {
   Widget build(BuildContext context) {
     final action = this.action;
     final body = _body(context);
+    // With a header the page starts as the section's list does, so the
+    // title and the header land where they are on the list.
+    final top = header.isEmpty ? context.watchContentPadding() : context.watchListPadding().copyWith(bottom: 0);
     // Without the edge button the state reaches down to the bottom of the
     // face; a round face narrows there, so the bottom keeps a list's room
     // and a long message does not scroll under the bezel.
@@ -90,18 +107,25 @@ class WatchStatePage extends StatelessWidget {
       color: Theme.of(context).scaffoldBackgroundColor,
       child: action == null
           ? Padding(
-              padding: context.watchContentPadding().copyWith(bottom: context.watchListPadding().bottom),
+              padding: top.copyWith(bottom: context.watchListPadding().bottom),
               child: body,
             )
-          : WatchEdgeLayout(body: body, edge: (context, overlay) => action.buildButton(overlay)),
+          : WatchEdgeLayout(padding: top, body: body, edge: (context, overlay) => action.buildButton(overlay)),
     );
   }
 
   Widget _body(BuildContext context) {
     final title = this.title;
+    final gap = context.adaptiveMetrics.gap;
     return Column(
       children: [
         if (title != null) WatchTitle(title),
+        if (header.isNotEmpty) ...[
+          // The gaps of the list's lead: after the title and after each
+          // part of the header, each part as wide as a list row.
+          if (title != null) SizedBox(height: gap),
+          for (final widget in header) ...[SizedBox(width: double.infinity, child: widget), SizedBox(height: gap)],
+        ],
         Expanded(
           child: WatchFadeMask(
             fadeHeight: _fadeHeight,
@@ -135,7 +159,9 @@ class WatchStatePage extends StatelessWidget {
 
   Widget _state(BuildContext context) {
     final themeData = Theme.of(context);
-    final icon = this.icon;
+    // Under a header the state has a list row's room, not the face's: the
+    // header already says which list this is, so the message keeps the room.
+    final icon = header.isEmpty ? this.icon : null;
     final hint = this.hint;
     return Column(
       mainAxisSize: MainAxisSize.min,

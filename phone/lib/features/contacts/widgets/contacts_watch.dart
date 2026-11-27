@@ -115,7 +115,8 @@ class ContactsWatchEmpty {
 /// One list of a contacts section on a watch - an address book, or the
 /// favourites - : the section's title, the search, the chip that shows
 /// another list, and a row per entry - no tabs, no app bar. On its way it is a loading page; with nothing to list, a state page
-/// that keeps the chip, so another book is a tap away - and a search that
+/// that keeps the search and the chip where the list has them, so the next
+/// tap on the chip shows another book - and a search that
 /// finds nothing stays the list, so the query can be changed.
 class ContactsWatchBody extends StatelessWidget {
   const ContactsWatchBody({
@@ -148,13 +149,12 @@ class ContactsWatchBody extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final section = ContactsWatchScope.of(context);
-    final chip = section.choosable ? ContactsWatchSourceChip(section: section) : null;
-
     // Keyed by the book shown: every book in the stack keeps a field of its
     // own, and one built before a search in another book would show the old
     // query over rows filtered by the new one. Changing the book rebuilds it
     // from the query the screen holds; typing in it does not.
-    final header = [ContactsWatchToolbar(key: ValueKey(section.selected), section: section), const WatchSeparator()];
+    final toolbar = ContactsWatchToolbar(key: ValueKey(section.selected), section: section);
+    final header = [toolbar, const WatchSeparator()];
 
     // A search that finds nothing stays the list, its rows saying so: a
     // state page would rebuild the field being typed in, and the watch
@@ -173,7 +173,7 @@ class ContactsWatchBody extends StatelessWidget {
     if (loading) {
       return WatchStatePage.loading(
         title: section.title,
-        footer: [?chip],
+        header: [if (section.choosable) toolbar],
         progressLabel: context.l10n.common_SemanticsLabel_loading,
       );
     }
@@ -181,7 +181,7 @@ class ContactsWatchBody extends StatelessWidget {
     if (itemCount == 0) {
       return WatchStatePage(
         title: section.title,
-        footer: [?chip],
+        header: [if (section.choosable) toolbar],
         icon: Icon(empty.icon),
         message: empty.message,
         hint: empty.hint,

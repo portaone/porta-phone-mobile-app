@@ -262,15 +262,31 @@ void main() {
   });
 
   for (final preset in watchPresets) {
-    testWidgets('on $preset an empty filter is a state page with the pill under it', (tester) async {
+    testWidgets('on $preset an empty filter keeps the pill where the list has it, the state under it', (tester) async {
       preset.apply(tester);
       mailbox([jane]);
-      screen(filter: VoicemailFilter.saved);
-      expect(await pumpCollectingOverflows(tester, app(const VoicemailScreen())), isEmpty);
+      screen();
+      await pumpCollectingOverflows(tester, app(const VoicemailScreen()));
+      final onList = tester.getRect(find.byKey(voicemailWatchFilterKey));
 
-      expect(find.byType(WatchStatePage), findsOneWidget);
-      expect(find.text('No saved messages'), findsOneWidget);
-      expect(find.byKey(voicemailWatchFilterKey), findsOneWidget);
+      for (final (filter, message, next) in [
+        (VoicemailFilter.saved, 'No saved messages', VoicemailFilter.trash),
+        (VoicemailFilter.trash, 'Trash is empty', VoicemailFilter.all),
+      ]) {
+        // A tree of its own: the mocked cubit does not emit the change.
+        await tester.pumpWidget(const SizedBox());
+        screen(filter: filter);
+        expect(await pumpCollectingOverflows(tester, app(const VoicemailScreen())), isEmpty, reason: '$filter');
+
+        expect(find.byType(WatchStatePage), findsOneWidget, reason: '$filter');
+        final pill = tester.getRect(find.byKey(voicemailWatchFilterKey));
+        expect(pill, rectMoreOrLessEquals(onList, epsilon: 0.5), reason: '$filter');
+        expect(pill.bottom, lessThanOrEqualTo(tester.getRect(find.text(message)).top), reason: '$filter');
+        expect(pill.bottom, lessThanOrEqualTo(tester.getRect(find.byType(WatchEdgeButton)).top), reason: '$filter');
+        // The next tap on the same spot lands on the pill: it shows the next filter.
+        await tester.tapAt(onList.center);
+        verify(() => cubit.setFilter(next)).called(1);
+      }
     });
   }
 

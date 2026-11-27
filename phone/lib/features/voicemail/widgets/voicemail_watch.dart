@@ -50,9 +50,9 @@ class VoicemailWatchBody extends StatelessWidget {
 /// tap opens the message's page, where it is played.
 ///
 /// Not supported, on its way, failed and empty are the watch's state pages;
-/// an empty or failed filter keeps the pill under its state, so another
-/// filter is a tap away. Picking several, forwarding and opening the contact
-/// stay on the phone.
+/// an empty or failed filter keeps the pill where the list has it, with the
+/// state under it, so the next tap on the pill shows the next filter. Picking
+/// several, forwarding and opening the contact stay on the phone.
 class VoicemailWatchList extends StatelessWidget {
   const VoicemailWatchList({super.key, required this.title, required this.view});
 
@@ -86,7 +86,7 @@ class VoicemailWatchList extends StatelessWidget {
         title: title,
         icon: const Icon(Icons.error_outline),
         message: l10n.webview_defaultError_title,
-        footer: chip,
+        header: chip,
         action: WatchAction(
           label: l10n.voicemail_Label_retry,
           identifier: voicemailWatchRetryId,
@@ -101,7 +101,7 @@ class VoicemailWatchList extends StatelessWidget {
         message: view.filter.emptyLabel(context),
         // The Saved hint points at the phone's menu, which a watch has not.
         hint: view.isShowingTrash ? l10n.voicemail_Label_emptyTrashHint : null,
-        footer: chip,
+        header: chip,
         // Where a phone pulls to refresh, as the other lists on a watch.
         action: WatchAction(
           label: l10n.common_SemanticsLabel_refresh,

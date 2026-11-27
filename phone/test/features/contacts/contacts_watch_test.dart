@@ -194,18 +194,49 @@ void main() {
       verifyNever(() => harness.callBloc.add(any()));
     });
 
-    testWidgets('on $preset the book on its way is a loading page that keeps the chip', (tester) async {
+    testWidgets('on $preset the book on its way is a loading page that keeps the chip where the list has it', (
+      tester,
+    ) async {
       preset.apply(tester);
       shown(ContactSourceType.external);
-      external(const ContactsExternalTabState(status: ContactsExternalTabStatus.inProgress));
+      external(ContactsExternalTabState(status: ContactsExternalTabStatus.success, contacts: people));
       local(const ContactsLocalTabState(status: ContactsLocalTabStatus.success));
+      await pumpCollectingOverflows(tester, tabbed());
+      final onList = tester.getRect(find.byKey(contactsWatchSourceKey));
 
+      external(const ContactsExternalTabState(status: ContactsExternalTabStatus.inProgress));
+      // A tree of its own: the mocked blocs do not emit the change.
+      await tester.pumpWidget(const SizedBox());
       expect(await pumpCollectingOverflows(tester, tabbed()), isEmpty);
 
       expect(find.byType(WatchStatePage), findsWidgets);
-      expect(find.byType(CircularProgressIndicator), findsOneWidget);
-      expect(find.byKey(contactsWatchSourceKey), findsOneWidget);
-      expect(find.byKey(contactsSearchInputKey), findsNothing);
+      final spinner = tester.getRect(find.byType(CircularProgressIndicator));
+      final chip = tester.getRect(find.byKey(contactsWatchSourceKey));
+      expect(chip, rectMoreOrLessEquals(onList, epsilon: 0.5));
+      expect(chip.bottom, lessThanOrEqualTo(spinner.top));
+      expect(find.byKey(contactsSearchInputKey), findsOneWidget);
+    });
+
+    testWidgets('on $preset an empty book keeps the chip where the list has it, the state under it', (tester) async {
+      preset.apply(tester);
+      shown(ContactSourceType.external);
+      external(ContactsExternalTabState(status: ContactsExternalTabStatus.success, contacts: people));
+      local(const ContactsLocalTabState(status: ContactsLocalTabStatus.success));
+      await pumpCollectingOverflows(tester, tabbed());
+      final onList = tester.getRect(find.byKey(contactsWatchSourceKey));
+
+      shown(ContactSourceType.local);
+      // A tree of its own: the mocked blocs do not emit the change.
+      await tester.pumpWidget(const SizedBox());
+      expect(await pumpCollectingOverflows(tester, tabbed()), isEmpty);
+
+      expect(find.byType(WatchStatePage), findsWidgets);
+      final chip = tester.getRect(find.byKey(contactsWatchSourceKey));
+      expect(chip, rectMoreOrLessEquals(onList, epsilon: 0.5));
+      expect(chip.bottom, lessThanOrEqualTo(tester.getRect(find.text('No contacts')).top));
+      // The next tap on the same spot lands on the chip: it shows the next book.
+      await tester.tapAt(onList.center);
+      verify(() => contactsBloc.add(any())).called(1);
     });
 
     testWidgets('on $preset no access to the phone book says so, opens the settings and keeps the chip', (
