@@ -12,7 +12,7 @@ import 'call_bloc_harness.dart';
 /// a slow device. A hangup that lands in that window ends the call for good:
 /// the plan must not bring it back. Seen on a Xiaomi Redmi against the stand
 /// as a ringing screen for a call the caller had already given up on.
-class _Connections extends Fake implements CallkeepConnections {
+class _Connections extends FakeConnections {
   final entered = Completer<void>();
   final release = Completer<List<CallkeepConnection>>();
 
@@ -64,7 +64,7 @@ void main() {
     // when it does, so callkeep is told the call ended as unanswered and
     // would accept the same call a second time.
     final connections = _Connections();
-    final h = CallBlocHarness(callkeepConnections: connections);
+    final h = CallBlocHarness(connections: connections);
     addTearDown(h.close);
     h.signaling.emitHandshake(_ringing(callId: 'call'));
     await connections.entered.future.timeout(const Duration(seconds: 2));
@@ -86,7 +86,7 @@ void main() {
 
   test('a ringing call unknown here that hung up while the plan is decided is not presented', () async {
     final connections = _Connections();
-    final h = CallBlocHarness(callkeepConnections: connections);
+    final h = CallBlocHarness(connections: connections);
     addTearDown(h.close);
     h.signaling.emitHandshake(_ringing(callId: 'call'));
     await connections.entered.future.timeout(const Duration(seconds: 2));
@@ -101,7 +101,7 @@ void main() {
 
   test('an accepted call hung up while the plan is decided is not restored', () async {
     final connections = _Connections();
-    final h = CallBlocHarness(callkeepConnections: connections);
+    final h = CallBlocHarness(connections: connections);
     addTearDown(h.close);
     h.signaling.emitHandshake(_ringing(callId: 'call', accepted: true));
     await connections.entered.future.timeout(const Duration(seconds: 2));

@@ -317,9 +317,9 @@ class HandshakeProcessor {
 
   /// Plans the actions for a handshake.
   ///
-  /// [connections] is every local callkeep connection ([CallkeepConnections.getConnections])
+  /// [connections] is every local callkeep connection ([Callkeep.getConnections])
   /// and [lineConnections] the connection callkeep reports for a line's
-  /// latest call id ([CallkeepConnections.getConnection]), both read by the
+  /// latest call id ([Callkeep.getConnection]), both read by the
   /// caller just before this.
   List<HandshakeAction> process({
     required List<Line?> lines,

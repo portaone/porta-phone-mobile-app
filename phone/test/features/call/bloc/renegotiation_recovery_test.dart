@@ -424,7 +424,7 @@ void main() {
     final errors = <Object>[];
     late CallBlocHarness failing;
     await runZonedGuarded(() async {
-      failing = CallBlocHarness(callkeepConnections: _FailingConnections());
+      failing = CallBlocHarness(connections: _FailingConnections());
       failing.seedEstablishedCall('call');
       failing.reconnect();
       await pumpEventQueue();
@@ -480,7 +480,7 @@ class _ManualTimer implements Timer {
 }
 
 /// Callkeep whose read of the connections fails.
-class _FailingConnections extends Fake implements CallkeepConnections {
+class _FailingConnections extends FakeConnections {
   @override
   Future<List<CallkeepConnection>> getConnections() async => throw StateError('callkeep is gone');
 

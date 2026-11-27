@@ -16,7 +16,7 @@ import 'call_bloc_harness.dart';
 /// The bloc holds no list of its own: it asks callkeep before it shows a presentation it
 /// received earlier and waited on, and a presentation still on its way is dropped by callkeep
 /// before it gets here (covered in the plugin's own tests).
-class _Connections extends Fake implements CallkeepConnections {
+class _Connections extends FakeConnections {
   final entered = Completer<void>();
   final release = Completer<List<CallkeepConnection>>();
 
@@ -78,7 +78,7 @@ void main() {
 
   test('a presentation of a call heard hung up before it was held is not shown', () async {
     final connections = _Connections();
-    final h = CallBlocHarness(callkeepConnections: connections);
+    final h = CallBlocHarness(connections: connections);
     addTearDown(h.close);
     h.signaling.emitHandshake(_ringing(callId: 'call'));
     await connections.entered.future.timeout(const Duration(seconds: 2));

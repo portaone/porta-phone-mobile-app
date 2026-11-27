@@ -295,12 +295,11 @@ Future<AppDependencies> _bootstrap({
     ),
   );
 
-  // Call-integration handles of the authenticated shell, shared here so widgets
-  // receive them from the composition root instead of constructing them inline
-  // (widget tests substitute them by providing their own above the shell). Both
-  // are process-wide singletons behind their factory constructors.
+  // The call-integration handle of the authenticated shell, shared here so widgets
+  // receive it from the composition root instead of constructing it inline
+  // (widget tests substitute it by providing their own above the shell). It is
+  // a process-wide singleton behind its factory constructor.
   deps.share(Callkeep());
-  deps.share(CallkeepConnections());
   // The screen capture of a call: one for the process, as callkeep reports the end of a capture
   // to one delegate; every call bloc of the shell shares it. On iOS it shares only in a build that
   // carries the screen share extension, which the native side is asked about here.

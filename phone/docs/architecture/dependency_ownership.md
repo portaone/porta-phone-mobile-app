@@ -74,7 +74,7 @@ Two consequences worth spelling out:
 | `SessionCleanupWorker` | connectivity subscription taken in its constructor | `SessionRepository` | its owner, the session repository |
 | `AppLogger` | the remote logging service behind it | - | the application |
 | `AppLifecycle` | registers itself as a `WidgetsBindingObserver` | - | the application |
-| `Callkeep`, `CallkeepConnections` | native singletons; the shell installs and removes its own listeners | `MainShell` | the shell, for its own listeners |
+| `Callkeep` | native singleton; the shell installs and removes its own listeners | `MainShell` | the shell, for its own listeners |
 | `FeatureAccessStreamFactory` | none itself; each `create()` call opens a stream over system info and remote config | `RootApp` | the `StreamProvider` cancels the subscription |
 | `AppInfo` | app-id change subscription; also releases a disposable app-id provider | metadata, auth and compatibility consumers | the application (or startup wave before registration) |
 | storages, device and package info, themes, certificates, permissions, metadata, api client factory, auth and session repositories | none - plain data or thin wrappers | many | nothing to release |

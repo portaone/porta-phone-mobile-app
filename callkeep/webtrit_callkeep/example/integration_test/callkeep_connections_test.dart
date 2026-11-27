@@ -17,7 +17,7 @@ Future<CallkeepConnection?> _waitForConnectionState(
 }) async {
   final deadline = DateTime.now().add(timeout);
   while (DateTime.now().isBefore(deadline)) {
-    final conn = await CallkeepConnections().getConnection(callId);
+    final conn = await Callkeep().getConnection(callId);
     if (conn?.state == state) return conn;
     await Future.delayed(const Duration(milliseconds: 100));
   }
@@ -31,7 +31,7 @@ Future<bool> _waitForConnectionInList(
 }) async {
   final deadline = DateTime.now().add(timeout);
   while (DateTime.now().isBefore(deadline)) {
-    final list = await CallkeepConnections().getConnections();
+    final list = await Callkeep().getConnections();
     if (list.any((c) => c.callId == callId)) return true;
     await Future.delayed(const Duration(milliseconds: 100));
   }
@@ -68,17 +68,16 @@ void main() {
   });
 
   // -------------------------------------------------------------------------
-  // CallkeepConnections.getConnection (Android only)
+  // Callkeep.getConnection (Android only)
   // -------------------------------------------------------------------------
 
-  group('CallkeepConnections.getConnection (Android only)',
-      skip: kIsWeb || defaultTargetPlatform != TargetPlatform.android, () {
+  group('Callkeep.getConnection (Android only)', skip: kIsWeb || defaultTargetPlatform != TargetPlatform.android, () {
     testWidgets('getConnection returns null for nonexistent callId', (WidgetTester _) async {
       if (kIsWeb || defaultTargetPlatform != TargetPlatform.android) {
         markTestSkipped('Android only');
         return;
       }
-      final conn = await CallkeepConnections().getConnection('conn-nonexistent-${nextTestId()}');
+      final conn = await Callkeep().getConnection('conn-nonexistent-${nextTestId()}');
       expect(conn, isNull);
     });
 
@@ -153,7 +152,7 @@ void main() {
       await callkeep.endCall(id);
       await waitFor(endLatch.future, label: 'performEndCall');
 
-      final conn = await CallkeepConnections().getConnection(id);
+      final conn = await Callkeep().getConnection(id);
       // After endCall, connection is either removed (null) or in disconnected state
       final isGone = conn == null || conn.state == CallkeepConnectionState.stateDisconnected;
       expect(isGone, isTrue);
@@ -164,23 +163,22 @@ void main() {
         markTestSkipped('Non-Android only');
         return;
       }
-      final conn = await CallkeepConnections().getConnection(nextTestId());
+      final conn = await Callkeep().getConnection(nextTestId());
       expect(conn, isNull);
     });
   });
 
   // -------------------------------------------------------------------------
-  // CallkeepConnections.getConnections (Android only)
+  // Callkeep.getConnections (Android only)
   // -------------------------------------------------------------------------
 
-  group('CallkeepConnections.getConnections (Android only)',
-      skip: kIsWeb || defaultTargetPlatform != TargetPlatform.android, () {
+  group('Callkeep.getConnections (Android only)', skip: kIsWeb || defaultTargetPlatform != TargetPlatform.android, () {
     testWidgets('getConnections has no entry for a nonexistent callId before any call', (WidgetTester _) async {
       if (kIsWeb || defaultTargetPlatform != TargetPlatform.android) {
         markTestSkipped('Android only');
         return;
       }
-      final connections = await CallkeepConnections().getConnections();
+      final connections = await Callkeep().getConnections();
       // There may be stale connections from prior test runs in this process;
       // we only assert the list is a valid list type.
       expect(connections, isA<List<CallkeepConnection>>());
@@ -214,7 +212,7 @@ void main() {
         displayName: 'Grace',
       );
 
-      final connections = await CallkeepConnections().getConnections();
+      final connections = await Callkeep().getConnections();
       // id1 must always be present
       expect(connections.any((c) => c.callId == id1), isTrue);
       // id2 may or may not be present: Android can immediately disconnect a
@@ -225,17 +223,17 @@ void main() {
   });
 
   // -------------------------------------------------------------------------
-  // CallkeepConnections.cleanConnections (Android only)
+  // Callkeep.cleanConnections (Android only)
   // -------------------------------------------------------------------------
 
-  group('CallkeepConnections.cleanConnections (Android only)',
-      skip: kIsWeb || defaultTargetPlatform != TargetPlatform.android, () {
+  group('Callkeep.cleanConnections (Android only)', skip: kIsWeb || defaultTargetPlatform != TargetPlatform.android,
+      () {
     testWidgets('cleanConnections completes without error on empty state', (WidgetTester _) async {
       if (kIsWeb || defaultTargetPlatform != TargetPlatform.android) {
         markTestSkipped('Android only');
         return;
       }
-      await expectLater(CallkeepConnections().cleanConnections(), completes);
+      await expectLater(Callkeep().cleanConnections(), completes);
     });
 
     testWidgets('cleanConnections removes all active connections', (WidgetTester _) async {
@@ -247,10 +245,10 @@ void main() {
       await callkeep.reportNewIncomingCall(id, kTestHandle1, displayName: 'Hank');
       await waitForConnection(id);
 
-      await CallkeepConnections().cleanConnections();
+      await Callkeep().cleanConnections();
 
       // After cleanConnections, connection should be gone or disconnected
-      final conn = await CallkeepConnections().getConnection(id);
+      final conn = await Callkeep().getConnection(id);
       final isGone = conn == null || conn.state == CallkeepConnectionState.stateDisconnected;
       expect(isGone, isTrue);
     });

@@ -143,6 +143,9 @@ Use these methods to notify the platform about call state changes.
 | `sendDTMF(callId, digit)` | Send a DTMF tone |
 | `setCallGroup(groupId, callIds)` | Present these calls to the OS as the group `groupId` |
 | `unsetCallGroup(callIds)` | Take these calls out of their group |
+| `getConnection(callId)` | The connection the platform holds for this call, or `null` (Android, web; `null` elsewhere) |
+| `getConnections()` | Every connection the platform holds (Android, web; empty elsewhere) |
+| `cleanConnections()` | End and forget every connection the platform holds (Android, web; nothing elsewhere) |
 
 ### Platform -> Flutter (`CallkeepDelegate`)
 

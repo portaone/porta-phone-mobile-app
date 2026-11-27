@@ -100,7 +100,6 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
   final Future<void> Function() onSessionMissedReported;
 
   final Callkeep callkeep;
-  final CallkeepConnections callkeepConnections;
   late final CallMediaManager _mediaManager;
 
   final SDPMunger? sdpMunger;
@@ -213,7 +212,6 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
     required this.onSessionMissedReported,
     required this.submitNotification,
     required this.callkeep,
-    required this.callkeepConnections,
     required this.userMediaBuilder,
     required this.contactResolver,
     required this.callErrorReporter,
@@ -5303,11 +5301,8 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
         ...line.callLogs.whereType<CallEventLog>().take(1).map((log) => log.callEvent.callId),
       ],
     };
-    final connections = await callkeepConnections.getConnections();
-    final lineConnections = Map.fromIterables(
-      lineCallIds,
-      await Future.wait(lineCallIds.map(callkeepConnections.getConnection)),
-    );
+    final connections = await callkeep.getConnections();
+    final lineConnections = Map.fromIterables(lineCallIds, await Future.wait(lineCallIds.map(callkeep.getConnection)));
     final session = _callSignaling.sessionHandshake ?? stateHandshake;
     final actions = _handshakeProcessor.process(
       lines: session.lines,
@@ -5586,22 +5581,16 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
   }
 
   @override
-  // Handles incoming call notifications from the native side.
-  // On iOS, this is triggered via PushKit when a push is received.
-  //
-  // On Android, this method is currently not used. Call state synchronization
-  // from the background is handled by `CallkeepConnections`. A future refactoring
-  // could unify this logic so that both platforms use this delegate method.
-  //
-  // On Android, this is now fully feasible because after the recent callback
-  // improvement we can reliably detect when the bloc is ready.
-  //
-  // PDelegateFlutterApi.setUp(null);
-  // _api.onDelegateSet();
-  //
-  // TODO: Unify incoming-call handling for both iOS and Android so that
-  // this method becomes the shared entry point. This may require removing
-  // `CallkeepConnections` and adjusting the method signature.
+  // The one way an incoming call the platform registered reaches the bloc, on
+  // both platforms:
+  // - iOS: CallKit registered the call of a VoIP push.
+  // - Android: a call the push registered, handed over while this delegate is
+  //   attached, and every still-ringing call replayed when the delegate attaches
+  //   (after a push isolate or a restart).
+  // The call usually is known from signaling as well; the bloc keeps one entry
+  // per call id. Calls that ended on the phone while the app was away do not come
+  // here: on Android the handshake plan reads them from callkeep's connections;
+  // iOS exposes no connections, and such a call is known from signaling only.
   void didPresentIncomingCall(
     CallkeepHandle handle,
     String? displayName,
