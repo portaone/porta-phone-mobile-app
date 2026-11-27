@@ -13,7 +13,7 @@ import 'package:webtrit_phone/theme/models/models.dart';
 /// change in the shape one writes and the other reads would have been found by
 /// a person starting the app, not by a check.
 ///
-/// What is on disk here is the stock WebTrit theme - the same eight files a
+/// What is on disk here is the default theme - the same eight files a
 /// build replaces, in the same places - so parsing them is parsing what a
 /// build produces.
 void main() {
