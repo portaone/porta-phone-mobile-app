@@ -5,11 +5,18 @@
       "mode": "system"
     },
     {
-      "type": "loggingConfig",
-      "checkIntervalSec": 15
+      "type": "videoCall",
+      "enabled": false
     },
     {
-      "type": "hybridPresence"
+      "type": "loggingConfig",
+      "logLevel": "INFO",
+      "checkIntervalSec": 15,
+      "anonymizationEnabled": true
+    },
+    {
+      "type": "hybridPresence",
+      "enabled": true
     },
     {
       "type": "systemNotifications",
@@ -22,17 +29,38 @@
     }
   ],
   "loginConfig": {
-    "signinOrder": ["passwordSignin", "otpSignin", "signup"],
-    "qr": { "enabled": false, "formats": [{ "type": "uri", "schemes": ["csc"] }, { "type": "json" }], "expectedHost": null },
+    "signinOrder": [
+      "passwordSignin",
+      "otpSignin",
+      "signup",
+      "qrSignin"
+    ],
+    "qr": {
+      "enabled": false,
+      "formats": [
+        {
+          "type": "uri",
+          "schemes": [
+            "csc"
+          ]
+        },
+        {
+          "type": "json",
+          "schemes": null
+        }
+      ],
+      "expectedHost": null
+    },
     "common": {
       "fullScreenLaunchEmbeddedResourceId": null
     },
     "modeSelect": {
-      "greetingL10n": "WebTrit",
+      "greetingL10n": "PortaPhone",
       "actions": [
         {
           "enabled": true,
           "type": "login",
+          "embeddedId": null,
           "titleL10n": "login_Button_signUpToDemoInstance"
         },
         {
@@ -67,7 +95,8 @@
           "type": "recents",
           "titleL10n": "main_BottomNavigationBarItemLabel_recents",
           "icon": "0xe03a",
-          "supportsCallHistory": true
+          "supportsCallHistory": true,
+          "layout": "unified"
         },
         {
           "enabled": true,
@@ -95,6 +124,20 @@
           "type": "messaging",
           "titleL10n": "main_BottomNavigationBarItemLabel_chats",
           "icon": "0xe155"
+        },
+        {
+          "enabled": true,
+          "initial": false,
+          "type": "voicemail",
+          "titleL10n": "main_BottomNavigationBarItemLabel_voicemail",
+          "icon": "0xe6c1"
+        },
+        {
+          "enabled": true,
+          "initial": false,
+          "type": "callCenter",
+          "titleL10n": "main_BottomNavigationBarItemLabel_callCenter",
+          "icon": "0xf0ee"
         },
         {
           "enabled": false,
@@ -125,13 +168,17 @@
             "enabled": true,
             "type": "callCenter",
             "titleL10n": "settings_ListViewTileTitle_callCenter",
-            "icon": "0xf0ee"
+            "icon": "0xf0ee",
+            "iconColor": null,
+            "embeddedResourceId": null
           },
           {
             "enabled": true,
             "type": "voicemail",
             "titleL10n": "settings_ListViewTileTitle_voicemail",
-            "icon": "0xe6c1"
+            "icon": "0xe6c1",
+            "iconColor": null,
+            "embeddedResourceId": null
           }
         ]
       },
@@ -143,56 +190,73 @@
             "enabled": true,
             "type": "presence",
             "titleL10n": "settings_ListViewTileTitle_presence",
-            "icon": "0xf4c8"
+            "icon": "0xf4c8",
+            "iconColor": null,
+            "embeddedResourceId": null
           },
           {
             "enabled": true,
             "type": "network",
             "titleL10n": "settings_ListViewTileTitle_network",
-            "icon": "0xe424"
+            "icon": "0xe424",
+            "iconColor": null,
+            "embeddedResourceId": null
           },
           {
             "enabled": true,
             "type": "mediaSettings",
             "titleL10n": "settings_ListViewTileTitle_mediaSettings",
-            "icon": "0xf1cf"
+            "icon": "0xf1cf",
+            "iconColor": null,
+            "embeddedResourceId": null
           },
           {
             "enabled": true,
             "type": "callerId",
             "titleL10n": "settings_ListViewTileTitle_callerId",
-            "icon": "0xf26e"
+            "icon": "0xf26e",
+            "iconColor": null,
+            "embeddedResourceId": null
           },
           {
             "enabled": true,
             "type": "language",
             "titleL10n": "settings_ListViewTileTitle_language",
-            "icon": "0xe366"
+            "icon": "0xe366",
+            "iconColor": null,
+            "embeddedResourceId": null
           },
           {
             "enabled": true,
             "type": "themeMode",
             "titleL10n": "settings_ListViewTileTitle_themeMode",
-            "icon": "0xe518"
+            "icon": "0xe518",
+            "iconColor": null,
+            "embeddedResourceId": null
           },
           {
             "enabled": false,
             "type": "help",
             "titleL10n": "settings_ListViewTileTitle_help",
-            "icon": "0xe30b"
+            "icon": "0xe30b",
+            "iconColor": null,
+            "embeddedResourceId": null
           },
           {
             "enabled": true,
             "type": "terms",
             "titleL10n": "settings_ListViewTileTitle_termsConditions",
             "icon": "0xeedf",
+            "iconColor": null,
             "embeddedResourceId": "privacy-policy-for-webtrit-app"
           },
           {
             "enabled": true,
             "type": "about",
             "titleL10n": "settings_ListViewTileTitle_about",
-            "icon": "0xe140"
+            "icon": "0xe140",
+            "iconColor": null,
+            "embeddedResourceId": null
           }
         ]
       },
@@ -204,24 +268,31 @@
             "enabled": true,
             "titleL10n": "settings_ListViewTileTitle_logRecordsConsole",
             "icon": "0xee79",
+            "iconColor": null,
+            "embeddedResourceId": null,
             "type": "log"
           },
           {
             "enabled": true,
             "type": "cacheManagement",
             "titleL10n": "settings_ListViewTileTitle_cacheManagement",
-            "icon": "0xe609"
+            "icon": "0xe609",
+            "iconColor": null,
+            "embeddedResourceId": null
           },
           {
             "enabled": true,
             "titleL10n": "settings_ListViewTileTitle_accountDelete",
             "icon": "0xe1bb",
+            "iconColor": null,
+            "embeddedResourceId": null,
             "type": "deleteAccount"
           },
           {
             "enabled": false,
             "titleL10n": "settings_ListViewTileTitle_embedded1",
             "icon": "0xe3a2",
+            "iconColor": null,
             "type": "embedded",
             "embeddedResourceId": "example_embedded_registration"
           },
@@ -229,6 +300,7 @@
             "enabled": false,
             "titleL10n": "settings_ListViewTileTitle_embedded2",
             "icon": "0xe3a2",
+            "iconColor": null,
             "type": "embedded",
             "embeddedResourceId": "example_embedded_statistics"
           }
@@ -242,6 +314,7 @@
             "enabled": true,
             "titleL10n": "settings_ListViewTileTitle_embedded3",
             "icon": "0xe3a2",
+            "iconColor": null,
             "type": "embedded",
             "embeddedResourceId": "example_embedded_rating"
           }
@@ -257,7 +330,7 @@
     },
     "encoding": {
       "bypassConfig": false,
-      "__defaultPresetOverride": {
+      "__defaultPresetOverrideExample": {
         "audioBitrate": 56,
         "videoBitrate": 512,
         "ptime": 20,
@@ -270,7 +343,23 @@
         "remapTE8payloadTo101": false,
         "removeREMBFeedback": false,
         "removeTWCCFeedback": false
-      }
+      },
+      "defaultPresetOverride": {
+        "audioBitrate": null,
+        "videoBitrate": null,
+        "ptime": null,
+        "maxptime": null,
+        "opusSamplingRate": null,
+        "opusBitrate": null,
+        "opusStereo": null,
+        "opusDtx": null,
+        "removeStaticAudioRtpMaps": null,
+        "remapTE8payloadTo101": null,
+        "removeREMBFeedback": null,
+        "removeTWCCFeedback": null,
+        "removeExtmaps": null
+      },
+      "conferenceAudioCodecs": null
     },
     "peerConnection": {
       "negotiation": {
@@ -288,26 +377,15 @@
     }
   },
   "contacts": {
-    "_details": {
+    "details": {
       "__details": "Configuration for the Contact Details screen, determining layout and available interactions.",
       "actions": {
         "__actions": "Defines the set of interactive actions (buttons or icons) available across different sections of the screen. Strings must match the 'ContactAction' enum names (e.g., 'chat', 'voiceCall', 'videoCall'). Invalid strings are ignored.",
-        "appBar": [
-          "chat"
-        ],
+        "appBar": null,
         "__appBar": "Actions displayed in the top application bar (header). If omitted or null, defaults to ['chat']. Common value: 'chat'.",
-        "phoneTile": [
-          "voiceCall",
-          "videoCall",
-          "sms",
-          "transfer",
-          "callLog",
-          "favorite"
-        ],
+        "phoneTile": null,
         "__phoneTile": "Actions available specifically on phone number items (e.g., swipe actions or inline buttons). If omitted, defaults to all available actions except 'chat'.",
-        "emailTile": [
-          "sendEmail"
-        ],
+        "emailTile": null,
         "__emailTile": "Actions available on email address items. If omitted, defaults to ['sendEmail']."
       }
     }
@@ -321,4 +399,3 @@
     }
   }
 }
-
