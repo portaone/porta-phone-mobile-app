@@ -145,7 +145,7 @@ void main() {
   final people = [for (var i = 1; i <= 20; i++) buildListContact(id: i, name: 'Person $i')];
 
   for (final preset in watchPresets) {
-    testWidgets('on $preset the book is a list under the title, the search and the chip, no tabs or bar', (
+    testWidgets('on $preset the book is a list under the title and the chip, Search on the edge, no tabs or bar', (
       tester,
     ) async {
       preset.apply(tester);
@@ -159,23 +159,25 @@ void main() {
       expect(find.byType(AppBar), findsNothing);
       expect(find.byType(TabBar), findsNothing);
       final title = tester.getRect(find.text('Contacts'));
-      final search = tester.getRect(find.bySemanticsIdentifier(contactsSearchInputId));
-      final toolbar = tester.getRect(find.byType(ContactsWatchToolbar));
       final separator = tester.getRect(find.byType(WatchSeparator));
       final chip = tester.getRect(find.byKey(contactsWatchSourceKey));
       final first = tester.getRect(find.byType(ContactsWatchTile).first);
-      // The search and the book share one row under the title, the
-      // separator under them, then the rows.
-      expect(title.bottom, lessThanOrEqualTo(toolbar.top));
-      expect((search.center.dy - chip.center.dy).abs(), lessThan(1));
-      expect(search.right, lessThanOrEqualTo(chip.left));
-      expect(toolbar.bottom, lessThanOrEqualTo(separator.top));
+      // The chip alone under the title, centred on the face as the filter of
+      // the other lists, the separator under it, then the rows.
+      expect(title.bottom, lessThanOrEqualTo(chip.top));
+      expect(
+        chip.center.dx,
+        moreOrLessEquals(tester.view.physicalSize.width / tester.view.devicePixelRatio / 2, epsilon: 1),
+      );
+      expect(chip.bottom, lessThanOrEqualTo(separator.top));
       expect(separator.bottom, lessThanOrEqualTo(first.top));
       expect(find.text('Person 1'), findsOneWidget);
       expect(
         tester.getSemantics(find.bySemanticsIdentifier(contactsWatchSourceId)).getSemanticsData().label,
         'Contact source: Cloud PBX',
       );
+      // The search is the edge button.
+      expect(find.descendant(of: find.byType(WatchEdgeButton), matching: find.text('Search contacts')), findsOneWidget);
       handle.dispose();
     });
 
@@ -283,7 +285,15 @@ void main() {
     await tester.scrollUntilVisible(
       find.byType(ContactsSelectionNotice),
       200,
-      scrollable: find.descendant(of: find.byType(ContactsLocalTabWatch), matching: find.byType(Scrollable)).first,
+      // The list's own: the hidden search field has a scrollable of its own.
+      scrollable: find
+          .descendant(
+            of: find.byType(ContactsLocalTabWatch),
+            matching: find.byWidgetPredicate(
+              (widget) => widget is Scrollable && widget.axisDirection == AxisDirection.down,
+            ),
+          )
+          .first,
     );
     expect(find.byType(ContactsSelectionNotice), findsOneWidget);
   });
@@ -396,7 +406,7 @@ void main() {
     bool focused() => tester.widget<TextField>(find.byKey(contactsSearchInputKey)).focusNode!.hasFocus;
     expect(focused(), isTrue);
 
-    final context = tester.element(find.byType(ContactsWatchToolbar));
+    final context = tester.element(find.byType(WatchPageSearch));
     unawaited(showDialog<void>(context: context, useRootNavigator: false, builder: (_) => const Text('over')));
     await tester.pumpAndSettle();
     Navigator.of(context).pop();
@@ -427,7 +437,8 @@ void main() {
 
     expect(find.text('No contacts found'), findsOneWidget);
     expect(find.byKey(contactsSearchInputKey), findsOneWidget);
-    expect(find.byType(WatchEdgeButton), findsNothing);
+    // The query on the edge, to change it.
+    expect(find.descendant(of: find.byType(WatchEdgeButton), matching: find.text('zz')), findsOneWidget);
   });
 
   testWidgets('a search that finds nothing while the cloud book syncs keeps its field, not a spinner', (tester) async {
@@ -500,56 +511,45 @@ void main() {
     expect(tester.testTextInput.isVisible, isTrue);
   });
 
-  testWidgets('the search is a pill: a tap opens the keyboard, the query shows in it, the cross clears it', (
-    tester,
-  ) async {
+  testWidgets('Search on the edge opens the keyboard and shows the query; the chip and the rows stay', (tester) async {
     watchPresets.first.apply(tester);
     final handle = tester.ensureSemantics();
     shown(ContactSourceType.external);
     external(ContactsExternalTabState(status: ContactsExternalTabStatus.success, contacts: people));
     local(const ContactsLocalTabState(status: ContactsLocalTabStatus.success));
     await pumpCollectingOverflows(tester, tabbed());
+    final chipBefore = tester.getRect(find.byKey(contactsWatchSourceKey));
+    final firstBefore = tester.getRect(find.byType(ContactsWatchTile).first);
 
-    final pill = find.bySemanticsIdentifier(contactsSearchInputId);
-    expect(tester.getSemantics(pill).getSemanticsData().label, 'Search contacts');
-    expect(tester.getSemantics(pill).getSemanticsData().flagsCollection.isTextField, isFalse);
-    expect(find.bySemanticsIdentifier(contactsSearchInputClearId), findsNothing);
+    final search = find.bySemanticsIdentifier(contactsSearchInputId);
+    expect(tester.getSemantics(search).getSemanticsData().label, 'Search contacts');
+    expect(tester.getSemantics(search).getSemanticsData().flagsCollection.isTextField, isFalse);
 
-    await tapViaSemantics(tester, pill);
+    await tapViaSemantics(tester, search);
     await tester.pump();
     expect(tester.testTextInput.isVisible, isTrue);
 
     tester.testTextInput.enterText('Per');
     await tester.pump();
-    // Shown in the pill as it is typed: a Text of its own, not the hidden field.
-    expect(
-      find.descendant(
-        of: find.byType(ContactsWatchToolbar),
-        matching: find.byWidgetPredicate((widget) => widget is Text && widget.data == 'Per'),
-      ),
-      findsOneWidget,
-    );
+    // Shown on the edge as it is typed: a Text of its own, not the hidden field.
+    expect(find.descendant(of: find.byType(WatchEdgeButton), matching: find.text('Per')), findsOneWidget);
+    expect(tester.getSemantics(search).getSemanticsData().label, 'Search contacts: Per');
     verify(() => contactsBloc.add(const ContactsSearchChanged('Per'))).called(1);
-    // The query takes the row; the book shrinks to a round button beside it,
-    // read by the same name.
-    final query = tester.getRect(find.bySemanticsIdentifier(contactsSearchInputId));
-    final book = tester.getRect(find.byKey(contactsWatchSourceKey));
-    expect(query.left, lessThan(book.left));
-    expect(query.width, greaterThan(book.width));
-    expect(book.width, moreOrLessEquals(book.height, epsilon: 1));
-    expect(
-      tester.getSemantics(find.bySemanticsIdentifier(contactsWatchSourceId)).getSemanticsData().label,
-      'Contact source: Cloud PBX',
-    );
+    // Nothing is added over the rows: the chip and the first row stay put.
+    expect(tester.getRect(find.byKey(contactsWatchSourceKey)), rectMoreOrLessEquals(chipBefore, epsilon: 0.5));
+    expect(tester.getRect(find.byType(ContactsWatchTile).first).top, moreOrLessEquals(firstBefore.top, epsilon: 0.5));
 
     await tester.testTextInput.receiveAction(TextInputAction.search);
     await tester.pump();
     verify(() => contactsBloc.add(const ContactsSearchSubmitted('Per'))).called(1);
 
-    await tapViaSemantics(tester, find.bySemanticsIdentifier(contactsSearchInputClearId));
+    // Deleted in the keyboard, the edge says Search again.
+    await tapViaSemantics(tester, search);
+    await tester.pump();
+    tester.testTextInput.enterText('');
     await tester.pump();
     verify(() => contactsBloc.add(const ContactsSearchChanged(''))).called(1);
-    expect(tester.getSemantics(pill).getSemanticsData().label, 'Search contacts');
+    expect(tester.getSemantics(search).getSemanticsData().label, 'Search contacts');
     handle.dispose();
   });
 

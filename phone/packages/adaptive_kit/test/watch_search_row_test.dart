@@ -11,25 +11,13 @@ void main() {
 
   setUp(() => changes = []);
 
-  Widget row({bool chooser = true, String query = ''}) => MaterialApp(
+  Widget row({String query = ''}) => MaterialApp(
     home: Scaffold(
       body: Padding(
         padding: const EdgeInsets.all(24),
         child: WatchSearchRow(
           initialQuery: query,
           onChanged: changes.add,
-          chooser: chooser
-              ? ({required round}) => round
-                    ? WatchRoundButton(
-                        identifier: 'list',
-                        label: 'Book',
-                        icon: const Icon(Icons.book),
-                        size: WatchPill.height,
-                        width: WatchPill.height,
-                        onPressed: () {},
-                      )
-                    : WatchPillButton(identifier: 'list', label: 'Book', semanticsLabel: 'Book', onPressed: () {})
-              : null,
           searchLabel: 'Search',
           clearLabel: 'Clear',
           fieldKey: const Key('field'),
@@ -43,24 +31,17 @@ void main() {
   bool focused(WidgetTester tester) => tester.widget<TextField>(find.byKey(const Key('field'))).focusNode!.hasFocus;
 
   for (final preset in watchPresets) {
-    testWidgets('on $preset with no query: a round search and the chooser as a pill, in one row', (tester) async {
+    testWidgets('on $preset the search takes the row: its name, or the query with its cross', (tester) async {
       preset.apply(tester);
       expect(await pumpCollectingOverflows(tester, row()), isEmpty);
+      expect(find.text('Search'), findsOneWidget);
+      expect(find.bySemanticsIdentifier('clear'), findsNothing);
 
-      final search = tester.getRect(find.bySemanticsIdentifier('search'));
-      final list = tester.getRect(find.bySemanticsIdentifier('list'));
-      expect((search.center.dy - list.center.dy).abs(), lessThan(1));
-      expect(search.width, closeTo(WatchPill.height, 1));
-      expect(list.width, greaterThan(search.width));
-    });
-
-    testWidgets('on $preset with a query: the query as a pill with its cross, the chooser round', (tester) async {
-      preset.apply(tester);
+      // A field of its own: the query a row starts with is read once.
+      await tester.pumpWidget(const SizedBox());
       expect(await pumpCollectingOverflows(tester, row(query: 'smi')), isEmpty);
-
       expect(find.text('smi'), findsWidgets);
       expect(find.bySemanticsIdentifier('clear'), findsOneWidget);
-      expect(tester.getRect(find.bySemanticsIdentifier('list')).width, closeTo(WatchPill.height, 1));
     });
   }
 
@@ -83,14 +64,6 @@ void main() {
     expect(changes.last, '');
     expect(find.bySemanticsIdentifier('clear'), findsNothing);
     handle.dispose();
-  });
-
-  testWidgets('with nothing to choose the search takes the row as a pill', (tester) async {
-    watchPresets.first.apply(tester);
-    await tester.pumpWidget(row(chooser: false));
-
-    expect(find.bySemanticsIdentifier('list'), findsNothing);
-    expect(find.text('Search'), findsOneWidget);
   });
 
   testWidgets('a route over the row takes the focus with it: closing it brings no keyboard back', (tester) async {
