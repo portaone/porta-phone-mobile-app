@@ -177,29 +177,44 @@ void main() {
   }
 
   for (final preset in watchPresets) {
-    testWidgets('on $preset the chats are rows under one row of search and the list pill', (tester) async {
+    testWidgets('on $preset the chats are rows under the list pill, Search on the edge', (tester) async {
       preset.apply(tester);
       shown(list);
       expect(await pumpCollectingOverflows(tester, app()), isEmpty);
 
       expect(find.text('Chats'), findsOneWidget);
-      expect(find.bySemanticsIdentifier(conversationsSearchInputId), findsOneWidget);
-      expect(find.bySemanticsIdentifier(conversationsWatchListId), findsOneWidget);
-      expect(find.byType(WatchSeparator), findsOneWidget);
+      final pill = tester.getRect(find.byKey(conversationsWatchListKey));
+      expect(
+        pill.center.dx,
+        moreOrLessEquals(tester.view.physicalSize.width / tester.view.devicePixelRatio / 2, epsilon: 1),
+      );
+      expect(pill.bottom, lessThanOrEqualTo(tester.getRect(find.byType(WatchSeparator)).top));
+      expect(find.descendant(of: find.byType(WatchEdgeButton), matching: find.text('Search chats')), findsOneWidget);
       expect(find.text('Team'), findsOneWidget);
       expect(find.text('See you at five'), findsOneWidget);
       expect(find.text('No messages yet'), findsOneWidget);
       expect(find.byType(FloatingActionButton), findsNothing);
     });
 
-    testWidgets('on $preset no conversations is a state page with the pill and New chat on the edge', (tester) async {
+    testWidgets('on $preset no conversations keeps the pill where the list has it, New chat on the edge', (
+      tester,
+    ) async {
       preset.apply(tester);
+      shown(list);
+      await pumpCollectingOverflows(tester, app());
+      final onList = tester.getRect(find.byKey(conversationsWatchListKey));
+
+      // A tree of its own: the mocked cubits do not emit the change.
+      await tester.pumpWidget(const SizedBox());
       shown(const []);
       expect(await pumpCollectingOverflows(tester, app()), isEmpty);
 
       expect(find.text('No conversations started yet'), findsOneWidget);
-      expect(find.bySemanticsIdentifier(conversationsWatchListId), findsOneWidget);
+      final pill = tester.getRect(find.byKey(conversationsWatchListKey));
+      expect(pill, rectMoreOrLessEquals(onList, epsilon: 0.5));
+      expect(pill.bottom, lessThanOrEqualTo(tester.getRect(find.text('No conversations started yet')).top));
       expect(find.bySemanticsIdentifier(conversationsNewId), findsOneWidget);
+      expect(find.text('Search chats'), findsNothing);
     });
   }
 
@@ -242,7 +257,9 @@ void main() {
     await tester.scrollUntilVisible(
       find.bySemanticsIdentifier(conversationsNewId),
       100,
-      scrollable: find.byType(Scrollable).first,
+      scrollable: find
+          .byWidgetPredicate((widget) => widget is Scrollable && widget.axisDirection == AxisDirection.down)
+          .first,
     );
     await tapViaSemantics(tester, find.bySemanticsIdentifier(conversationsNewId));
     expect(started, 1);
@@ -250,7 +267,9 @@ void main() {
     await tester.scrollUntilVisible(
       find.bySemanticsIdentifier(conversationsWatchListId),
       -100,
-      scrollable: find.byType(Scrollable).first,
+      scrollable: find
+          .byWidgetPredicate((widget) => widget is Scrollable && widget.axisDirection == AxisDirection.down)
+          .first,
     );
     // Said as what it is, as the contacts' source pill.
     expect(find.bySemanticsLabel('List: Messages'), findsOneWidget);
@@ -259,14 +278,15 @@ void main() {
     handle.dispose();
   });
 
-  testWidgets('with one list there is no pill: the search takes the row', (tester) async {
+  testWidgets('with one list there is no pill; Search stays on the edge', (tester) async {
     watchPresets.first.apply(tester);
     shown(list);
     await tester.pumpWidget(app(tabs: const [ConversationsTab.chat]));
     await tester.pump();
 
     expect(find.bySemanticsIdentifier(conversationsWatchListId), findsNothing);
-    expect(find.text('Search chats'), findsOneWidget);
+    expect(find.byType(WatchSeparator), findsNothing);
+    expect(find.descendant(of: find.byType(WatchEdgeButton), matching: find.text('Search chats')), findsOneWidget);
   });
 
   testWidgets('on its way the list says how the chat connection stands', (tester) async {
@@ -288,6 +308,8 @@ void main() {
     expect(find.text('No conversations found'), findsOneWidget);
     expect(find.bySemanticsIdentifier(conversationsSearchInputId), findsOneWidget);
     expect(find.bySemanticsIdentifier(conversationsNewId), findsNothing);
+    // The query on the edge, to change it.
+    expect(find.descendant(of: find.byType(WatchEdgeButton), matching: find.text('zz')), findsOneWidget);
   });
 
   testWidgets('the query cleared before the lists narrow back stays the list, not the empty page', (tester) async {

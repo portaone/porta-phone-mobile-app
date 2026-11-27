@@ -13,16 +13,18 @@ import 'package:webtrit_phone/l10n/l10n.dart';
 import 'package:webtrit_phone/models/models.dart';
 import 'package:webtrit_phone/widgets/widgets.dart';
 
-/// The conversations on a watch: the section's title, one row of the search
-/// and the list pill (Messages, SMS - in place of the tabs), the bar, and a
-/// row per conversation; New chat (New SMS) closes the list. No app bar, no
-/// floating button, no swipe: deleting or leaving a conversation stays on the
-/// phone.
+/// The conversations on a watch: the section's title, the list pill
+/// (Messages, SMS - in place of the tabs), the bar, a row per conversation and
+/// Search on the edge button, which shows the query once one is typed; New
+/// chat (New SMS) closes the list. No app bar, no floating button, no swipe:
+/// deleting or leaving a conversation stays on the phone.
 ///
-/// On its way the list is a loading page, saying how the chat connection
-/// stands while it is not up; with no conversations, a state page with the
-/// pill under it and New chat on the edge; a search that finds nothing stays
-/// the list, a line saying so, so the field being typed in is not rebuilt.
+/// The pill is one full-width pill, as the filter of the other lists on a
+/// watch, and stays where it is on every state. On its way the list is a
+/// loading page, saying how the chat connection stands while it is not up;
+/// with no conversations, a state page with the pill on top and New chat on
+/// the edge; a search that finds nothing stays the list, a line saying so,
+/// under the same field, so the keyboard stays.
 class ConversationsWatchBody extends StatelessWidget {
   const ConversationsWatchBody({
     super.key,
@@ -44,6 +46,15 @@ class ConversationsWatchBody extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    return WatchPageSearch(
+      initialQuery: query,
+      onChanged: onSearch,
+      fieldKey: conversationsSearchInputKey,
+      builder: _page,
+    );
+  }
+
+  Widget _page(BuildContext context, WatchSearchControls search) {
     final l10n = context.l10n;
     final tab = section.selected;
     final chip = section.choosable ? ConversationsWatchListChip(section: section) : null;
@@ -52,22 +63,12 @@ class ConversationsWatchBody extends StatelessWidget {
       ConversationsTab.chat => (l10n.messaging_Watch_newChat, l10n.messaging_SemanticsLabel_newChat),
       ConversationsTab.sms => (l10n.messaging_Watch_newSms, l10n.messaging_SemanticsLabel_newSms),
     };
+    final searchLabel = switch (tab) {
+      ConversationsTab.chat => l10n.messaging_Watch_search,
+      ConversationsTab.sms => l10n.messaging_Watch_searchSms,
+    };
     final header = [
-      WatchSearchRow(
-        initialQuery: query,
-        onChanged: onSearch,
-        chooser: chip == null ? null : ({required round}) => ConversationsWatchListChip(section: section, round: round),
-        searchLabel: switch (tab) {
-          ConversationsTab.chat => l10n.messaging_Watch_search,
-          ConversationsTab.sms => l10n.messaging_Watch_searchSms,
-        },
-        clearLabel: l10n.contacts_SemanticsLabel_clearSearch,
-        fieldKey: conversationsSearchInputKey,
-        searchIdentifier: conversationsSearchInputId,
-        clearKey: conversationsSearchInputClearKey,
-        clearIdentifier: conversationsSearchInputClearId,
-      ),
-      const WatchSeparator(),
+      if (chip != null) ...[chip, const WatchSeparator()],
     ];
 
     // Whether there is any conversation is asked of the whole list, not of
@@ -107,7 +108,7 @@ class ConversationsWatchBody extends StatelessWidget {
     if (loading) {
       return WatchStatePage.loading(
         title: section.title,
-        footer: [?chip],
+        header: [?chip],
         hint: status.l10n(l10n),
         progressLabel: l10n.common_SemanticsLabel_loading,
       );
@@ -116,7 +117,7 @@ class ConversationsWatchBody extends StatelessWidget {
     if (none) {
       return WatchStatePage(
         title: section.title,
-        footer: [?chip],
+        header: [?chip],
         icon: const Icon(Icons.chat_bubble_outline),
         message: l10n.messaging_ConversationsScreen_empty,
         hint: status.l10n(l10n),
@@ -127,6 +128,12 @@ class ConversationsWatchBody extends StatelessWidget {
     return WatchScrollList.builder(
       title: section.title,
       header: header,
+      edge: (context, overlay) => WatchSearchEdgeButton(
+        overlay: overlay,
+        search: search,
+        label: searchLabel,
+        identifier: conversationsSearchInputId,
+      ),
       spacing: context.adaptiveMetrics.gap,
       itemCount: count + 1,
       itemBuilder: (context, index) {
@@ -145,46 +152,28 @@ class ConversationsWatchBody extends StatelessWidget {
 }
 
 /// The list pill of the conversations on a watch, in place of the tabs: one
-/// pill naming the list shown, Messages or SMS; a tap shows the other.
+/// full-width pill naming the list shown, Messages or SMS; a tap shows the
+/// other.
 class ConversationsWatchListChip extends StatelessWidget {
-  const ConversationsWatchListChip({super.key, required this.section, this.round = false});
+  const ConversationsWatchListChip({super.key, required this.section});
 
   final WatchSection<ConversationsTab> section;
-
-  /// Only the list's icon, in a round button: beside a query, which takes the
-  /// rest of the row.
-  final bool round;
 
   @override
   Widget build(BuildContext context) {
     final tab = section.selected;
     final label = tab.l10n(context.l10n);
-    // What the pill is as well as what it shows, as the contacts' source pill.
-    final name = '${context.l10n.messaging_Watch_list}: $label';
-    final icon = switch (tab) {
-      ConversationsTab.chat => Icons.chat_bubble_outline,
-      ConversationsTab.sms => Icons.sms_outlined,
-    };
-    void showNext() => section.onSelected(section.next);
-
-    if (round) {
-      return WatchRoundButton(
-        buttonKey: conversationsWatchListKey,
-        identifier: conversationsWatchListId,
-        label: name,
-        icon: Icon(icon),
-        size: WatchPill.height,
-        width: WatchPill.height,
-        onPressed: showNext,
-      );
-    }
     return WatchPillButton(
       buttonKey: conversationsWatchListKey,
       identifier: conversationsWatchListId,
-      icon: icon,
+      icon: switch (tab) {
+        ConversationsTab.chat => Icons.chat_bubble_outline,
+        ConversationsTab.sms => Icons.sms_outlined,
+      },
       label: label,
-      semanticsLabel: name,
-      onPressed: showNext,
+      // What the pill is as well as what it shows, as the contacts' source pill.
+      semanticsLabel: '${context.l10n.messaging_Watch_list}: $label',
+      onPressed: () => section.onSelected(section.next),
     );
   }
 }

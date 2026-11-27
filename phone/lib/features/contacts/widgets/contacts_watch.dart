@@ -113,11 +113,13 @@ class ContactsWatchEmpty {
 }
 
 /// One list of a contacts section on a watch - an address book, or the
-/// favourites - : the section's title, the search, the chip that shows
-/// another list, and a row per entry - no tabs, no app bar. On its way it is a loading page; with nothing to list, a state page
-/// that keeps the search and the chip where the list has them, so the next
-/// tap on the chip shows another book - and a search that
-/// finds nothing stays the list, so the query can be changed.
+/// favourites - : the section's title, the chip that shows another list, a
+/// row per entry and Search on the edge button, which shows the query once
+/// one is typed - no tabs, no app bar. The chip is one full-width pill, as
+/// the filter of the other lists on a watch, and stays where it is on every
+/// state: on its way the list is a loading page, with nothing to list a
+/// state page with the chip on top and its own action on the edge, and a
+/// search that finds nothing stays the list, so the query can be changed.
 class ContactsWatchBody extends StatelessWidget {
   const ContactsWatchBody({
     super.key,
@@ -153,35 +155,57 @@ class ContactsWatchBody extends StatelessWidget {
     // own, and one built before a search in another book would show the old
     // query over rows filtered by the new one. Changing the book rebuilds it
     // from the query the screen holds; typing in it does not.
-    final toolbar = ContactsWatchToolbar(key: ValueKey(section.selected), section: section);
-    final header = [toolbar, const WatchSeparator()];
+    final contactsBloc = context.read<ContactsBloc>();
+    return WatchPageSearch(
+      key: ValueKey(section.selected),
+      initialQuery: contactsBloc.state.search,
+      onChanged: (value) => contactsBloc.add(ContactsSearchChanged(value)),
+      onSubmitted: (value) => contactsBloc.add(ContactsSearchSubmitted(value)),
+      fieldKey: contactsSearchInputKey,
+      builder: (context, search) => _page(context, section, search),
+    );
+  }
 
-    // A search that finds nothing stays the list, its rows saying so: a
-    // state page would rebuild the field being typed in, and the watch
-    // keyboard would close after the letter that emptied the list. Asked
-    // before the loading page, which a book still syncing would otherwise
-    // show for the same letter.
+  Widget _page(BuildContext context, WatchSection<ContactsListSelection> section, WatchSearchControls search) {
+    final l10n = context.l10n;
+    final chip = section.choosable ? ContactsWatchSourceChip(section: section) : null;
+    final header = [
+      if (chip != null) ...[chip, const WatchSeparator()],
+    ];
+    Widget edge(BuildContext context, ButtonStyle overlay) => WatchSearchEdgeButton(
+      overlay: overlay,
+      search: search,
+      label: l10n.contacts_ContactsScreen_searchSemanticsLabel,
+      identifier: contactsSearchInputId,
+    );
+
+    // A search that finds nothing stays the list, its rows saying so, with
+    // the query on the edge to change it. Asked before the loading page,
+    // which a book still syncing would otherwise show for the same letter.
     if (itemCount == 0 && searching) {
       return WatchScrollList.builder(
         title: section.title,
         header: header,
+        edge: edge,
         itemCount: 1,
         itemBuilder: (context, _) => WatchListNote(empty.message),
       );
     }
 
+    // On its way or empty there is nothing to search: the edge is the
+    // state's own action, the chip stays on top where the list has it.
     if (loading) {
       return WatchStatePage.loading(
         title: section.title,
-        header: [if (section.choosable) toolbar],
-        progressLabel: context.l10n.common_SemanticsLabel_loading,
+        header: [?chip],
+        progressLabel: l10n.common_SemanticsLabel_loading,
       );
     }
 
     if (itemCount == 0) {
       return WatchStatePage(
         title: section.title,
-        header: [if (section.choosable) toolbar],
+        header: [?chip],
         icon: Icon(empty.icon),
         message: empty.message,
         hint: empty.hint,
@@ -192,6 +216,7 @@ class ContactsWatchBody extends StatelessWidget {
     return WatchScrollList.builder(
       title: section.title,
       header: header,
+      edge: edge,
       spacing: context.adaptiveMetrics.gap,
       itemCount: itemCount + (footer == null ? 0 : 1),
       itemBuilder: (context, index) => index == itemCount ? footer! : itemBuilder(context, index),
@@ -234,70 +259,23 @@ class ContactsWatchFavorites extends StatelessWidget {
 }
 
 /// The list chip of a contacts section on a watch, in place of the tabs or
-/// the chooser: one pill naming the address book shown, or the favourites; a
-/// tap moves to the next one.
+/// the chooser: one full-width pill naming the address book shown, or the
+/// favourites; a tap moves to the next one.
 class ContactsWatchSourceChip extends StatelessWidget {
-  const ContactsWatchSourceChip({super.key, required this.section, this.round = false});
+  const ContactsWatchSourceChip({super.key, required this.section});
 
   final WatchSection<ContactsListSelection> section;
-
-  /// Only the book's icon, in a round button: beside a query, which takes the
-  /// rest of the row.
-  final bool round;
 
   @override
   Widget build(BuildContext context) {
     final label = section.selected.l10n(context);
-    final name = '${context.l10n.contacts_ContactsScreen_sourceSemanticsLabel}: $label';
-    final icon = section.selected.icon;
-    void showNext() => section.onSelected(section.next);
-
-    if (round) {
-      return WatchRoundButton(
-        buttonKey: contactsWatchSourceKey,
-        identifier: contactsWatchSourceId,
-        label: name,
-        icon: Icon(icon),
-        size: WatchPill.height,
-        width: WatchPill.height,
-        onPressed: showNext,
-      );
-    }
     return WatchPillButton(
       buttonKey: contactsWatchSourceKey,
       identifier: contactsWatchSourceId,
-      icon: icon,
+      icon: section.selected.icon,
       label: label,
-      semanticsLabel: name,
-      onPressed: showNext,
-    );
-  }
-}
-
-/// The row over a contacts list on a watch ([WatchSearchRow]): the search and
-/// the address book side by side - a round search button and the book as a
-/// pill, or the query as a pill and the book as a round button; with one book
-/// the search takes the row. Same keys and ids as the phone's box.
-class ContactsWatchToolbar extends StatelessWidget {
-  const ContactsWatchToolbar({super.key, required this.section});
-
-  final WatchSection<ContactsListSelection> section;
-
-  @override
-  Widget build(BuildContext context) {
-    final contactsBloc = context.read<ContactsBloc>();
-    final l10n = context.l10n;
-    return WatchSearchRow(
-      initialQuery: contactsBloc.state.search,
-      onChanged: (value) => contactsBloc.add(ContactsSearchChanged(value)),
-      onSubmitted: (value) => contactsBloc.add(ContactsSearchSubmitted(value)),
-      chooser: section.choosable ? ({required round}) => ContactsWatchSourceChip(section: section, round: round) : null,
-      searchLabel: l10n.contacts_ContactsScreen_searchSemanticsLabel,
-      clearLabel: l10n.contacts_SemanticsLabel_clearSearch,
-      fieldKey: contactsSearchInputKey,
-      searchIdentifier: contactsSearchInputId,
-      clearKey: contactsSearchInputClearKey,
-      clearIdentifier: contactsSearchInputClearId,
+      semanticsLabel: '${context.l10n.contacts_ContactsScreen_sourceSemanticsLabel}: $label',
+      onPressed: () => section.onSelected(section.next),
     );
   }
 }
