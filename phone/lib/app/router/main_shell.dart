@@ -42,7 +42,6 @@ class _MainShellState extends State<MainShell> {
   /// fields so each keeps one identity for the shell's lifetime ([dispose]
   /// still needs the callkeep instance after the context is gone).
   late final Callkeep _callkeep = context.read<Callkeep>();
-  late final CallkeepConnections _callkeepConnections = context.read<CallkeepConnections>();
 
   /// The session's API client. Any of its requests that learns the session is
   /// over reports it on [WebtritApiClient.sessionRejections], and the first
@@ -207,7 +206,6 @@ class _MainShellState extends State<MainShell> {
         child: MainShellServices(
           child: MainShellBlocs(
             callkeep: _callkeep,
-            callkeepConnections: _callkeepConnections,
             signalingModule: _signalingModule,
             signalingInbound: _signalingInbound,
             signalingReconnect: _signalingReconnect,

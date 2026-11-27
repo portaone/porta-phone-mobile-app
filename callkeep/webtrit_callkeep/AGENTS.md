@@ -13,8 +13,7 @@ release ([../docs/release_process.md](../docs/release_process.md)).
 
 ```text
 lib/src/
-|-- callkeep.dart                      # Callkeep singleton - core call operations + status stream
-|-- callkeep_connections.dart          # CallkeepConnections singleton - connection state (Android, web)
+|-- callkeep.dart                      # Callkeep singleton - core call operations, connection reads, status stream
 |-- webtrit_callkeep_permissions.dart  # Permission helpers
 |-- webtrit_callkeep_sound.dart        # Sound playback helpers
 `-- android/
@@ -44,6 +43,8 @@ example/integration_test/              # the public API on a real device
   the whole membership, an empty one does nothing
 - `statusStream` / `currentStatus` - `CallkeepStatus` enum stream (uninitialized, configuring, active, terminating)
 - `setDelegate(CallkeepDelegate?)` / `setPushRegistryDelegate(PushRegistryDelegate?)` - event callbacks
+- `getConnection(callId)` / `getConnections()` / `cleanConnections()` - the connections the platform holds;
+  Android and web only, elsewhere `null` / an empty list / nothing
 - `reportEndCall` with `missedWhileConnecting` remembers the end of a call the app never held
   (with `declinedByUser`, a decline on this device, the same for now);
   `wasEndedBeforePresented(callId)` answers it, and the delegate wrapper drops a later
@@ -60,11 +61,6 @@ Entry point for Android background modes. Always use these static singletons:
 
 - `activityControl` - lock screen overlay, wake screen, send to background
 - `diagnostics` - get diagnostic report map
-
-### `CallkeepConnections` (singleton, Android and web)
-
-- `getConnection(callId)` / `getConnections()` / `cleanConnections()`
-- All methods are no-ops on platforms other than Android and web (return `null` / empty list)
 
 ---
 
@@ -87,7 +83,7 @@ No gate or Jenkins job runs them.
 ## Rules
 
 - **Do not** add platform-specific imports. A platform guard uses `kIsWeb` and
-  `defaultTargetPlatform` from `package:flutter/foundation.dart`, as `CallkeepConnections` does.
+  `defaultTargetPlatform` from `package:flutter/foundation.dart`, as the connection reads of `Callkeep` do.
   `dart:io` `Platform` throws on web, where this package also runs: the guards that still use it
   check `kIsWeb` first (`callkeep_diagnostics.dart`), except `activity_control.dart`.
 - **Do not** expose Pigeon types - all public API uses types from `webtrit_callkeep_platform_interface`.

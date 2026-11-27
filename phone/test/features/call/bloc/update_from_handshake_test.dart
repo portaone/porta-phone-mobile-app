@@ -48,7 +48,7 @@ StateHandshake _handshake({bool updateUnanswered = false, UpdatingCallEvent logg
 );
 
 /// Callkeep whose read of the connections stays open until the test lets it go.
-class _HeldConnections extends Fake implements CallkeepConnections {
+class _HeldConnections extends FakeConnections {
   final entered = Completer<void>();
   final release = Completer<List<CallkeepConnection>>();
 
@@ -64,7 +64,7 @@ class _HeldConnections extends Fake implements CallkeepConnections {
 
 /// Callkeep whose first read of the connections returns at once and whose
 /// second one stays open until the test lets it go.
-class _SecondReadHeld extends Fake implements CallkeepConnections {
+class _SecondReadHeld extends FakeConnections {
   var _reads = 0;
   final entered = Completer<void>();
   final release = Completer<List<CallkeepConnection>>();
@@ -205,7 +205,7 @@ void main() {
 
   test('a live update answered while the handshake waits on callkeep is not answered twice', () async {
     final connections = _HeldConnections();
-    final harness = CallBlocHarness(callkeepConnections: connections);
+    final harness = CallBlocHarness(connections: connections);
     addTearDown(harness.close);
     harness.seedEstablishedCall(_callId);
 
@@ -229,7 +229,7 @@ void main() {
 
   test('a second handshake that arrives before the answer is sent does not answer the update again', () async {
     final connections = _SecondReadHeld();
-    final harness = CallBlocHarness(callkeepConnections: connections);
+    final harness = CallBlocHarness(connections: connections);
     addTearDown(harness.close);
     harness.seedEstablishedCall(_callId);
 
@@ -264,7 +264,7 @@ void main() {
 
     await runZonedGuarded<Future<void>>(() async {
       final connections = _HeldConnections();
-      final harness = CallBlocHarness(callkeepConnections: connections);
+      final harness = CallBlocHarness(connections: connections);
       final peer = harness.seedEstablishedCall(_callId);
 
       // The handshake stops at its callkeep reads; one update is heard live,
@@ -338,7 +338,7 @@ void main() {
 
   test('a live update answered while a reconnect\'s handshake waits is not answered again', () async {
     final connections = _SecondReadHeld();
-    final harness = CallBlocHarness(callkeepConnections: connections);
+    final harness = CallBlocHarness(connections: connections);
     addTearDown(harness.close);
     harness.seedEstablishedCall(_callId);
     harness.signaling.emitHandshake(_handshake());
@@ -369,7 +369,7 @@ void main() {
 
   test('an update handed over from a log is not handled again when it also comes live', () async {
     final connections = _HeldConnections();
-    final harness = CallBlocHarness(callkeepConnections: connections);
+    final harness = CallBlocHarness(connections: connections);
     addTearDown(harness.close);
     harness.seedEstablishedCall(_callId);
 
@@ -452,7 +452,7 @@ void main() {
     var answers = -1;
     await runZonedGuarded<Future<void>>(() async {
       final connections = _HeldConnections();
-      final harness = CallBlocHarness(callkeepConnections: connections);
+      final harness = CallBlocHarness(connections: connections);
       harness.seedEstablishedCall(_callId);
       harness.signaling.emitHandshake(_handshake());
       await connections.entered.future;

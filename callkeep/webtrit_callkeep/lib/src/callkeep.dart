@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:flutter/foundation.dart';
 import 'package:logging/logging.dart';
 import 'package:webtrit_callkeep_platform_interface/webtrit_callkeep_platform_interface.dart';
 
@@ -287,6 +288,35 @@ class Callkeep {
   /// Returns [CallkeepCallRequestError] if there is an error.
   Future<CallkeepCallRequestError?> setAudioDevice(String callId, CallkeepAudioDevice device) {
     return platform.setAudioDevice(callId, device);
+  }
+
+  /// Whether the platform keeps connections of its own that can be read and cleaned:
+  /// Android Telecom and the web. Everywhere else (iOS, where CallKit exposes none, and
+  /// desktop) the methods below answer as if there were no connections.
+  static bool get _hasConnections => kIsWeb || defaultTargetPlatform == TargetPlatform.android;
+
+  /// The connection the platform holds for [callId], or null when it holds none.
+  ///
+  /// Always null everywhere but Android and web.
+  Future<CallkeepConnection?> getConnection(String callId) {
+    if (!_hasConnections) return Future.value();
+    return platform.getConnection(callId);
+  }
+
+  /// Every connection the platform holds.
+  ///
+  /// Always empty everywhere but Android and web.
+  Future<List<CallkeepConnection>> getConnections() {
+    if (!_hasConnections) return Future.value([]);
+    return platform.getConnections();
+  }
+
+  /// Ends and forgets every connection the platform holds.
+  ///
+  /// Does nothing everywhere but Android and web.
+  Future<void> cleanConnections() {
+    if (!_hasConnections) return Future.value();
+    return platform.cleanConnections();
   }
 }
 

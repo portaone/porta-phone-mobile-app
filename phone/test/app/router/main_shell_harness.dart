@@ -83,9 +83,7 @@ class FakeCallkeep extends Fake implements Callkeep {
 
   @override
   void setPushRegistryDelegate(PushRegistryDelegate? delegate) {}
-}
 
-class FakeCallkeepConnections extends Fake implements CallkeepConnections {
   @override
   Future<List<CallkeepConnection>> getConnections() async => const [];
 
@@ -279,7 +277,6 @@ class MainShellHarness {
   final appBloc = MockAppBloc();
   final notificationsBloc = MockNotificationsBloc();
   final callkeep = FakeCallkeep();
-  final callkeepConnections = FakeCallkeepConnections();
   final firebaseMessaging = FakeFirebaseMessaging();
   final signalingFactory = FakeSignalingServiceFactory();
   final connectivityService = FakeConnectivityService();
@@ -365,7 +362,6 @@ class MainShellHarness {
           updateShouldNotify: (previous, next) => previous != next,
         ),
         Provider<Callkeep>.value(value: callkeep),
-        Provider<CallkeepConnections>.value(value: callkeepConnections),
         Provider<ScreenCapturer>.value(value: FakeScreenCapturer()),
         Provider<SignalingServiceFactory>.value(value: signalingFactory),
         Provider<StartupFeatureAccessCheck>.value(value: startupFeatureAccessCheck),

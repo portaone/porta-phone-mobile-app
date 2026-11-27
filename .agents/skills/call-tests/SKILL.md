@@ -48,8 +48,8 @@ app drives callkeep.
 - `FakeCallkeep.setHeld` and `endCall` only record; only `setMuted` reports back through the
   delegate. An OS-started action (hold from the lock screen, end from the system UI) is a direct
   `h.bloc.performXxx(...)` call in the test.
-- The default `CallkeepConnections` reports no connections (as iOS does); pass `callkeepConnections:`
-  for an Android-like case.
+- `FakeCallkeep` reports no connections by default (as iOS does); pass `connections:` (a
+  `FakeConnections` subclass) for an Android-like case.
 - `FakeSignalingModule` has no queue: `connected = false` changes `isConnected` only and `execute`
   still acks; `sendable = false` returns `null`, which the app's module never does. It does not
   model the 30 s `NotConnectedException`, a request flushed after reconnect, or `executeNow` swallowing

@@ -41,13 +41,12 @@ final _logger = Logger('MainShell');
 ///
 /// Extracted from [MainShell] as a widget of its own so the layer reads as one
 /// unit and can be composed (or replaced) on its own in tests. The shell keeps
-/// ownership of the session-long collaborators ([callkeep],
-/// [callkeepConnections], [signalingModule]) and passes them in.
+/// ownership of the session-long collaborators ([callkeep], [signalingModule])
+/// and passes them in.
 class MainShellBlocs extends StatelessWidget {
   const MainShellBlocs({
     super.key,
     required this.callkeep,
-    required this.callkeepConnections,
     required this.signalingModule,
     required this.signalingInbound,
     required this.signalingReconnect,
@@ -55,7 +54,6 @@ class MainShellBlocs extends StatelessWidget {
   });
 
   final Callkeep callkeep;
-  final CallkeepConnections callkeepConnections;
 
   /// Created and connected by the shell state before the first build so the
   /// WebSocket handshake runs in parallel while this layer is being built.
@@ -230,7 +228,6 @@ class MainShellBlocs extends StatelessWidget {
               submitNotification: (n) => notificationsBloc.add(NotificationsSubmitted(n)),
               isCameraPermissionGranted: () => appPermissions.isPermissionGranted(Permission.camera),
               callkeep: callkeep,
-              callkeepConnections: callkeepConnections,
               sdpMunger: sdpMunger,
               conferenceAudioCodecs: encodingConfig.conferenceAudioCodecs,
               conferenceAudioProfiles: () => sdpMunger.settings?.conferenceAudioProfiles,

@@ -17,7 +17,7 @@ windows where the call exists and `activeCalls` is still empty:
 
 - After a handshake. `_handleHandshakeReceived` first adds `_HandshakeSignalingEventState` with
   the registration (that sets `isHandshakeEstablished`), and plans the calls of the handshake
-  lines later, after awaiting `CallkeepConnections.getConnections()` and `getConnection()`. On a
+  lines later, after awaiting `Callkeep.getConnections()` and `getConnection()`. On a
   device started by a call answered from the notification, the gap was about 130 ms.
 - After the platform presents an incoming call. `didPresentIncomingCall` adds
   `_CallPushEventIncoming`, and `_onCallPushEventIncoming` puts the call into the state only
@@ -35,7 +35,7 @@ only say there is no handshake; whether a call is waiting on the server is unkno
 has heard from the server", which is acceptable for showing an update prompt. For an action that
 ends calls it is not.
 
-On iOS `CallkeepConnections.getConnections()` always returns an empty list (the plugin answers
+On iOS `Callkeep.getConnections()` always returns an empty list (the plugin answers
 only on Android and web), so it cannot be the source of "no calls" there.
 
 ## Callkeep and signaling are one per process

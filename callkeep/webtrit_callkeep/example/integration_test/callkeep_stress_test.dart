@@ -40,7 +40,7 @@ void main() {
     // here ensures the next test starts with a blank connection slate and
     // avoids "wrong call ID" routing failures in multi-call tests.
     if (!kIsWeb && defaultTargetPlatform == TargetPlatform.android) {
-      await CallkeepConnections().cleanConnections();
+      await Callkeep().cleanConnections();
     }
   });
 

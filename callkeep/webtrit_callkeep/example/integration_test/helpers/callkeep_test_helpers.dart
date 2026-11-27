@@ -186,7 +186,7 @@ Future<CallkeepConnection?> waitForConnection(
 }) async {
   final deadline = DateTime.now().add(timeout);
   while (DateTime.now().isBefore(deadline)) {
-    final conn = await CallkeepConnections().getConnection(callId);
+    final conn = await Callkeep().getConnection(callId);
     if (conn != null) return conn;
     await Future.delayed(const Duration(milliseconds: 100));
   }
@@ -202,7 +202,7 @@ Future<void> waitForConnectionGone(
   // this just sleeps the full timeout without observing anything.
   final deadline = DateTime.now().add(timeout);
   while (DateTime.now().isBefore(deadline)) {
-    final conn = await CallkeepConnections().getConnection(callId);
+    final conn = await Callkeep().getConnection(callId);
     if (conn == null || conn.state == CallkeepConnectionState.stateDisconnected) return;
     await Future.delayed(const Duration(milliseconds: 100));
   }

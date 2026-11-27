@@ -100,7 +100,6 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
   final Future<void> Function() onSessionMissedReported;
 
   final Callkeep callkeep;
-  final CallkeepConnections callkeepConnections;
   late final CallMediaManager _mediaManager;
 
   final SDPMunger? sdpMunger;
@@ -213,7 +212,6 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
     required this.onSessionMissedReported,
     required this.submitNotification,
     required this.callkeep,
-    required this.callkeepConnections,
     required this.userMediaBuilder,
     required this.contactResolver,
     required this.callErrorReporter,
@@ -5303,11 +5301,8 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
         ...line.callLogs.whereType<CallEventLog>().take(1).map((log) => log.callEvent.callId),
       ],
     };
-    final connections = await callkeepConnections.getConnections();
-    final lineConnections = Map.fromIterables(
-      lineCallIds,
-      await Future.wait(lineCallIds.map(callkeepConnections.getConnection)),
-    );
+    final connections = await callkeep.getConnections();
+    final lineConnections = Map.fromIterables(lineCallIds, await Future.wait(lineCallIds.map(callkeep.getConnection)));
     final session = _callSignaling.sessionHandshake ?? stateHandshake;
     final actions = _handshakeProcessor.process(
       lines: session.lines,

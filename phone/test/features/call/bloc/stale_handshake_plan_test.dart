@@ -12,7 +12,7 @@ import 'call_bloc_harness.dart';
 /// call in between must win over the plan. The probes were written by the
 /// review of the handshake plan change and are adopted as its coverage.
 
-class _Connections extends Fake implements CallkeepConnections {
+class _Connections extends FakeConnections {
   final entered = Completer<void>();
   final release = Completer<List<CallkeepConnection>>();
   @override
@@ -53,7 +53,7 @@ void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
   test('a pending handshake plan must not replace an offer received live while reading Callkeep', () async {
     final connections = _Connections();
-    final h = CallBlocHarness(callkeepConnections: connections);
+    final h = CallBlocHarness(connections: connections);
     addTearDown(h.close);
     h.bloc.didPresentIncomingCall(const CallkeepHandle.number('100'), null, false, 'push-call', null);
     await pumpEventQueue();
@@ -72,7 +72,7 @@ void main() {
 
   test('a pending handshake plan must not revive a push call ended while reading Callkeep', () async {
     final connections = _Connections();
-    final h = CallBlocHarness(callkeepConnections: connections);
+    final h = CallBlocHarness(connections: connections);
     addTearDown(h.close);
     h.bloc.didPresentIncomingCall(const CallkeepHandle.number('100'), null, false, 'push-call', null);
     await pumpEventQueue();

@@ -47,7 +47,7 @@ class CallBlocHarness {
   CallBlocHarness({
     bool sendPresenceSettings = false,
     UserMediaBuilder? userMediaBuilder,
-    CallkeepConnections? callkeepConnections,
+    FakeConnections? connections,
     CallCapabilitiesConfig capabilities = const CallCapabilitiesConfig(),
     bool Function()? speakerOnMinimize,
     ValueListenable<bool>? voiceNoiseReductionFailed,
@@ -73,6 +73,7 @@ class CallBlocHarness {
     // line an outgoing call takes would depend on the order tests run in.
     CallState.lastUsedLine = null;
     peerFactory.order = sideEffectOrder;
+    if (connections != null) callkeep.connections = connections;
     final recordingLines = _RecordingLinesStateRepository(linesRepository, sideEffectOrder);
     publishedLines = recordingLines.published;
     bloc = CallBloc(
@@ -87,7 +88,6 @@ class CallBlocHarness {
       onSessionMissedReported: () async {},
       submitNotification: notifications.add,
       callkeep: callkeep,
-      callkeepConnections: callkeepConnections ?? _FakeCallkeepConnections(),
       userMediaBuilder: userMediaBuilder ?? media,
       contactResolver: contactResolver ?? _FakeContactResolver(),
       callErrorReporter: errors,
@@ -538,6 +538,15 @@ class FakeSignalingModule extends Fake implements SignalingModule {
 
 /// Records what the bloc asked the OS to do; requests are accepted by default.
 class FakeCallkeep extends Fake implements Callkeep {
+  /// What the connection reads return; replaced by a test that stages connections.
+  FakeConnections connections = FakeConnections();
+
+  @override
+  Future<CallkeepConnection?> getConnection(String callId) => connections.getConnection(callId);
+
+  @override
+  Future<List<CallkeepConnection>> getConnections() => connections.getConnections();
+
   Object? updateError;
 
   /// When set, the native update report does not return until the test completes it.
@@ -1269,13 +1278,12 @@ class FakeQueuedTerminationRequestsRepository extends Fake implements QueuedTerm
   void remove(QueuedTerminationRequest request) => requests.remove(request.callId);
 }
 
-/// No native connections: what the plugin reports on iOS, and on Android
-/// while nothing is up.
-class _FakeCallkeepConnections extends Fake implements CallkeepConnections {
-  @override
+/// The native connections [FakeCallkeep] reports. None by default: what the
+/// plugin reports on iOS, and on Android while nothing is up; a test overrides
+/// the reads to stage the connections it needs.
+class FakeConnections {
   Future<CallkeepConnection?> getConnection(String callId) async => null;
 
-  @override
   Future<List<CallkeepConnection>> getConnections() async => const [];
 }
 

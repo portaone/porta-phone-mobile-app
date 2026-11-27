@@ -357,7 +357,7 @@ class ActionsCubit extends Cubit<ActionsState> implements CallkeepDelegate, Call
 
   void refreshConnections() async {
     try {
-      final list = await CallkeepConnections().getConnections();
+      final list = await Callkeep().getConnections();
       emit(state.copyWith(connections: list).log(LogEntry.info('connections: ${list.length} active')));
     } catch (e) {
       emit(state.log(LogEntry.error('getConnections: $e')));
@@ -366,7 +366,7 @@ class ActionsCubit extends Cubit<ActionsState> implements CallkeepDelegate, Call
 
   void cleanConnections() async {
     try {
-      await CallkeepConnections().cleanConnections();
+      await Callkeep().cleanConnections();
       emit(state.copyWith(connections: []).log(LogEntry.success('cleanConnections: ok')));
     } catch (e) {
       emit(state.log(LogEntry.error('cleanConnections: $e')));
@@ -375,7 +375,7 @@ class ActionsCubit extends Cubit<ActionsState> implements CallkeepDelegate, Call
 
   void getConnectionByCallId() async {
     try {
-      final conn = await CallkeepConnections().getConnection(state.currentCallId);
+      final conn = await Callkeep().getConnection(state.currentCallId);
       if (conn == null) {
         emit(state.log(LogEntry.info('getConnection[${state.currentCallId}]: not found')));
       } else {
@@ -393,7 +393,7 @@ class ActionsCubit extends Cubit<ActionsState> implements CallkeepDelegate, Call
   /// Does not add a log entry so it can be called frequently without noise.
   Future<void> _syncConnections() async {
     try {
-      final list = await CallkeepConnections().getConnections();
+      final list = await Callkeep().getConnections();
       emit(state.copyWith(connections: list));
     } catch (_) {
       // best-effort: ignore errors from background syncs
