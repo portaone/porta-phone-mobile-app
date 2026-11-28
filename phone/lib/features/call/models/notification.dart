@@ -265,6 +265,9 @@ final class CallUnableToCompleteNotification extends MessageNotification {
   String l10n(BuildContext context) {
     return context.l10n.signalingResponseCode_unableToComplete;
   }
+
+  @override
+  String? get identifier => notificationCallUnableToCompleteId;
 }
 
 @Deprecated.instantiate('will be removed, (see [app/notifications/models/notification.dart] for details)')

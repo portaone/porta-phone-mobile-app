@@ -89,6 +89,38 @@ void main() {
     handle.dispose();
   });
 
+  testWidgets('the unable-to-complete bar carries its own id, so a flow tells it from any other message', (
+    tester,
+  ) async {
+    final handle = tester.ensureSemantics();
+    final notification = CallUnableToCompleteNotification();
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: Builder(
+            builder: (context) => ElevatedButton(
+              onPressed: () => context.showSnackBar('Unable', identifier: notification.identifier!),
+              child: const Text('show'),
+            ),
+          ),
+        ),
+      ),
+    );
+
+    await tester.tap(find.text('show'));
+    await tester.pump();
+
+    expect(notification.identifier, notificationCallUnableToCompleteId);
+    expect(
+      tester.getSemantics(find.bySemanticsIdentifier(notificationCallUnableToCompleteId)),
+      isSemantics(identifier: notificationCallUnableToCompleteId, label: 'Unable'),
+    );
+    expect(find.bySemanticsIdentifier(appSnackBarId), findsNothing);
+
+    handle.dispose();
+  });
+
   test('only the decline of a linked call names its own bar', () {
     expect(const LinkedCallFailedNotification(LinkedCallFailure.declined).identifier, notificationLinkedCallDeclinedId);
     expect(const LinkedCallFailedNotification(LinkedCallFailure.unanswered).identifier, isNull);

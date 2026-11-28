@@ -314,6 +314,11 @@ const String notificationLinkedCallDeclinedId = 'notificationLinkedCallDeclined'
 /// client's camera or screen did not get in; it carries this id instead of
 /// [appSnackBarId], so a flow can tell it from any other message.
 const String notificationConferenceRoomFullId = 'notificationConferenceRoomFull';
+
+/// The snack bar saying that an outgoing call could not be completed, the
+/// neutral message of a call the server refused; it carries this id instead
+/// of [appSnackBarId], so a flow can tell it from any other message.
+const String notificationCallUnableToCompleteId = 'notificationCallUnableToComplete';
 const String actionPadTransferId = 'actionPadTransfer';
 const String actionPadVoiceCallId = 'actionPadVoiceCall';
 const String callActionsAcceptId = 'callActionsAccept';
