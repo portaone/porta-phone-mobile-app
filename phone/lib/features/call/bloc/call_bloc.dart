@@ -1563,7 +1563,10 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
       case SignalingResponseCode.requestTerminated:
         break;
       case SignalingResponseCode.unauthorizedRequest:
-        submitNotification(CallWhileUnregisteredNotification());
+        // A 403 on an outgoing call is the switch refusing this one call (destination not in the
+        // tariff, no funds, a blocked number); the response carries no reason to tell them apart,
+        // and other numbers may still be callable, so the message stays neutral.
+        submitNotification(CallUnableToCompleteNotification());
       case SignalingResponseCode.rejected:
         submitNotification(CallRejectedNotification());
       case SignalingResponseCode.unwanted:
